@@ -3,7 +3,7 @@ requires = ["uv_build >= 0.8.22"]
 build-backend = "uv_build"
 
 [project]
-name = "ABMOS"
+name = "UKUMARI"
 version = "0.0.1"
 authors = [
     { name="Manuel Munizaga Sepulveda", email="manuel.chile@yahoo.com" },
@@ -22,5 +22,5 @@ license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
 [project.urls]
-Homepage = "https://github.com/JungleHollow/ABMOS"
-Issues = "https://github.com/JungleHollow/ABMOS/issues"
+Homepage = "https://github.com/JungleHollow/UKUMARI"
+Issues = "https://github.com/JungleHollow/UKUMARI/issues"
