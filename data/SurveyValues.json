@@ -92,7 +92,7 @@
   },
   "Q17": {
     "Environmental imapct": "Environmental",
-    "Economico benefits": "Economic",
+    "Economic benefits": "Economic",
     "Community opinion": "Community",
     "Religious beliefs": "Religious",
     "Personal experience": "Personal"
@@ -120,7 +120,7 @@
   "Q22": {
     "Football": 1,
     "Basketball": 2,
-    "Voleyball": 3,
+    "Volleyball": 3,
     "Athletics": 4,
     "Other": 5
   },
