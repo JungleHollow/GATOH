@@ -65,6 +65,8 @@ class Graph:
     with respect to different social hierarchies.
     """
 
+    # TODO: Add functionality for random graph generation
+
     def __init__(self, name: str) -> None:
         """
         :param name: The name of the social hierarchy that this Graph object will be representing
@@ -119,6 +121,7 @@ class Graph:
         """
         for index in self.graph.node_indices():
             self.graph[index].index = index
+        # TODO: Add in an updating of the indices within respective GraphEdge objects
         self.node_count = len(self.graph.nodes())
 
     def add_nodes(self, agents: Iterable[Agent]) -> None:

@@ -28,11 +28,12 @@ class Agent:
         :param kwargs: keyword arguments that can be passed to each Agent
         """
 
-        self.id: str
-        self.opinion: float = 0.0
+        self.id: str  # Can be any arbitrary string, but likely will follow the form XXXX0000 allowing for up to 9999 agents per community
+        self.opinion: float = 0.0  # Range always [-1, 1]
         self.previous_opinion: float = (
             0.0  # Used to handle updating during model iterations
         )
+        self.social_susceptibility: float = 0.5  # Range always [0, 1]
         self.social_weightings: dict[str, float] = {}
         self.personality: str = "neutral"
         self.position: tuple[int, int]
