@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from .model import ABModel
+from typing import Any
+# from .model import ABModel
 
 
 class UKUMARILogger:
@@ -11,7 +12,7 @@ class UKUMARILogger:
 
     def __init__(
         self,
-        model: ABModel,
+        model: Any,
         verbose: bool = False,
         print_interval: int = 10,
         write_file: bool = True,
@@ -22,7 +23,7 @@ class UKUMARILogger:
         :param print_interval: the number of model iterations to run in between each printed logging output
         :param write_file: a flag to indicate if a log file should be written to disk at the end of logging
         """
-        self.parent_model: ABModel = model
+        self.parent_model: Any = model
         self.verbose: bool = verbose
         self.print_interval: int = print_interval
         self.write_file: bool = write_file

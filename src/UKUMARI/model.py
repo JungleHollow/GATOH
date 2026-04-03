@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .agent_space import AgentSpace
+# from .agent_space import AgentSpace
 from .agents import Agent, AgentSet
 from .graphs import Graph, GraphSet
 from .logging import UKUMARILogger
@@ -28,11 +28,11 @@ class ABModel:
         self.graphs: GraphSet = GraphSet(self)
         self.agents: AgentSet = AgentSet(self)
 
-        self.agent_space: AgentSpace
-        if xlims is not None and ylims is not None:
-            self.agent_space = AgentSpace(self, xlims=xlims, ylims=ylims)
-        else:
-            self.agent_space = AgentSpace(self)
+        # self.agent_space: AgentSpace
+        # if xlims is not None and ylims is not None:
+        #     self.agent_space = AgentSpace(self, xlims=xlims, ylims=ylims)
+        # else:
+        #     self.agent_space = AgentSpace(self)
 
         self.logger: UKUMARILogger = UKUMARILogger(self)
         self.visualiser: ABVisualiser = ABVisualiser(self)
@@ -54,6 +54,22 @@ class ABModel:
                 new_graph: Graph = Graph(names[idx])
                 new_graph.load_graph(graph, names[idx])
                 self.graphs.add_graph(new_graph)
+
+    def generate_graphs(
+        self, agents: list[Any], names: list[str], method: str = "small-world"
+    ) -> None:
+        """
+        Randomly generates graphs for the given social hierarchy names using the specified method.
+        Hierarchies will only contain the agents whose names are passed to the function.
+
+        :param agents: A list of agent IDs or Agent objects which determines who is included in the hierarchies
+        :param names: The names of the social hierarchies for which graphs are being generated
+        :param method: The social network graph generation method to use. Options include: 'small-world', 'scale-free', 'full'. Defaults to 'small-world'
+        """
+        # TODO: Implement this function
+        raise NotImplementedError(
+            "Random graph generation function in ABModel not implemented yet."
+        )
 
     def add_agents(self, agents: list[Agent]) -> None:
         """
@@ -90,10 +106,10 @@ class ABModel:
         """
         while self.current_iteration < self.max_iterations:
             # First each agent looks at its neighbours to see how their opinion will evolve this iterations
-            for agent in self.agents:
+            for agent in self.agents.agents:
                 agent.previous_opinion = agent.opinion
                 collective_changes: list[float] = []
-                for hierarchy in self.graphs:
+                for hierarchy in self.graphs.graphs:
                     collective_changes.append(hierarchy.neighbour_influences(agent))
                 total_change: float = sum(collective_changes)
                 agent.opinion += total_change

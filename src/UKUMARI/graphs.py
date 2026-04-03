@@ -3,13 +3,15 @@ from __future__ import annotations
 import contextlib
 from collections.abc import Generator, Iterable
 from typing import Any
+from math import fabs
 
 import numpy as np
 import polars as pl
 import rustworkx as rx
 
 from .agents import Agent
-from .model import ABModel
+
+# from .model import ABModel
 
 
 class GraphNode:
@@ -163,11 +165,11 @@ class Graph:
         if weightings:
             for i in range(len(from_nodes)):
                 edge = GraphEdge(self.name, from_nodes[i], to_nodes[i], weightings[i])
-                graph_edges.append(edge)
+                graph_edges.append((from_nodes[i], to_nodes[i], edge))
         else:
             for i in range(len(from_nodes)):
                 edge = GraphEdge(self.name, from_nodes[i], to_nodes[i])
-                graph_edges.append(edge)
+                graph_edges.append((from_nodes[i], to_nodes[i], edge))
 
         self.graph.add_edges_from(graph_edges)
         self.update_edge_indices()
@@ -212,15 +214,15 @@ class Graph:
 
         return relationships_dict
 
-    def get_relationship(self, from_node: int, to_node: int) -> float:
+    def get_relationship(self, from_node: Agent, to_node: Agent) -> float:
         """
         Return a directed relationship from one node to another
 
         :param from_node: The node that the relationship originates from
         :param to_node: The node that the relationship points to
         """
-        relationship_dict: dict[int, Any] = self.graph.adj_direction(from_node, False)
-        graph_edge: GraphEdge = relationship_dict[to_node]
+        relationship_dict: dict[int, Any] = self.graph.adj_direction(self.get_agent_index(from_node), False)
+        graph_edge: GraphEdge = relationship_dict[self.get_agent_index(to_node)]
         return graph_edge.weighting
 
     def change_weights(self, node_1: int, node_2: int, value: float) -> None:
@@ -276,6 +278,13 @@ class Graph:
                 return True
         return False
 
+    def get_agent_index(self, agent: Agent) -> int:
+        """ """
+        for idx, node in enumerate(self.graph.nodes()):
+            if agent == node.agent:
+                return idx
+        return 0
+
     def neighbour_influences(self, agent: Agent) -> float:
         """
         Looks at all the neighbours for an Agent and uses the neighbours' own opinions plus the
@@ -285,14 +294,22 @@ class Graph:
         :param agent: The Agent for which the strength of opinion change is being determined
         """
         agent_hierarchy_weighting: float = agent.social_weightings[self.name]
-        neighbours: rx.NodeIndices = self.graph.neighbors(agent.id)
+        agent_index: int = self.get_agent_index(agent)
+        neighbour_indices: rx.NodeIndices = self.graph.neighbors(agent_index)
+
         final_change: float = 0.0
-        for neighbour in neighbours:
-            relationship_strength: float = self.get_relationship(agent.id, neighbour)
-            neighbour_node: GraphNode = self.get_node(neighbour)
+        for neighbour_index in neighbour_indices:
+            relationship_strength: float = self.get_relationship(
+                agent, self.get_node(neighbour_index).agent
+            )
+            neighbour_node: GraphNode = self.get_node(neighbour_index)
+
             opinion_change: float = (
-                neighbour_node.agent.opinion**relationship_strength
-            ) / (1 - agent_hierarchy_weighting)
+                (neighbour_node.agent.opinion / (1 - agent_hierarchy_weighting))*relationship_strength
+            )
+
+            # print(opinion_change)
+
             final_change += opinion_change
         return final_change
 
@@ -309,13 +326,14 @@ class GraphSet:
     and provide utilities using this collection
     """
 
-    def __init__(self, model: ABModel, graphs: Iterable[Graph] = []) -> None:
+    def __init__(self, model: Any, graphs: list[Graph] = []) -> None:
         """
         :param model: The parent ABModel object that this GraphSet is being attached to
         :param graphs: An optional iterable containing already created Graph objects
         """
-        self.parent_model: ABModel = model
-        self.graphs: pl.Series = pl.Series(values=graphs)
+        self.parent_model: Any = model
+        # self.graphs: pl.Series = pl.Series(values=graphs)
+        self.graphs: list[Graph] = graphs
 
     def add_graph(self, graph: Graph) -> None:
         """
@@ -323,7 +341,7 @@ class GraphSet:
 
         :param graph: The Graph object to add to the GraphSet
         """
-        self.graphs.append(pl.Series(values=graph))
+        self.graphs.append(graph)
 
     def graph_at_index(self, graph_index: int) -> Graph:
         """
@@ -378,11 +396,11 @@ class GraphSet:
                     significant_hierarchies.append(hierarchy.name)
         return significant_hierarchies
 
-    def __iter__(self) -> Generator[Any]:
-        """
-        An override of what looping over this object will output
-        """
-        return self.graphs.__iter__()
+    # def __iter__(self) -> Generator[Any]:
+    #     """
+    #     An override of what looping over this object will output
+    #     """
+    #     return self.graphs.__iter__()
 
     def __str__(self) -> str:
         """

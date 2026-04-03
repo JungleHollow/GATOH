@@ -8,7 +8,7 @@ from typing import Any, override
 import numpy as np
 import polars as pl
 
-from .model import ABModel
+# from .model import ABModel
 
 
 class Agent:
@@ -29,14 +29,11 @@ class Agent:
         """
 
         self.id: str  # Can be any arbitrary string, but likely will follow the form XXXX0000 allowing for up to 9999 agents per community
-        self.opinion: float = 0.0  # Range always [-1, 1]
         self.previous_opinion: float = (
             0.0  # Used to handle updating during model iterations
         )
         self.social_susceptibility: float = 0.5  # Range always [0, 1]
-        self.social_weightings: dict[str, float] = {}
         self.personality: str = "neutral"
-        self.position: tuple[int, int]
         self.radicalised: bool = False
 
         if args:
@@ -50,6 +47,10 @@ class Agent:
                         self.add_attribute("position", arg)
                     case str():
                         self.id = arg
+
+        self.social_weightings: dict[str, float]
+        self.opinion: float  # Range always [-1, 1]
+        self.position: tuple[int, int]
 
         if kwargs:
             for key, value in kwargs.items():
@@ -87,7 +88,7 @@ class Agent:
         if not overwrite and name in self.__dict__.keys():
             # Raise a warning but do not change any attributes or crash the model if overwriting an existing attribute without meaning to.
             warnings.warn(
-                "WARNING: Attempting to overwrite an existing Agent attribute without meaning to.",
+                f"WARNING: Attempting to overwrite an existing Agent attribute ({name}) without meaning to.",
                 category=UserWarning,
             )
         else:
@@ -190,19 +191,20 @@ class AgentSet:
     An ordered collection of Agent objects that maintains consistency for the Model
     """
 
-    def __init__(self, model: ABModel) -> None:
+    def __init__(self, model: Any) -> None:
         """
         :param model: The parent ABModel object that this AgentSet is being attached to
         """
         self.parent_model = model
-        self.agents: pl.Series = pl.Series()
+        # self.agents: pl.Series = pl.Series()
+        self.agents: list = []
         self.random: Random = Random()
 
-    def __iter__(self) -> Generator[Any]:
-        """
-        Override of what calling __iter__ on this object will return
-        """
-        return self.agents.__iter__()
+    # def __iter__(self) -> Generator[Any]:
+    #     """
+    #     Override of what calling __iter__ on this object will return
+    #     """
+    #     return self.agents.__iter__()
 
     def __len__(self) -> int:
         """
@@ -217,32 +219,37 @@ class AgentSet:
         """
         return self.agents.__contains__(agent)
 
-    def select(
-        self,
-        filter_func: Callable[[Agent], bool],
-        inplace: bool = False,
-        k: int = int(np.inf),
-    ) -> AgentSet:
-        """
-        Select a subset of Agent objects from the AgentSet.
+    # def select(
+    #     self,
+    #     filter_func: Callable[[Agent], bool],
+    #     inplace: bool = False,
+    #     k: int | None = None,
+    # ) -> AgentSet:
+    #     """
+    #     Select a subset of Agent objects from the AgentSet.
 
-        :param filter_func: a function used to filter the Agent objects
-        :param inplace: if True, modify the existing AgentSet, otherwise return a new AgentSet
-        :param k: the maximum number of Agent objects to include in the subset
-        :return: an AgentSet containing a filtered subset of Agents
-        """
-        set_mask = []
-        for agent in self.agents:
-            set_mask.append(filter_func(agent))
+    #     :param filter_func: a function used to filter the Agent objects
+    #     :param inplace: if True, modify the existing AgentSet, otherwise return a new AgentSet
+    #     :param k: the maximum number of Agent objects to include in the subset
+    #     :return: an AgentSet containing a filtered subset of Agents
+    #     """
+    #     if not k:
+    #         k = len(self.agents)
 
-        reduced_set: pl.Series = self.agents.filter(set_mask)
-        if k < len(reduced_set):
-            reduced_set = reduced_set.sample(n=k)
+    #     agents_df: pl.DataFrame = pl.DataFrame(self.agents, schema=["Agents"], orient="row")
 
-        if inplace:
-            self.agents = reduced_set
+    #     set_mask = []
+    #     for agent in agents_df:
+    #         set_mask.append(filter_func(agent))
 
-        return self
+    #     reduced_set: pl.DataFrame = agents_df.filter(set_mask)
+    #     if k < len(reduced_set):
+    #         reduced_set = reduced_set.sample(n=k)
+
+    #     if inplace:
+    #         self.agents = reduced_set.to
+
+    #     return self
 
     def __getitem__(self, item: int | slice) -> pl.Series | Any:
         """
@@ -262,7 +269,7 @@ class AgentSet:
                 self.agents[idx] = agent
                 self.agents[idx].id = idx
                 return 1
-        self.agents.append(pl.Series(agent))
+        self.agents.append(agent)
         self.agents[-1].id = len(self.agents) - 1
         return 1
 
