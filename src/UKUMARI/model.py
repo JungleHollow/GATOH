@@ -30,19 +30,20 @@ class ABModel:
         self.current_iteration: int = 0
         self.max_iterations: int = iterations
 
-    def add_graphs(self, graphs: list[Any], names: list[str]) -> None:
+    def add_graphs(self, graphs: list[Any], names: list[str], rw_params: list[tuple[float, float]]) -> None:
         """
         Add new Graphs to the Model's GraphSet.
 
         :param graphs: A list of Graph objects or filepaths to stored GraphML objects
         :param names: A list of the corresponding social hierarchy names to give to the Graphs
+        :param rw_params: The (mean, variance) to assign to the hierarchy when determining normal distributions for random walk dynamic relationships
         """
         if type(graphs[0]) is Graph:
             for graph in graphs:
                 self.graphs.add_graph(graph)
         else:
             for idx, graph in enumerate(graphs):
-                new_graph: Graph = Graph(names[idx])
+                new_graph: Graph = Graph(names[idx], rw_params[idx])
                 new_graph.load_graph(graph, names[idx])
                 self.graphs.add_graph(new_graph)
 
@@ -103,7 +104,12 @@ class ABModel:
                 for hierarchy in self.graphs.graphs:
                     collective_changes.append(hierarchy.neighbour_influences(agent))
                 total_change: float = sum(collective_changes)
-                agent.opinion += total_change
+
+                if (agent.opinion + total_change < -1.0) or (agent.opinion + total_change > 1.0):
+                    # Constrain the agent opinion to [-1, 1]
+                    continue
+                else:
+                    agent.opinion += total_change
             self.step()
             self.update()
             self.logger.iteration_print(

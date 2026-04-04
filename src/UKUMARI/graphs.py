@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import contextlib
 from collections.abc import Generator, Iterable
-from typing import Any
 from math import fabs
+from typing import Any
 
 import numpy as np
 import polars as pl
@@ -67,15 +67,17 @@ class Graph:
 
     # TODO: Add functionality for random graph generation
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, rw_params: tuple[float, float]) -> None:
         """
         :param name: The name of the social hierarchy that this Graph object will be representing
+        :param rw_params: The (mean, variance) of the normal distribution used for the dynamic relationships random walk
         """
         # Defined as DiGraph as it is common in social networks for relationships to be unidirectional or unbalanced
         self.graph: rx.PyDiGraph = rx.PyDiGraph()
         self.node_count: int = 0
         self.edge_count: int = 0
         self.name: str = name
+        self.rw_params: tuple[float, float] = rw_params
 
     def load_graph(self, path: str, name: str) -> None:
         """
@@ -219,7 +221,9 @@ class Graph:
         :param from_node: The node that the relationship originates from
         :param to_node: The node that the relationship points to
         """
-        relationship_dict: dict[int, Any] = self.graph.adj_direction(self.get_agent_index(from_node), False)
+        relationship_dict: dict[int, Any] = self.graph.adj_direction(
+            self.get_agent_index(from_node), False
+        )
         graph_edge: GraphEdge = relationship_dict[self.get_agent_index(to_node)]
         return graph_edge.weighting
 
@@ -302,12 +306,36 @@ class Graph:
             )
             neighbour_node: GraphNode = self.get_node(neighbour_index)
 
+            # TODO: Redefine the opinion change equation to something that makes more sense
             opinion_change: float = (
-                (neighbour_node.agent.opinion / (1 - agent_hierarchy_weighting))*relationship_strength
-            )
+                neighbour_node.agent.opinion / (1 - agent_hierarchy_weighting)
+            ) * relationship_strength
 
             final_change += opinion_change
         return final_change
+
+    def dynamic_relationships(self) -> None:
+        """
+        Uses the (mean, variance) passed at initialisation to draw random walk values by which each edge (relationship)
+        in the hierarchy will be shifted. Aims to simulate dynamic relationships between agents across timesteps.
+        """
+        for edge in self.graph.edges():
+            rw_value: float = np.random.normal(self.rw_params[0], self.rw_params[1])
+            if (edge.weighting + rw_value < -1.0) or (edge.weighting + rw_value > 1.0):
+                # Constrain the relationship weightings to [-1, 1]
+                continue
+            else:
+                edge.weighting += rw_value
+
+    def estimate_opinion_climate(self, agent: Agent) -> float:
+        """
+        Return the unique opinion climate perceived by the Agent within this social hierarchy.
+
+        :param agent: The Agent object which is estimating the opinion climate
+        :return: The Agent's perceived `aggregated opinion' of this whole social hierarchy
+        """
+        # TODO: Finish this function
+        return 0.0
 
     def __str__(self) -> str:
         """

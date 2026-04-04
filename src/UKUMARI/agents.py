@@ -144,10 +144,17 @@ class Agent:
 
         match self.__getattribute__("personality"):
             case "rational":
+                # This will likely mean that the agent is more disposed towards considering tangible benefits and their own
+                # opinions when determining radicalisation, rather than external influences
                 pass
             case "erratic":
+                # Radicalisation is influenced by personal opinion to some extent, but is largely stochastically determined
                 pass
             case "impulsive":
+                # The agent places very strong consideration on tangible benefits over anything else
+                pass
+            case "social":
+                # Radicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors
                 pass
             case None:
                 pass
