@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import contextlib
-from collections.abc import Generator, Iterable
-from math import fabs
+import warnings
+from collections.abc import Iterable
 from random import Random
 from typing import Any
 
@@ -11,7 +11,7 @@ import polars as pl
 import rustworkx as rx
 
 from .agents import Agent
-from .utils import connected_watts_strogatz_graph
+from .utils import beta_value_attenuation, connected_watts_strogatz_graph
 
 
 class GraphNode:
@@ -86,6 +86,34 @@ class Graph:
             "sbm_sizes": 10,
         }
 
+    def change_generation_params(self, **params) -> None:
+        """
+        Setter function which outlines the existing generation parameters used in generate_graph()
+        and allows the user to alter them.
+
+        :param p: The probability of edge rewiring (small-world) or edge creation (random).
+        :param m: The number of nearest neighbours that each node is connected to initially (scale-free).
+        :param: sbm_sizes: The size of generated blocks (blockmodel).
+        """
+        for key, value in params:
+            if (
+                key not in self.generation_params.keys()
+            ):  # Skip any invalid parameters which have been passed
+                warnings.warn(
+                    f"WARNING: Invalid graph generation parameter ({key}) specified when trying to modify parameter values.",
+                    category=UserWarning,
+                )
+                continue
+            elif (
+                type(self.generation_params[key]) is not type(value)
+            ):  # Skip altering any parameters which have been assigned invalid data types
+                warnings.warn(
+                    f"WARNING: Invalid data type detected for the value when modifying parameter {key}.",
+                    category=UserWarning,
+                )
+                continue
+            self.generation_params[key] = value
+
     def load_graph(self, path: str, name: str) -> None:
         """
         Loads a Graph object stored in the GraphML format from the given path.
@@ -107,21 +135,37 @@ class Graph:
         """
         rx.write_graphml(self.graph, path)
 
-    def get_node(self, node_index: int) -> GraphNode:
+    def get_node(self, node_index: int) -> Any:
         """
-        A getter function to access GraphNode objects
+        A getter function to access GraphNode objects.
 
-        :param node_index: The index of the node to access
+        :param node_index: The index of the node to access.
+        :return: The GraphNode object if the index was valid, or None otherwise.
         """
-        return self.graph.nodes()[node_index]
+        try:
+            return self.graph.nodes()[node_index]
+        except IndexError:
+            warnings.warn(
+                f"WARNING: Node with index {node_index} is out of bounds for graph {self.name} with {self.node_count} total nodes.",
+                category=RuntimeWarning,
+            )
+            return None
 
-    def get_edge(self, edge_index: int) -> GraphEdge:
+    def get_edge(self, edge_index: int) -> Any:
         """
-        A getter function to access GraphEdge objects
+        A getter function to access GraphEdge objects.
 
-        :param edge_index: The index of the edge to access
+        :param edge_index: The index of the edge to access.
+        :return: The GraphEdge object if the index was valid, or None otherwise.
         """
-        return self.graph.edges()[edge_index]
+        try:
+            return self.graph.edges()[edge_index]
+        except IndexError:
+            warnings.warn(
+                f"WARNING: Edge with index {edge_index} is out of bounds for graph {self.name} with {self.edge_count} total edges.",
+                category=RuntimeWarning,
+            )
+            return None
 
     def update_node_indices(self) -> None:
         """
@@ -187,7 +231,6 @@ class Graph:
 
         :param agents: The subset of Agents in the base model that are being used as the nodes for this graph.
         :param method: The random generation method to use. Possible choices include: 'small-world', 'scale-free', 'random', 'blockmodel'; Defaults to 'small-world'.
-        :return: The number of nodes present in the generated graph.
         """
         if len(agents) <= 0:
             raise ValueError(
@@ -271,17 +314,16 @@ class Graph:
                 edge[0], edge[1], generated_value
             )  # Update the edge weighting in the graph
 
-    def relationship_exists(self, node_1: int, node_2: int) -> int | None:
+    def relationship_exists(self, from_node: int, to_node: int) -> int | None:
         """
-        Checks for the existence of a relationship (weighted edge) between two Agents (nodes)
+        Checks for the existence of a relationship (weighted edge) between two Agents (nodes).
 
-        :param node_1: the node index of Agent 1
-        :param node_2: the node index of Agent 2
+        :param from_node: the node index of the parent node.
+        :param from_node: the node index of the child node.
+        :return: The index of the edge if the relationship exists, or None otherwise
         """
         for edge in self.graph.edges():
-            if (edge.from_node == node_1 and edge.to_node == node_2) or (
-                edge.from_node == node_2 and edge.to_node == node_1
-            ):
+            if edge.from_node == from_node and edge.to_node == to_node:
                 return edge.index
         return None
 
@@ -289,10 +331,11 @@ class Graph:
         self, node_1: int, node_2: int
     ) -> dict[tuple[int, int], float] | None:
         """
-        Return a dictionary with the bidirectional edge weightings between two nodes if they exist
+        Retrieves and reports the bidirectional relationship weightings between two nodes in the Graph.
 
-        :param node_1: the node index of Agent 1
-        :param node_2: the node index of Agent 2
+        :param node_1: the node index of Agent 1.
+        :param node_2: the node index of Agent 2.
+        :return: Dictionary with the bidirectional edge weightings between two nodes (if they exist).
         """
         if not self.relationship_exists(node_1, node_2):
             return None
@@ -313,10 +356,11 @@ class Graph:
 
     def get_relationship(self, from_node: Agent, to_node: Agent) -> float:
         """
-        Return a directed relationship from one node to another
+        Return a directed relationship from one node to another.
 
-        :param from_node: The node that the relationship originates from
-        :param to_node: The node that the relationship points to
+        :param from_node: The node that the relationship originates from.
+        :param to_node: The node that the relationship points to.
+        :return: The weighting of the directed relationship (from_node -> to_node).
         """
         relationship_dict: dict[int, Any] = self.graph.adj_direction(
             self.get_agent_index(from_node), False
@@ -358,19 +402,29 @@ class Graph:
             self.remove_edge(edge[0], edge[1])
         # No need to update indices, as rustworkx will automatically add new nodes/edges into the largest empty index
 
-    def remove_edge(self, node_1: int, node_2: int) -> None:
+    def remove_edge(self, from_node: int, to_node: int) -> None:
         """
         Removes a single edge from the graph.
+        Throws a warning if the edge did not exist in the first place.
 
-        :param node_1: the from_node in the edge
-        :param node_2: the to_node in the edge
+        :param from_node: the parent node in the edge.
+        :param to_node: the child node in the edge.
         """
-        self.graph.remove_edge(node_1, node_2)
+        edge_exists: int | None = self.relationship_exists(from_node, to_node)
+        if edge_exists:
+            self.graph.remove_edge(from_node, to_node)
+        else:
+            warnings.warn(
+                f"WARNING: Attempted to remove edge ({from_node} -> {to_node}) which does not exist in the graph.",
+                category=UserWarning,
+            )
 
     def agent_in_graph(self, agent: Agent) -> bool:
         """
-        A simple function that checks wether an Agent exists within a Graph
-        :param agent: the Agent whose existence in the Graph is being checked for
+        A simple function that checks wether an Agent exists within a Graph.
+
+        :param agent: the Agent whose existence in the Graph is being checked for.
+        :return: A boolean indicating if the Agent exists in the Graph.
         """
         for node in self.graph.nodes():
             if agent == node.agent:
@@ -378,19 +432,40 @@ class Graph:
         return False
 
     def get_agent_index(self, agent: Agent) -> int:
-        """ """
+        """
+        Searches for the node index in the Graph which corresponds to the input Agent object.
+
+        :param agent: The Agent object whose index is being searched for.
+        :return: The Agent's node index within the social hierarchy Graph.
+        """
         for idx, node in enumerate(self.graph.nodes()):
             if agent == node.agent:
                 return idx
         return 0
 
+    def get_neighbours(self, agent: Agent) -> list[GraphNode]:
+        """
+        Finds all the nodes in the graph with direct relationships to the specified Agent.
+
+        :param agent: The Agent for which the neighbours are being examined.
+        :return: A list of the GraphNode objects belonging to the direct neighbours of the agent.
+        """
+        neighbour_nodes: list[GraphNode] = []
+        agent_index: int = self.get_agent_index(agent)
+        neighbour_indices: rx.rustworkx.NodeIndices = self.graph.neighbors(agent_index)
+        for index in neighbour_indices:
+            neighbour_node: GraphNode = self.get_node(index)
+            neighbour_nodes.append(neighbour_node)
+        return neighbour_nodes
+
     def neighbour_influences(self, agent: Agent) -> float:
         """
         Looks at all the neighbours for an Agent and uses the neighbours' own opinions plus the
         weight of the relationship between Agents to return a final value by which the given
-        Agent's opinion value will increment or decrement
+        Agent's opinion value will increment or decrement.
 
-        :param agent: The Agent for which the strength of opinion change is being determined
+        :param agent: The Agent for which the strength of opinion change is being determined.
+        :return: The final change in the Agent's opinion caused by their neighbours in this hierarchy.
         """
         agent_hierarchy_weighting: float = agent.social_weightings[self.name]
         agent_index: int = self.get_agent_index(agent)
@@ -403,12 +478,17 @@ class Graph:
             )
             neighbour_node: GraphNode = self.get_node(neighbour_index)
 
-            # TODO: Redefine the opinion change equation to something that makes more sense
-            opinion_change: float = (
-                neighbour_node.agent.opinion / (1 - agent_hierarchy_weighting)
-            ) * relationship_strength
+            average_opinion: float = (
+                agent.opinion + neighbour_node.agent.opinion
+            ) / 2.0  # Simple average of own and neighbour opinions
+            distance_from_avg: float = (
+                average_opinion - agent.opinion
+            )  # The delta that must be applied to own opinion to reach the average
+            weighted_delta: float = (
+                distance_from_avg * agent_hierarchy_weighting * relationship_strength
+            )  # The final opinion change
 
-            final_change += opinion_change
+            final_change += weighted_delta
         return final_change
 
     def dynamic_relationships(self) -> None:
@@ -428,15 +508,46 @@ class Graph:
         """
         Return the unique opinion climate perceived by the Agent within this social hierarchy.
 
-        :param agent: The Agent object which is estimating the opinion climate
-        :return: The Agent's perceived `aggregated opinion' of this whole social hierarchy
+        :param agent: The Agent object which is estimating the opinion climate.
+        :return: The Agent's perceived `aggregated opinion' of this whole social hierarchy.
         """
         # TODO: Finish this function
-        return 0.0
+        observed_opinions: list[
+            float
+        ] = []  # The observed opinions of the agent's direct neighbours and the relevant observed opinions of indirect neighbours
+
+        direct_neighbours: list[GraphNode] = self.get_neighbours(agent)
+        for direct_neighbour in direct_neighbours:
+            observed_opinion: float = direct_neighbour.agent.opinion
+            observed_opinions.append(observed_opinion)
+
+        for node in self.graph.nodes():
+            if node.agent == agent or node in direct_neighbours:
+                # Only look at indirect neighbours
+                continue
+
+            raw_observed_opinion: float = node.agent.opinion
+            attenuated_opinion: float = beta_value_attenuation(raw_observed_opinion)
+
+            if (
+                -0.1 > attenuated_opinion > 0.1
+            ):  # Only take values which are still relevant after attenuation (i.e. not in [-0.1, 0.1])
+                observed_opinions.append(attenuated_opinion)
+
+        summed_opinions: float = sum(
+            observed_opinions
+        )  # Sum all of the observed opinions
+        opinion_climate: float = summed_opinions / float(
+            len(observed_opinions)
+        )  # Find the average of the aggregated, relevant opinions
+
+        return opinion_climate
 
     def __str__(self) -> str:
         """
-        An override of the Graph string representation when calling print()
+        An override of the Graph string representation when calling print().
+
+        :return: A string outlining the name and graph properties of the specific social hierarchy.
         """
         return f"Graph representing the {self.name} social hierarchy with {self.node_count} nodes and {self.edge_count} edges"
 
@@ -444,38 +555,46 @@ class Graph:
 class GraphSet:
     """
     A class that will collect all of the different social hierarchy graphs in the same structure
-    and provide utilities using this collection
+    and provide utilities using this collection.
     """
 
     def __init__(self, model: Any, graphs: list[Graph] = []) -> None:
         """
-        :param model: The parent ABModel object that this GraphSet is being attached to
-        :param graphs: An optional iterable containing already created Graph objects
+        :param model: The parent ABModel object that this GraphSet is being attached to.
+        :param graphs: An optional iterable containing already created Graph objects.
         """
         self.parent_model: Any = model
         self.graphs: list[Graph] = graphs
 
     def add_graph(self, graph: Graph) -> None:
         """
-        A setter function to add a new Graph object to the GraphSet
+        A setter function to add a new Graph object to the GraphSet.
 
-        :param graph: The Graph object to add to the GraphSet
+        :param graph: The Graph object to add to the GraphSet.
         """
         self.graphs.append(graph)
 
-    def graph_at_index(self, graph_index: int) -> Graph:
+    def graph_at_index(self, graph_index: int) -> Graph | None:
         """
-        A getter function to return a Graph object stored at the given index in the GraphSet
+        A getter function to return a Graph object stored at the given index in the GraphSet.
 
-        :param graph_index: The index of the Graph to return
+        :param graph_index: The index of the Graph to return.
+        :return: The Graph object to return
         """
-        return self.graphs[graph_index]
+        try:
+            return self.graphs[graph_index]
+        except IndexError:
+            print(
+                f"Index {graph_index} is out of bounds for the GraphSet. Only {len(self.graphs)} social hierarchies have been created."
+            )
+            return None
 
     def get_hierarchy(self, hierarchy: str) -> Graph | None:
         """
-        A getter function to return a Graph object with the given hierarchy name
+        A getter function to return a Graph object with the given hierarchy name.
 
-        :param hierarchy: The name of the social hierarchy represented by the Graph to return
+        :param hierarchy: The name of the social hierarchy represented by the Graph to return.
+        :return: The Graph object of the specified hierarchy, or None if no matching hierarchy was found.
         """
         for graph in self.graphs:
             if graph.name == hierarchy:
@@ -486,7 +605,10 @@ class GraphSet:
 
     def list_hierarchies(self, print_out: bool = False) -> list[str]:
         """
-        A utility function that iterates over the GraphSet and prints out the names of all the social hierarchies that are present
+        A utility function that iterates over the GraphSet and prints out the names of all the social hierarchies that are present.
+
+        :param print_out: A boolean which flags if the listed hierarchies should be printed to the terminal.
+        :return: A list of the names of all social hierarchies present in the GraphSet.
         """
         social_hierarchies: list[str] = []
         for graph in self.graphs:
@@ -504,9 +626,11 @@ class GraphSet:
     ) -> Iterable[str]:
         """
         A utility function that iterates over the GraphSet and records for which social hierarchies a specific Agent's weighting
-        of those hierarchies is above a certain threshold value
-        :param agent: the Agent for which to check the AgentSet for
-        :param threshold: the absolute threshold value over which the Agent's opinion is considered significant
+        of those hierarchies is above a certain threshold value.
+        :param agent: the Agent for which to check the AgentSet for.
+        :param threshold: the absolute threshold value over which the Agent's opinion is considered significant.
+
+        :return: An iterable containing the names of the hierarchies for which the agent's weighting is above the threshold.
         """
         significant_hierarchies: Iterable[str] = []
         for hierarchy in self.graphs:
@@ -518,6 +642,8 @@ class GraphSet:
 
     def __str__(self) -> str:
         """
-        An override of what calling `print()` on this object will output
+        An override of what calling `print()` on this object will output.
+
+        :return: A string listing the names of the hierarchies which are contained in the GraphSet.
         """
         return f"GraphSet containing the graphs of the following social hierarchies:\n\n{self.list_hierarchies()}"

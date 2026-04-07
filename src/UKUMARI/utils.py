@@ -5,10 +5,14 @@ This utils file should cover any miscellaneous functions that facilitate running
 from __future__ import annotations
 
 import random
+from typing import Any
 
 import numpy as np
 import rustworkx as rx
 import rustworkx.generators as rx_gen  # Workaround for unrecognised module import in base rustworkx
+from scipy.stats import beta
+
+# ========== Graph utils ========== #
 
 
 def pygraph_to_pydigraph(input_graph: rx.PyGraph) -> rx.PyDiGraph:
@@ -114,3 +118,54 @@ def connected_watts_strogatz_graph(
     raise RuntimeError(
         "Exceeded maximum number of tries generating a connected Watts-Strogatz small-world graph..."
     )
+
+
+# ========== Math utils ========== #
+
+
+def beta_value_attenuation(input_value: float, a: float = 0.5, b: float = 0.5) -> Any:
+    """
+    Takes an input value and rescales it using a beta distribution. This function is intended to be used exclusively
+    for the attenuation of indirect neighbouring opinions when an agent is estimating an opinion climate in a hierarchy.
+
+    a and b should generally be equal to each other and less than 1.0 to approximate a binomial distribution whose PDF still has
+    non-zero values in the range (0, 1). This is to enable modeling of the tendency for opinions to become polarised over time;
+    with this distribution meaning that agents will place much higher importance on extreme observed opinions and less importance
+    on moderate opinions.
+
+    :param input_value: The value to be attenuated. Should always be in the range [-1, 1]
+    :param a: The alpha parameter for the beta distribution.
+    :param b: The beta parameter for the beta distribution.
+    :return: The attenuated input value.
+    """
+    original_opinion: float = input_value
+
+    # Shift the range of input_value from [-1, 1] to [0, 1]
+    input_value = (input_value + 1.0) / 2.0
+
+    # Constrain to (0, 1) to prevent the beta pdf from reaching infinity
+    if input_value == 0.0:
+        input_value = 0.001
+    elif input_value == 1.0:
+        input_value = 0.999
+
+    # Define the beta function and find the upper bound of its PDF
+    beta_func = beta(a, b)
+    upper_bound: float = beta_func.pdf(0.001)
+
+    # Calculate the beta PDF of the input value
+    beta_value: float = beta_func.pdf(input_value)
+
+    # Normalise the beta value using the upper bound of the PDF
+    attenuation_factor: float = beta_value / upper_bound
+
+    # Apply the attenuation factor to the original observed opinion
+    attenuated_opinion: float = original_opinion * attenuation_factor
+
+    # Check if range has to be constrained (float operations)
+    if attenuated_opinion < -1.0:
+        attenuated_opinion = -1.0
+    elif attenuated_opinion > 1.0:
+        attenuated_opinion = 1.0
+
+    return attenuated_opinion
