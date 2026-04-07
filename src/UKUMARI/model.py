@@ -81,6 +81,7 @@ class ABModel:
         :param attributes: A dictionary containing (attribute: tuple) pairs for Agent attribute setting
         :param number: Number of agents to be randomly created.
         """
+        # TODO: Reimplement this function (will be done similar to generate_graphs, where main function is in agents.py and this is a wrapper...)
         for i in range(number):
             new_agent: Agent = Agent()
             for key, value in attributes.items():

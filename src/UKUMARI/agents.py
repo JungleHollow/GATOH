@@ -26,6 +26,7 @@ class Agent:
         :param args: positional arguments that can be passed to each Agent
         :param kwargs: keyword arguments that can be passed to each Agent
         """
+        # TODO: Implement random Agent object generation functions
 
         self.id: str  # Can be any arbitrary string, but likely will follow the form XXXX0000 allowing for up to 9999 agents per community
         self.index: int  # The Agent's index within the AgentSet it belongs in
@@ -123,12 +124,14 @@ class Agent:
         """
         Step the individual agent object
         """
+        # TODO: Implement this function
         pass
 
     def update_state(self):
         """
         Updates the internal state of the agent after the model has stepped.
         """
+        # TODO: Implement this function
         pass
 
     def radicalisation(self, neighbours: Iterable[Agent]) -> bool:
@@ -164,6 +167,7 @@ class Agent:
         """
         Experimental function that aims to model the constantly evolving relationships between Agents over time
         """
+        # TODO: Implement this function (may already be handled at the network level in graphs.py?)
         raise NotImplementedError(
             "Agent relationship evolution has not been implemented as a feature yet."
         )
@@ -172,6 +176,7 @@ class Agent:
         """
         Experimental function that aims to model the ways in which Agent behaviours change according to major random life events over time
         """
+        # TODO: Implement this function
         raise NotImplementedError(
             "Agent life events have not been implemented as a feature yet."
         )
@@ -270,11 +275,11 @@ class AgentSet:
         """
         if 0 < index < len(self.agents):
             left_half: list[Agent] = deepcopy(self.agents[:index])
-            right_half: list[Agent] = deepcopy(self.agents[index + 1:])
-            
+            right_half: list[Agent] = deepcopy(self.agents[index + 1 :])
+
             self.agents = deepcopy(left_half) + deepcopy(right_half)
             del left_half, right_half
-            
+
             self.update_indices()
             return True
         return False
@@ -295,7 +300,9 @@ class AgentSet:
 
                 self.update_indices()
                 return True
-        raise KeyError(f"Tried to remove an Agent with id {agent.id} that doesn't exist in the AgentSet")
+        raise KeyError(
+            f"Tried to remove an Agent with id {agent.id} that doesn't exist in the AgentSet"
+        )
 
     def remove_index(self, index: int) -> bool:
         """
@@ -305,14 +312,16 @@ class AgentSet:
         """
         if 0 < index < len(self.agents):
             left_half: list[Agent] = deepcopy(self.agents[:index])
-            right_half: list[Agent] = deepcopy(self.agents[index + 1:])
-            
+            right_half: list[Agent] = deepcopy(self.agents[index + 1 :])
+
             self.agents = deepcopy(left_half) + deepcopy(right_half)
             del left_half, right_half
 
             self.update_indices()
             return True
-        raise IndexError(f"Tried to remove an Agent at out of bounds index {index} from the AgentSet")
+        raise IndexError(
+            f"Tried to remove an Agent at out of bounds index {index} from the AgentSet"
+        )
 
     def sample(self, n: int) -> list[Agent]:
         """

@@ -511,7 +511,6 @@ class Graph:
         :param agent: The Agent object which is estimating the opinion climate.
         :return: The Agent's perceived `aggregated opinion' of this whole social hierarchy.
         """
-        # TODO: Finish this function
         observed_opinions: list[
             float
         ] = []  # The observed opinions of the agent's direct neighbours and the relevant observed opinions of indirect neighbours
