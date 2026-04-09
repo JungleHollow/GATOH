@@ -529,9 +529,11 @@ class Graph:
             attenuated_opinion: float = beta_value_attenuation(raw_observed_opinion)
 
             if (
-                -0.1 > attenuated_opinion > 0.1
-            ):  # Only take values which are still relevant after attenuation (i.e. not in [-0.1, 0.1])
-                observed_opinions.append(attenuated_opinion)
+                -0.5 > attenuated_opinion > 0.5
+            ):  # Only take values which are still relevant after attenuation (i.e. values stronger than an absolute 0.5 after attenuation)
+                observed_opinions.append(
+                    raw_observed_opinion
+                )  # NOT the attenuated opinion, as that would funamentally alter the nature of the opinion climate
 
         summed_opinions: float = sum(
             observed_opinions

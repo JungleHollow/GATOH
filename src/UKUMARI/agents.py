@@ -163,6 +163,16 @@ class Agent:
                 pass
         return False  # TODO: Finish this method (returning False to suppress typing warnings)
 
+    def evolve_hierarchies(self):
+        """
+        Experimental function that aims to model the constantly evolving 'intrinsic value' that Agents place on
+        the social hierarchies that they belong in over time.
+        """
+        # TODO: Implement this function
+        raise NotImplementedError(
+            "Dynamic agent hierarchy weighting has not been implemented yet."
+        )
+
     def evolve_relationships(self):
         """
         Experimental function that aims to model the constantly evolving relationships between Agents over time

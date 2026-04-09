@@ -123,10 +123,13 @@ def connected_watts_strogatz_graph(
 # ========== Math utils ========== #
 
 
-def beta_value_attenuation(input_value: float, a: float = 0.5, b: float = 0.5) -> Any:
+def beta_value_attenuation(input_value: float, a: float = 0.9, b: float = 0.9) -> Any:
     """
     Takes an input value and rescales it using a beta distribution. This function is intended to be used exclusively
     for the attenuation of indirect neighbouring opinions when an agent is estimating an opinion climate in a hierarchy.
+
+    Importantly, the output values are not used for constructing the opinion climate, instead they serve as a threshold
+    used to decide if the original opinion values are included or not.
 
     a and b should generally be equal to each other and less than 1.0 to approximate a binomial distribution whose PDF still has
     non-zero values in the range (0, 1). This is to enable modeling of the tendency for opinions to become polarised over time;
@@ -138,11 +141,10 @@ def beta_value_attenuation(input_value: float, a: float = 0.5, b: float = 0.5) -
     :param b: The beta parameter for the beta distribution.
     :return: The attenuated input value.
     """
-    # TODO: Change the from an "attenuation" to a simple value drawn from a beta distribution; possibly change the alpha and beta parameters for a less extreme curve
     original_opinion: float = input_value
 
     # Shift the range of input_value from [-1, 1] to [0, 1]
-    input_value = (input_value + 1.0) / 2.0
+    input_value = (input_value / 2.0) + 0.5
 
     # Constrain to (0, 1) to prevent the beta pdf from reaching infinity
     if input_value == 0.0:
@@ -160,7 +162,7 @@ def beta_value_attenuation(input_value: float, a: float = 0.5, b: float = 0.5) -
     # Normalise the beta value using the upper bound of the PDF
     attenuation_factor: float = beta_value / upper_bound
 
-    # Apply the attenuation factor to the original observed opinion
+    # Rescale the original value by the attenuation factor
     attenuated_opinion: float = original_opinion * attenuation_factor
 
     # Check if range has to be constrained (float operations)

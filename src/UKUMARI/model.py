@@ -12,12 +12,10 @@ class ABModel:
     """
     An agent-based model class that is capable of handling multiple layers that affect agent behaviour.
     """
+
     # TODO: Add functions to calculate network-level informational statistics (i.e. layer interdependence, radicalisation log odds, etc...)
 
-    def __init__(
-        self,
-        iterations: int = 100
-    ) -> None:
+    def __init__(self, iterations: int = 100) -> None:
         """
         :param iterations: The number of iterations that the model will run for
         :param xlims: A (lower, upper) tuple representing the limits of the model's x-axis
@@ -31,7 +29,9 @@ class ABModel:
         self.current_iteration: int = 0
         self.max_iterations: int = iterations
 
-    def add_graphs(self, graphs: list[Any], names: list[str], rw_params: list[tuple[float, float]]) -> None:
+    def add_graphs(
+        self, graphs: list[Any], names: list[str], rw_params: list[tuple[float, float]]
+    ) -> None:
         """
         Add new Graphs to the Model's GraphSet.
 
@@ -107,7 +107,9 @@ class ABModel:
                     collective_changes.append(hierarchy.neighbour_influences(agent))
                 total_change: float = sum(collective_changes)
 
-                if (agent.opinion + total_change < -1.0) or (agent.opinion + total_change > 1.0):
+                if (agent.opinion + total_change < -1.0) or (
+                    agent.opinion + total_change > 1.0
+                ):
                     # Constrain the agent opinion to [-1, 1]
                     continue
                 else:
@@ -133,3 +135,51 @@ class ABModel:
         """
         # TODO: Implement this function
         pass
+
+    def calculate_navigability(
+        self, from_node: tuple[int, int], to_node: tuple[int, int]
+    ) -> float:
+        r"""
+        Calculate the difficulty of navigating from an arbitrary node :math:`s` in some layer :math:`a` to another arbitrary
+        node :math:`t` in some layer :math:`b`, where :math:`a` and :math:`b` may or may not be the same layer.
+
+        The formulae for the navigatability are defined by:
+
+        .. math::
+
+            S(s \rightarrow t) = -\log_{2}\sum_{\{p(s,t)\}} P[p(s,t)]
+
+            P[p(s,t)] = \frac{1}{k_{s}} \prod_{j \in p(s,t)} \frac{1}{k_{j} - 1}
+
+        :param from_node: A tuple containing (agent_index, graph_index) for the starting node.
+        :param to_node: A tuple containing (agent_index, graph_index) for the end node.
+        :return: The navigability value for the specified path.
+        """
+        # TODO: Implement this function
+        raise NotImplementedError(
+            "Navigability measure calculation is not yet implemented..."
+        )
+        return 0.0
+
+    def calculate_interdependence(self, layer: int) -> float:
+        r"""
+        Calculate the layer interdependence; a measure of how much impact a specific layer has in the overall
+        social network.
+
+        The formula for layer interdependence is defined as:
+
+        .. math::
+
+            \lambda^{a} = \frac{\sum_{i}\sum_{i \neq j}\Psi^{a}_{ij}}{\sum_{i}\sum_{i \neq j}\Psi_{ij}}
+
+        where :math:`\Psi^{a}_{ij}` describes the number of shortest paths between nodes :math:`i` and :math:`j`
+        using two or more layers, where at least one of the layers passed through is :math:`a`.
+
+        :param layer: The index of the layer of interest.
+        :return: The layer interdependence measure for the layer of interest.
+        """
+        # TODO: Implement this function
+        raise NotImplementedError(
+            "Layer interdependence calculation is not yet implemented..."
+        )
+        return 0.0
