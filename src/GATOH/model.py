@@ -38,7 +38,7 @@ class ABModel:
         self.graphs: GraphSet = GraphSet(self)
         self.agents: AgentSet = AgentSet(self)
 
-        self.logger: GATOHLogger = GATOHLogger(self, iterations)
+        self.logger: GATOHLogger = GATOHLogger(self, iterations, hierarchy_names)
         self.visualiser: ABVisualiser = ABVisualiser(self)
         self.current_iteration: int = 0
         self.max_iterations: int = iterations
@@ -141,6 +141,12 @@ class ABModel:
         Handles the main model iteration loop
         """
         while self.current_iteration < self.max_iterations:
+            # Initialise the logger state for the current iteration
+            if self.current_iteration == 0:
+                self.logger.new_iteration(init=True)
+            else:
+                self.logger.new_iteration()
+
             # First each agent looks at its neighbours to see how their opinion will evolve this iterations
             for agent in self.agents:
                 agent.previous_opinion = agent.opinion
@@ -158,13 +164,18 @@ class ABModel:
                     agent.opinion += total_change
 
                 # After the opinion change, determine if the agent has become radicalised
-                was_radicalised: bool = agent.radicalisation(collective_changes, list(self.hierarchy_information.keys()), self.radicalisation_threshold)
+                was_radicalised: bool = agent.radicalisation(
+                    collective_changes,
+                    list(self.hierarchy_information.keys()),
+                    self.radicalisation_threshold,
+                )
 
-                if was_radicalised:
-                    self.logger.variables.radicalised_agents[self.current_iteration] += 1
+                # Update the radicalisation count in the logger as needed
+                self.logger.variables.increment_radicalised(was_radicalised)
             self.step()
             self.update()
-            self.logger.iteration()  # Store all relevant model variables and states for future analysis
+
+            self.logger_iteration()  # Handle the logger's iteration() calculations and call its method
             self.logger.iteration_print(
                 self.current_iteration
             )  # Does nothing if not at the print interval
@@ -188,6 +199,7 @@ class ABModel:
         """
         for agent in self.agents:
             silenced: dict[str, bool] = {}
+            was_silenced: bool = False
             negation: bool = False
             for graph in self.graphs:
                 est_opinion_climate: float = graph.estimate_opinion_climate(agent)
@@ -195,11 +207,34 @@ class ABModel:
                     graph.name, est_opinion_climate
                 )
                 silenced[graph.name] = is_silenced[0]
+
+                if is_silenced[0]:
+                    was_silenced = True
+
                 if not negation:
                     negation = agent.opinion_negation(
                         graph.name, is_silenced[1], self.negation_threshold
                     )
+
+            # Update the logger variables as needed
+            self.logger.variables.increment_silenced(was_silenced)
+            self.logger.variables.increment_negated(negation)
+
+            # Update the Agent object
             agent.update(silenced, negation)
+
+    def logger_iteration(self) -> None:
+        """
+        Calculate any relevant aggregate statistics and then pass these to the logger's iteration() function to be stored.
+
+        Statistics calculated currently:
+            1. Aggregate network opinion
+            2. Network radicalisation log odds
+            3. Layer navigability for each hierarchy
+            4. Layer interdependence for each hierarchy
+        """
+        # TODO: Implement this function
+        pass
 
     def calculate_navigability(
         self, from_node: tuple[int, int], to_node: tuple[int, int]

@@ -5,9 +5,9 @@ from copy import deepcopy
 
 import rustworkx as rx
 
-import src.UKUMARI.agents as agt
-import src.UKUMARI.graphs as gr
-import src.UKUMARI.model as md
+import src.GATOH.agents as agt
+import src.GATOH.graphs as gr
+import src.GATOH.model as md
 
 rd.seed(1234)
 N_INDIVIDUALS: int = 10
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         (0, 0.3),
         (0, 0.1),
         (0, 0.05),
-        (0, 0.6)
+        (0, 0.6),
     ]
 
     model = md.ABModel(100)

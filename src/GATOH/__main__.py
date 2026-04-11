@@ -6,22 +6,22 @@ from .graphs import Graph as Graph
 from .graphs import GraphEdge as GraphEdge
 from .graphs import GraphNode as GraphNode
 from .graphs import GraphSet as GraphSet
-from .logging import UKUMARILogger as UKUMARILogger
+from .logging import GATOHLogger as GATOHLogger
 from .model import ABModel as ABModel
 
 __version__ = "0.1"
 __authors__ = "Manuel Munizaga Sepulveda"
 __license__ = "MIT License"
 __year__ = "2025"
-__repo__ = "https://www.github.com/JungleHollow/UKUMARI"
+__repo__ = "https://www.github.com/JungleHollow/GATOH"
 
 ###
 # This may be turned into a CLI entry point or extended context manager in the future...
 ###
 
 parser = argparse.ArgumentParser(
-    prog="UKUMARI",
+    prog="GATOH",
     usage="",
-    description="An open-source Python package to model social unrest in small yet complex communities",
+    description="Generalised Agent Transformations of Opinions in Hierarchies -- An open-source Python package to model social unrest in small yet complex communities",
     epilog="",
 )

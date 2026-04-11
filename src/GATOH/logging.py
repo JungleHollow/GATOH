@@ -53,6 +53,63 @@ class LoggerVariables:
                 0.0 for _ in range(self.max_iterations)
             ]
 
+    def increment_radicalised(self, flag: bool) -> None:
+        """
+        A simple setter function that checks the input flag and updates the radicalisation count accordingly.
+
+        :param flag: A boolean flag indicating if radicalisation ocurred.
+        """
+        if flag:
+            self.radicalised_agents[self.current_iteration - 1] += 1
+
+    def increment_silenced(self, flag: bool) -> None:
+        """
+        A simple setter function that checks the input flag and updates the opinion silencing events count accordingly.
+
+        :param flag: A boolean flag indicating if opinion silencing ocurred.
+        """
+        if flag:
+            self.silenced_agents[self.current_iteration - 1] += 1
+
+    def increment_negated(self, flag: bool) -> None:
+        """
+        A simple setter function that checks the input flag and updates the opinion negation events count accordingly.
+
+        :param flag: A boolean flag indicating if opinion negation ocurred.
+        """
+        if flag:
+            self.negated_agents[self.current_iteration - 1] += 1
+
+    def new_iteration(self, init: bool = False) -> None:
+        """
+        Increment the current_iteration counter and then copy all the values from the previous iteration to their respective list indexes for the new iteration.
+
+        :param init: A boolean indicating if the call is being made during the first model iteration (no previous values to copy)
+        """
+        self.current_iteration += 1
+
+        if init:
+            return None
+
+        # Variables defined to reduce repetition below
+        t_now: int = self.current_iteration - 1
+        t_last: int = self.current_iteration - 2
+        # -1 and -2 indexes due to indexing logic for lists...
+
+        self.aggregate_opinions[t_now] = self.aggregate_opinions[t_last]
+        self.radicalised_agents[t_now] = self.radicalised_agents[t_last]
+        self.silenced_agents[t_now] = self.silenced_agents[t_last]
+        self.negated_agents[t_now] = self.negated_agents[t_last]
+        self.radicalisation_logodds[t_now] = self.radicalisation_logodds[t_last]
+
+        for hierarchy in self.layer_interdependences.keys():
+            self.layer_interdependences[hierarchy][t_now] = self.layer_interdependences[
+                hierarchy
+            ][t_last]
+            self.layer_navigabilities[hierarchy][t_now] = self.layer_navigabilities[
+                hierarchy
+            ][t_last]
+
     def current_layers_repr(self) -> str:
         """
         Extract all the per-hierarchy variables for the current iteration and format it into a substring to be appended to the main iteration output.
@@ -121,9 +178,28 @@ class GATOHLogger:
         self.write_file: bool = write_file
         self.variables: LoggerVariables = LoggerVariables(max_iterations, hierarchies)
 
-    def iteration(self) -> None:
+    def new_iteration(self, init: bool) -> None:
         """
-        Inspect and store all relevant model variables and states based on the level of logging that has been specified.
+        A wrapper that calls LoggerVariables new_iteration().
+
+        :param init: A flag indicating if this function is being called from the first iteration of the model.
+        """
+        self.variables.new_iteration(init=init)
+
+    def iteration(
+        self,
+        aggregate_opinion: float,
+        radicalisation_logodds: float,
+        layer_interdependences: dict[str, float],
+        layer_navigabilities: dict[str, float],
+    ) -> None:
+        """
+        Store all relevant model variables and states based on the level of logging that has been specified.
+
+        :param aggregate_opinion: The aggregate network opinion that has been observed in the model at the end of this iteration.
+        :param radicalisation_logodds: The log odds of an agent being radicalised in the model at the end of this iteration.
+        :param layer_interdependences: A <hierarchy : value> dictionary containing the calculated layer interdependency for each hierarchy in the model at the end of this iteration.
+        :param layer_navigabilities: A <hierarchy : value> dictionary containing the calculated layer navigability for each hierarchy in the model at the end of this iteration.
         """
         # TODO: Implement this function
         pass
