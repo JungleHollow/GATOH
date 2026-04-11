@@ -5,7 +5,7 @@ from typing import Any
 
 from .agents import Agent, AgentSet
 from .graphs import Graph, GraphSet
-from .logging import UKUMARILogger
+from .logging import GATOHLogger
 from .visualisation import ABVisualiser
 
 
@@ -22,12 +22,14 @@ class ABModel:
         hierarchy_rw_distributions: list[tuple[float, float]],
         iterations: int = 100,
         negation_threshold: float = 0.95,
+        radicalisation_threshold: float = 0.90,
     ) -> None:
         """
         :param hierarchy_names: A list of strings representing the names of all social hierachies that will exist in the model
         :param hierarchy_rw_distributions: A list of (mean, variance) tuples defining the parameters of normal distributions used in random walks for their corresponding hierarchies.
         :param iterations: The number of iterations that the model will run for
         :param negation_threshold: A threshold that, when surpassed by Agents, will cause their opinion to become its additive inverse.
+        :param radicalisation_threshold: A threshold that determined how strong of an absolute opinion an Agent must hold before they begin to consider becoming radicalised.
         """
         self.hierarchy_information: dict[str, tuple[float, float]] = {}
         for idx, hierarchy in enumerate(hierarchy_names):
@@ -36,12 +38,13 @@ class ABModel:
         self.graphs: GraphSet = GraphSet(self)
         self.agents: AgentSet = AgentSet(self)
 
-        self.logger: UKUMARILogger = UKUMARILogger(self)
+        self.logger: GATOHLogger = GATOHLogger(self, iterations)
         self.visualiser: ABVisualiser = ABVisualiser(self)
         self.current_iteration: int = 0
         self.max_iterations: int = iterations
 
         self.negation_threshold: float = negation_threshold
+        self.radicalisation_threshold: float = radicalisation_threshold
 
     def add_graphs(
         self, graphs: list[Any], names: list[str], rw_params: list[tuple[float, float]]
@@ -139,10 +142,10 @@ class ABModel:
         """
         while self.current_iteration < self.max_iterations:
             # First each agent looks at its neighbours to see how their opinion will evolve this iterations
-            for agent in self.agents.agents:
+            for agent in self.agents:
                 agent.previous_opinion = agent.opinion
                 collective_changes: list[float] = []
-                for hierarchy in self.graphs.graphs:
+                for hierarchy in self.graphs:
                     collective_changes.append(hierarchy.neighbour_influences(agent))
                 total_change: float = sum(collective_changes)
 
@@ -153,6 +156,12 @@ class ABModel:
                     continue
                 else:
                     agent.opinion += total_change
+
+                # After the opinion change, determine if the agent has become radicalised
+                was_radicalised: bool = agent.radicalisation(collective_changes, list(self.hierarchy_information.keys()), self.radicalisation_threshold)
+
+                if was_radicalised:
+                    self.logger.variables.radicalised_agents[self.current_iteration] += 1
             self.step()
             self.update()
             self.logger.iteration()  # Store all relevant model variables and states for future analysis

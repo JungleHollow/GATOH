@@ -220,6 +220,33 @@ def draw_random_value(distribution: str, parameters: dict | None = None) -> floa
                 drawn_value = gamma.rvs(1.0)
     return drawn_value
 
+def random_coinflip(return_type: str) -> Any:
+    """
+    Simulates a random coinflip, returning the result as either a boolean, an integer, a float, or a string.
+
+    :param return_type: The data type of the returned coinflip result.
+    :return: The outcome of the random coinflip.
+    """
+    coinflip_result: bool = random.choices([True, False], k=1)[0]
+
+    match return_type:
+        case "bool":
+            return coinflip_result
+        case "int":
+            if coinflip_result:
+                return 1
+            return 0
+        case "float":
+            if coinflip_result:
+                return 1.0
+            return 0
+        case "string":
+            if coinflip_result:
+                return "yes"
+            return "no"
+
+    return coinflip_result  # Defaults to boolean if no valid input type was passed.
+
 # ========== Random Walk Utils ==========
 
 def value_rw_delta(input_value: float, mean: float, variance: float) -> float:

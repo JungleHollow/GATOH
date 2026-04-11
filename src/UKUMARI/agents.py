@@ -9,7 +9,7 @@ from typing import Any, Iterator, override
 import numpy as np
 import polars as pl
 
-from .utils import draw_random_value, value_rw_delta
+from .utils import draw_random_value, value_rw_delta, random_coinflip
 
 
 class Agent:
@@ -35,11 +35,14 @@ class Agent:
 
         self.social_weightings: dict[str, float] = {}
         self.is_silenced: dict[str, bool] = {}
-        self.opinion: float  # Range always [-1, 1]
 
+        self.opinion: float  # Range always [-1, 1]
         self.previous_opinion: float = (
             0.0  # Used to handle updating during model iterations
         )
+
+        self.personal_benefit: bool  # Whether the Agent is personally benefitted by the adoption of the 'social virus' that is being spread
+
         self.social_susceptibility: float  # Range always [0, 1]
         self.personality: str = "neutral"
         self.radicalised: bool = False
@@ -72,6 +75,7 @@ class Agent:
         distribution: str = "gaussian",
         personality: str | None = None,
         parameters: dict | None = None,
+        personal_benefit: bool | None = None,
     ) -> Agent:
         """
         Randomly generate an Agent object based on the input parameters.
@@ -82,6 +86,7 @@ class Agent:
         :param distribution: The distribution to use for relevant attribute generation (Valid distributions include: 'gaussian', 'beta')
         :param personality: A string defining what type of personality the agent will have (defaults to 'neutral' on Agent __init__)
         :param parameters: A dictionary containing the distribution parameters used to generate random values.
+        :param personal_benefit: A boolean indicating if the Agent would be personally benefitted by the adoption of the 'social virus' being spread.
         :return: The generated Agent object.
         """
         # Begin by setting crucial information
@@ -89,6 +94,11 @@ class Agent:
         self.index = index
         if personality:
             self.personality = personality
+
+        if personal_benefit:
+            self.personal_benefit = personal_benefit
+        else:
+            self.personal_benefit = random_coinflip("bool")
 
         # Generate a weighting for each hierarchy; initialise the is_silenced flag for that hierarchy
         for hierarchy in hierarchies:
@@ -256,31 +266,47 @@ class Agent:
 
         return negation_strength > threshold
 
-    def radicalisation(self, neighbours: Iterable[Agent]) -> bool:
+    def radicalisation(self, hierarchy_changes: Iterable[float], hierarchies: Iterable[str], threshold: float) -> bool:
         """
         Uses the agent's own opinion as well as the neighbours' opinions to determine if
         the agent has become radicalised in their actions.
 
-        :param neighbours: A list of all agents that "neighbour" this agent in any model layer.
+        :param hierarchy_changes: A list of the opinion changes caused in each social hierarchy by neighbours during this iteration.
+        :param hierarchy_names: A list of hierarchy names in an order corresponding to the passed hierarchy changes list.
+        :param threshold: The radicalisation threshold that has been defined at the global level in the model.
+        :return: A boolean indicating if the Agent has become radicalised or not.
         """
         # If the Agent is already radicalised, always return True
         if self.radicalised:
             return True
 
+        # Absolute opinion declared here to reduce calls to abs() in the match statement
+        absolute_opinion: float = abs(self.opinion)
+
         match self.personality:
             case "neutral":
                 # This will mean that radicalisation is exclusively determined by the strength of the Agent's opinion
-                pass
+                if absolute_opinion >= threshold:
+                    self.radicalised = True
+                    return self.radicalised
             case "rational":
                 # This will likely mean that the agent is more disposed towards considering tangible benefits and their own
                 # opinions when determining radicalisation, rather than external influences
-                pass
+                if absolute_opinion >= threshold and self.personal_benefit:
+                    self.radicalised = True
+                    return self.radicalised
+                elif absolute_opinion >= threshold and not self.personal_benefit:
+                    # In the case where the threshold is met but there is no explicit personal benefit, radicalisation is treated as a coinflip
+                    self.radicalised = random_coinflip("bool")
+                    return self.radicalised
             case "erratic":
                 # Radicalisation is influenced by personal opinion to some extent, but is largely stochastically determined
                 pass
             case "impulsive":
                 # The agent places very strong consideration on tangible benefits over anything else
-                pass
+                if absolute_opinion >= threshold / 2:  # (threshold / 2) as the Agent behaves impulsively and less is required for them to consider becoming radicalised
+                    self.radicalised = self.personal_benefit
+                    return self.radicalised
             case "social":
                 # Radicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors
                 pass
