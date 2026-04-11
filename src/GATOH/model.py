@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from random import choices
+from random import choices, randint
 from typing import Any
 
-from numpy import log
+import numpy as np
 
 from .agents import Agent, AgentSet
 from .graphs import Graph, GraphSet
@@ -15,8 +15,6 @@ class ABModel:
     """
     An agent-based model class that is capable of handling multiple layers that affect agent behaviour.
     """
-
-    # TODO: Add functions to calculate network-level informational statistics (i.e. layer interdependence, radicalisation log odds, etc...)
 
     def __init__(
         self,
@@ -48,6 +46,15 @@ class ABModel:
         self.negation_threshold: float = negation_threshold
         self.radicalisation_threshold: float = radicalisation_threshold
 
+    def add_graph(self, graph: Graph) -> None:
+        """
+        Add a new Graph to the Model's GraphSet. It is assumed that this is a generated Graph object which already has
+        a name and rw_params assigned to it.
+
+        :param graph: The Graph object to be added to the Model's GraphSet.
+        """
+        self.graphs.add_graph(graph)
+
     def add_graphs(
         self, graphs: list[Any], names: list[str], rw_params: list[tuple[float, float]]
     ) -> None:
@@ -67,18 +74,37 @@ class ABModel:
                 new_graph.load_graph(graph, names[idx])
                 self.graphs.add_graph(new_graph)
 
-    def generate_graphs(self, agents: list[Any], method: str = "small-world") -> None:
+    def generate_graphs(
+        self,
+        hierarchies: list[str],
+        agents: list[Any],
+        method: str = "small-world",
+        agent_subsetting: bool = False,
+        rw_params: list[tuple[float, float]] | None = None,
+    ) -> None:
         """
         Randomly generates graphs for the given social hierarchy names using the specified method.
         Hierarchies will only contain the agents whose names are passed to the function.
 
-        :param agents: A list of agent IDs or Agent objects which determines who is included in the hierarchies
-        :param method: The social network graph generation method to use. Options include: 'small-world', 'scale-free', 'full'. Defaults to 'small-world'
+        :param hierarchies: A list containing the names of the social hierarchy graphs to be created.
+        :param agents: A list of Agent objects which determines who is included in the hierarchies.
+        :param method: The social network graph generation method to use. Options include: 'small-world', 'scale-free', 'random', 'blockmodel'. Defaults to 'small-world'.
+        :param agent_subsetting: A boolean indicating if the agents should be sampled into random subsets when generating each graph.
+        :param rw_params: A list of (mean, variance) tuples containing the random-walk distributions for each of the generated graphs.
         """
-        # TODO: Implement this function
-        raise NotImplementedError(
-            "Random graph generation function in ABModel not implemented yet."
-        )
+        agent_sample: np.ndarray = np.array(agents)
+
+        for idx, hierarchy in enumerate(hierarchies):
+            if agent_subsetting:
+                random_k: int = randint(len(agents) // 10, len(agents) - 1)
+                agent_sample = np.random.choice(agents, size=random_k, replace=False)
+
+            hierarchy_rw_param: tuple[float, float] = (0.0, 0.1)
+            if rw_params:
+                hierarchy_rw_param = rw_params[idx]
+            hierarchy_graph: Graph = Graph(hierarchy, hierarchy_rw_param)
+            hierarchy_graph.generate_graph(list(agent_sample), method=method)
+            self.add_graph(hierarchy_graph)
 
     def add_agent(self, agent: Agent) -> int:
         """
@@ -235,7 +261,6 @@ class ABModel:
             3. Layer navigability for each hierarchy
             4. Layer interdependence for each hierarchy
         """
-        # TODO: Implement this function
         aggregate_opinion: float = self.calculate_aggregate_opinion()
         radicalisation_logodds: float = self.calculate_radicalisation_logodds()
         layer_interdependences: dict[str, float] = {}
@@ -280,7 +305,7 @@ class ABModel:
                 radicalised_count += 1
 
         radicalisation_p: float = radicalised_count / len(self.agents)
-        log_odds: float = log(radicalisation_p / (1.0 - radicalisation_p))
+        log_odds: float = np.log(radicalisation_p / (1.0 - radicalisation_p))
         return log_odds
 
     def calculate_layers_polarisation(self) -> dict[str, float]:
