@@ -89,7 +89,7 @@ class LoggerVariables:
 
         :param agg_opp: The aggregate opinion value to store for the current iteration.
         """
-        self.aggregate_opinions[self.current_iteration] = agg_opp
+        self.aggregate_opinions[self.current_iteration - 1] = agg_opp
 
     def store_radicalisation_logodds(self, r_logodds: float) -> None:
         """
@@ -97,7 +97,7 @@ class LoggerVariables:
 
         :param r_logodds: The model's radicalisation log odds value to store for the current iteration.
         """
-        self.radicalisation_logodds[self.current_iteration] = r_logodds
+        self.radicalisation_logodds[self.current_iteration - 1] = r_logodds
 
     def store_layer_interdepences(self, layer_interdeps: dict[str, float]) -> None:
         """
@@ -106,7 +106,7 @@ class LoggerVariables:
         :param layer_interdeps: A <hierarchy : interdependence value> dictionary that tracks the layer interdependences to be stored for this iteration.
         """
         for hierarchy, interdependence in layer_interdeps.items():
-            self.layer_interdependences[hierarchy][self.current_iteration] = (
+            self.layer_interdependences[hierarchy][self.current_iteration - 1] = (
                 interdependence
             )
 
@@ -117,7 +117,9 @@ class LoggerVariables:
         :param layer_polars: A <hierarchy : polarisation value> dictionary that tracks the layer polarisations to be stored for this iteration.
         """
         for hierarchy, polarisation in layer_polars.items():
-            self.layers_polarisation[hierarchy][self.current_iteration] = polarisation
+            self.layers_polarisation[hierarchy][self.current_iteration - 1] = (
+                polarisation
+            )
 
     def new_iteration(self, init: bool = False) -> None:
         """
@@ -151,10 +153,10 @@ class LoggerVariables:
         )
         for hierarchy in self.layer_interdependences.keys():
             interdepence: float = self.layer_interdependences[hierarchy][
-                self.current_iteration
+                self.current_iteration - 1
             ]
             polarisation: float = self.layers_polarisation[hierarchy][
-                self.current_iteration
+                self.current_iteration - 1
             ]
             hierarchy_string: str = f"\t{hierarchy}\t{interdepence}\t{polarisation}\n"
             output_string += hierarchy_string
