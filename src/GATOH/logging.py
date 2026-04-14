@@ -250,16 +250,16 @@ class GATOHLogger:
         self.variables.store_layer_interdepences(layer_interdependences)
         self.variables.store_layer_polarisations(layers_polarisation)
 
-    def iteration_print(self) -> None:
+    def iteration_print(self) -> str:
         """
-        A method which prints out informative model statistics at the appropriate print_interval.
+        A method which formats the model statistics at the appropriate print_interval.
 
-        :param current_iteration: The current iteration that the model is at when calling this method.
+        :return: An appropriately formatted string to be printed out by the model for this iteration.
         """
         print_string: str
-        if self.variables.current_iteration % self.print_interval != 0:
-            print_string = self.variables.current_layers_repr()
-            print(print_string)
+        if self.variables.current_iteration % self.print_interval == 0:
+            print_string = self.variables.current_iteration_repr()
+            return print_string
         else:
             print_string = self.format_non_interval_print()
-            print(print_string)
+            return print_string

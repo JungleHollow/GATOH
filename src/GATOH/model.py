@@ -223,7 +223,11 @@ class ABModel:
             self.update()
 
             self.logger_iteration()  # Handle the logger's iteration() calculations and call its method
-            self.logger.iteration_print()  # Does nothing if not at the print interval
+
+            # Get this iteration's print string (will be formatted appropriately based on the print interval)
+            iteration_print_string: str = self.logger.iteration_print()
+            print(iteration_print_string)
+
             self.current_iteration += 1
 
     def step(self) -> None:
