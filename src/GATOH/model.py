@@ -22,8 +22,8 @@ class ABModel:
         hierarchy_names: list[str],
         hierarchy_rw_distributions: list[tuple[float, float]],
         iterations: int = 100,
-        negation_threshold: float = 0.95,
-        radicalisation_threshold: float = 0.90,
+        negation_threshold: float = 0.99,
+        radicalisation_threshold: float = 0.95,
     ) -> None:
         """
         :param hierarchy_names: A list of strings representing the names of all social hierachies that will exist in the model
