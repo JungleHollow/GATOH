@@ -79,6 +79,10 @@ class InfluentialTester:
         "personal_benefit": True,
     }
 
+    # Define the save paths for each model's logged variables (must point to a .csv file)
+    LI_MODEL_DATAFILE: str = "./li_model_variables.csv"
+    HI_MODEL_DATAFILE: str = "./hi_model_variables.csv"
+
     def __init__(self):
         # Store the class parameters within the instance
         self.n_agents: int = InfluentialTester.TEST_PARAMETERS["n_agents"]
@@ -111,6 +115,7 @@ class InfluentialTester:
             radicalisation_threshold=InfluentialTester.MODEL_PARAMETERS[
                 "radical_thresh"
             ],
+            data_file=InfluentialTester.LI_MODEL_DATAFILE,
         )
         self.hi_model: md.ABModel = md.ABModel(
             InfluentialTester.HIERARCHY_NAMES,
@@ -120,6 +125,7 @@ class InfluentialTester:
             radicalisation_threshold=InfluentialTester.MODEL_PARAMETERS[
                 "radical_thresh"
             ],
+            data_file=InfluentialTester.HI_MODEL_DATAFILE,
         )
 
     def create_li_agents(self) -> list[agt.Agent]:
