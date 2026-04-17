@@ -23,6 +23,7 @@ class Agent:
             - <string> to set the Agent's id
             - <dict> of {hierarchy_name : weight} for the personal value that this Agent assigns to each social hierarchy
             - <float> in the range [-1, 1] to set the Agent's initial opinion on the topic of interest
+            - <bool> to define if the socially contagious belief will be of personal benefit to this Agent
             - (string, float) for the agent's defined personality and their social susceptibility
 
         :param args: positional arguments that can be passed to each Agent
@@ -62,6 +63,8 @@ class Agent:
                         self.add_attribute("social_susceptibility", value=arg[1])
                     case str():
                         self.id = arg
+                    case bool():
+                        self.personal_benefit = arg
         if kwargs:
             for key, value in kwargs.items():
                 # No checking for duplicate keys; assume that explicitly added kwargs should override any args.

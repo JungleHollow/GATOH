@@ -25,6 +25,12 @@ class InfluentialTester:
     density of relationships between them and other Agents in the hierarchies.
     """
 
+    # The parameters set for the tester class itself
+    TEST_PARAMETERS: dict[str, Any] = {
+        "n_agents": 40,
+        "negative_fraction": 0.1,
+    }
+
     # The model parameters used when creating the ABModel instances
     MODEL_PARAMETERS: dict[str, Any] = {
         "iterations": 100,
@@ -67,24 +73,28 @@ class InfluentialTester:
         "influential_connectivity": 20,
         "social_susceptibility": 0.5,
         "personality": "social",
+        "personal_benefit": True,
     }
 
     def __init__(self):
-        self.li_agents: list[agt.Agent] = []
-        self.create_li_agents()
+        # Store the class parameters within the instance
+        self.n_agents: int = InfluentialTester.TEST_PARAMETERS["n_agents"]
+        self.negative_fraction: float = InfluentialTester.TEST_PARAMETERS[
+            "negative_fraction"
+        ]
 
-        self.hi_agents: list[agt.Agent] = []
-        self.create_hi_agents()
+        # Calculate the number of negative agents
+        self.n_negative: int = int(self.n_agents * self.negative_fraction)
 
-        self.li_graphs: list[gr.Graph] = []
-        self.create_li_graphs(
+        self.li_agents: list[agt.Agent] = self.create_li_agents()
+        self.li_graphs: list[gr.Graph] = self.create_li_graphs(
             InfluentialTester.HIERARCHY_NAMES,
             InfluentialTester.HIERARCHY_RW_DISTRIBUTIONS,
             self.li_agents,
         )
 
-        self.hi_graphs: list[gr.Graph] = []
-        self.create_hi_graphs(
+        self.hi_agents: list[agt.Agent] = self.create_hi_agents()
+        self.hi_graphs: list[gr.Graph] = self.create_hi_graphs(
             InfluentialTester.HIERARCHY_NAMES,
             InfluentialTester.HIERARCHY_RW_DISTRIBUTIONS,
             self.hi_agents,
@@ -117,6 +127,31 @@ class InfluentialTester:
         """
         created_agents: list[agt.Agent] = []
 
+        nn_opinion_range: tuple[float, float] = InfluentialTester.AGENT_CHARACTERISTICS[
+            "non_negative_opinion"
+        ]
+
+        agent_behaviour: tuple[str, float] = (
+            InfluentialTester.AGENT_CHARACTERISTICS["personality"],
+            InfluentialTester.AGENT_CHARACTERISTICS["social_susceptibility"],
+        )
+
+        created_count: int = 0
+        while created_count < self.n_agents:
+            agent_id: str = f"NONN{created_count + 1:04}"
+
+            agent_opinion: float = rd.uniform(nn_opinion_range[0], nn_opinion_range[1])
+
+            agent: agt.Agent = agt.Agent(
+                agent_id,
+                InfluentialTester.HIERARCHY_WEIGHTINGS,
+                agent_opinion,
+                agent_behaviour,
+                InfluentialTester.AGENT_CHARACTERISTICS["personal_benefit"],
+            )
+
+            created_agents.append(agent)
+            created_count += 1
         return created_agents
 
     def create_hi_agents(self) -> list[agt.Agent]:
