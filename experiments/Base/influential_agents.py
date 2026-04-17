@@ -3,9 +3,10 @@ from __future__ import annotations
 import random as rd
 from typing import Any
 
+import numpy as np
+
 import src.GATOH.agents as agt
 import src.GATOH.graphs as gr
-import src.GATOH.logging as lg
 import src.GATOH.model as md
 
 
@@ -70,7 +71,9 @@ class InfluentialTester:
         "non_negative_opinion": (0.0, 0.8),
         "negative_opinion": (-1.0, -0.5),
         "non_influential_connectivity": 3,
+        "relationship": (-0.4, 0.4),
         "influential_connectivity": 20,
+        "influencial_relationship": (-0.9, 0.9),
         "social_susceptibility": 0.5,
         "personality": "social",
         "personal_benefit": True,
@@ -222,12 +225,58 @@ class InfluentialTester:
         """
         Creates the graphs for the low influence model.
 
+        For the purposes of this experiment, each graph contains all Agents in the population,
+        and the relationships are created following a customised scale-free methodology.
+
         :param hierarchies: A list of the names of the hierarchies that each graph should represent.
         :param rw_distributions: A dictionary defining the random walk distributions for each social hierarchy.
         :param agents: The population of Agents from which the graphs will be constructed.
         :return: A list containing all the created Graph objects.
         """
         created_graphs: list[gr.Graph] = []
+
+        # Create a set of the agent indices to be used later in iteration
+        agent_indices: set = {i for i in range(len(agents))}
+
+        # The valid range of relationship strengths originating from noninfluential agents
+        noninf_rel_range: tuple[float, float] = InfluentialTester.AGENT_CHARACTERISTICS[
+            "relationship"
+        ]
+
+        for idx, hierarchy in enumerate(hierarchies):
+            graph: gr.Graph = gr.Graph(hierarchy, rw_distributions[idx])
+
+            # Initialise the graph nodes using the population of Agents
+            graph.add_nodes(agents)
+
+            new_edges: dict = {"from_node": [], "to_node": [], "weighting": []}
+
+            for agent_node in graph.graph.nodes():
+                # Return a filtered list including all indices except the one for the current node
+                valid_indices: list[int] = list(agent_indices ^ {agent_node.index})
+
+                selected_indices: tuple = tuple(
+                    np.random.choice(
+                        valid_indices,
+                        size=InfluentialTester.AGENT_CHARACTERISTICS[
+                            "non_influential_connectivity"
+                        ],
+                        replace=False,
+                    )
+                )
+
+                for selected_index in selected_indices:
+                    edge_weighting: float = rd.uniform(
+                        noninf_rel_range[0], noninf_rel_range[1]
+                    )
+
+                    # Flip the to_ and from_ indices to make the weighting representative of the impact that agent_node has on others.
+                    new_edges["from_node"].append(selected_index)
+                    new_edges["to_node"].append(agent_node.index)
+                    new_edges["weighting"].append(edge_weighting)
+
+            graph.add_edges(new_edges)
+            created_graphs.append(graph)
 
         return created_graphs
 
@@ -239,6 +288,9 @@ class InfluentialTester:
     ) -> list[gr.Graph]:
         """
         Creates the graphs for the high influence model.
+
+        For the purposes of this experiment, each graph contains all Agents in the population,
+        and the relationships are created following a customised scale-free methodology.
 
         :param hierarchies: A list of the names of the hierarchies that each graph should represent.
         :param rw_distributions: A dictionary defining the random walk distributions for each social hierarchy.
