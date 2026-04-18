@@ -289,3 +289,17 @@ def value_rw_delta(input_value: float, mean: float, variance: float) -> float:
     rw_delta: float = norm.rvs(loc=mean, scale=variance)
     rw_result: float = input_value + rw_delta
     return rw_result
+
+
+# ========== Data Persistence Utils ==========
+
+
+def create_config_file(save_path: str, config_data: dict[str, Any]) -> None:
+    """
+    Creates a structured config file from the input config data, and then saves it to the specified path.
+
+    :param save_path: The path to save the config file to.
+    :param config_data: A <name : value> dictionary specifying the values of specific parameters to be stored in the config file.
+    """
+    # TODO: Implement this function
+    pass

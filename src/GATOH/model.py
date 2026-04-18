@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 from copy import deepcopy
+from datetime import datetime
 from random import choices, randint
 from typing import Any
 
@@ -10,6 +12,7 @@ from rustworkx.rustworkx import NoEdgeBetweenNodes
 from .agents import Agent, AgentSet
 from .graphs import Graph, GraphEdge, GraphSet
 from .logging import GATOHLogger
+from .utils import create_config_file
 from .visualisation import ABVisualiser
 
 
@@ -72,6 +75,24 @@ class ABModel:
         if self.save_dir == "":
             # An empty save directory is assumed to mean that no saving is desired.
             return None
+
+        # In the case when attempting to save the model, an existing directory with the specified name will be deleted and newly created.
+        if os.path.isdir(self.save_dir):
+            os.rmdir(self.save_dir)
+
+        # Create the save directory
+        os.mkdir(self.save_dir)
+
+        # Save the AgentSet and GraphSet
+        self.agents.save_agentset(self.save_dir)
+        self.graphs.save_graphset(self.save_dir)
+
+        # Store the model's configurations in a config file
+        config_path: str = f"{self.save_dir}/model_{datetime.now()}.config"
+        config_data: dict[str, Any] = {
+            # TODO: FINISH IMPLEMENTING THIS FUNCTION
+        }
+        create_config_file(config_path, config_data)
 
     def add_graph(self, graph: Graph) -> GraphSet:
         """
