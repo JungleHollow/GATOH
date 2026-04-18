@@ -10,64 +10,6 @@ import src.GATOH.agents as agt
 import src.GATOH.graphs as gr
 import src.GATOH.model as md
 
-# The parameters set for the tester class itself
-TEST_PARAMETERS: dict[str, Any] = {
-    "n_agents": 40,
-    "n_negative": 4,
-}
-
-# The model parameters used when creating the ABModel instances
-MODEL_PARAMETERS: dict[str, Any] = {
-    "iterations": 100,
-    "silencing_thresh": 0.9,
-    "radical_thresh": 0.98,
-    "negation_thresh": 0.99,
-}
-
-# The social hierarchies that will exist in the models
-HIERARCHY_NAMES: list[str] = [
-    "family",
-    "friends",
-    "religion",
-    "neighbours",
-    "cultural",
-]
-
-# The random walk distribution parameters for each hierarchy
-HIERARCHY_RW_DISTRIBUTIONS: list[tuple[float, float]] = [
-    (0.0, 0.01),  # Family
-    (0.0, 0.05),  # Friends
-    (0.0, 0.15),  # Religion
-    (0.0, 0.08),  # Neighbours
-    (0.0, 0.2),  # Cultural
-]
-
-# The hierarchy weightings that will be given to each hierarchy (shared amongst all agents)
-HIERARCHY_WEIGHTINGS: dict[str, float] = {
-    "family": 0.9,
-    "friends": 0.7,
-    "religion": 0.5,
-    "neighbours": 0.55,
-    "cultural": 0.25,
-}
-
-# Defining the distributions of the characteristics for Agents that will be used in the experiment
-AGENT_CHARACTERISTICS: dict[str, Any] = {
-    "non_negative_opinion": (0.0, 0.8),
-    "negative_opinion": (-1.0, -0.5),
-    "non_influential_connectivity": 3,
-    "relationship": (-0.4, 0.4),
-    "influential_connectivity": 20,
-    "influential_relationship": (-0.9, 0.9),
-    "social_susceptibility": 0.5,
-    "personality": "social",
-    "personal_benefit": True,
-}
-
-# Define the save paths for each model's logged variables (must point to a .csv file)
-LI_MODEL_DATAFILE: str = "./experiments/Base/li_model_variables.csv"
-HI_MODEL_DATAFILE: str = "./experiments/Base/hi_model_variables.csv"
-
 
 class InfluentialTester:
     """
@@ -90,14 +32,16 @@ class InfluentialTester:
         self.n_agents: int = TEST_PARAMETERS["n_agents"]
         self.n_negative: int = TEST_PARAMETERS["n_negative"]
 
+        # Create the Agent objects
         self.li_agents: list[agt.Agent] = self.create_li_agents()
+        self.hi_agents: list[agt.Agent] = self.create_hi_agents()
+
+        # Create the Graph objects
         self.li_graphs: list[gr.Graph] = self.create_li_graphs(
             deepcopy(HIERARCHY_NAMES),
             deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
             self.li_agents,
         )
-
-        self.hi_agents: list[agt.Agent] = self.create_hi_agents()
         self.hi_graphs: list[gr.Graph] = self.create_hi_graphs(
             deepcopy(HIERARCHY_NAMES),
             deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
@@ -112,6 +56,7 @@ class InfluentialTester:
             negation_threshold=MODEL_PARAMETERS["negation_thresh"],
             radicalisation_threshold=MODEL_PARAMETERS["radical_thresh"],
             data_file=LI_MODEL_DATAFILE,
+            model_id="LI_MODEL",
         )
 
         self.hi_model: md.ABModel = md.ABModel(
@@ -122,6 +67,7 @@ class InfluentialTester:
             negation_threshold=MODEL_PARAMETERS["negation_thresh"],
             radicalisation_threshold=MODEL_PARAMETERS["radical_thresh"],
             data_file=HI_MODEL_DATAFILE,
+            model_id="HI_MODEL",
         )
 
     def create_li_agents(self) -> list[agt.Agent]:
@@ -188,7 +134,7 @@ class InfluentialTester:
             # Manual garbage collection
             del agent
 
-        return created_li_agents
+        return deepcopy(created_li_agents)
 
     def create_hi_agents(self) -> list[agt.Agent]:
         """
@@ -250,7 +196,7 @@ class InfluentialTester:
             # Manual garbage collection
             del n_agent
 
-        return created_hi_agents
+        return deepcopy(created_hi_agents)
 
     def create_li_graphs(
         self,
@@ -317,7 +263,7 @@ class InfluentialTester:
             # Manual garbage collection
             del new_edges, graph
 
-        return created_li_graphs
+        return deepcopy(created_li_graphs)
 
     def create_hi_graphs(
         self,
@@ -412,27 +358,22 @@ class InfluentialTester:
             # Manual garbage collection
             del new_edges, graph
 
-        return created_hi_graphs
+        return deepcopy(created_hi_graphs)
 
-    def setup_model_li(self) -> None:
+    def setup_models(self) -> None:
         """
-        Adds the appropriate Agent and Graph objects to the li model.
+        Adds the appropriate Agent and Graph objects to both models.
         """
-        self.li_model.add_agents(self.li_agents)
+        self.li_model.add_agents(deepcopy(self.li_agents))
         self.li_model.add_graphs(
-            self.li_graphs,
+            deepcopy(self.li_graphs),
             deepcopy(HIERARCHY_NAMES),
             deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
         )
-        return None
 
-    def setup_model_hi(self) -> None:
-        """
-        Adds the appropriate Agent and Graph objects to the hi model.
-        """
-        self.hi_model.add_agents(self.hi_agents)
+        self.hi_model.add_agents(deepcopy(self.hi_agents))
         self.hi_model.add_graphs(
-            self.hi_graphs,
+            deepcopy(self.hi_graphs),
             deepcopy(HIERARCHY_NAMES),
             deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
         )
@@ -454,11 +395,68 @@ class InfluentialTester:
 
 
 if __name__ == "__main__":
+    # The parameters set for the tester class itself
+    TEST_PARAMETERS: dict[str, Any] = {
+        "n_agents": 40,
+        "n_negative": 4,
+    }
+
+    # The model parameters used when creating the ABModel instances
+    MODEL_PARAMETERS: dict[str, Any] = {
+        "iterations": 100,
+        "silencing_thresh": 0.9,
+        "radical_thresh": 0.98,
+        "negation_thresh": 0.99,
+    }
+
+    # The social hierarchies that will exist in the models
+    HIERARCHY_NAMES: list[str] = [
+        "family",
+        "friends",
+        "religion",
+        "neighbours",
+        "cultural",
+    ]
+
+    # The random walk distribution parameters for each hierarchy
+    HIERARCHY_RW_DISTRIBUTIONS: list[tuple[float, float]] = [
+        (0.0, 0.01),  # Family
+        (0.0, 0.05),  # Friends
+        (0.0, 0.15),  # Religion
+        (0.0, 0.08),  # Neighbours
+        (0.0, 0.2),  # Cultural
+    ]
+
+    # The hierarchy weightings that will be given to each hierarchy (shared amongst all agents)
+    HIERARCHY_WEIGHTINGS: dict[str, float] = {
+        "family": 0.9,
+        "friends": 0.7,
+        "religion": 0.5,
+        "neighbours": 0.55,
+        "cultural": 0.25,
+    }
+
+    # Defining the distributions of the characteristics for Agents that will be used in the experiment
+    AGENT_CHARACTERISTICS: dict[str, Any] = {
+        "non_negative_opinion": (0.0, 0.8),
+        "negative_opinion": (-1.0, -0.5),
+        "non_influential_connectivity": 3,
+        "relationship": (-0.4, 0.4),
+        "influential_connectivity": 20,
+        "influential_relationship": (-0.9, 0.9),
+        "social_susceptibility": 0.5,
+        "personality": "social",
+        "personal_benefit": True,
+    }
+
+    # Define the save paths for each model's logged variables (must point to a .csv file)
+    LI_MODEL_DATAFILE: str = "./experiments/Base/li_model_variables.csv"
+    HI_MODEL_DATAFILE: str = "./experiments/Base/hi_model_variables.csv"
+
     tester: InfluentialTester = InfluentialTester()
 
     # Setup the models
-    tester.setup_model_li()
-    tester.setup_model_hi()
+    tester.setup_models()
 
     # Run the low influence scenario
     tester.run_model_li()

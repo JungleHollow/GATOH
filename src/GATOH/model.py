@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from random import choices, randint
 from typing import Any
 
@@ -26,6 +27,7 @@ class ABModel:
         negation_threshold: float = 0.99,
         radicalisation_threshold: float = 0.9,
         data_file: str = "",
+        model_id: str = "",
     ) -> None:
         """
         :param hierarchy_names: A list of strings representing the names of all social hierachies that will exist in the model.
@@ -35,6 +37,7 @@ class ABModel:
         :param negation_threshold: A threshold that, when surpassed by Agents, will cause their opinion to become its additive inverse.
         :param radicalisation_threshold: A threshold that determined how strong of an absolute opinion an Agent must hold before they begin to consider becoming radicalised.
         :param data_file: The path to which the logger's data should be saved to after iterations are run.
+        :param model_id: An optional field to give the created model object a referencable ID.
         """
         self.hierarchy_information: dict[str, tuple[float, float]] = {}
         for idx, hierarchy in enumerate(hierarchy_names):
@@ -57,29 +60,32 @@ class ABModel:
         self.radicalisation_threshold: float = radicalisation_threshold
 
         self.data_file: str = data_file
+        self.model_id: str = model_id
 
-    def add_graph(self, graph: Graph) -> None:
+    def add_graph(self, graph: Graph) -> GraphSet:
         """
         Add a new Graph to the Model's GraphSet. It is assumed that this is a generated Graph object which already has
         a name and rw_params assigned to it.
 
         :param graph: The Graph object to be added to the Model's GraphSet.
+        :return: The model's newly updated GraphSet.
         """
         self.graphs.add_graph(graph)
 
         # Also add new edges to the model's base graph
         self.add_base_graph_edges(graph)
-        return None
+        return self.graphs
 
     def add_graphs(
         self, graphs: list[Any], names: list[str], rw_params: list[tuple[float, float]]
-    ) -> None:
+    ) -> GraphSet:
         """
         Add new Graphs to the Model's GraphSet.
 
-        :param graphs: A list of Graph objects or filepaths to stored GraphML objects
-        :param names: A list of the corresponding social hierarchy names to give to the Graphs
-        :param rw_params: The (mean, variance) to assign to the hierarchy when determining normal distributions for random walk dynamic relationships
+        :param graphs: A list of Graph objects or filepaths to stored GraphML objects.
+        :param names: A list of the corresponding social hierarchy names to give to the Graphs.
+        :param rw_params: The (mean, variance) to assign to the hierarchy when determining normal distributions for random walk dynamic relationships.
+        :return: The model's newly updated GraphSet.
         """
         if type(graphs[0]) is Graph:
             for graph in graphs:
@@ -90,7 +96,7 @@ class ABModel:
                 new_graph.load_graph(graph, names[idx])
                 self.graphs.add_graph(new_graph)
         self.update_base_graph()
-        return None
+        return self.graphs
 
     def generate_graphs(
         self,
@@ -146,18 +152,19 @@ class ABModel:
         self.base_graph.add_nodes([agent])
         return self.agents.add(agent)
 
-    def add_agents(self, agents: list[Agent]) -> None:
+    def add_agents(self, agents: list[Agent]) -> AgentSet:
         """
         Add new Agents to the Model's AgentSet.
 
-        :param agents: A list of Agent objects to be added to the AgentSet
+        :param agents: A list of Agent objects to be added to the AgentSet.
+        :return: The model's newly updated AgentSet.
         """
         for agent in agents:
             self.agents.add(agent)
 
         # Add all the new Agent objects to the model-handled 'base' graph
         self.base_graph.add_nodes(agents)
-        return None
+        return self.agents
 
     def generate_agents(
         self,
@@ -497,7 +504,7 @@ class ABModel:
         new_edges: dict = {"from_node": [], "to_node": [], "weighting": [], "name": []}
 
         for idx, edge in graph.graph.edge_index_map().items():
-            graph_edge: GraphEdge = edge[2]
+            graph_edge: GraphEdge = deepcopy(edge[2])
 
             # Get the index of the Agent objects within the model's AgentSet (not the graph's node set)
             base_from_idx, base_to_idx = self.get_base_indices_from_edge(
@@ -509,7 +516,11 @@ class ABModel:
             new_edges["to_node"].append(base_to_idx)
             new_edges["weighting"].append(graph_edge.weighting)
 
-        self.base_graph.add_edges(new_edges)
+        self.base_graph.add_edges(deepcopy(new_edges))
+
+        # Manual garbage collection
+        del new_edges
+
         return None
 
     def update_base_graph(self) -> None:
@@ -519,7 +530,7 @@ class ABModel:
         """
         for hierarchy in self.graphs:
             for idx, edge in hierarchy.graph.edge_index_map().items():
-                graph_edge: GraphEdge = edge[2]
+                graph_edge: GraphEdge = deepcopy(edge[2])
 
                 # Get the index of the Agent objects within the model's AgentSet (not the graph's node set)
                 base_from_idx, base_to_idx = self.get_base_indices_from_edge(
@@ -543,5 +554,8 @@ class ABModel:
                         "weighting": [graph_edge.weighting],
                         "name": [hierarchy.name],
                     }
-                    self.base_graph.add_edges(new_edge)
+                    self.base_graph.add_edges(deepcopy(new_edge))
+
+                    # Manual garbage collection
+                    del new_edge
         return None

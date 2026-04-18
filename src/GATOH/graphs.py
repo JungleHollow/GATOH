@@ -800,13 +800,15 @@ class GraphSet:
     and provide utilities using this collection.
     """
 
-    def __init__(self, model: Any, graphs: list[Graph] = []) -> None:
+    def __init__(self, model: Any, graphs: list[Graph] | None = None) -> None:
         """
         :param model: The parent ABModel object that this GraphSet is being attached to.
         :param graphs: An optional iterable containing already created Graph objects.
         """
         self.parent_model: Any = model
-        self.graphs: list[Graph] = graphs
+        self.graphs: list[Graph] = []
+        if graphs:
+            self.graphs = graphs
 
     def add_graph(self, graph: Graph) -> None:
         """
