@@ -7,6 +7,7 @@ from random import choices, randint
 from typing import Any
 
 import numpy as np
+import yaml
 from rustworkx.rustworkx import NoEdgeBetweenNodes
 
 from .agents import Agent, AgentSet
@@ -87,12 +88,87 @@ class ABModel:
         self.agents.save_agentset(self.save_dir)
         self.graphs.save_graphset(self.save_dir)
 
-        # Store the model's configurations in a config file
-        config_path: str = f"{self.save_dir}/model_{datetime.now()}.config"
+        # Save the model's base graph (uncompressed and in the root of the save directory)
+        base_graph_path: str = f"{self.save_dir}/graph_base_graph.graphml"
+        self.base_graph.save_graph(base_graph_path)
+
+        # Store the model's configurations in a YAML config file
+        config_path: str = f"{self.save_dir}/model_{datetime.now()}.yaml"
         config_data: dict[str, Any] = {
-            # TODO: FINISH IMPLEMENTING THIS FUNCTION
+            "hierarchy_information": self.hierarchy_information,
+            "current_iteration": self.current_iteration,
+            "max_iterations": self.max_iterations,
+            "silencing_threshold": self.silencing_threshold,
+            "negation_threshold": self.negation_threshold,
+            "radicalisation_threshold": self.radicalisation_threshold,
+            "save_dir": self.save_dir,
+            "data_file": self.data_file,
+            "model_id": self.model_id,
         }
         create_config_file(config_path, config_data)
+        return None
+
+    def load_model(self, load_dir: str) -> None:
+        """
+        Loads a model and all its components which have been saved following the processes in the save_model() function.
+
+        :param load_dir: The path to the directory where all model data was saved.
+        """
+        if not os.path.isdir(load_dir):
+            raise FileNotFoundError(f"The input load directory {load_dir} is invalid.")
+
+        graphset_exists: bool = False
+        agentset_exists: bool = False
+
+        # Recursively scan the files in load_dir
+        for file_name in os.listdir(load_dir):
+            file_path: str = f"{load_dir}/{file_name}"
+            file_type: str = file_name.split(".")[-1]
+            match file_type:
+                case "zip":
+                    # Simply flag that any zip files exist, as these will then be decompressed and loaded by their respective parent modules
+                    if file_name == "_agentset.zip":
+                        agentset_exists = True
+                    elif file_name == "_graphset.zip":
+                        graphset_exists = True
+                    else:
+                        # Currently unknown how/if to handle edge cases here
+                        pass
+                case "yaml":
+                    # The 'yaml' case may grow to include more config files beyond just the model's...
+                    config_prefix: str = file_name.split("_")[0]
+                    if config_prefix == "model":
+                        with open(file_path, "r") as config_file:
+                            config_data: dict[str, Any] = yaml.safe_load(config_file)
+                            self.hierarchy_information = config_data[
+                                "hierarchy_information"
+                            ]
+                            self.current_iteration = config_data["current_iteration"]
+                            self.max_iterations = config_data["max_iterations"]
+                            self.silencing_threshold = config_data[
+                                "silencing_threshold"
+                            ]
+                            self.negation_threshold = config_data["negation_threshold"]
+                            self.radicalisation_threshold = config_data[
+                                "radicalisation_threshold"
+                            ]
+                            self.save_dir = config_data["save_dir"]
+                            self.data_file = config_data["data_file"]
+                            self.model_id = config_data["model_id"]
+                case "graphml":
+                    # For now, only the model's base graph should exist as an uncompressed graphml file in the root of the save directory
+                    self.base_graph.load_graph(file_path, "base_graph", (0.0, 0.0))
+                case _:
+                    # Currently unknown how/if to handle edge cases here
+                    pass
+
+        # Check if any compressed files exist and handle them from their parent modules
+        if agentset_exists:
+            self.agents.load_agentset(load_dir)
+        if graphset_exists:
+            self.graphs.load_graphset(load_dir, self.hierarchy_information)
+
+        return None
 
     def add_graph(self, graph: Graph) -> GraphSet:
         """

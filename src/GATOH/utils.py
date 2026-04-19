@@ -9,6 +9,7 @@ from typing import Any
 
 import numpy as np
 import rustworkx as rx
+import yaml
 from scipy.stats import beta, gamma, levy, norm, truncnorm, uniform
 
 # ========== Graph utils ========== #
@@ -298,8 +299,10 @@ def create_config_file(save_path: str, config_data: dict[str, Any]) -> None:
     """
     Creates a structured config file from the input config data, and then saves it to the specified path.
 
-    :param save_path: The path to save the config file to.
+    :param save_path: The path in which to save the config file.
     :param config_data: A <name : value> dictionary specifying the values of specific parameters to be stored in the config file.
     """
-    # TODO: Implement this function
-    pass
+    with open(save_path, "w") as config_file:
+        yaml.dump(config_data, config_file)
+
+    return None
