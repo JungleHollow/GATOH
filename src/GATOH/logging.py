@@ -316,7 +316,7 @@ class GATOHLogger:
 
             for i in range(self.variables.max_iterations):
                 row_dict: dict[str, str] = {
-                    "iterations": f"{i}",
+                    "iterations": f"{i + 1}",
                     "aggregate_opinions": f"{self.variables.aggregate_opinions[i]}",
                     "radicalised_agents": f"{self.variables.radicalised_agents[i]}",
                     "silenced_agents": f"{self.variables.silenced_agents[i]}",

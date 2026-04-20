@@ -373,7 +373,7 @@ class Agent:
                     if absolute_change >= self.social_susceptibility:
                         # A strong opinion change was caused by some hierarchy
                         self.radicalised = True
-                        return True
+                        return self.radicalised
                     else:
                         absolute_changes += absolute_change
                 # If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)
