@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import random as rd
 from copy import deepcopy
 from typing import Any
@@ -27,27 +28,21 @@ class InfluentialTester:
     density of relationships between them and other Agents in the hierarchies.
     """
 
-    def __init__(self):
+    def __init__(self, existing: bool = False) -> None:
+        """
+        :param existing: A flag indicating if the tester is loading an existing experiment.
+        """
         # Store the class parameters within the instance
         self.n_agents: int = TEST_PARAMETERS["n_agents"]
         self.n_negative: int = TEST_PARAMETERS["n_negative"]
 
-        # Create the Agent objects
-        self.li_agents: list[agt.Agent] = self.create_li_agents()
-        self.hi_agents: list[agt.Agent] = self.create_hi_agents()
+        # Define the data types without assigning values
+        self.li_agents: list[agt.Agent]
+        self.hi_agents: list[agt.Agent]
+        self.li_graphs: list[gr.Graph]
+        self.hi_graphs: list[gr.Graph]
 
-        # Create the Graph objects
-        self.li_graphs: list[gr.Graph] = self.create_li_graphs(
-            deepcopy(HIERARCHY_NAMES),
-            deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
-            self.li_agents,
-        )
-        self.hi_graphs: list[gr.Graph] = self.create_hi_graphs(
-            deepcopy(HIERARCHY_NAMES),
-            deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
-            self.hi_agents,
-        )
-
+        # Create the model objects no matter what
         self.li_model: md.ABModel = md.ABModel(
             deepcopy(HIERARCHY_NAMES),
             deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
@@ -59,7 +54,6 @@ class InfluentialTester:
             data_file=LI_MODEL_DATAFILE,
             model_id="LI_MODEL",
         )
-
         self.hi_model: md.ABModel = md.ABModel(
             deepcopy(HIERARCHY_NAMES),
             deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
@@ -71,6 +65,23 @@ class InfluentialTester:
             data_file=HI_MODEL_DATAFILE,
             model_id="HI_MODEL",
         )
+
+        if not existing:  # Objects are needed to define and run the models
+            # Create the Agent objects
+            self.li_agents = self.create_li_agents()
+            self.hi_agents = self.create_hi_agents()
+
+            # Create the Graph objects
+            self.li_graphs = self.create_li_graphs(
+                deepcopy(HIERARCHY_NAMES),
+                deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
+                self.li_agents,
+            )
+            self.hi_graphs = self.create_hi_graphs(
+                deepcopy(HIERARCHY_NAMES),
+                deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
+                self.hi_agents,
+            )
 
     def create_li_agents(self) -> list[agt.Agent]:
         """
@@ -362,6 +373,14 @@ class InfluentialTester:
 
         return deepcopy(created_hi_graphs)
 
+    def load_models(self) -> None:
+        """
+        Loads the model objects that have been previously saved at their respective directories.
+        """
+        self.li_model.load_model(LI_SAVEDIR)
+        self.hi_model.load_model(HI_SAVEDIR)
+        return None
+
     def setup_models(self) -> None:
         """
         Adds the appropriate Agent and Graph objects to both models.
@@ -461,13 +480,29 @@ if __name__ == "__main__":
     LI_SAVEDIR: str = "./experiments/Base/InfluentialAgents_LI"
     HI_SAVEDIR: str = "./experiments/Base/InfluentialAgents_HI"
 
-    tester: InfluentialTester = InfluentialTester()
+    tester: InfluentialTester
 
-    # Setup the models
-    tester.setup_models()
+    if not os.path.exists(LI_SAVEDIR) or not os.path.exists(
+        HI_SAVEDIR
+    ):  # At least one model save directory does not exist
+        # Create the tester normally, setup the models, and begin iterations
+        tester = InfluentialTester()
 
-    # Run the low influence scenario
-    tester.run_model_li()
+        # Setup the models
+        tester.setup_models()
 
-    # Run the high influence scenario
-    tester.run_model_hi()
+        # Run the low influence scenario
+        tester.run_model_li()
+
+        # Run the high influence scenario
+        tester.run_model_hi()
+    elif os.path.exists(LI_SAVEDIR) and os.path.exists(
+        HI_SAVEDIR
+    ):  # Both model save directories exist
+        # Create the tester in "existing" mode, and examine the results
+        tester = InfluentialTester(existing=True)
+
+        # Load the existing models
+        tester.load_models()
+
+        # TODO: Add the graph visualisation functions here once those features are implemented...
