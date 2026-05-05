@@ -64,18 +64,21 @@ class GraphEdge:
         from_node: int,
         to_node: int,
         weighting: float = 0.0,
+        rw_params: tuple[float, float] | None = None,
     ) -> None:
         """
         :param hierarchy: The name of the social hierarchy that this edge belongs to
         :param from_node: The index of the starting node
         :param to_node: The index of the destination node
         :param weighting: The opinion weighting that is being assigned
+        :param rw_params: Optional normal distribution parameters to assign a relationship-specific random walk effect
         """
         self.index: int
         self.weighting: float = weighting
         self.from_node: int = from_node
         self.to_node: int = to_node
         self.hierarchy: str = hierarchy
+        self.rw_params: tuple[float, float] | None = rw_params
 
     def set_index(self, idx: int) -> None:
         """
@@ -112,6 +115,16 @@ class GraphEdge:
         """
         self.to_node = idx
         return None
+
+    def has_rw_params(self) -> bool:
+        """
+        A function that checks if this relationship has explicit random walk parameters.
+
+        :return: A boolean indicating if random walk parameters exist.
+        """
+        if self.rw_params:
+            return True
+        return False
 
     @override
     def __str__(self) -> str:
@@ -295,8 +308,12 @@ class Graph:
         from_nodes: list[int] = edges["from_node"]
         to_nodes: list[int] = edges["to_node"]
         weightings: list[float] | None = None
+        rw_params: list[tuple[float, float]] | None = None
+
         if "weighting" in edges.keys():
             weightings = edges["weighting"]
+        if "rw_param" in edges.keys():
+            rw_params = edges["rw_param"]
 
         # Used in case that explicit hierarchy names are set per edge (in the case of the mixed-hierarchy base graph in the model for example)
         names: list[str] | None = None
@@ -308,26 +325,67 @@ class Graph:
 
         if weightings:
             if names:
-                for i in range(len(from_nodes)):
-                    edge = GraphEdge(
-                        names[i], from_nodes[i], to_nodes[i], weightings[i]
-                    )
-                    graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                if rw_params:
+                    for i in range(len(from_nodes)):
+                        edge = GraphEdge(
+                            names[i],
+                            from_nodes[i],
+                            to_nodes[i],
+                            weighting=weightings[i],
+                            rw_params=rw_params[i],
+                        )
+                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                else:
+                    for i in range(len(from_nodes)):
+                        edge = GraphEdge(
+                            names[i],
+                            from_nodes[i],
+                            to_nodes[i],
+                            weighting=weightings[i],
+                        )
+                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
             else:
-                for i in range(len(from_nodes)):
-                    edge = GraphEdge(
-                        self.name, from_nodes[i], to_nodes[i], weightings[i]
-                    )
-                    graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                if rw_params:
+                    for i in range(len(from_nodes)):
+                        edge = GraphEdge(
+                            self.name,
+                            from_nodes[i],
+                            to_nodes[i],
+                            weighting=weightings[i],
+                            rw_params=rw_params[i],
+                        )
+                else:
+                    for i in range(len(from_nodes)):
+                        edge = GraphEdge(
+                            self.name, from_nodes[i], to_nodes[i], weightings[i]
+                        )
+                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
         else:
             if names:
-                for i in range(len(from_nodes)):
-                    edge = GraphEdge(names[i], from_nodes[i], to_nodes[i])
-                    graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                if rw_params:
+                    for i in range(len(from_nodes)):
+                        edge = GraphEdge(
+                            names[i], from_nodes[i], to_nodes[i], rw_params=rw_params[i]
+                        )
+                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                else:
+                    for i in range(len(from_nodes)):
+                        edge = GraphEdge(names[i], from_nodes[i], to_nodes[i])
+                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
             else:
-                for i in range(len(from_nodes)):
-                    edge = GraphEdge(self.name, from_nodes[i], to_nodes[i])
-                    graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                if rw_params:
+                    for i in range(len(from_nodes)):
+                        edge = GraphEdge(
+                            self.name,
+                            from_nodes[i],
+                            to_nodes[i],
+                            rw_params=rw_params[i],
+                        )
+                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                else:
+                    for i in range(len(from_nodes)):
+                        edge = GraphEdge(self.name, from_nodes[i], to_nodes[i])
+                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
 
         self.graph.add_edges_from(graph_edges)
         self.update_edge_indices()
@@ -678,9 +736,16 @@ class Graph:
         in the hierarchy will be shifted. Aims to simulate dynamic relationships between agents across timesteps.
         """
         for edge in self.graph.edges():
-            new_weighting: float = value_rw_delta(
-                edge.weighting, self.rw_params[0], self.rw_params[1]
-            )
+            new_weighting: float
+
+            if not edge.has_rw_params():
+                new_weighting = value_rw_delta(
+                    edge.weighting, self.rw_params[0], self.rw_params[1]
+                )
+            else:
+                new_weighting = value_rw_delta(
+                    edge.weighting, edge.rw_params[0], edge.rw_params[1]
+                )
 
             # Constrain the weighting back to [-1.0, 1.0] as needed
             if new_weighting < -1.0:

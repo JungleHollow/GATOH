@@ -65,6 +65,9 @@ class Agent:
         self.personality: str = "neutral"
         self.radicalised: bool = False
 
+        # To assign per-agent random-walk parameters for the dynamic hierarchy weightings
+        self.rw_distributions: dict[str, tuple[float, float]] | None = None
+
         # If no args have been passed, it is assumed that self.generate_agent() will be subsequently called
         if args:
             for arg in args:
@@ -93,6 +96,7 @@ class Agent:
         index: int,
         hierarchies: list[str],
         distribution: str = "gaussian",
+        explicit_rw: bool = False,
         personality: str | None = None,
         parameters: dict | None = None,
         personal_benefit: bool | None = None,
@@ -104,6 +108,7 @@ class Agent:
         :param index: The index of the Agent object within the model's AgentSet.
         :param hierarchies: A list containing the names of all valid social hierarchies in the model.
         :param distribution: The distribution to use for relevant attribute generation (Valid distributions include: 'gaussian', 'beta')
+        :param explicit_rw: A flag indicating if explicit random walk parameters should be generated for this Agent.
         :param personality: A string defining what type of personality the agent will have (defaults to 'neutral' on Agent __init__)
         :param parameters: A dictionary containing the distribution parameters used to generate random values.
         :param personal_benefit: A boolean indicating if the Agent would be personally benefitted by the adoption of the 'social virus' being spread.
@@ -126,6 +131,18 @@ class Agent:
                 distribution, parameters=parameters
             )
             self.is_silenced[hierarchy] = False
+
+        # Handle explicit random walk parameter generation
+        if explicit_rw:
+            rw_params: dict[str, tuple[float, float]] = {}
+            for hierarchy in hierarchies:
+                rw_mean: float = draw_random_value("gaussian", parameters=parameters)
+                rw_variance: float = draw_random_value(
+                    "gaussian", parameters=parameters
+                )
+
+                rw_params[hierarchy] = (rw_mean, rw_variance)
+            self.rw_distributions = rw_params
 
         # Generate the Agent's initial opinion
         self.opinion = draw_random_value(distribution, parameters=parameters)
@@ -230,6 +247,22 @@ class Agent:
         :param radicalisation: The boolean radicalisation value to set.
         """
         self.radicalised = radicalisation
+        return None
+
+    def change_rw_distribution(
+        self, hierarchy: str, parameters: tuple[float, float]
+    ) -> None:
+        """
+        A setter method that changes the Agent's explicit random walk parameters for a specific social hierarchy.
+
+        :param hierarchy: The name of the hierarchy whose rw parameters are being changes.
+        :param parameters: The new (mean, var) for the random walk's gaussian distribution.
+        """
+        # Assume that if this function is being called, rw_distributions should be initialised if not already
+        if not self.rw_distributions:
+            self.rw_distributions = {}
+
+        self.rw_distributions[hierarchy] = parameters
         return None
 
     def step(self, rw_distributions: dict[str, tuple[float, float]]) -> None:
@@ -367,9 +400,8 @@ class Agent:
                     return self.radicalised
             case "erratic":
                 # Radicalisation is influenced by personal opinion to some extent, but is largely stochastically determined
-                random_threshold: float = rd.random()
-                if (absolute_opinion * 0.9 >= threshold) and (random_threshold >= 0.5):
-                    self.radicalised = True
+                if absolute_opinion * 1.25 >= threshold:
+                    self.radicalised = random_coinflip("bool")
                     return self.radicalised
             case "impulsive":
                 # The agent places very strong consideration on tangible benefits over anything else
@@ -409,9 +441,22 @@ class Agent:
         :param rw_distributions: A dictionary specifying the global random walk distributions defined for each hierarchy in the model.
         """
         for key, value in rw_distributions.items():
-            rw_result: float = value_rw_delta(
-                self.social_weightings[key], value[0], value[1]
-            )
+            rw_result: float | None = None
+
+            if self.rw_distributions:
+                if key in self.rw_distributions.keys():
+                    rw_result = value_rw_delta(
+                        self.social_weightings[key],
+                        self.rw_distributions[key][0],
+                        self.rw_distributions[key][1],
+                    )
+
+            if (
+                not rw_result
+            ):  # No explicit rw distribution was found; use the input ones instead
+                rw_result = value_rw_delta(
+                    self.social_weightings[key], value[0], value[1]
+                )
 
             # Constrain the result back to [-1, 1] if necessary
             if rw_result < -1.0:
