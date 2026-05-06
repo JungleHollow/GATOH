@@ -68,6 +68,9 @@ class Agent:
         # To assign per-agent random-walk parameters for the dynamic hierarchy weightings
         self.rw_distributions: dict[str, tuple[float, float]] | None = None
 
+        # To assign per-agent random-walk parameters for the stochastic opinion shifts
+        self.opinion_rw: tuple[float, float] | None = None
+
         # If no args have been passed, it is assumed that self.generate_agent() will be subsequently called
         if args:
             for arg in args:
@@ -97,6 +100,7 @@ class Agent:
         hierarchies: list[str],
         distribution: str = "gaussian",
         explicit_rw: bool = False,
+        explicit_opinion_rw: bool = False,
         personality: str | None = None,
         parameters: dict | None = None,
         personal_benefit: bool | None = None,
@@ -108,7 +112,8 @@ class Agent:
         :param index: The index of the Agent object within the model's AgentSet.
         :param hierarchies: A list containing the names of all valid social hierarchies in the model.
         :param distribution: The distribution to use for relevant attribute generation (Valid distributions include: 'gaussian', 'beta')
-        :param explicit_rw: A flag indicating if explicit random walk parameters should be generated for this Agent.
+        :param explicit_rw: A flag indicating if explicit hierarchy weighting random walk parameters should be generated for this Agent.
+        :param explicit_opinion_rw: A flag indicating if an explicit opinion random walk parameter should be generated for this Agent.
         :param personality: A string defining what type of personality the agent will have (defaults to 'neutral' on Agent __init__)
         :param parameters: A dictionary containing the distribution parameters used to generate random values.
         :param personal_benefit: A boolean indicating if the Agent would be personally benefitted by the adoption of the 'social virus' being spread.
@@ -132,7 +137,7 @@ class Agent:
             )
             self.is_silenced[hierarchy] = False
 
-        # Handle explicit random walk parameter generation
+        # Handle explicit hierarchy weighting random walk parameter generation
         if explicit_rw:
             rw_params: dict[str, tuple[float, float]] = {}
             for hierarchy in hierarchies:
@@ -143,6 +148,12 @@ class Agent:
 
                 rw_params[hierarchy] = (rw_mean, rw_variance)
             self.rw_distributions = rw_params
+
+        # Handle the explicit opinion random walk parameter generation
+        if explicit_opinion_rw:
+            rw_mean = draw_random_value("gaussian", parameters=parameters)
+            rw_variance = draw_random_value("gaussian", parameters=parameters)
+            self.opinion_rw = (rw_mean, rw_variance)
 
         # Generate the Agent's initial opinion
         self.opinion = draw_random_value(distribution, parameters=parameters)
@@ -265,15 +276,31 @@ class Agent:
         self.rw_distributions[hierarchy] = parameters
         return None
 
-    def step(self, rw_distributions: dict[str, tuple[float, float]]) -> None:
+    def change_opinion_rw(self, rw_params: tuple[float, float]) -> None:
+        """
+        A setter method that changes the Agent's explicit opinion random walk parameters.
+
+        :param rw_params: The new (mean, var) for the random walk's gaussian distribution.
+        """
+        self.opinion_rw = rw_params
+        return None
+
+    def step(
+        self,
+        rw_distributions: dict[str, tuple[float, float]],
+        opinion_rw: tuple[float, float],
+    ) -> None:
         """
         Step the individual agent object:
             1. Handle dynamic social hierarchy weightings
+            2. Handle the stochastic opinion changes experienced by the Agent
 
         :param rw_distributions: A dictionary of <hierarchy name : (mean, variance)> defining the random walk distributions of each social
-                                    hierarchy in the model
+                                    hierarchy weighting in the model.
+        :param opinion_rw: A (mean, variance) tuple defining the random walk distribution at the model level for the Agent opinions.
         """
         self.evolve_hierarchies(rw_distributions)
+        self.stochastic_opinion(opinion_rw)
         return None
 
     def update(self, opinion_silenced: dict[str, bool], negation_ocurred: bool) -> None:
@@ -465,6 +492,34 @@ class Agent:
                 self.social_weightings[key] = 1.0
             else:
                 self.social_weightings[key] = rw_result
+        return None
+
+    def stochastic_opinion(self, opinion_rw: tuple[float, float]) -> None:
+        """
+        Determine the stochastic direction and magnitude of a shift in the Agent's opinion and apply it.
+
+        This is representative of opinion changes in real social networks in which individual opinions may increase or decrease
+        away from the aggregate mean (independent of external influences).
+
+        :param opinion_rw: A (mean, variance) tuple which parametrises the Gaussian distribution used for stochastic opinion shift.
+        """
+        rw_result: float | None = None
+
+        if self.opinion_rw:
+            rw_result = value_rw_delta(
+                self.opinion, self.opinion_rw[0], self.opinion_rw[1]
+            )
+
+        if not rw_result:
+            rw_result = value_rw_delta(self.opinion, opinion_rw[0], opinion_rw[1])
+
+        if rw_result < -1.0:
+            self.opinion = -1.0
+        elif rw_result > 1.0:
+            self.opinion = 1.0
+        else:
+            self.opinion = rw_result
+
         return None
 
     def life_events(self) -> None:

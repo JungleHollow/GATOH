@@ -27,6 +27,7 @@ class ABModel:
         self,
         hierarchy_names: list[str],
         hierarchy_rw_distributions: list[tuple[float, float]],
+        agent_opinion_rw: tuple[float, float] = (0.0, 0.1),
         iterations: int = 100,
         silencing_threshold: float = 0.8,
         negation_threshold: float = 0.99,
@@ -38,6 +39,7 @@ class ABModel:
         """
         :param hierarchy_names: A list of strings representing the names of all social hierachies that will exist in the model.
         :param hierarchy_rw_distributions: A list of (mean, variance) tuples defining the parameters of normal distributions used in random walks for their corresponding hierarchies.
+        :param agent_opinion_rw: A (mean, variance) tuple defining the parameters of the normal distribution used for stochastic opinion changes in Agents at each timestep.
         :param iterations: The number of iterations that the model will run for.
         :param silencing_threshold: A threshold that, when surpassed by Agents, will cause them to cease expressing their opinions in a given hierarchy.
         :param negation_threshold: A threshold that, when surpassed by Agents, will cause their opinion to become its additive inverse.
@@ -49,6 +51,8 @@ class ABModel:
         self.hierarchy_information: dict[str, tuple[float, float]] = {}
         for idx, hierarchy in enumerate(hierarchy_names):
             self.hierarchy_information[hierarchy] = hierarchy_rw_distributions[idx]
+
+        self.agent_opinion_rw: tuple[float, float] = agent_opinion_rw
 
         self.agents: AgentSet = AgentSet(self)
         self.graphs: GraphSet = GraphSet(self)
@@ -392,7 +396,7 @@ class ABModel:
         for graph in self.graphs:
             graph.step()
         for agent in self.agents:
-            agent.step(self.hierarchy_information)
+            agent.step(self.hierarchy_information, self.agent_opinion_rw)
         return None
 
     def update(self) -> None:
