@@ -46,8 +46,9 @@ class RandomWalkTester:
         for model_name in self.model_names:
             new_model: md.ABModel = md.ABModel(
                 deepcopy(TEST_PARAMETERS["hierarchy_names"]),
-                # The rw params passed to model are overridden by the explicit ones set for the Agents and Graphs...
-                deepcopy(TEST_PARAMETERS["shared_hierarchy_rw"]),
+                deepcopy(
+                    list(TEST_PARAMETERS["shared_hierarchy_rw"].values())
+                ),  # The rw params passed to model are overridden by the explicit ones set for the Agents and Graphs...
                 save_dir=SAVEDIRS[model_name],
                 data_file=SAVEFILES[model_name],
                 model_id=model_name,
@@ -75,6 +76,8 @@ class RandomWalkTester:
             self.model_agents["BOTH"] = deepcopy(
                 self.model_agents["HIER"]
             )  # Agents require unique hierarchy params
+
+            print("== All model Agents successfully created ==")
 
             # Create the BASE Graphs
             self.model_graphs["BASE"] = self.create_graphs(self.model_agents["BASE"])
@@ -108,28 +111,31 @@ class RandomWalkTester:
                 for idx, node in enumerate(graph.graph.nodes()):
                     node.agent = deepcopy(self.model_agents["BOTH"][idx])
 
+            print("== All model Graphs successfully created ==")
+
     def create_agents(self) -> list[agt.Agent]:
         """
         Generates and returns the population of Agents that will be used across all models.
 
         :return: A list containing all the created Agent objects.
         """
+        print("Starting Agent creation")
         created_agents: list[agt.Agent] = []
 
-        personalities: list[str] = AGENT_PARAMETERS["personality"].keys()
-        personality_p: list[float] = AGENT_PARAMETERS["personality"].values()
+        personalities: list[str] = list(AGENT_PARAMETERS["personality"].keys())
+        personality_p: list[float] = list(AGENT_PARAMETERS["personality"].values())
 
-        benefit_flags: list[bool] = AGENT_PARAMETERS["personal_benefit"].keys()
-        benefit_p: list[float] = AGENT_PARAMETERS["personal_benefit"].values()
+        benefit_flags: list[bool] = list(AGENT_PARAMETERS["personal_benefit"].keys())
+        benefit_p: list[float] = list(AGENT_PARAMETERS["personal_benefit"].values())
 
         for i in range(self.num_agents):
             agent_id: str = f"{AGENT_PARAMETERS['id_base']}{i + 1:04}"
             agent_opinion: float = rd.uniform(
                 AGENT_PARAMETERS["opinions"][0], AGENT_PARAMETERS["opinions"][1]
             )
-            agent_personality: str = np.random.choice(
-                personalities, size=1, p=personality_p
-            )[0]
+            agent_personality: str = str(
+                np.random.choice(personalities, size=1, p=personality_p)[0]
+            )
             agent_susceptibility: float = rd.uniform(
                 AGENT_PARAMETERS["social_susceptibility"][0],
                 AGENT_PARAMETERS["social_susceptibility"][1],
@@ -138,12 +144,22 @@ class RandomWalkTester:
                 agent_personality,
                 agent_susceptibility,
             )
-            agent_benefit: bool = np.random.choice(benefit_flags, size=1, p=benefit_p)[
-                0
-            ]
+            agent_benefit: bool = bool(
+                np.random.choice(benefit_flags, size=1, p=benefit_p)[0]
+            )
+
+            hierarchy_weightings: dict[str, float] = {}
+            for hierarchy_name in TEST_PARAMETERS["hierarchy_names"]:
+                generated_weighting: float = rd.uniform(
+                    AGENT_PARAMETERS["hierarchy_weighting"][0],
+                    AGENT_PARAMETERS["hierarchy_weighting"][1],
+                )
+                hierarchy_weightings[hierarchy_name] = generated_weighting
+
             created_agent: agt.Agent = agt.Agent(
                 agent_id,
                 agent_opinion,
+                hierarchy_weightings,
                 agent_behaviour,
                 agent_benefit,
             )
@@ -155,6 +171,7 @@ class RandomWalkTester:
             # Manual garbage collection
             del created_agent
 
+        print("Finished Agent creation")
         return deepcopy(created_agents)
 
     def create_graphs(self, agents: list[agt.Agent]) -> list[gr.Graph]:
@@ -164,11 +181,12 @@ class RandomWalkTester:
         :param agents: The population of Agents that will be used to generate graphs.
         :return: A list containing all the created Graph objects
         """
+        print("Starting Graph creation")
         created_graphs: list[gr.Graph] = []
 
         for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
             graph: gr.Graph = gr.Graph(
-                hierarchy, TEST_PARAMETERS["shared_relationship_rw"][hierarchy]
+                hierarchy, TEST_PARAMETERS["shared_relationship_rw"]
             )
             graph.generate_graph(
                 deepcopy(agents),
@@ -181,6 +199,7 @@ class RandomWalkTester:
             # Manual garbage collection
             del graph
 
+        print("Finished Graph creation")
         return deepcopy(created_graphs)
 
     def load_models(self, existing_saves: list[str] | None = None) -> None:
@@ -204,6 +223,7 @@ class RandomWalkTester:
 
         :param missing_saves: An optional partial list of the model names representing models that should be setup.
         """
+        print("Setting up the model instances")
         if missing_saves:
             for missing_save in missing_saves:
                 _ = self.models[missing_save].add_agents(
@@ -233,6 +253,7 @@ class RandomWalkTester:
 
         :param missing_saves: An optional partial list of the model names representing models that should be run.
         """
+        print("Beginning model iterations\n\n")
         if missing_saves:
             for missing_save in missing_saves:
                 self.models[missing_save].iterate()
@@ -282,6 +303,10 @@ if __name__ == "__main__":
         "opinions": (-0.8, 0.8),
         "relationships": (-0.8, 0.8),
         "social_susceptibility": (0.2, 0.8),
+        "hierarchy_weighting": (
+            -0.6,
+            0.6,
+        ),  # Range of possible initial hierarchy weighting values
         "personality": {
             "social": 0.4,
             "neutral": 0.4,
