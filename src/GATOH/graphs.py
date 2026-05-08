@@ -98,6 +98,15 @@ class GraphEdge:
         self.weighting = value
         return None
 
+    def set_rw_params(self, rw_params: tuple[float, float]) -> None:
+        """
+        A setter function that changes this GraphEdge's rw_params value.
+
+        :param rw_params: A (mean, variance) tuple specifying this relationship's unique random walk distribution.
+        """
+        self.rw_params = rw_params
+        return None
+
     def update_from_node(self, idx: int) -> None:
         """
         A setter function that updates the from_node's index for this GraphEdge.

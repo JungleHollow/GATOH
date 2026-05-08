@@ -45,7 +45,10 @@ class GraphAlgTester:
                 data_file=MODEL_DATAFILES[algorithm],
                 model_id=algorithm.upper(),
             )
-            self.models[algorithm] = algorithm_model
+            self.models[algorithm] = deepcopy(algorithm_model)
+
+            # Manual garbage collection
+            del algorithm_model
 
         # TODO: Optimise this statement to account for partial missing and existing saves
         if not self.existing:  # Objects are needed to define and run the models
@@ -166,8 +169,8 @@ class GraphAlgTester:
         """
         if missing_saves:
             for missing_save in missing_saves:
-                self.models[missing_save].add_agents(deepcopy(self.model_agents))
-                self.models[missing_save].add_graphs(
+                _ = self.models[missing_save].add_agents(deepcopy(self.model_agents))
+                _ = self.models[missing_save].add_graphs(
                     deepcopy(self.model_graphs[missing_save]),
                     deepcopy(HIERARCHY_NAMES),
                     deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
@@ -175,8 +178,8 @@ class GraphAlgTester:
             return None
 
         for algorithm in self.algorithms:
-            self.models[algorithm].add_agents(deepcopy(self.model_agents))
-            self.models[algorithm].add_graphs(
+            _ = self.models[algorithm].add_agents(deepcopy(self.model_agents))
+            _ = self.models[algorithm].add_graphs(
                 deepcopy(self.model_graphs[algorithm]),
                 deepcopy(HIERARCHY_NAMES),
                 deepcopy(HIERARCHY_RW_DISTRIBUTIONS),

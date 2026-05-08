@@ -312,7 +312,7 @@ class ABModel:
             agent_personality: str = choices(personalities, weights=probabilities, k=1)[
                 0
             ]
-            new_agent.generate_agent(
+            _ = new_agent.generate_agent(
                 agent_id,
                 agent_index,
                 hierarchies,

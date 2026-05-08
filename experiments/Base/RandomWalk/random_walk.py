@@ -40,34 +40,148 @@ class RandomWalkTester:
 
         self.existing: bool = existing
 
-        # Define the lists that will contain the shared populations of Agents and Graphs
-        self.model_agents: list[agt.Agent] = []
-        self.model_graphs: list[gr.Graph] = []
-
         # Dynamic model space
         self.models: dict[str, md.ABModel] = {}
 
-        # Create the appropriate models
-        # TODO: FINISH THE MODEL CREATION
+        for model_name in self.model_names:
+            new_model: md.ABModel = md.ABModel(
+                deepcopy(TEST_PARAMETERS["hierarchy_names"]),
+                # The rw params passed to model are overridden by the explicit ones set for the Agents and Graphs...
+                deepcopy(TEST_PARAMETERS["shared_hierarchy_rw"]),
+                save_dir=SAVEDIRS[model_name],
+                data_file=SAVEFILES[model_name],
+                model_id=model_name,
+            )
+            self.models[model_name] = deepcopy(new_model)
 
-    def create_agents(self, num_agents: int) -> list[agt.Agent]:
+            # Manual garbage collection
+            del new_model
+
+        # Define the dicts that will contain the populations of Agents and Graphs
+        self.model_agents: dict[str, list[agt.Agent]] = {}
+        self.model_graphs: dict[str, list[gr.Graph]] = {}
+
+        if not self.existing:
+            self.model_agents["BASE"] = self.create_agents()
+            self.model_agents["RELS"] = deepcopy(
+                self.model_agents["BASE"]
+            )  # No changes in the Agents from the base case
+
+            # HIER Model requires all Agents to have unique hierarchy rw params
+            self.model_agents["HIER"] = deepcopy(self.model_agents["BASE"])
+            for agent in self.model_agents["HIER"]:
+                agent.rw_distributions = TEST_PARAMETERS["unique_hierarchy_rw"]
+
+            self.model_agents["BOTH"] = deepcopy(
+                self.model_agents["HIER"]
+            )  # Agents require unique hierarchy params
+
+            # Create the BASE Graphs
+            self.model_graphs["BASE"] = self.create_graphs(self.model_agents["BASE"])
+
+            self.model_graphs["RELS"] = deepcopy(self.model_graphs["BASE"])
+            for graph in self.model_graphs["RELS"]:
+                # First, update all the nodes with the appropriate Agent objects
+                for idx, node in enumerate(graph.graph.nodes()):
+                    node.agent = deepcopy(self.model_agents["RELS"][idx])
+                # For this case, unique rw parameters must be generated for each edge
+                for edge in graph.graph.edges():
+                    generated_mean: float = rd.uniform(
+                        TEST_PARAMETERS["unique_rel_rw_range"][0][0],
+                        TEST_PARAMETERS["unique_rel_rw_range"][0][1],
+                    )
+                    generated_variance: float = rd.uniform(
+                        TEST_PARAMETERS["unique_rel_rw_range"][1][0],
+                        TEST_PARAMETERS["unique_rel_rw_range"][1][1],
+                    )
+                    edge.set_rw_params((generated_mean, generated_variance))
+
+            self.model_graphs["HIER"] = deepcopy(self.model_graphs["BASE"])
+            for graph in self.model_graphs["HIER"]:
+                # Only the nodes must be updated for this case
+                for idx, node in enumerate(graph.graph.nodes()):
+                    node.agent = deepcopy(self.model_agents["HIER"][idx])
+
+            self.model_graphs["BOTH"] = deepcopy(self.model_graphs["RELS"])
+            for graph in self.model_graphs["BOTH"]:
+                # Only the nodes must be updated as unique rels were already generated for RELS
+                for idx, node in enumerate(graph.graph.nodes()):
+                    node.agent = deepcopy(self.model_agents["BOTH"][idx])
+
+    def create_agents(self) -> list[agt.Agent]:
         """
         Generates and returns the population of Agents that will be used across all models.
 
-        :param num_agents: The number of agents to create.
         :return: A list containing all the created Agent objects.
         """
-        # TODO: IMPLEMENT THIS FUNCTION
-        return []
+        created_agents: list[agt.Agent] = []
 
-    def create_graphs(self) -> list[gr.Graph]:
+        personalities: list[str] = AGENT_PARAMETERS["personality"].keys()
+        personality_p: list[float] = AGENT_PARAMETERS["personality"].values()
+
+        benefit_flags: list[bool] = AGENT_PARAMETERS["personal_benefit"].keys()
+        benefit_p: list[float] = AGENT_PARAMETERS["personal_benefit"].values()
+
+        for i in range(self.num_agents):
+            agent_id: str = f"{AGENT_PARAMETERS['id_base']}{i + 1:04}"
+            agent_opinion: float = rd.uniform(
+                AGENT_PARAMETERS["opinions"][0], AGENT_PARAMETERS["opinions"][1]
+            )
+            agent_personality: str = np.random.choice(
+                personalities, size=1, p=personality_p
+            )[0]
+            agent_susceptibility: float = rd.uniform(
+                AGENT_PARAMETERS["social_susceptibility"][0],
+                AGENT_PARAMETERS["social_susceptibility"][1],
+            )
+            agent_behaviour: tuple[str, float] = (
+                agent_personality,
+                agent_susceptibility,
+            )
+            agent_benefit: bool = np.random.choice(benefit_flags, size=1, p=benefit_p)[
+                0
+            ]
+            created_agent: agt.Agent = agt.Agent(
+                agent_id,
+                agent_opinion,
+                agent_behaviour,
+                agent_benefit,
+            )
+            # Initialise the base population with shared dynamic hierarchy rw params
+            created_agent.rw_distributions = TEST_PARAMETERS["shared_hierarchy_rw"]
+
+            created_agents.append(deepcopy(created_agent))
+
+            # Manual garbage collection
+            del created_agent
+
+        return deepcopy(created_agents)
+
+    def create_graphs(self, agents: list[agt.Agent]) -> list[gr.Graph]:
         """
         Creates the graphs that will be used across all models.
 
+        :param agents: The population of Agents that will be used to generate graphs.
         :return: A list containing all the created Graph objects
         """
-        # TODO: IMPLEMENT THIS FUNCTION
-        return []
+        created_graphs: list[gr.Graph] = []
+
+        for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+            graph: gr.Graph = gr.Graph(
+                hierarchy, TEST_PARAMETERS["shared_relationship_rw"][hierarchy]
+            )
+            graph.generate_graph(
+                deepcopy(agents),
+                method=TEST_PARAMETERS["graph_generation_alg"],
+                relationship_range=AGENT_PARAMETERS["relationships"],
+            )
+
+            created_graphs.append(deepcopy(graph))
+
+            # Manual garbage collection
+            del graph
+
+        return deepcopy(created_graphs)
 
     def load_models(self, existing_saves: list[str] | None = None) -> None:
         """
@@ -90,8 +204,28 @@ class RandomWalkTester:
 
         :param missing_saves: An optional partial list of the model names representing models that should be setup.
         """
-        # TODO: IMPLEMENT THIS FUNCTION
-        pass
+        if missing_saves:
+            for missing_save in missing_saves:
+                _ = self.models[missing_save].add_agents(
+                    deepcopy(self.model_agents[missing_save])
+                )
+                _ = self.models[missing_save].add_graphs(
+                    deepcopy(self.model_graphs[missing_save]),
+                    deepcopy(TEST_PARAMETERS["hierarchy_names"]),
+                    deepcopy(TEST_PARAMETERS["shared_hierarchy_rw"]),
+                )
+            return None
+
+        for model_name in self.model_names:
+            _ = self.models[model_name].add_agents(
+                deepcopy(self.model_agents[model_name])
+            )
+            _ = self.models[model_name].add_graphs(
+                deepcopy(self.model_graphs[model_name]),
+                deepcopy(TEST_PARAMETERS["hierarchy_names"]),
+                deepcopy(TEST_PARAMETERS["shared_hierarchy_rw"]),
+            )
+        return None
 
     def run_models(self, missing_saves: list[str] | None = None) -> None:
         """
@@ -99,8 +233,17 @@ class RandomWalkTester:
 
         :param missing_saves: An optional partial list of the model names representing models that should be run.
         """
-        # TODO: IMPLEMENT THIS FUNCTION
-        pass
+        if missing_saves:
+            for missing_save in missing_saves:
+                self.models[missing_save].iterate()
+                self.models[missing_save].save_model()
+            return None
+
+        for model_name in self.model_names:
+            self.models[model_name].iterate()
+            self.models[model_name].save_model()
+
+        return None
 
 
 if __name__ == "__main__":
@@ -124,7 +267,11 @@ if __name__ == "__main__":
             "E": (0.0, 0.01),
             "F": (0.1, 0.2),
         },
-        "shared_relaitonship_rw": (0.0, 0.1),
+        "shared_relationship_rw": (0.0, 0.1),
+        "unique_rel_rw_range": (
+            (-0.1, 0.1),
+            (0.0, 0.5),
+        ),  # Ranges for the mean and variance values of the rw params
         "hierarchy_names": ["A", "B", "C", "D", "E", "F"],
         "graph_generation_alg": "small-world",
     }

@@ -102,7 +102,7 @@ class Agent:
         explicit_rw: bool = False,
         explicit_opinion_rw: bool = False,
         personality: str | None = None,
-        parameters: dict | None = None,
+        parameters: dict[str, Any] | None = None,
         personal_benefit: bool | None = None,
     ) -> Agent:
         """
