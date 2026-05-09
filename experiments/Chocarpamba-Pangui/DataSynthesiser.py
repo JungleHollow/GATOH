@@ -1,3 +1,5 @@
+from typing import Any
+
 import argparse
 import copy
 import json
@@ -23,11 +25,11 @@ class DataSynthesiser:
 
         self.social_graphs: list[str] = social_graphs
 
-        self.survey_values: dict
+        self.survey_values: dict[str, Any]
         with open(self.values_path, "r") as file:
             self.survey_values = json.load(file)
 
-        self.response_distribution: dict
+        self.response_distribution: dict[str, Any]
         with open(self.response_file, "r") as file:
             self.response_distribution = json.load(file)
 
@@ -36,9 +38,9 @@ class DataSynthesiser:
         self.num_synthetic_entries: int = 0
 
         self.output_dataframe: pl.DataFrame
-        self.output_dict: dict = {"AgentId": []}
+        self.output_dict: dict[str, Any] = {"AgentId": []}
 
-        self.output_relationships: dict = {
+        self.output_relationships: dict[str, Any] = {
             hierarchy: [] for hierarchy in self.social_graphs
         }  # Will be lists of (start_node, end_node, weight) triples
 
@@ -222,12 +224,12 @@ class DataSynthesiser:
         a marriage joining these families) are not accounted for.
         """
         agent_df: pl.DataFrame = copy.deepcopy(self.output_dataframe.select("AgentId"))
-        no_family: list = list(
+        no_family: list[Any] = list(
             agent_df.sample(fraction=0.1, with_replacement=False)["AgentId"]
         )  # Leave 10% of the total pop as having no family
         agent_df = agent_df.filter(~pl.col("AgentId").is_in(no_family))
 
-        current_sample: list  # Define but don't initialise the variable yet
+        current_sample: list[Any]  # Define but don't initialise the variable yet
 
         while (
             len(agent_df["AgentId"]) >= 3
@@ -257,9 +259,9 @@ class DataSynthesiser:
         This means that unidirectional and unbalanced friendships can exist between the agents in the graph.
         """
         agent_df: pl.DataFrame = copy.deepcopy(self.output_dataframe.select("AgentId"))
-        agent_list: list = list(agent_df["AgentId"])
+        agent_list: list[Any] = list(agent_df["AgentId"])
         for i in agent_list:
-            random_sample: list = list(
+            random_sample: list[Any] = list(
                 agent_df.sample(fraction=0.1, with_replacement=False)["AgentId"]
             )
             for j in random_sample:
@@ -284,11 +286,11 @@ class SynthesiserArgParser:
             prog="ABMOS DataSynthesiser",
             description="Create synthetic data from observed distributions for use with the ABMOS library",
         )
-        self.parser.add_argument("response_file", type=str)
-        self.parser.add_argument("output_path", type=str)
-        self.parser.add_argument("-c", "--community_code", default="FALSE", type=str)
-        self.parser.add_argument("-n", "--num_entries", default=100, type=int)
-        self.parser.add_argument(
+        _ = self.parser.add_argument("response_file", type=str)
+        _ = self.parser.add_argument("output_path", type=str)
+        _ = self.parser.add_argument("-c", "--community_code", default="FALSE", type=str)
+        _ = self.parser.add_argument("-n", "--num_entries", default=100, type=int)
+        _ = self.parser.add_argument(
             "-s",
             "--social_graphs",
             default=["Age", "Family", "Friends", "Religion", "Cultural"],

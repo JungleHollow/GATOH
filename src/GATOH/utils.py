@@ -26,13 +26,13 @@ def pygraph_to_pydigraph(input_graph: rx.PyGraph) -> rx.PyDiGraph:
     """
     new_graph: rx.PyDiGraph = rx.PyDiGraph()
     for node in input_graph.nodes():
-        new_graph.add_node(node)
+        _ = new_graph.add_node(node)
 
     for edge in input_graph.weighted_edge_list():
         # 'edge' is a (node_a_index, node_b_index, weight) tuple
         # Given that multiple edges were not allowed at creation, each combination of a and b should be unique
-        new_graph.add_edge(edge[0], edge[1], edge[2])  # Edge going from a -> b
-        new_graph.add_edge(edge[1], edge[0], edge[2])  # Edge going from b -> a
+        _ = new_graph.add_edge(edge[0], edge[1], edge[2])  # Edge going from a -> b
+        _ = new_graph.add_edge(edge[1], edge[0], edge[2])  # Edge going from b -> a
     return new_graph
 
 
@@ -67,7 +67,7 @@ def watts_strogatz_graph(
     G: rx.PyGraph = rx.PyGraph()
     nodes: list[int] = list(range(n))  # nodes labeled 0 to n-1
 
-    G.add_nodes_from(
+    _ = G.add_nodes_from(
         nodes
     )  # Add the index-labelled nodes for now (GraphNode objects will replace these in the calling module)
 
@@ -79,7 +79,7 @@ def watts_strogatz_graph(
 
         weightings: list[float] = [0.0 for _ in range(len(nodes))]
         edges_info: list[tuple[int, int, float]] = list(zip(nodes, targets, weightings))
-        G.add_edges_from(edges_info)
+        _ = G.add_edges_from(edges_info)
 
         # Manual garbage collection
         del weightings, edges_info
@@ -100,7 +100,7 @@ def watts_strogatz_graph(
                         break  # Skip this rewiring
                 else:
                     G.remove_edge(u, v)
-                    G.add_edge(u, w, 0.0)
+                    _ = G.add_edge(u, w, 0.0)
     return G
 
 
@@ -188,7 +188,7 @@ def beta_value_attenuation(input_value: float, a: float = 0.9, b: float = 0.9) -
 # ========== Random Generation Utils ==========
 
 
-def draw_random_value(distribution: str, parameters: dict | None = None) -> float:
+def draw_random_value(distribution: str, parameters: dict[str, Any] | None = None) -> float:
     """
     Utility function that handles random value generation from multiple distributions in the same function.
 
@@ -244,6 +244,8 @@ def draw_random_value(distribution: str, parameters: dict | None = None) -> floa
                 )
             else:
                 drawn_value = gamma.rvs(1.0)
+        case _:
+            raise ValueError(f"The given distribution ({distribution}) does not match any valid implemented types.")
     return drawn_value
 
 
@@ -326,8 +328,8 @@ def create_config_file(save_path: str, config_data: dict[str, Any]) -> None:
 
 
 def plot_graph(
-    x_vals: dict[str, list],
-    y_vals: dict[str, list],
+    x_vals: dict[str, list[Any]],
+    y_vals: dict[str, list[Any]],
     plot_type: str = "line",
     show_fig: bool = False,
     x_label: str | None = None,
@@ -350,8 +352,8 @@ def plot_graph(
     fig, ax = plt.subplots()
 
     for key in x_vals.keys():
-        current_x: list = x_vals[key]
-        current_y: list = y_vals[key]
+        current_x: list[Any] = x_vals[key]
+        current_y: list[Any] = y_vals[key]
 
         match plot_type:
             case "line":

@@ -173,7 +173,7 @@ class Agent:
         self,
         name: str,
         value: Any | None = None,
-        parameters: dict | None = None,
+        parameters: dict[str, Any] | None = None,
         distribution: str | None = None,
         overwrite: bool = True,
     ) -> None:
@@ -455,6 +455,8 @@ class Agent:
                 ):
                     self.radicalised = True
                     return self.radicalised
+            case _:
+                return False
         # If this is somehow reached, an error has ocurred (but False is returned just in case)
         return False
 
@@ -560,8 +562,8 @@ class AgentSet:
         """
         :param model: The parent ABModel object that this AgentSet is being attached to
         """
-        self.parent_model = model
-        self.agents: list = []
+        self.parent_model: Any = model
+        self.agents: list[Agent] = []
         self.random: rd.Random = rd.Random()
 
     def save_agentset(self, directory_path: str) -> None:
@@ -642,7 +644,7 @@ class AgentSet:
             agent_pickle_path: str = f"{subdirectory_path}/{agent_pickle_name}"
             with open(agent_pickle_path, "rb") as agent_pickle:
                 agent_object: Agent = pickle.load(agent_pickle)
-                self.add(agent_object)
+                _ = self.add(agent_object)
 
         return None
 
@@ -836,7 +838,7 @@ class AgentSet:
         return deepcopy(sampled_agents)
 
     @override
-    def __getstate__(self) -> dict:
+    def __getstate__(self) -> dict[str, Any]:
         """
         Retrive the current state of the AgentSet for serialization.
         :return: a dictionary representing the current state of the AgentSet

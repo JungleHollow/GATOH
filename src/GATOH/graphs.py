@@ -4,11 +4,11 @@ import contextlib
 import os
 import warnings
 import zipfile
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from copy import deepcopy
 from random import Random
 from shutil import rmtree
-from typing import Any, Iterator, override
+from typing import Any, override
 
 import numpy as np
 import polars as pl
@@ -307,7 +307,7 @@ class Graph:
         self.edge_count = len(self.graph.edges())
         return None
 
-    def add_edges(self, edges: dict) -> None:
+    def add_edges(self, edges: dict[str, list[Any]]) -> None:
         """
         Creates appropriate GraphEdges from the given dictionary and then adds these to the graph.
 
@@ -396,7 +396,7 @@ class Graph:
                         edge = GraphEdge(self.name, from_nodes[i], to_nodes[i])
                         graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
 
-        self.graph.add_edges_from(graph_edges)
+        _ = self.graph.add_edges_from(graph_edges)
         self.update_edge_indices()
         return None
 
@@ -575,7 +575,7 @@ class Graph:
         if edge_index is not None:
             self.graph.update_edge_by_index(edge_index, updated_edge)
         else:
-            self.graph.add_edges_from(updated_edge)
+            _ = self.graph.add_edges_from(updated_edge)
         self.update_edge_indices()
         return None
 

@@ -4,14 +4,14 @@ from typing import Any
 
 import polars as pl
 
-from src.ABMOS.agents import Agent, AgentSet
-from src.ABMOS.graphs import Graph, GraphEdge, GraphNode, GraphSet
-from src.ABMOS.model import ABModel
+from src.GATOH.agents import Agent, AgentSet
+from src.GATOH.graphs import Graph, GraphEdge, GraphNode, GraphSet
+from src.GATOH.model import ABModel
 
 
 class DataReader:
     """
-    A class that will be used to create and handle an appropriate ABMOS model from the given agent and
+    A class that will be used to create and handle an appropriate GATOH model from the given agent and
     social hierarchy CSV file paths
     """
 
@@ -20,33 +20,38 @@ class DataReader:
         agents_path: str,
         initial_hierarchies: list[str],
         social_path: str,
+        base_hierarchies: list[str] | None = None,
         opinions_path: str | None = None,
         iterations: int = 100,
-        xlims: tuple[int, int] | None = None,
-        ylims: tuple[int, int] | None = None,
-    ):
+    ) -> None:
         """
-        :param agents_path: A relative or absolute file path to a CSV file containing relevant data on model agent characteristics
-        :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader
-        :param social_path: A relative or absolute file path to a CSV file containing relevant data on the relative influence of the existing social hierarchies in the community
-        :optional param opinions_path: A relative or absolute file path to a CSV file containing the dependant variables of actual agent opinions; used to compare model accuracy after execution
-        :optional param iterations: The number of iterations that the ABModel will be run for
-        :optional param xlims: The x-axis boundaries of the agent space within the ABModel
-        :optional param ylims: The y-axis boundaries of the agent space within the ABModel
+        :param agents_path: A relative or absolute file path to a CSV file containing relevant data on model agent characteristics.
+        :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
+        :param social_path: A relative or absolute file path to a CSV file containing relevant data on the relative influence of the existing social hierarchies in the community.
+        :param base_hierarchies: A list containing the most basic hierarchies that exist; will be created before <initial_hierarchies>.
+        :optional param opinions_path: A relative or absolute file path to a CSV file containing the dependant variables of actual agent opinions; used to compare model accuracy after execution.
+        :optional param iterations: The number of iterations that the ABModel will be run for.
         """
         self.agents_path: str = agents_path
         self.agents_df: pl.DataFrame
-        self.base_hierarchies: list[str] = [
-            "Age",
-            "Gender",
-            "Location",
-        ]  # Predefined social hierarchies that should always be present in the data
+
+        self.base_hierarchies: list[str]
+        if base_hierarchies:
+            self.base_hierarchies = base_hierarchies
+        else:
+            self.base_hierarchies = [
+                "Age",
+                "Gender",
+            ]
         self.initial_hierarchies: list[str] = initial_hierarchies
-        self.hierarchy_influences: dict[str, dict] = {}
+        self.hierarchy_influences: dict[str, dict[str, Any]] = {}
+
         self.social_path: str = social_path
         self.social_df: pl.DataFrame
+
         self.opinions_path: str | None = opinions_path
         self.opinions_df: pl.DataFrame
+
         self.agent_objects: list[Agent]
         self.graph_objects: list[Graph]
 
@@ -76,13 +81,13 @@ class DataReader:
                     self.initial_hierarchies.append(hierarchy)
 
         for agent_row in self.social_df.iter_rows(named=True):
-            hierarchy_effects: dict = {}
+            hierarchy_effects: dict[str, Any] = {}
             for hierarchy in self.initial_hierarchies:
                 hierarchy_effects[hierarchy] = (
                     0.0  # Initialise each hierarchy effect, even if not explicitly seen in the current agent row
                 )
 
-            raw_hierarchy_values: dict = {}
+            raw_hierarchy_values: dict[str, list[int]] = {}
             for key, value in agent_row:
                 if key == "AgenteId":
                     continue
@@ -96,7 +101,7 @@ class DataReader:
                         raw_hierarchy_values[hierarchy_name] = []
                     raw_hierarchy_values[hierarchy_name].append(abs(int(value)))
 
-            for key, value in raw_hierarchy_values:
+            for key, value in raw_hierarchy_values.items():
                 sum_values: int = sum(value)
                 averaged_sum: float = sum_values / len(value)
                 final_effect: float = averaged_sum / 10.0
@@ -114,7 +119,7 @@ class DataReader:
                 key, value
             )  # This should create an Agent with id <key> and social_weightings <value>
             self.agent_objects.append(new_agent)
-        self.model.add_agents(self.agent_objects)
+        _ = self.model.add_agents(self.agent_objects)
         self.create_initial_graphs()
 
     def create_initial_graphs(self):
@@ -125,7 +130,11 @@ class DataReader:
         for hierarchy in self.base_hierarchies:
             new_graph = Graph(hierarchy)
             new_graph.add_nodes(self.agent_objects)
-            graph_edges: dict = {"from_node": [], "to_node": [], "weighting": []}
+            graph_edges: dict[str, list[Any]] = {
+                "from_node": [],
+                "to_node": [],
+                "weighting": [],
+            }
             for i in range(new_graph.node_count):
                 for j in range(new_graph.node_count):
                     if i == j:
@@ -142,7 +151,11 @@ class DataReader:
         for hierarchy in self.initial_hierarchies:
             new_graph = Graph(hierarchy)
             new_graph.add_nodes(self.agent_objects)
-            graph_edges: dict = {"from_node": [], "to_node": [], "weighting": []}
+            graph_edges: dict[str, list[Any]] = {
+                "from_node": [],
+                "to_node": [],
+                "weighting": [],
+            }
             for i in range(new_graph.node_count):
                 for j in range(new_graph.node_count):
                     if i == j:
@@ -152,3 +165,22 @@ class DataReader:
                         node_i = new_graph.get_node(i)
                         node_j = new_graph.get_node(j)
                         # TODO: FINISH THIS FUNCTION
+
+
+if __name__ == "__main__":
+    SAVEDIRS: dict[str, str] = {
+        "CHPBA": "./experiments/Chocarpamba-Pangui/Results/CHPBA",
+        "PANGI": "./experiments/Chocarpamba-Pangui/Results/PANGI",
+    }
+
+    SAVEFILES: dict[str, str] = {
+        "CHPBA": "./experiments/Chocarpamba-Pangui/Results/CHPBA_model_variables.csv",
+        "PANGI": "./experiments/Chocarpamba-Pangui/Results/PANGI_model_variables.csv",
+    }
+
+    AGENT_PATHS: dict[str, str] = {
+        "CHPBA": "./data/Chocarpamba.csv",
+        "PANGI": "./data/Pangui.csv",
+    }
+
+    data_reader: DataReader = DataReader()

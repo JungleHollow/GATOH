@@ -1,6 +1,8 @@
+from typing import Any
+
 import polars as pl
 
-QUESTION_RESPONSES = [
+QUESTION_RESPONSES: list[str] = [
     "18-25",
     "26-35",
     "36-45",
@@ -126,7 +128,7 @@ class TableReader:
         with open(self.filename, "r") as file:
             self.dataframe = pl.read_csv(file, has_header=False)
 
-        self.output_dict: dict = {"AgentId": []}
+        self.output_dict: dict[str, Any] = {"AgentId": []}
         self.output_dataframe: pl.DataFrame
 
         for i in range(1, 31):
@@ -134,7 +136,7 @@ class TableReader:
 
     def parse_values(self):
         for row_idx, row in enumerate(self.dataframe.iter_rows()):
-            agent_id: str = f"{self.community_code}{row_idx + 1:05}"
+            agent_id: str = f"{self.community_code}{row_idx + 1:04}"
             self.output_dict["AgentId"].append(agent_id)
 
             current_q: int = 1
@@ -158,5 +160,14 @@ if __name__ == "__main__":
     )
     table_reader.parse_values()
     table_reader.write_out(
-        "/home/manuelms/Desktop/Uni Work/Masters Thesis/ABMOS/data/Chocarpamba.csv"
+        "/home/manuelms/Desktop/Uni Work/Masters Thesis/GATOH/data/Chocarpamba.csv"
+    )
+
+    table_reader_two: TableReader = TableReader(
+        "/home/manuelms/Desktop/Uni Work/Masters Thesis/Papers Submissions/pangui_tabla.csv",
+        "PANGI",
+    )
+    table_reader_two.parse_values()
+    table_reader.write_out(
+        "/home/manuelms/Desktop/Uni Work/Masters Thesis/GATOH/data/Pangui.csv"
     )

@@ -253,7 +253,7 @@ class ABModel:
                 agent_sample, method=method
             )
 
-            self.add_graph(hierarchy_graph)
+            _ = self.add_graph(hierarchy_graph)
         return None
 
     def add_agent(self, agent: Agent) -> int:
@@ -275,7 +275,7 @@ class ABModel:
         :return: The model's newly updated AgentSet.
         """
         for agent in agents:
-            self.agents.add(agent)
+            _ = self.agents.add(agent)
 
         # Add all the new Agent objects to the model-handled 'base' graph
         self.base_graph.add_nodes(agents)
@@ -286,7 +286,7 @@ class ABModel:
         id_base: str,
         personality_probs: dict[str, float],
         distribution: str = "gaussian",
-        parameters: dict | None = None,
+        parameters: dict[str, Any] | None = None,
         number: int = 100,
     ) -> None:
         """
@@ -566,7 +566,7 @@ class ABModel:
         observed_opinions_all: dict[str, dict[str, dict[str, float]]] = {}
 
         for hierarchy in self.graphs:
-            observed_opinions_layer: dict[str, dict] = {}
+            observed_opinions_layer: dict[str, dict[str, float]] = {}
             for agent_i in hierarchy.graph.nodes():
                 agent_i_oc: dict[str, float] = hierarchy.estimate_neighbour_opinions(
                     agent_i.agent
@@ -576,7 +576,7 @@ class ABModel:
 
         interdep_numerator: float = 0.0
         # Get the sum of all the estimated opinion values, only for the layer of interest (a)
-        oc_a: dict[str, dict] = observed_opinions_all[layer_of_interest]
+        oc_a: dict[str, dict[str, float]] = observed_opinions_all[layer_of_interest]
         for agent_a_i, oc_a_i in oc_a.items():
             for oc_val in oc_a_i.values():
                 interdep_numerator += abs(oc_val)
@@ -619,7 +619,7 @@ class ABModel:
 
         :param graph: The new Graph object that is being added to self.graphs.
         """
-        new_edges: dict = {"from_node": [], "to_node": [], "weighting": [], "name": []}
+        new_edges: dict[str, list[Any]] = {"from_node": [], "to_node": [], "weighting": [], "name": []}
 
         for idx, edge in graph.graph.edge_index_map().items():
             graph_edge: GraphEdge = deepcopy(edge[2])
@@ -666,7 +666,7 @@ class ABModel:
                         )
                 # If the edge does not exist in the base graph, create it and add it to the base graph
                 except NoEdgeBetweenNodes:
-                    new_edge: dict = {
+                    new_edge: dict[str, list[Any]] = {
                         "from_node": [base_from_idx],
                         "to_node": [base_to_idx],
                         "weighting": [graph_edge.weighting],
