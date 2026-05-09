@@ -1,0 +1,11 @@
+{
+  "Dependant": ["Q04", "Q05", "Q06", "Q07", "Q08", "Q09", "Q10", "Q18"],
+  "Age": ["Q01"],
+  "Gender": ["Q02"],
+  "Religious": ["Q11"],
+  "ReligiousStrength": ["Q12", "Q13", "Q14", "Q15", "Q16", "Q19"],
+  "Cultural": ["Q20", "Q22", "Q29"],
+  "CulturalStrength": ["Q21", "Q23", "Q24", "Q25", "Q26", "Q27", "Q30"],
+  "Time": ["Q03"],
+  "General": ["Q17", "Q28"]
+}

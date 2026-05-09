@@ -89,7 +89,7 @@ class DataReader:
 
             raw_hierarchy_values: dict[str, list[int]] = {}
             for key, value in agent_row:
-                if key == "AgenteId":
+                if key == "AgentId":
                     continue
                 elif key == "General":
                     hierarchy_effects[value] = (
@@ -107,7 +107,7 @@ class DataReader:
                 final_effect: float = averaged_sum / 10.0
                 hierarchy_effects[key] = final_effect
 
-            self.hierarchy_influences[agent_row["AgenteId"]] = hierarchy_effects
+            self.hierarchy_influences[agent_row["AgentId"]] = hierarchy_effects
 
     def create_model_agents(self):
         """
