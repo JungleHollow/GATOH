@@ -118,11 +118,11 @@
     "No": 0
   },
   "Q22": {
-    "Football": 1,
-    "Basketball": 2,
-    "Volleyball": 3,
-    "Athletics": 4,
-    "Other": 5
+    "Football": "Football",
+    "Basketball": "Basketball",
+    "Volleyball": "Volleyball",
+    "Athletics": "Athletics",
+    "Other": "Other"
   },
   "Q23": {
     "Local team": 3,
@@ -153,23 +153,26 @@
     "No": 0
   },
   "Q28": {
-    "Local festivities": 1,
-    "Religious events": 2,
-    "Sports events": 3,
-    "Community meetings": 4,
-    "None": 0
+    "Local festivities": "Festivities",
+    "Religious events": "Religious",
+    "Sports events": "Sports",
+    "Community meetings": "Meetings",
+    "None": "None"
   },
   "Q29": {
-    "Traditional music": 1,
-    "Popular music": 2,
-    "Religious music": 3,
-    "International music": 4,
-    "Varied": 5
+    "Traditional music": "Traditional",
+    "Popular music": "Popular",
+    "Religious music": "Religious",
+    "International music": "International",
+    "Varied": "Varied"
   },
   "Q30": {
     "Frequently": 3,
     "Occasionally": 2,
     "Rarely": 1,
     "Never": 0
-  }
+  },
+  "DependantTotal": 12,
+  "ReligiousTotal": 12,
+  "CulturalTotal": 17
 }
