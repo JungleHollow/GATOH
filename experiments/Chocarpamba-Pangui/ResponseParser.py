@@ -143,24 +143,24 @@ class ResponseParser:
                                 pass
 
                 # Assign the Agent to all the relevant clusters
-                self.hierarchy_clusters["Age"][agent_values["age"]].append(
+                self.hierarchy_clusters[community]["Age"][agent_values["age"]].append(
                     agent_values["id"]
                 )
-                self.hierarchy_clusters["Gender"][agent_values["gender"]].append(
-                    agent_values["id"]
-                )
-                self.hierarchy_clusters["Religious"][agent_values["religious"]].append(
-                    agent_values["id"]
-                )
-                self.hierarchy_clusters["Cultural_1"][agent_values["dialogue"]].append(
-                    agent_values["id"]
-                )
-                self.hierarchy_clusters["Cultural_2"][agent_values["sport"]].append(
-                    agent_values["id"]
-                )
-                self.hierarchy_clusters["Cultural_3"][agent_values["music"]].append(
-                    agent_values["id"]
-                )
+                self.hierarchy_clusters[community]["Gender"][
+                    agent_values["gender"]
+                ].append(agent_values["id"])
+                self.hierarchy_clusters[community]["Religious"][
+                    agent_values["religious"]
+                ].append(agent_values["id"])
+                self.hierarchy_clusters[community]["Cultural_1"][
+                    agent_values["dialogue"]
+                ].append(agent_values["id"])
+                self.hierarchy_clusters[community]["Cultural_2"][
+                    agent_values["sport"]
+                ].append(agent_values["id"])
+                self.hierarchy_clusters[community]["Cultural_3"][
+                    agent_values["music"]
+                ].append(agent_values["id"])
 
                 # Calculate the relevant hierarchy weightings
                 agent_weightings["Age"] = rd.uniform(-1.0, 1.0)
@@ -200,19 +200,42 @@ class ResponseParser:
                 agent_values["sociability"] = (agent_personality, agent_susceptibility)
 
                 # Append all the relevant attributes to self.agents
-                self.agents["ids"].append(agent_values["id"])
-                self.agents["weightings"].append(agent_weightings)
-                self.agents["opinions"].append(agent_values["opinion"])
-                self.agents["benefits"].append(agent_values["benefit"])
-                self.agents["sociabilities"].append(agent_values["sociability"])
+                self.agents[community]["ids"].append(agent_values["id"])
+                self.agents[community]["weightings"].append(agent_weightings)
+                self.agents[community]["opinions"].append(agent_values["opinion"])
+                self.agents[community]["benefits"].append(agent_values["benefit"])
+                self.agents[community]["sociabilities"].append(
+                    agent_values["sociability"]
+                )
 
     def create_base_hierarchies(self) -> None:
+        """
+        Creates the hierarchy graphs for the elemental relationships (Age and Gender)
+        """
+        pass
+
+    def generate_hierarchies(self) -> None:
+        """
+        Creates the remaining hierarchy graphs using the available information and the input adjacency matrices.
+        """
         pass
 
     def write_agents(self) -> None:
+        """
+        Writes CSV files where each row contains all the necessary information to create a unique Agent object
+        within the models.
+
+        One CSV file is created per community.
+        """
         pass
 
     def write_graphs(self) -> None:
+        """
+        Writes CSV files where each row contains all the necessary information to create a unique Graph object
+        within the models.
+
+        One CSV file is created per community.
+        """
         pass
 
 
