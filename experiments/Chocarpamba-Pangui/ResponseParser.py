@@ -2,27 +2,57 @@ from __future__ import annotations
 
 import json
 import random as rd
+from dataclasses import dataclass
 from typing import Any
 
+import numpy as np
 import polars as pl
 
 from src.GATOH.agents import PERSONALITIES
 
 
+@dataclass
+class AgentAttributes:
+    """
+    A dataclass used to collect all relevant agent attributes that will be saved for Agent creation,
+    and used to determine relationships during hierarchy creation.
+    """
+
+    id: str
+    age: str
+    gender: str
+    weightings: dict[str, float]
+    opinion: float
+    benefit: bool
+    sociability: tuple[str, float]
+
+    def __init__(
+        self,
+        id: str,
+        age: str,
+        gender: str,
+        weightings: dict[str, float],
+        opinion: float,
+        benefit: bool,
+        sociability: tuple[str, float],
+    ) -> None:
+        self.id = id
+        self.age = age
+        self.gender = gender
+        self.weightings = weightings
+        self.opinion = opinion
+        self.benefit = benefit
+        self.sociability = sociability
+
+
 class ResponseParser:
     def __init__(self) -> None:
-        self.agents: dict[str, dict[str, list[Any]]] = {}
+        self.agents: dict[str, list[AgentAttributes]] = {}
         self.graphs: dict[str, dict[str, list[Any]]] = {}
         self.hierarchy_clusters: dict[str, dict[str, dict[str, list[str]]]] = {}
 
         for key in RESPONSE_CSV.keys():
-            self.agents[key] = {
-                "ids": [],  # String IDs
-                "weightings": [],  # <hierarchy: float value> dictionary weightings
-                "opinions": [],  # Floats representing the initial agent opinions (range [-1, 1])
-                "benefits": [],  # Boolean indicating if supporting mining is personally beneficial
-                "sociabilities": [],  # (str, float) of personality type and social susceptibility strength
-            }
+            self.agents[key] = []
             self.graphs[key] = {
                 "hierarchies": [],  # String names
                 "adj_matrices": [],  # 2D matrices indicating presence and strength of graph relationships (ranges [-1, 1])
@@ -200,19 +230,73 @@ class ResponseParser:
                 agent_values["sociability"] = (agent_personality, agent_susceptibility)
 
                 # Append all the relevant attributes to self.agents
-                self.agents[community]["ids"].append(agent_values["id"])
-                self.agents[community]["weightings"].append(agent_weightings)
-                self.agents[community]["opinions"].append(agent_values["opinion"])
-                self.agents[community]["benefits"].append(agent_values["benefit"])
-                self.agents[community]["sociabilities"].append(
-                    agent_values["sociability"]
+                agent_attributes: AgentAttributes = AgentAttributes(
+                    agent_values["id"],
+                    agent_values["age"],
+                    agent_values["gender"],
+                    agent_weightings,
+                    agent_values["opinion"],
+                    agent_values["benefit"],
+                    agent_values["sociability"],
                 )
+
+                self.agents[community].append(agent_attributes)
 
     def create_base_hierarchies(self) -> None:
         """
         Creates the hierarchy graphs for the elemental relationships (Age and Gender)
         """
-        pass
+        for community in self.surveys.keys():
+            num_agents: int = len(self.agents[community])
+            age_matrix: np.ndarray = np.zeros(
+                (num_agents, num_agents), dtype=np.float32
+            )
+            gender_matrix: np.ndarray = np.zeros(
+                (num_agents, num_agents), dtype=np.float32
+            )
+
+            # Collect all the agent IDs in a list to add to the graph later
+            agent_ids: list[str] = []
+
+            # Populate the age and gender matrices
+            for i, agent_i in enumerate(self.agents[community]):
+                for j, agent_j in enumerate(self.agents[community]):
+                    if i == j:
+                        continue
+
+                    age_difference: int = abs(
+                        self.survey_values["Q01"][agent_i.age]
+                        - self.survey_values["Q01"][agent_j.age]
+                    )
+                    age_weighting: float = (
+                        1.0 - age_difference * 0.25
+                    )  # 1.0 at no difference, and -0.25 at maximum difference
+                    # Set the weighting in the age matrix
+                    age_matrix[i, j] = age_weighting
+
+                    # Set the weighting in the gender matrix
+                    if agent_i.gender == agent_j.gender:
+                        gender_matrix[i, j] = 1.0
+                    else:  # Explictly defining that the weighting should remain 0.0
+                        gender_matrix[i, j] = 0.0
+
+                # Append the Agent ID
+                agent_ids.append(agent_i.id)
+
+            # Generate the random walk parameters for each hierarchy
+            age_rw: tuple[float, float] = (0.0, rd.uniform(0.01, 0.2))
+            gender_rw: tuple[float, float] = (0.0, rd.uniform(0.01, 0.2))
+
+            # After both matrices are populated, add them to self.graphs
+            self.graphs[community]["hierarchies"].append("Age")
+            self.graphs[community]["adj_matrices"].append(age_matrix)
+            self.graphs[community]["rw_params"].append(age_rw)
+            self.graphs[community]["agents"].append(agent_ids)
+
+            self.graphs[community]["hierarchies"].append("Gender")
+            self.graphs[community]["adj_matrices"].append(gender_matrix)
+            self.graphs[community]["rw_params"].append(gender_rw)
+            self.graphs[community]["agents"].append(agent_ids)
 
     def generate_hierarchies(self) -> None:
         """
