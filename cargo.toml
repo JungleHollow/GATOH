@@ -1,0 +1,30 @@
+[package]
+name = "GATOH"
+version = "0.0.1"
+authors = ["Manuel Munizaga Sepulveda <manuel.chile@yahoo.com>"]
+edition = "2026"
+description = "An open source agent-based modelling framework"
+license = "MIT"
+repository = "https://github.com/JungleHollow/GATOH"
+
+[dependencies]
+rand = "0.8.5"
+
+[profile.dev]
+opt-level = 1
+debug = false
+
+[profile.debug]
+opt-level = 0
+debug = true
+
+[profile.bench]
+opt-level = 3
+debug = false
+overflow-checks = false
+
+[profile.release]
+opt-level = 3
+debug = false
+lto = "fat"
+panic = "abort"
