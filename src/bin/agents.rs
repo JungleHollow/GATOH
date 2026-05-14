@@ -43,7 +43,7 @@ impl Agent {
         social_weightings: HashMap,
         is_silenced: Option<bool>,
         opinion: f32,
-        previous_opinion: Option<bool>,
+        previous_opinion: Option<f32>,
         personal_benefit: bool,
         personality: &str,
         susceptibility: f32,
@@ -53,17 +53,17 @@ impl Agent {
     ) -> Agent {
         Agent {
             id: String::from(id),
-            index.unwrap_or(-1), // An index of -1 is not valid, treated as a null value
-            social_weightings,
-            is_silenced.unwrap_or(false),
-            opinion,
-            previous_opinion.unwrap_or(0.0),
-            personal_benefit,
-            susceptibility,
+            index: index.unwrap_or(0), // An index of 0 is not valid, treated as a null value
+            social_weightings: social_weightings,
+            is_silenced: is_silenced.unwrap_or(false),
+            opinion: opinion,
+            previous_opinion: previous_opinion.unwrap_or(0.0),
+            personal_benefit: personal_benefit,
+            social_susceptibility: susceptibility,
             personality: String::from(personality),
-            radicalised.unwrap_or(false),
-            rw_distributions.unwrap_or(HashMap::new()),
-            opinion_rw.unwrap_or((0.0, 0.1))
+            radicalised: radicalised.unwrap_or(false),
+            rw_distributions: rw_distributions.unwrap_or(HashMap::new()),
+            opinion_rw: opinion_rw.unwrap_or((0.0, 0.1))
         }
     }
 
@@ -72,7 +72,7 @@ impl Agent {
         &self,
         id: &str,
         index: u32,
-        hierarchies: [str],
+        hierarchies: Vec<&str>,
         distribution: Option<&str>,
         explicit_rw: Option<bool>,
         explicit_opinion_rw: Option<bool>,
@@ -81,11 +81,11 @@ impl Agent {
         personal_benefit: Option<bool>,
     ) -> Self {
         // Set the crucial information first
-        &self.id = id;
+        &self.id = id.to_string();
         &self.index = index;
 
-        &self.personality = personality.unwrap_or("neutral");
-        &self.personal_benefit.unwrap_or(false);
+        &self.personality = personality.unwrap_or("neutral").to_string();
+        &self.personal_benefit = personal_benefit.unwrap_or(false);
 
         // Generate a weighting for each hierarchy; initialise the is_silenced flag for that hierarchy
         for hierarchy in hierarchies {
