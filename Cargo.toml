@@ -9,6 +9,7 @@ repository = "https://github.com/JungleHollow/GATOH"
 
 [dependencies]
 rand = "0.8.5"
+src = "0.0.6"
 
 [profile.dev]
 opt-level = 1
