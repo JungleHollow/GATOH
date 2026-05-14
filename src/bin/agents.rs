@@ -10,13 +10,13 @@ use std::slice;
 use std::str;
 
 // Definition of all valid, existing Agent personality types
-const PERSONALITIES: [str; 5] = ["neutral", "rational", "erratic", "impulsive", "social"];
+const PERSONALITIES: [&str; 5] = ["neutral", "rational", "erratic", "impulsive", "social"];
 
-fn _draw_personality() -> str {
+fn _draw_personality() -> &str {
     /// An Agent utility function that randomly draws a valid Agent personality type.
     let mut rng = rand::rng();
     let drawn_personality: str = PERSONALITIES.choose(&mut rng);
-    return drawn_personality;
+    return &drawn_personality;
 }
 
 struct Agent {
