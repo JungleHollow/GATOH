@@ -10,6 +10,8 @@ repository = "https://github.com/JungleHollow/GATOH"
 [dependencies]
 conv = "0.3.3"
 rand = "0.10.1"
+serde = "1.0.228"
+serde-pickle = "1.2.0"
 
 [profile.dev]
 opt-level = 1

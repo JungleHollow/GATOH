@@ -1,7 +1,12 @@
 use conv::*;
 use rand::prelude::*;
 use std::collections::HashMap;
+use std::fmt;
 use std::str;
+use std::path::Path;
+use std::fs;
+use serde::{Serialize, Deserialize};
+use serde_pickle;
 
 /// Definition of all valid, existing Agent personality types
 const PERSONALITIES: [&str; 5] = ["neutral", "rational", "erratic", "impulsive", "social"];
@@ -20,8 +25,9 @@ enum ParameterTypes {
     BoolParam(bool),
 }
 
+/// A struct to define the Agent objects that will interact with each other in an agent-based model.
+#[derive(Serialize, Deserialize)]
 struct Agent {
-    /// A struct to define the Agent objects that will interact with each other in an agent-based model.
     id: String,
     index: u64,
     social_weightings: HashMap<String, f64>,
@@ -165,8 +171,8 @@ impl Agent {
     ///     1. Handle the dynamic social hierarchy weightings
     ///     2. Handle the stochastic opinion changes experienced by the Agent
     fn step(&mut self, rw_distributions: HashMap<String, (f64, f64)>, opinion_rw: (f64, f64)) {
-        Self::evolve_hierarchies(rw_distributions);
-        Self::stochastic_opinion(opinion_rw);
+        Self::evolve_hierarchies(self, rw_distributions);
+        Self::stochastic_opinion(self, opinion_rw);
     }
 
     /// Updates the internal state of the Agent after the model has stepped:
@@ -367,6 +373,81 @@ impl Agent {
             self.opinion = 1.0;
         } else {
             self.opinion = rw_result.unwrap();
+        }
+    }
+
+    /// Experimental function that aims to model the ways in which Agent behaviours change according to major random life events over time.
+    fn life_events(&mut self) {
+        // TODO: Implement this function
+        unimplemented!();
+    }
+}
+
+impl PartialEq for Agent {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl fmt::Display for Agent {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.radicalised {
+            write!(
+                f,
+                "Agent {} which is radicalised with an opinion value of {}",
+                self.id, self.opinion
+            )
+        } else {
+            write!(
+                f,
+                "Agent {} which is not radicalised with an opinion value of {}",
+                self.id, self.opinion
+            )
+        }
+    }
+}
+
+/// An ordered collection of Agent objects that maintains consistency for the Model.
+struct AgentSet {
+    parent_model: model::ABModel,
+    agents: Vec<Agent>,
+    random: rand::prelude::ThreadRng,
+}
+
+impl AgentSet {
+    /// A constructor to create a new AgentSet.
+    fn new(&parent_model: model::ABModel) -> AgentSet {
+        AgentSet {
+            parent_model: parent_model,
+            agents: Vec::new(),
+            random: rand::rng(),
+        }
+    }
+
+    /// Save the Agent objects into a compressed subdirectory representing the saved AgentSet.
+    fn save_agentset(&mut self, directory_path: &str) {
+        let mut subdirectory_path: String = directory_path.clone().to_string();
+        subdirectory_path.push_str("/_agentset");
+
+        let subdirectory_path_clone: String = subdirectory_path.clone();
+        let subdir_path = Path::new(subdirectory_path_clone.as_str());
+
+        // Removes the subdirectory if it already exists to allow for a new overwrite
+        if subdir_path.exists() {
+            fs::remove_dir_all(subdir_path);
+        }
+
+        // Create the _agentset subdirectory
+        fs::create_dir(subdir_path);
+
+        let agent_save_paths: Vec<&str> = Vec::new();
+
+        for agent in self.agents.iter() {
+            let agent_save_path: String = format!("{}/_agent_{}.pkl", subdirectory_path_clone, agent.id);
+            
+            let serialised = serde_pickle::to_vec(&agent, Default::default()).unwrap();
+
+            // TODO: FINISH THIS FUNCTION
         }
     }
 }
