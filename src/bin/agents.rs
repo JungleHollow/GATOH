@@ -1,3 +1,4 @@
+use conv::*;
 use rand::prelude::*;
 use std::collections::HashMap;
 use std::str;
@@ -14,9 +15,9 @@ fn _draw_personality() -> String {
 /// An Enum that simplifies the data typing for ``parameters'' HashMaps across functions
 enum ParameterTypes {
     StringParam(String),
-    IntParam(i64),  // i32 instead of u32 to allow for negatives
+    IntParam(i64), // i32 instead of u32 to allow for negatives
     FloatParam(f64),
-    BoolParam(bool)
+    BoolParam(bool),
 }
 
 struct Agent {
@@ -49,7 +50,7 @@ impl Agent {
         susceptibility: f64,
         radicalised: Option<bool>,
         rw_distributions: Option<HashMap<String, (f64, f64)>>,
-        opinion_rw: Option<(f64, f64)>
+        opinion_rw: Option<(f64, f64)>,
     ) -> Self {
         Agent {
             id: String::from(id),
@@ -63,7 +64,7 @@ impl Agent {
             personality: String::from(personality),
             radicalised: radicalised.unwrap_or(false),
             rw_distributions: rw_distributions.unwrap_or(HashMap::new()),
-            opinion_rw: opinion_rw.unwrap_or((0.0, 0.1))
+            opinion_rw: opinion_rw.unwrap_or((-99.9, 0.1)),
         }
     }
 
@@ -91,7 +92,7 @@ impl Agent {
         for hierarchy in hierarchies {
             self.social_weightings.insert(
                 hierarchy.to_string(),
-                draw_random_value(&distribution, parameters)
+                draw_random_value(&distribution, parameters),
             );
             self.is_silenced.insert(hierarchy.to_string(), false);
         }
@@ -151,7 +152,8 @@ impl Agent {
 
     /// A setter method that changes the Agent's explicit random walk parameters for a specific social hierarchy.
     fn change_rw_distribution(&mut self, hierarchy: &str, parameters: (f64, f64)) {
-        self.rw_distributions.insert(hierarchy.to_string(), parameters);
+        self.rw_distributions
+            .insert(hierarchy.to_string(), parameters);
     }
 
     /// A setter method that changes the Agent's explicit opinion random walk parameters.
@@ -180,7 +182,12 @@ impl Agent {
     /// Determines if an Agent will become silenced in a given social hierarchy based on their attributes.
     ///
     /// If no silencing threshold has been passed, each Agent's own social susceptibility is used as the threshold instead.
-    fn opinion_silencing(&mut self, hierarchy: &str, estimated_opinion_climate: f64, silencing_threshold: Option<f64>) -> (bool, f64) {
+    fn opinion_silencing(
+        &mut self,
+        hierarchy: &str,
+        estimated_opinion_climate: f64,
+        silencing_threshold: Option<f64>,
+    ) -> (bool, f64) {
         if self.radicalised {
             return (false, 0.0);
         } else {
@@ -204,7 +211,12 @@ impl Agent {
 
     /// Checks if the Agent has experienced sufficiently `overwhelming' social pressure in a hierarchy leading to a complete
     /// reversal of their opinion.
-    fn opinion_negation(&mut self, hierarchy: &str, absolute_difference: f64, threshold: f64) -> bool {
+    fn opinion_negation(
+        &mut self,
+        hierarchy: &str,
+        absolute_difference: f64,
+        threshold: f64,
+    ) -> bool {
         if self.radicalised {
             return false;
         } else {
@@ -219,6 +231,142 @@ impl Agent {
                 negation_strength /= self.social_susceptibility * self.social_weightings[hierarchy];
             }
             return negation_strength > threshold;
+        }
+    }
+
+    /// Uses the Agent's own opinion as well as the neighbours' opinions to determine if the Agent has become
+    /// radicalised in their actions.
+    fn radicalisation(
+        &mut self,
+        hierarchy_changes: &[f64],
+        neighbour_benefits: &[bool],
+        hierarchies: &[&str],
+        threshold: f64,
+    ) -> bool {
+        if self.radicalised {
+            return false;
+        } else {
+            let absolute_opinion: f64 = self.opinion.abs();
+
+            if self.personality == "neutral" {
+                // This will mean that radicalisation is exclusively determined by the strength of the Agent's opinion
+                self.radicalised = true;
+                return self.radicalised;
+            } else if self.personality == "rational" {
+                // This will likely mean that the agent is more disposed towards considering tangible benefits and their own
+                // opinions when determining radicalisation, rather than external social influences
+                let collective_benefit: f64 =
+                    f64::value_from(neighbour_benefits.into_iter().filter(|b| **b).count())
+                        .unwrap()
+                        / f64::value_from(neighbour_benefits.len()).unwrap();
+
+                if absolute_opinion >= threshold && collective_benefit >= 0.5 {
+                    self.radicalised = true;
+                    return self.radicalised;
+                } else if absolute_opinion >= threshold && collective_benefit < 0.5 {
+                    // In the case where the threshold is met but there is no explicit collective benefit, radicalisation is treated as a coinflip
+                    self.radicalised = random_coinflip("bool");
+                    return self.radicalised;
+                } else {
+                    return false;
+                }
+            } else if self.personality == "erratic" {
+                // Radicalisation is influenced by personal opinion to some extent, but is largely stochastically determined
+                if absolute_opinion * 1.25 >= threshold {
+                    self.radicalised = random_coinflip("bool");
+                    return self.radicalised;
+                } else {
+                    return false;
+                }
+            } else if self.personality == "impulsive" {
+                // The Agent places very strong consideration on tangible benefits over anything else
+                if absolute_opinion >= threshold / 2.0 {
+                    self.radicalised = self.personal_benefit;
+                    return self.radicalised;
+                } else {
+                    return false;
+                }
+            } else if self.personality == "social" {
+                // Radicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors
+                let mut absolute_changes: f64 = 0.0;
+
+                for change in hierarchy_changes {
+                    let absolute_change: f64 = change.abs();
+                    if absolute_change >= self.social_susceptibility {
+                        // A strong opinion change was caused by some hierarchy
+                        self.radicalised = true;
+                        return self.radicalised;
+                    } else {
+                        absolute_changes += absolute_change;
+                    }
+                }
+                // If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)
+                if absolute_changes
+                    >= self.social_susceptibility
+                        * f64::value_from(hierarchy_changes.len() / 2).unwrap()
+                {
+                    self.radicalised = true;
+                    return self.radicalised;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+
+    /// Experimental function that aims to model the constantly evolving `intrinsic value' that Agents place on the social hierarchies
+    /// that they belong in over time.
+    fn evolve_hierarchies(&mut self, rw_distributions: HashMap<String, (f64, f64)>) {
+        for (key, value) in &rw_distributions {
+            let rw_result: Option<f64> = None;
+
+            if self.rw_distributions.len() > 0 {
+                if self.rw_distributions.contains_key(key) {
+                    rw_result = value_rw_delta(
+                        self.social_weightings[key],
+                        self.rw_distributions[key].0,
+                        self.rw_distributions[key].1,
+                    );
+                }
+            }
+
+            if rw_result.is_none() {
+                // No explicit rw distribution was found; use the input ones instead
+                rw_result = value_rw_delta(self.social_weightings[key], value.0, value.1);
+            }
+
+            // Constrain the result back to [-1, 1] if necessary
+            if rw_result.unwrap() < -1.0 {
+                self.social_weightings[key] = -1.0;
+            } else if rw_result.unwrap() > 1.0 {
+                self.social_weightings[key] = 1.0;
+            } else {
+                self.social_weightings[key] = rw_result.unwrap();
+            }
+        }
+    }
+
+    /// Determine the stochastic direction and magnitude of a shift in the Agent's opinion and apply it.
+    fn stochastic_opinion(&mut self, opinion_rw: (f64, f64)) {
+        let rw_result: Option<f64> = None;
+
+        if self.opinion_rw.0 != -99.9 {
+            // -99.9 for mean is used to indicate a null value
+            rw_result = value_rw_delta(self.opinion, self.opinion_rw.0, self.opinion_rw.1);
+        }
+
+        if rw_result.is_none() {
+            rw_result = value_rw_delta(self.opinion, opinion_rw.0, opinion_rw.1);
+        }
+
+        if rw_result.unwrap() < -1.0 {
+            self.opinion = -1.0;
+        } else if rw_result.unwrap() > 1.0 {
+            self.opinion = 1.0;
+        } else {
+            self.opinion = rw_result.unwrap();
         }
     }
 }

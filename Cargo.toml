@@ -8,6 +8,7 @@ license = "MIT"
 repository = "https://github.com/JungleHollow/GATOH"
 
 [dependencies]
+conv = "0.3.3"
 rand = "0.10.1"
 
 [profile.dev]
