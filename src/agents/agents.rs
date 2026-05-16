@@ -559,6 +559,9 @@ impl AgentSet {
     /// Returns the Agent object at the given index in the AgentSet.
     fn agent_at_index(&mut self, index: usize) -> Option<&Agent> {
         let agent: Option<&Agent> = self.agents.get(index);
+        if agent.is_none() {
+            println!(format!("Index {} is out of bounds for the AgentSet. Only {} Agents have been created.", index, self.agents.len()))
+        }
         return agent;
     }
 
