@@ -12,6 +12,7 @@ conv = "0.3.3"
 rand = "0.10.1"
 serde = { version = "1.0.228", features = ["derive"] }
 serde-pickle = "1.2.0"
+zip = "8.6.0"
 
 [profile.dev]
 opt-level = 1

@@ -5,9 +5,12 @@ use serde_pickle;
 use std::collections::HashMap;
 use std::fmt;
 use std::fs;
-use std::io::prelude::*;
+use std::fs::File;
+use std::io::{self, Read, Write};
 use std::path::Path;
 use std::str;
+use zip::write::FileOptions;
+use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
 /// Definition of all valid, existing Agent personality types
 const PERSONALITIES: [&str; 5] = ["neutral", "rational", "erratic", "impulsive", "social"];
@@ -426,7 +429,7 @@ impl AgentSet {
     }
 
     /// Save the Agent objects into a compressed subdirectory representing the saved AgentSet.
-    fn save_agentset(&mut self, directory_path: &str) {
+    fn save_agentset(&mut self, directory_path: &str) -> Result<(), Box<dyn std::error::Error>> {
         let mut subdirectory_path: String = directory_path.clone().to_string();
         subdirectory_path.push_str("/_agentset");
 
@@ -441,26 +444,7 @@ impl AgentSet {
         // Create the _agentset subdirectory
         fs::create_dir(subdir_path);
 
-        let mut agent_save_paths: Vec<String> = Vec::new();
-
-        for agent in self.agents.iter() {
-            let agent_save_path: String =
-                format!("{}/_agent_{}.pkl", subdirectory_path_clone, agent.id);
-
-            let pickled_agent = serde_pickle::to_vec(&agent, Default::default()).unwrap();
-
-            let mut pickle_file =
-                fs::File::create(agent_save_path.as_str()).expect("Could not create file!");
-
-            pickle_file
-                .write_all(pickled_agent.as_slice())
-                .expect("Cannot write to the file!");
-
-            agent_save_paths.push(agent_save_path);
-        }
-
         let zipfile_path: String = format!("{}.zip", subdir_path.to_str().unwrap());
-
         let zip_path = Path::new(zipfile_path.as_str());
 
         // Removes the zip file if it already exists to allow for a new overwrite
@@ -468,6 +452,112 @@ impl AgentSet {
             fs::remove_dir_all(zip_path);
         }
 
-        // TODO: CONTINUE...
+        let zip_file_handle = File::create(&zip_path)?;
+        let mut zip_writer = ZipWriter::new(zip_file_handle);
+        let zip_options = FileOptions::default() // TODO: Check the typing of this variable...
+            .compression_method(CompressionMethod::Deflated)
+            .unix_permissions(0o644);
+
+        for agent in self.agents.iter() {
+            let agent_save_file: String = format!("_agent_{}.pkl", agent.id);
+
+            let pickled_agent = serde_pickle::to_vec(&agent, Default::default()).unwrap();
+
+            zip_writer.start_file(agent_save_file, zip_options)?;
+            zip_writer.write_all(&pickled_agent)?;
+        }
+
+        zip_writer.finish()?;
+        Ok(())
+    }
+
+    /// Loads an AgentSet that has been saved following the same process as in the save_agentset() function.
+    fn load_agentset(&mut self, load_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let zip_load_path = Path::new(format!("{}/_agentset.zip", load_path).as_str());
+
+        if !zip_load_path.exists() {
+            panic!(format!(
+                "No saved AgentSet was found at the path: {}",
+                zip_load_path.to_str().unwrap()
+            ))
+        }
+
+        // The path to the uncompressed agentset subdirectory
+        let subdirectory_path = Path::new(format!("{}/_agentset", load_path).as_str());
+
+        // Remove any existing subdirectory with the same name to replace it with the newly loaded one
+        if subdirectory_path.is_dir() {
+            fs::remove_dir_all(subdirectory_path);
+        }
+
+        // Create the uncompressed subdirectory
+        fs::create_dir(subdirectory_path);
+
+        let zip_file = File::open(zip_load_path)?;
+        let mut zip_reader = ZipArchive::new(zip_file)?;
+
+        // First extract all the Agent pickles to the uncompressed subdirectory
+        for i in 0..zip_reader.len() {
+            let mut file = zip_reader.by_index(i)?;
+            let file_name = file.name().to_owned();
+
+            // Path where the extracted file will be written to
+            let file_path = Path::new(
+                format!("{}/{}", subdirectory_path.to_str().unwrap(), file_name).as_str(),
+            );
+
+            let mut output_file = File::create(&file_path)?;
+            io::copy(&mut file, &mut output_file);
+        }
+
+        // Next, read and deserialise the Agent pickles and add them to self.agents
+        for dir_entry in subdirectory_path.read_dir().expect("read_dir call failed") {
+            if let Ok(dir_entry) = dir_entry {
+                let pickle_path = Path::new(&dir_entry.path());
+
+                let pickle_string = fs::read_to_string(pickle_path)?;
+                let pickle_bytes = pickle_string.as_bytes();
+
+                let agent_object =
+                    serde_pickle::from_slice::<Agent>(pickle_bytes, Default::default())?;
+                self.agents.push(agent_object);
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Add an Agent to the Agentset.
+    fn add(&mut self, agent: Agent) -> u64 {
+        self.agents.push(agent);
+        let agents_len = self.agents.len();
+        self.agents[agents_len].index = u64::value_from(agents_len).unwrap();
+        return self.agents[agents_len].index;
+    }
+
+    /// Iterate over the AgentSet and update the current Agent object index values.
+    fn update_indices(&mut self) {
+        for (idx, agent) in self.agents.iter_mut().enumerate() {
+            agent.index = u64::value_from(idx).unwrap();
+        }
+    }
+
+    /// Removes an Agent from the AgentSet which matches the input Agent; does not return an error if the Agent does not exist.
+    fn discard(&mut self, agent: &Agent) -> bool {
+        for (idx, other_agent) in self.agents.iter().enumerate() {
+            if agent == other_agent {
+                self.agents.remove(idx);
+
+                self.update_indices();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// Returns the Agent object at the given index in the AgentSet.
+    fn agent_at_index(&mut self, index: usize) -> Option<&Agent> {
+        let agent: Option<&Agent> = self.agents.get(index);
+        return agent;
     }
 }
