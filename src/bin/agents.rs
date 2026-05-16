@@ -1,12 +1,13 @@
 use conv::*;
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
+use serde_pickle;
 use std::collections::HashMap;
 use std::fmt;
-use std::str;
-use std::path::Path;
 use std::fs;
-use serde::{Serialize, Deserialize};
-use serde_pickle;
+use std::io::prelude::*;
+use std::path::Path;
+use std::str;
 
 /// Definition of all valid, existing Agent personality types
 const PERSONALITIES: [&str; 5] = ["neutral", "rational", "erratic", "impulsive", "social"];
@@ -26,7 +27,7 @@ enum ParameterTypes {
 }
 
 /// A struct to define the Agent objects that will interact with each other in an agent-based model.
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Agent {
     id: String,
     index: u64,
@@ -440,14 +441,33 @@ impl AgentSet {
         // Create the _agentset subdirectory
         fs::create_dir(subdir_path);
 
-        let agent_save_paths: Vec<&str> = Vec::new();
+        let mut agent_save_paths: Vec<String> = Vec::new();
 
         for agent in self.agents.iter() {
-            let agent_save_path: String = format!("{}/_agent_{}.pkl", subdirectory_path_clone, agent.id);
-            
-            let serialised = serde_pickle::to_vec(&agent, Default::default()).unwrap();
+            let agent_save_path: String =
+                format!("{}/_agent_{}.pkl", subdirectory_path_clone, agent.id);
 
-            // TODO: FINISH THIS FUNCTION
+            let pickled_agent = serde_pickle::to_vec(&agent, Default::default()).unwrap();
+
+            let mut pickle_file =
+                fs::File::create(agent_save_path.as_str()).expect("Could not create file!");
+
+            pickle_file
+                .write_all(pickled_agent.as_slice())
+                .expect("Cannot write to the file!");
+
+            agent_save_paths.push(agent_save_path);
         }
+
+        let zipfile_path: String = format!("{}.zip", subdir_path.to_str().unwrap());
+
+        let zip_path = Path::new(zipfile_path.as_str());
+
+        // Removes the zip file if it already exists to allow for a new overwrite
+        if zip_path.exists() {
+            fs::remove_dir_all(zip_path);
+        }
+
+        // TODO: CONTINUE...
     }
 }
