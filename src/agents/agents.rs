@@ -1,5 +1,6 @@
 use conv::*;
 use rand::prelude::*;
+use rand::rand_core::utils::next_word_via_fill;
 use serde::{Deserialize, Serialize};
 use serde_pickle;
 use std::collections::HashMap;
@@ -30,7 +31,7 @@ enum ParameterTypes {
 }
 
 /// A struct to define the Agent objects that will interact with each other in an agent-based model.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct Agent {
     id: String,
     index: u64,
@@ -559,5 +560,70 @@ impl AgentSet {
     fn agent_at_index(&mut self, index: usize) -> Option<&Agent> {
         let agent: Option<&Agent> = self.agents.get(index);
         return agent;
+    }
+
+    /// Searches the AgentSet for an Agent with the given id and returns its object if it exists.
+    fn get_agent_by_id(&mut self, id: &str) -> &Agent {
+        let mut agent_index: usize = self.agents.len() + 1;  // Is always an invalid index at initialisation
+        for (idx, agent) in self.agents.iter().enumerate() {
+            if agent.id == id {
+                agent_index = idx;
+            }
+        }
+
+        let agent_reference: Option<&Agent> = self.agents.get(agent_index);
+        if agent_reference.is_none() {
+            panic!(format!("The Agent with id '{}' does not exist in the AgentSet -- unable to return an Agent object.", id))
+        } else {
+            return agent_reference.unwrap();
+        }
+    }
+
+    /// Returns the index within the AgentSet of the input Agent object.
+    fn get_index(&mut self, agent: &Agent) -> usize {
+        for (idx, agt) in self.agents.iter().enumerate() {
+            if agent == agt {
+                return idx;
+            }
+        }
+        panic!(format!("The Agent {} does not exist in the AgentSet -- unable to return an index.", agent.id))
+    }
+
+    /// Removes the Agent at the specified index in the AgentSet; does not return an error if the index is out of bounds.
+    fn discard_index(&mut self, index: usize) -> bool {
+        if 0 < index && index < self.agents.len() {
+            self.agents.remove(index);
+            self.update_indices();
+            return true;
+        }
+        return false;
+    }
+
+    /// Removes an Agent from the AgentSet which matches the input Agent; returning an error if such an Agent does not exist.
+    fn remove(&mut self, agent: &Agent) -> bool {
+        for (idx, agt) in self.agents.iter().enumerate() {
+            if agent == agt {
+                self.agents.remove(idx);
+                self.update_indices();
+                return true;
+            }
+        }
+        panic!(format!("Tried to remove an Agent with id {} that doesn't exist in the AgentSet", agent.id))
+    }
+
+    /// Removes the Agent at the specified index in the AgentSet; returning an error if the index is out of bounds.
+    fn remove_index(&mut self, index: usize) -> bool {
+        if 0 < index && index < self.agents.len() {
+            self.agents.remove(index);
+            self.update_indices();
+            return true;
+        }
+        panic!(format!("Tried to remove an Agent at out of bounds index {} from the AgentSet", index))
+    }
+
+    /// Randomly draw n Agents from the AgentSet without replacement.
+    fn sample(&mut self, n: usize) -> Vec<Agent> {
+        let sampled_agents: Vec<Agent> = self.agents.sample(&mut self.random, n).cloned().collect();
+        return sampled_agents;
     }
 }
