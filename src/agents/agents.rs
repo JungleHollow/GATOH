@@ -25,8 +25,8 @@ fn _draw_personality() -> String {
 /// An Enum that simplifies the data typing for ``parameters'' HashMaps across functions
 enum ParameterTypes {
     StringParam(String),
-    IntParam(i64), // i32 instead of u32 to allow for negatives
-    FloatParam(f64),
+    IntParam(i32), // i32 instead of u32 to allow for negatives
+    FloatParam(f32),
     BoolParam(bool),
 }
 
@@ -34,34 +34,34 @@ enum ParameterTypes {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Agent {
     id: String,
-    index: u64,
-    social_weightings: HashMap<String, f64>,
+    index: u32,
+    social_weightings: HashMap<String, f32>,
     is_silenced: HashMap<String, bool>,
-    opinion: f64,
-    previous_opinion: f64,
+    opinion: f32,
+    previous_opinion: f32,
     personal_benefit: bool,
-    social_susceptibility: f64,
+    social_susceptibility: f32,
     personality: String,
     radicalised: bool,
-    rw_distributions: HashMap<String, (f64, f64)>,
-    opinion_rw: (f64, f64),
+    rw_distributions: HashMap<String, (f32, f32)>,
+    opinion_rw: (f32, f32),
 }
 
 impl Agent {
     /// A constructor to create a new Agent.
     fn new(
         id: &str,
-        index: Option<u64>,
-        social_weightings: HashMap<String, f64>,
+        index: Option<u32>,
+        social_weightings: HashMap<String, f32>,
         is_silenced: Option<HashMap<String, bool>>,
-        opinion: f64,
-        previous_opinion: Option<f64>,
+        opinion: f32,
+        previous_opinion: Option<f32>,
         personal_benefit: bool,
         personality: &str,
-        susceptibility: f64,
+        susceptibility: f32,
         radicalised: Option<bool>,
-        rw_distributions: Option<HashMap<String, (f64, f64)>>,
-        opinion_rw: Option<(f64, f64)>,
+        rw_distributions: Option<HashMap<String, (f32, f32)>>,
+        opinion_rw: Option<(f32, f32)>,
     ) -> Self {
         Agent {
             id: String::from(id),
@@ -83,7 +83,7 @@ impl Agent {
     fn generate_agent(
         &mut self,
         id: &str,
-        index: u64,
+        index: u32,
         hierarchies: Vec<&str>,
         distribution: Option<&str>,
         explicit_rw: Option<bool>,
@@ -112,8 +112,8 @@ impl Agent {
         if explicit_rw.is_some() {
             let mut rw_params = HashMap::new();
             for hierarchy in hierarchies {
-                let rw_mean: f64 = draw_random_value("gaussian", parameters);
-                let rw_variance: f64 = draw_random_value("gaussian", parameters);
+                let rw_mean: f32 = draw_random_value("gaussian", parameters);
+                let rw_variance: f32 = draw_random_value("gaussian", parameters);
 
                 rw_params.insert(hierarchy.to_string(), (rw_mean, rw_variance));
             }
@@ -122,8 +122,8 @@ impl Agent {
 
         // Handle the explicit opinion random walk parameter generation
         if explicit_opinion_rw.is_some() {
-            let rw_mean: f64 = draw_random_value("gaussian", parameters);
-            let rw_variance: f64 = draw_random_value("gaussian", parameters);
+            let rw_mean: f32 = draw_random_value("gaussian", parameters);
+            let rw_variance: f32 = draw_random_value("gaussian", parameters);
             self.opinion_rw = (rw_mean, rw_variance);
         }
 
@@ -141,12 +141,12 @@ impl Agent {
 
     /// A setter method that stores the Agent's current opinion into the previous opinion.
     fn store_previous_opinion(&mut self) {
-        let opinion: f64 = self.opinion;
+        let opinion: f32 = self.opinion;
         self.previous_opinion = opinion;
     }
 
     /// A setter method that changes the Agent's current opinion by a given delta value.
-    fn change_opinion(&mut self, opinion_delta: f64) {
+    fn change_opinion(&mut self, opinion_delta: f32) {
         self.opinion += opinion_delta;
 
         if self.opinion < -1.0 {
@@ -162,20 +162,20 @@ impl Agent {
     }
 
     /// A setter method that changes the Agent's explicit random walk parameters for a specific social hierarchy.
-    fn change_rw_distribution(&mut self, hierarchy: &str, parameters: (f64, f64)) {
+    fn change_rw_distribution(&mut self, hierarchy: &str, parameters: (f32, f32)) {
         self.rw_distributions
             .insert(hierarchy.to_string(), parameters);
     }
 
     /// A setter method that changes the Agent's explicit opinion random walk parameters.
-    fn change_opinion_rw(&mut self, rw_params: (f64, f64)) {
+    fn change_opinion_rw(&mut self, rw_params: (f32, f32)) {
         self.opinion_rw = rw_params;
     }
 
     /// Step the individual Agent object:
     ///     1. Handle the dynamic social hierarchy weightings
     ///     2. Handle the stochastic opinion changes experienced by the Agent
-    fn step(&mut self, rw_distributions: HashMap<String, (f64, f64)>, opinion_rw: (f64, f64)) {
+    fn step(&mut self, rw_distributions: HashMap<String, (f32, f32)>, opinion_rw: (f32, f32)) {
         Self::evolve_hierarchies(self, rw_distributions);
         Self::stochastic_opinion(self, opinion_rw);
     }
@@ -196,17 +196,17 @@ impl Agent {
     fn opinion_silencing(
         &mut self,
         hierarchy: &str,
-        estimated_opinion_climate: f64,
-        silencing_threshold: Option<f64>,
-    ) -> (bool, f64) {
+        estimated_opinion_climate: f32,
+        silencing_threshold: Option<f32>,
+    ) -> (bool, f32) {
         if self.radicalised {
             return (false, 0.0);
         } else {
-            let threshold: f64 = silencing_threshold.unwrap_or(self.social_susceptibility);
+            let threshold: f32 = silencing_threshold.unwrap_or(self.social_susceptibility);
 
-            let mut absolute_difference: f64 = 0.0;
+            let mut absolute_difference: f32 = 0.0;
             let personality_str: &str = self.personality.as_str();
-            let difference: f64 = estimated_opinion_climate - self.opinion;
+            let difference: f32 = estimated_opinion_climate - self.opinion;
 
             if ["neutral", "rational", "erratic"].contains(&personality_str) {
                 // Cases where opinion silencing will be less influenced by the surrounding opinion climate.
@@ -225,13 +225,13 @@ impl Agent {
     fn opinion_negation(
         &mut self,
         hierarchy: &str,
-        absolute_difference: f64,
-        threshold: f64,
+        absolute_difference: f32,
+        threshold: f32,
     ) -> bool {
         if self.radicalised {
             return false;
         } else {
-            let mut negation_strength: f64 = absolute_difference;
+            let mut negation_strength: f32 = absolute_difference;
             let personality_str: &str = self.personality.as_str();
 
             // Multiplication by (susceptibility * hierarchy weighting) will always decrease negation strength, whilst division will always increase it
@@ -249,15 +249,15 @@ impl Agent {
     /// radicalised in their actions.
     fn radicalisation(
         &mut self,
-        hierarchy_changes: &[f64],
+        hierarchy_changes: &[f32],
         neighbour_benefits: &[bool],
         hierarchies: &[&str],
-        threshold: f64,
+        threshold: f32,
     ) -> bool {
         if self.radicalised {
             return false;
         } else {
-            let absolute_opinion: f64 = self.opinion.abs();
+            let absolute_opinion: f32 = self.opinion.abs();
 
             if self.personality == "neutral" {
                 // This will mean that radicalisation is exclusively determined by the strength of the Agent's opinion
@@ -266,10 +266,10 @@ impl Agent {
             } else if self.personality == "rational" {
                 // This will likely mean that the agent is more disposed towards considering tangible benefits and their own
                 // opinions when determining radicalisation, rather than external social influences
-                let collective_benefit: f64 =
-                    f64::value_from(neighbour_benefits.into_iter().filter(|b| **b).count())
+                let collective_benefit: f32 =
+                    f32::value_from(neighbour_benefits.into_iter().filter(|b| **b).count())
                         .unwrap()
-                        / f64::value_from(neighbour_benefits.len()).unwrap();
+                        / f32::value_from(neighbour_benefits.len()).unwrap();
 
                 if absolute_opinion >= threshold && collective_benefit >= 0.5 {
                     self.radicalised = true;
@@ -299,10 +299,10 @@ impl Agent {
                 }
             } else if self.personality == "social" {
                 // Radicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors
-                let mut absolute_changes: f64 = 0.0;
+                let mut absolute_changes: f32 = 0.0;
 
                 for change in hierarchy_changes {
-                    let absolute_change: f64 = change.abs();
+                    let absolute_change: f32 = change.abs();
                     if absolute_change >= self.social_susceptibility {
                         // A strong opinion change was caused by some hierarchy
                         self.radicalised = true;
@@ -314,7 +314,7 @@ impl Agent {
                 // If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)
                 if absolute_changes
                     >= self.social_susceptibility
-                        * f64::value_from(hierarchy_changes.len() / 2).unwrap()
+                        * f32::value_from(hierarchy_changes.len() / 2).unwrap()
                 {
                     self.radicalised = true;
                     return self.radicalised;
@@ -329,9 +329,9 @@ impl Agent {
 
     /// Experimental function that aims to model the constantly evolving `intrinsic value' that Agents place on the social hierarchies
     /// that they belong in over time.
-    fn evolve_hierarchies(&mut self, rw_distributions: HashMap<String, (f64, f64)>) {
+    fn evolve_hierarchies(&mut self, rw_distributions: HashMap<String, (f32, f32)>) {
         for (key, value) in &rw_distributions {
-            let rw_result: Option<f64> = None;
+            let rw_result: Option<f32> = None;
 
             if self.rw_distributions.len() > 0 {
                 if self.rw_distributions.contains_key(key) {
@@ -360,8 +360,8 @@ impl Agent {
     }
 
     /// Determine the stochastic direction and magnitude of a shift in the Agent's opinion and apply it.
-    fn stochastic_opinion(&mut self, opinion_rw: (f64, f64)) {
-        let rw_result: Option<f64> = None;
+    fn stochastic_opinion(&mut self, opinion_rw: (f32, f32)) {
+        let rw_result: Option<f32> = None;
 
         if self.opinion_rw.0 != -99.9 {
             // -99.9 for mean is used to indicate a null value
@@ -531,17 +531,17 @@ impl AgentSet {
     }
 
     /// Add an Agent to the Agentset.
-    fn add(&mut self, agent: Agent) -> u64 {
+    fn add(&mut self, agent: Agent) -> u32 {
         self.agents.push(agent);
         let agents_len = self.agents.len();
-        self.agents[agents_len].index = u64::value_from(agents_len).unwrap();
+        self.agents[agents_len].index = u32::value_from(agents_len).unwrap();
         return self.agents[agents_len].index;
     }
 
     /// Iterate over the AgentSet and update the current Agent object index values.
     fn update_indices(&mut self) {
         for (idx, agent) in self.agents.iter_mut().enumerate() {
-            agent.index = u64::value_from(idx).unwrap();
+            agent.index = u32::value_from(idx).unwrap();
         }
     }
 
@@ -562,14 +562,18 @@ impl AgentSet {
     fn agent_at_index(&mut self, index: usize) -> Option<&Agent> {
         let agent: Option<&Agent> = self.agents.get(index);
         if agent.is_none() {
-            println!(format!("Index {} is out of bounds for the AgentSet. Only {} Agents have been created.", index, self.agents.len()))
+            println!(format!(
+                "Index {} is out of bounds for the AgentSet. Only {} Agents have been created.",
+                index,
+                self.agents.len()
+            ))
         }
         return agent;
     }
 
     /// Searches the AgentSet for an Agent with the given id and returns its object if it exists.
     fn get_agent_by_id(&mut self, id: &str) -> &Agent {
-        let mut agent_index: usize = self.agents.len() + 1;  // Is always an invalid index at initialisation
+        let mut agent_index: usize = self.agents.len() + 1; // Is always an invalid index at initialisation
         for (idx, agent) in self.agents.iter().enumerate() {
             if agent.id == id {
                 agent_index = idx;
@@ -578,7 +582,10 @@ impl AgentSet {
 
         let agent_reference: Option<&Agent> = self.agents.get(agent_index);
         if agent_reference.is_none() {
-            panic!(format!("The Agent with id '{}' does not exist in the AgentSet -- unable to return an Agent object.", id))
+            panic!(format!(
+                "The Agent with id '{}' does not exist in the AgentSet -- unable to return an Agent object.",
+                id
+            ))
         } else {
             return agent_reference.unwrap();
         }
@@ -591,7 +598,10 @@ impl AgentSet {
                 return idx;
             }
         }
-        panic!(format!("The Agent {} does not exist in the AgentSet -- unable to return an index.", agent.id))
+        panic!(format!(
+            "The Agent {} does not exist in the AgentSet -- unable to return an index.",
+            agent.id
+        ))
     }
 
     /// Removes the Agent at the specified index in the AgentSet; does not return an error if the index is out of bounds.
@@ -613,7 +623,10 @@ impl AgentSet {
                 return true;
             }
         }
-        panic!(format!("Tried to remove an Agent with id {} that doesn't exist in the AgentSet", agent.id))
+        panic!(format!(
+            "Tried to remove an Agent with id {} that doesn't exist in the AgentSet",
+            agent.id
+        ))
     }
 
     /// Removes the Agent at the specified index in the AgentSet; returning an error if the index is out of bounds.
@@ -623,7 +636,10 @@ impl AgentSet {
             self.update_indices();
             return true;
         }
-        panic!(format!("Tried to remove an Agent at out of bounds index {} from the AgentSet", index))
+        panic!(format!(
+            "Tried to remove an Agent at out of bounds index {} from the AgentSet",
+            index
+        ))
     }
 
     /// Randomly draw n Agents from the AgentSet without replacement.
