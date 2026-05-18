@@ -32,7 +32,7 @@ enum ParameterTypes {
 
 /// A struct to define the Agent objects that will interact with each other in an agent-based model.
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct Agent {
+pub struct Agent {
     id: String,
     index: u64,
     social_weightings: HashMap<String, f64>,
@@ -389,12 +389,14 @@ impl Agent {
 }
 
 impl PartialEq for Agent {
+    /// An override of how equality checking between Agent objects will function.
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
     }
 }
 
 impl fmt::Display for Agent {
+    /// An override of how an Agent object's representation will be printed out.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.radicalised {
             write!(
@@ -413,15 +415,15 @@ impl fmt::Display for Agent {
 }
 
 /// An ordered collection of Agent objects that maintains consistency for the Model.
-struct AgentSet {
-    parent_model: model::ABModel,
+pub struct AgentSet {
+    parent_model: ABModel,
     agents: Vec<Agent>,
     random: rand::prelude::ThreadRng,
 }
 
 impl AgentSet {
     /// A constructor to create a new AgentSet.
-    fn new(&parent_model: model::ABModel) -> AgentSet {
+    fn new(&parent_model: ABModel) -> AgentSet {
         AgentSet {
             parent_model: parent_model,
             agents: Vec::new(),

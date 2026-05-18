@@ -1,5 +1,5 @@
 [package]
-name = "GATOH"
+name = "gatoh"
 version = "0.0.1"
 authors = ["Manuel Munizaga Sepulveda <manuel.chile@yahoo.com>"]
 edition = "2024"
