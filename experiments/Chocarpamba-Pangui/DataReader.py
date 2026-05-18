@@ -4,9 +4,9 @@ from typing import Any
 
 import polars as pl
 
-from src.GATOH.agents import Agent, AgentSet
-from src.GATOH.graphs import Graph, GraphEdge, GraphNode, GraphSet
-from src.GATOH.model import ABModel
+from gatoh.agents import Agent, AgentSet
+from gatoh.graphs import Graph, GraphEdge, GraphNode, GraphSet
+from gatoh.model import ABModel
 
 
 class DataReader:

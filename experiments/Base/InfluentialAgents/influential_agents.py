@@ -7,9 +7,9 @@ from typing import Any
 
 import numpy as np
 
-import src.GATOH.agents as agt
-import src.GATOH.graphs as gr
-import src.GATOH.model as md
+import gatoh.agents as agt
+import gatoh.graphs as gr
+import gatoh.model as md
 
 
 class InfluentialTester:

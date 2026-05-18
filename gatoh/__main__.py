@@ -20,7 +20,7 @@ __repo__ = "https://www.github.com/JungleHollow/GATOH"
 ###
 
 parser = argparse.ArgumentParser(
-    prog="GATOH",
+    prog="gatoh",
     usage="",
     description="Generalised Agent Transformations of Opinions in Hierarchies -- An open-source Python package to model social unrest in small yet complex communities",
     epilog="",

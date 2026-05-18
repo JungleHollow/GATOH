@@ -1,6 +1,6 @@
 import csv
 
-from src.GATOH.utils import plot_graph
+from gatoh.utils import plot_graph
 
 if __name__ == "__main__":
     DATAFILES: dict[str, str] = {

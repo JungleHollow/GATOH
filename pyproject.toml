@@ -3,8 +3,8 @@ requires = ["uv_build >= 0.8.22"]
 build-backend = "uv_build"
 
 [project]
-name = "GATOH"
-version = "0.0.1"
+name = "gatoh"
+version = "0.0.2"
 authors = [
     { name="Manuel Munizaga Sepulveda", email="manuel.chile@yahoo.com" },
 ]
