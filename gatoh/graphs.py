@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import pickle
 import warnings
 import zipfile
 from collections.abc import Iterable, Iterator
@@ -925,12 +926,39 @@ class GraphSet:
         os.mkdir(subdirectory_path)
 
         graph_save_paths: list[str] = []
+        node_save_paths: list[str] = []
+        edge_save_paths: list[str] = []
 
         for graph in self.graphs:
+            # Create a graph subdirectory
+            os.mkdir(f"{subdirectory_path}/{graph.name}")
+
             # Save path for the specific hierarchy graph
-            graph_save_path: str = f"{subdirectory_path}/graph_{graph.name}.graphml"
+            graph_save_path: str = (
+                f"{subdirectory_path}/{graph.name}/graph_{graph.name}.graphml"
+            )
             graph.save_graph(graph_save_path)
             graph_save_paths.append(graph_save_path)
+
+            # Create a nodes subdirectory
+            os.mkdir(f"{subdirectory_path}/{graph.name}/nodes")
+            for idx, node in enumerate(graph.graph.nodes()):
+                node_save_path: str = (
+                    f"{subdirectory_path}/{graph.name}/nodes/node_{idx}.pkl"
+                )
+                with open(node_save_path, "wb") as node_file:
+                    pickle.dump(node, node_file)
+                node_save_paths.append(node_save_path)
+
+            # Create an edges subdirectory
+            os.mkdir(f"{subdirectory_path}/{graph.name}/edges")
+            for idx, edge in enumerate(graph.graph.edges()):
+                edge_save_path: str = (
+                    f"{subdirectory_path}/{graph.name}/edges/edge_{idx}.pkl"
+                )
+                with open(edge_save_path, "wb") as edge_file:
+                    pickle.dump(edge, edge_file)
+                edge_save_paths.append(edge_save_path)
 
         zip_path: str = f"{subdirectory_path}.zip"
 
@@ -943,7 +971,23 @@ class GraphSet:
             zip_path, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
         ) as subdir_zip:
             for graph_path in graph_save_paths:
-                subdir_zip.write(graph_path, arcname=f"{os.path.basename(graph_path)}")
+                graph_path_components: list[str] = graph_path.split("/")
+                subdir_zip.write(
+                    graph_path,
+                    arcname=f"{graph_path_components[-2]}/{graph_path_components[-1]}",
+                )
+            for node_path in node_save_paths:
+                node_path_components: list[str] = node_path.split("/")
+                subdir_zip.write(
+                    node_path,
+                    arcname=f"{node_path_components[-3]}/{node_path_components[-2]}/{node_path_components[-1]}",
+                )
+            for edge_path in edge_save_paths:
+                edge_path_components: list[str] = edge_path.split("/")
+                subdir_zip.write(
+                    edge_path,
+                    arcname=f"{edge_path_components[-3]}/{edge_path_components[-2]}/{edge_path_components[-1]}",
+                )
 
         # Remove the uncompressed subdirectory if compression was successful
         if os.path.exists(zip_path):
@@ -983,20 +1027,40 @@ class GraphSet:
         ) as subdir_zip:
             subdir_zip.extractall(path=subdirectory_path)
 
-        # Load each graphml file and add it to the GraphSet
-        for graphml_name in os.listdir(subdirectory_path):
-            print(graphml_name)
-            graphml_path: str = f"{subdirectory_path}/{graphml_name}"
+        save_dirs: list[str] = list(os.walk(subdirectory_path))[0][1]
+        for save_dir in save_dirs:
+            # Extracts the name of the hierarchy
+            graph_name: str = os.path.basename(save_dir)
 
-            # Extracts the name of the hierarchy without the "graph_" prefix or file type suffix
-            graph_name: str = graphml_path[6:-8]
+            graphml_path: str = f"{save_dir}/graph_{graph_name}.graphml"
 
             graph_object: Graph = Graph("", (0.0, 0.0))
             graph_object.load_graph(graphml_path, graph_name, rw_params[graph_name])
 
+            # Load and add the GraphNodes
+            node_dir: str = f"{save_dir}/nodes"
+            node_paths: list[str] = list(os.walk(node_dir))[0][2]
+            for node_path in node_paths:
+                node_index: int = int(
+                    (os.path.basename(node_path).split("_")[-1]).split(".")[0]
+                )
+                with open(node_path, "rb") as node_pickle:
+                    node_object: GraphNode = pickle.load(node_pickle)
+                    graph_object.graph[node_index] = node_object
+
+            # Load and add the GraphEdges
+            edge_dir: str = f"{save_dir}/edges"
+            edge_paths: list[str] = list(os.walk(edge_dir))[0][2]
+            for edge_path in edge_paths:
+                edge_index: int = int(
+                    (os.path.basename(edge_path).split("_")[-1]).split(".")[0]
+                )
+                with open(edge_path, "rb") as edge_pickle:
+                    edge_object: GraphEdge = pickle.load(edge_pickle)
+                    graph_object.graph.update_edge_by_index(edge_index, edge_object)
+
             # Add the Graph object to the GraphSet
             self.add_graph(graph_object)
-
         return None
 
     def add_graph(self, graph: Graph) -> None:
