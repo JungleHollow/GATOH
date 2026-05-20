@@ -1,18 +1,66 @@
-use crate::{
-    agents::agents,
-    graphs::graphs::{GraphEdge, GraphNode},
-};
+use crate::agents::agents;
+use crate::graphs::graphs::{GraphEdge, GraphNode};
+
 use petgraph::graph::DiGraph;
-use quick_xml::{
-    Reader, Writer,
-    events::{BytesEnd, BytesStart, BytesText, Event},
-};
+
+use quick_xml::Error as XmlError;
+use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
+use quick_xml::{Reader, Writer};
+
 use rand::prelude;
+
 use std::fs;
 use std::io;
+use std::num::{ParseFloatError, ParseIntError};
+use std::str::ParseBoolError;
 use std::sync::Arc;
 
 /// This utils module should cover any miscellaneous functions that facilitate running the package across modules.
+
+/// A utility enum to define various custom error types.
+pub enum Error {
+    Xml(String),
+    ParseValue(String),
+    NotFound(String),
+    Unsupported(String),
+    InvalidDoc(String),
+    IO(String),
+}
+
+impl From<XmlError> for Error {
+    #[inline]
+    fn from(e: XmlError) -> Error {
+        Error::Xml(format!("Xml document not well-formed: {e}"))
+    }
+}
+
+impl From<ParseBoolError> for Error {
+    #[inline]
+    fn from(e: ParseBoolError) -> Error {
+        Error::ParseValue(format!("Failed conversion to 'bool': {e}"))
+    }
+}
+
+impl From<ParseIntError> for Error {
+    #[inline]
+    fn from(e: ParseIntError) -> Error {
+        Error::ParseValue(format!("Failed conversion to 'int' or 'long': {e}"))
+    }
+}
+
+impl From<ParseFloatError> for Error {
+    #[inline]
+    fn from(e: ParseFloatError) -> Error {
+        Error::ParseValue(format!("Failed conversion to 'float' or 'double': {e}"))
+    }
+}
+
+impl From<std::io::Error> for Error {
+    #[inline]
+    fn from(e: std::io::Error) -> Error {
+        Error::IO(format!("Input/output error: {e}"))
+    }
+}
 
 // ========== Graph utils ========== //
 
