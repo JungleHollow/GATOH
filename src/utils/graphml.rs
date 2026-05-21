@@ -1,12 +1,24 @@
 use indexmap::map::Entry;
-use std::borrow::Cow;
+
+use std::borrow::{Borrow, Cow};
 use std::collections::HashSet;
+use std::ffi::OsStr;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::iter::{FromIterator, Iterator};
+use std::path::Path;
+use std::convert::From;
+
+use flate2::Compression;
+use flate2::bufread::GzDecoder;
+use flate2::write::GzEncoder;
 
 use crate::utils::utils::Error;
 
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::name::QName;
 use quick_xml::{Reader, Writer};
+
 use rustworkx_core::dictmap::{DictMap, InitWithHasher};
 
 /// The code in this file is closely adapted from the `graphml.rs' file present in rustworkx-core, which is not normally
@@ -481,6 +493,218 @@ impl GraphML {
             graph.last_edge_set_data(key, val)?;
         }
 
+        Ok(())
+    }
+
+    fn last_graph_set_attribute(&mut self, key: &str, val: String) -> Result<(), Error> {
+        let key = match self.key_for_all.get(key) {
+            Some(key) => key,
+            None => self
+                .key_for_graph
+                .get(key)
+                .ok_or_else(|| Error::NotFound(format!("Key '{key}' for graph not found.")))?,
+        };
+
+        if let Some(graph) = self.graphs.last_mut() {
+            graph.attributes.insert(key.name.clone(), key.parse(val)?);
+        }
+
+        Ok(())
+    }
+
+    /// Open file compressed with gzip using GzDecoder
+    /// Returns a quick_xml Reader instance
+    fn open_file_gzip<P: AsRef<Path>>(
+        path: P,
+    ) -> Result<Reader<BufReader<GzDecoder<BufReader<File>>>>, quick_xml::Error> {
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+        let gzip_reader = BufReader::new(GzDecoder::new(reader));
+        Ok(Reader::from_reader(gzip_reader))
+    }
+
+    /// Parse a file written in GraphML format from a BufReader
+    ///
+    /// The implementation is based on a state machine in order to
+    /// accept only valid GraphML syntax (e.g. a '<data>' element should
+    /// be nested inside a '<node>' element) where the internal state changes
+    /// after handling each quick_xml event.
+    fn read_graph_from_reader<R: BufRead>(mut reader: Reader<R>) -> Result<GraphML, Error> {
+        let mut graphml = GraphML::default();
+
+        let mut buf = Vec::new();
+        let mut state = State::Start;
+        let mut domain_of_last_key = Domain::Node;
+        let mut last_data_key = String::new();
+
+        loop {
+            match reader.read_event_into(&mut buf)? {
+                Event::Start(ref e) => match e.name() {
+                    QName(b"key") => {
+                        matches!(state, State::Start);
+                        domain_of_last_key = graphml.add_graphml_key(e)?;
+                        state = State::Key;
+                    }
+                    QName(b"default") => {
+                        matches!(state, State::Key);
+                        state = State::DefaultForKey;
+                    }
+                    QName(b"graph") => {
+                        matches!(state, State::Start);
+                        graphml.create_graph(e)?;
+                        state = State::Graph;
+                    }
+                    QName(b"node") => {
+                        matches!(state, State::Graph);
+                        graphml.add_node(e)?;
+                        state = State::Node;
+                    }
+                    QName(b"edge") => {
+                        matches!{state, State::Graph};
+                        graphml.add_edge(e)?;
+                        state = State::Edge;
+                    }
+                    QName(b"data") => {
+                        matches!(state, State::Node | State::Edge | State::Graph);
+                        last_data_key = xml_attribute(e, b"key")?;
+                        match state {
+                            State::Node => state = State::DataForNode,
+                            State::Edge => state = State::DataForEdge,
+                            State::Graph => state = State::DataForGraph,
+                            _ => {
+                                // In all other cases we have already bailed out in `matches`.
+                                unreachable!()
+                            }
+                        }
+                    }
+                    QName(b"hyperedge") => {
+                        return Err(Error::Unsupported(String::from(
+                            "Hyperedges are not supported.",
+                        )));
+                    }
+                    QName(b"port") => {
+                        return Err(Error::Unsupported(String::from(
+                            "Ports are not supported.",
+                        )));
+                    }
+                    _ => {}
+                },
+                Event::Empty(ref e) => match e.name() {
+                    QName(b"key") => {
+                        matches!(state, State::Start);
+                        graphml.add_graphml_key(e)?;
+                    }
+                    QName(b"node") => {
+                        matches!(state, State::Graph);
+                        graphml.add_node(e)?;
+                    }
+                    QName(b"edge") => {
+                        matches!(state, State::Graph);
+                        graphml.add_edge(e)?;
+                    }
+                    QName(b"port") => {
+                        return Err(Error::Unsupported(String::from(
+                            "Ports are not supported.",
+                        )));
+                    }
+                    _ => {}
+                },
+                Event::End(ref e) => match e.name() {
+                    QName(b"key") => {
+                        matches!(state, State::Key);
+                        state = State::Start;
+                    }
+                    QName(b"default") => {
+                        matches!(state, State::DefaultForKey);
+                        state = State::Key;
+                    }
+                    QName(b"graph") => {
+                        matches!(state, State::Graph);
+                        state = State::Start;
+                    }
+                    QName(b"node") => {
+                        matches!(state, State::Node);
+                        state = State::Graph;
+                    }
+                    QName(b"edge") => {
+                        matches!(state, State::Edge);
+                        state = State::Graph;
+                    }
+                    QName(b"data") => {
+                        matches!(state, State::DataForNode | State::DataForEdge | State::DataForGraph);
+                        match state {
+                            State::DataForNode => state = State::Node,
+                            State::DataForEdge => state = State::Edge,
+                            State::DataForGraph => state = State::Graph,
+                            _ => {
+                                // In all other cases we have already bailed out in `matches`
+                                unreachable!()
+                            }
+                        }
+                    }
+                    _ => {}
+                },
+                Event::Text(ref e) => match state {
+                    State::DefaultForKey => {
+                        graphml.last_key_set_value((e.unescape()?).to_string(), domain_of_last_key)?;
+                    }
+                    State::DataForNode => {
+                        graphml.last_node_set_data(&last_data_key, (e.unescape()?).to_string())?;
+                    }
+                    State::DataForEdge => {
+                        graphml.last_edge_set_data(&last_data_key, (e.unescape()?).to_string())?;
+                    }
+                    State::DataForGraph => {
+                        graphml.last_graph_set_attribute(&last_data_key, (e.unescape()?).to_string())?;
+                    }
+                    _ => {}
+                },
+                Event::Eof => {
+                    break;
+                }
+                _ => {}
+            }
+
+            buf.clear();
+        }
+
+        Ok(graphml)
+    }
+
+    /// Read a graph from a file in the GraphML format
+    /// If the file extension is `graphmlz` or `gz`, decompress it on the fly
+    fn from_file<P: AsRef<Path>>(path: P, compression: &str) -> Result<GraphML, Error> {
+        let extension = path.as_ref().extension().unwrap_or(OsStr::new(""));
+
+        let graph: Result<GraphML, Error> =
+            if extension.eq("graphmlz") || extension.eq("gz") || compression.eq("gzip") {
+                let reader = Self::open_file_gzip(path)?;
+                Self::read_graph_from_reader(reader)
+            } else {
+                let reader = Reader::from_file(path)?;
+                Self::read_graph_from_reader(reader)
+            };
+
+        graph
+    }
+
+    fn write_data<W: std::io::Write>(writer: &mut Writer<W>, keys: &DictMap<String, (&String, &Key)>, data: &DictMap<String, Value>) -> Result<(), Error> {
+        for (key_name, value) in data {
+            let (id, key) = keys
+                .get(key_name)
+                .ok_or_else(|| Error::NotFound(format!("Unknown key {key_name}")))?;
+            if key.default == *value {
+                continue;
+            }
+
+            let mut elem = BytesStart::new("data");
+            elem.push_attribute(("key", id.as_str()));
+            writer.write_event(Event::Start(elem.borrow()))?;
+            if let Some(contents) = value.serialize() {
+                writer.write_event(Event::Text(BytesText::new(contents.borrow())))?;
+            }
+            writer.write_event(Event::End(elem.to_end()))?;
+        }
         Ok(())
     }
 }
