@@ -1,13 +1,14 @@
 use indexmap::map::Entry;
 
+use core::any::Any;
 use std::borrow::{Borrow, Cow};
 use std::collections::HashSet;
+use std::convert::From;
 use std::ffi::OsStr;
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, BufWriter};
 use std::iter::{FromIterator, Iterator};
 use std::path::Path;
-use std::convert::From;
 
 use flate2::Compression;
 use flate2::bufread::GzDecoder;
@@ -15,7 +16,7 @@ use flate2::write::GzEncoder;
 
 use crate::utils::utils::Error;
 
-use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
+use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::name::QName;
 use quick_xml::{Reader, Writer};
 
@@ -114,6 +115,15 @@ impl Value {
             Value::String(val) => Some(Cow::from(val.to_string())),
             Value::Long(val) => Some(Cow::from(val.to_string())),
             Value::UnDefined => None,
+        }
+    }
+
+    fn to_id(&self) -> Result<&str, Error> {
+        match self {
+            Value::String(value_str) => Ok(value_str),
+            _ => Err(Error::ValueError(String::from(
+                "Expected string value for id",
+            ))),
         }
     }
 
@@ -267,6 +277,40 @@ impl<Index: std::cmp::Eq + std::hash::Hash> GraphElementInfos<Index> {
             vec: vec![],
             id_taken: HashSet::new(),
         }
+    }
+
+    fn insert(
+        &mut self,
+        index: Index,
+        weight: Option<DictMap<String, Value>>,
+    ) -> Result<(), Error> {
+        // TODO: KEEP AN EYE ON THIS FUNCTION...
+        let element_info = weight
+            .and_then(
+                |mut data: DictMap<String, Value>| -> Option<Result<GraphElementInfo, Error>> {
+                    let id = data
+                        .shift_remove_entry("id")
+                        .map(|(id, value)| -> Result<Option<String>, Error> {
+                            let value_str = value.to_id()?;
+                            if self.id_taken.contains(value_str) {
+                                data.insert(id, value);
+                                Ok(None)
+                            } else {
+                                self.id_taken.insert(value_str.to_string());
+                                Ok(Some(value_str.to_string()))
+                            }
+                        })
+                        .unwrap_or_else(|| Ok(None))
+                        .ok()?;
+                    Some(Ok(GraphElementInfo {
+                        attributes: data.clone(),
+                        id,
+                    }))
+                },
+            )
+            .unwrap_or_else(|| Ok(GraphElementInfo::default()))?;
+        self.vec.push((index, element_info));
+        Ok(())
     }
 }
 
@@ -560,7 +604,7 @@ impl GraphML {
                         state = State::Node;
                     }
                     QName(b"edge") => {
-                        matches!{state, State::Graph};
+                        matches! {state, State::Graph};
                         graphml.add_edge(e)?;
                         state = State::Edge;
                     }
@@ -583,9 +627,7 @@ impl GraphML {
                         )));
                     }
                     QName(b"port") => {
-                        return Err(Error::Unsupported(String::from(
-                            "Ports are not supported.",
-                        )));
+                        return Err(Error::Unsupported(String::from("Ports are not supported.")));
                     }
                     _ => {}
                 },
@@ -603,9 +645,7 @@ impl GraphML {
                         graphml.add_edge(e)?;
                     }
                     QName(b"port") => {
-                        return Err(Error::Unsupported(String::from(
-                            "Ports are not supported.",
-                        )));
+                        return Err(Error::Unsupported(String::from("Ports are not supported.")));
                     }
                     _ => {}
                 },
@@ -631,7 +671,10 @@ impl GraphML {
                         state = State::Graph;
                     }
                     QName(b"data") => {
-                        matches!(state, State::DataForNode | State::DataForEdge | State::DataForGraph);
+                        matches!(
+                            state,
+                            State::DataForNode | State::DataForEdge | State::DataForGraph
+                        );
                         match state {
                             State::DataForNode => state = State::Node,
                             State::DataForEdge => state = State::Edge,
@@ -646,7 +689,8 @@ impl GraphML {
                 },
                 Event::Text(ref e) => match state {
                     State::DefaultForKey => {
-                        graphml.last_key_set_value((e.unescape()?).to_string(), domain_of_last_key)?;
+                        graphml
+                            .last_key_set_value((e.unescape()?).to_string(), domain_of_last_key)?;
                     }
                     State::DataForNode => {
                         graphml.last_node_set_data(&last_data_key, (e.unescape()?).to_string())?;
@@ -655,7 +699,10 @@ impl GraphML {
                         graphml.last_edge_set_data(&last_data_key, (e.unescape()?).to_string())?;
                     }
                     State::DataForGraph => {
-                        graphml.last_graph_set_attribute(&last_data_key, (e.unescape()?).to_string())?;
+                        graphml.last_graph_set_attribute(
+                            &last_data_key,
+                            (e.unescape()?).to_string(),
+                        )?;
                     }
                     _ => {}
                 },
@@ -688,7 +735,11 @@ impl GraphML {
         graph
     }
 
-    fn write_data<W: std::io::Write>(writer: &mut Writer<W>, keys: &DictMap<String, (&String, &Key)>, data: &DictMap<String, Value>) -> Result<(), Error> {
+    fn write_data<W: std::io::Write>(
+        writer: &mut Writer<W>,
+        keys: &DictMap<String, (&String, &Key)>,
+        data: &DictMap<String, Value>,
+    ) -> Result<(), Error> {
         for (key_name, value) in data {
             let (id, key) = keys
                 .get(key_name)
@@ -706,5 +757,162 @@ impl GraphML {
             writer.write_event(Event::End(elem.to_end()))?;
         }
         Ok(())
+    }
+
+    fn write_elem_data<W: std::io::Write>(
+        writer: &mut Writer<W>,
+        keys: &DictMap<String, (&String, &Key)>,
+        elem: BytesStart,
+        data: &DictMap<String, Value>,
+    ) -> Result<(), Error> {
+        if data.is_empty() {
+            writer.write_event(Event::Empty(elem))?;
+            return Ok(());
+        }
+
+        writer.write_event(Event::Start(elem.borrow()))?;
+        Self::write_data(writer, keys, data)?;
+        writer.write_event(Event::End(elem.to_end()))?;
+        Ok(())
+    }
+
+    fn write_keys<W: std::io::Write>(
+        writer: &mut Writer<W>,
+        key_for: &str,
+        map: &DictMap<String, Key>,
+    ) -> Result<(), quick_xml::Error> {
+        for (id, key) in map {
+            let mut elem = BytesStart::new("key");
+            elem.push_attribute(("id", id.as_str()));
+            elem.push_attribute(("for", key_for));
+            elem.push_attribute(("attr.name", key.name.as_str()));
+            let ty: &str = key.ty.into();
+            elem.push_attribute(("attr.type", ty));
+            writer.write_event(Event::Start(elem.borrow()))?;
+            if let Some(contents) = key.default.serialize() {
+                let elem = BytesStart::new("default");
+                writer.write_event(Event::Start(elem.borrow()))?;
+                writer.write_event(Event::Text(BytesText::new(contents.borrow())))?;
+                writer.write_event(Event::End(elem.to_end()))?;
+            };
+            writer.write_event(Event::End(elem.to_end()))?;
+        }
+        Ok(())
+    }
+
+    fn write_graph_to_writer<W: std::io::Write>(
+        &self,
+        writer: &mut Writer<W>,
+    ) -> Result<(), Error> {
+        writer.write_event(Event::Decl(BytesDecl::new("1.0", Some("UTF-8"), None)))?;
+
+        let mut elem = BytesStart::new("graphml");
+        elem.push_attribute(("xmlns", "http://graphml.graphdrawing.org/xmlns"));
+        elem.push_attribute(("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
+        elem.push_attribute(("xsi:schemaLocation", "http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"));
+
+        writer.write_event(Event::Start(elem.borrow()))?;
+
+        Self::write_keys(writer, "node", &self.key_for_nodes)?;
+        Self::write_keys(writer, "edge", &self.key_for_edges)?;
+        Self::write_keys(writer, "graph", &self.key_for_graph)?;
+        Self::write_keys(writer, "all", &self.key_for_all)?;
+
+        let graph_keys: DictMap<String, (&String, &Key)> =
+            build_key_name_map(&self.key_for_graph, &self.key_for_all);
+        let node_keys: DictMap<String, (&String, &Key)> =
+            build_key_name_map(&self.key_for_nodes, &self.key_for_all);
+        let edge_keys: DictMap<String, (&String, &Key)> =
+            build_key_name_map(&self.key_for_edges, &self.key_for_all);
+
+        for graph in self.graphs.iter() {
+            let mut elem = BytesStart::new("graph");
+            if let Some(id) = &graph.id {
+                elem.push_attribute(("id", id.as_str()));
+            }
+            let edgedefault = match graph.dir {
+                Direction::Directed => "directed",
+                Direction::Undirected => "undirected",
+            };
+            elem.push_attribute(("edgedefault", edgedefault));
+            writer.write_event(Event::Start(elem.borrow()))?;
+            Self::write_data(writer, &graph_keys, &graph.attributes)?;
+            for node in &graph.nodes {
+                let mut elem = BytesStart::new("node");
+                elem.push_attribute(("id", node.id.as_str()));
+                Self::write_elem_data(writer, &node_keys, elem, &node.data)?;
+            }
+            for edge in &graph.edges {
+                let mut elem = BytesStart::new("edge");
+                if let Some(id) = &edge.id {
+                    elem.push_attribute(("id", id.as_str()));
+                }
+                elem.push_attribute(("source", edge.source.as_str()));
+                elem.push_attribute(("target", edge.target.as_str()));
+                Self::write_elem_data(writer, &edge_keys, elem, &edge.data)?;
+            }
+            writer.write_event(Event::End(elem.to_end()))?;
+        }
+        writer.write_event(Event::End(elem.to_end()))?;
+        Ok(())
+    }
+
+    fn to_file(&self, path: impl AsRef<Path>, compression: &str) -> Result<(), Error> {
+        let extension = path.as_ref().extension().unwrap_or(OsStr::new(""));
+        if extension.eq("graphmlz") || extension.eq("gz") || compression.eq("gzip") {
+            let file = File::create(path)?;
+            let buf_writer = BufWriter::new(file);
+            let gzip_encoder = GzEncoder::new(buf_writer, Compression::default());
+            let mut writer = Writer::new(gzip_encoder);
+            self.write_graph_to_writer(&mut writer)?;
+            writer.into_inner().finish()?;
+        } else {
+            let file = File::create(path)?;
+            let mut writer = Writer::new(file);
+            self.write_graph_to_writer(&mut writer)?;
+        }
+        Ok(())
+    }
+
+    fn infer_keys(&mut self) -> Result<(), Error> {
+        infer_keys_for_attributes(
+            &mut self.key_for_graph,
+            self.graphs.iter().flat_map(|graph| graph.attributes.iter()),
+        )?;
+        infer_keys_for_attributes(
+            &mut self.key_for_nodes,
+            self.graphs
+                .iter()
+                .flat_map(|graph| graph.nodes.iter())
+                .flat_map(|nodes| nodes.data.iter()),
+        )?;
+        infer_keys_for_attributes(
+            &mut self.key_for_edges,
+            self.graphs
+                .iter()
+                .flat_map(|graph| graph.edges.iter())
+                .flat_map(|edges| edges.data.iter()),
+        )?;
+        Ok(())
+    }
+}
+
+pub struct KeySpec {
+    id: String,
+    domain: Domain,
+    name: String,
+    ty: Type,
+    default: Value,
+}
+
+impl KeySpec {
+    fn new(id: String, domain: Domain, name: String, ty: Type, default: Value) -> Self {
+        KeySpec {
+            id,
+            domain,
+            name,
+            ty,
+            default,
+        }
     }
 }

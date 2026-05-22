@@ -25,6 +25,7 @@ pub enum Error {
     Unsupported(String),
     InvalidDoc(String),
     IO(String),
+    ValueError(String),
 }
 
 impl From<XmlError> for Error {
