@@ -1,6 +1,5 @@
 use indexmap::map::Entry;
 
-use core::any::Any;
 use std::borrow::{Borrow, Cow};
 use std::collections::HashSet;
 use std::convert::From;
@@ -688,6 +687,7 @@ impl GraphML {
                     _ => {}
                 },
                 Event::Text(ref e) => match state {
+                    // TODO: Figure out why the unescapes for BytesText are being flagged by rust-analyzer...
                     State::DefaultForKey => {
                         graphml
                             .last_key_set_value((e.unescape()?).to_string(), domain_of_last_key)?;
