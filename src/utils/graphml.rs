@@ -1,4 +1,10 @@
+#![allow(clippy::borrow_as_ptr)]
+
 use indexmap::map::Entry;
+
+use petgraph::graph::DiGraph;
+
+use conv::ValueFrom;
 
 use std::borrow::{Borrow, Cow};
 use std::collections::HashSet;
@@ -13,9 +19,10 @@ use flate2::Compression;
 use flate2::bufread::GzDecoder;
 use flate2::write::GzEncoder;
 
+use crate::graphs::graphs::{Graph as GatohGraph, GraphEdge, GraphNode};
 use crate::utils::utils::Error;
 
-use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, BytesText, Event};
+use quick_xml::events::{BytesDecl, BytesStart, BytesText, Event};
 use quick_xml::name::QName;
 use quick_xml::{Reader, Writer};
 
@@ -313,6 +320,114 @@ impl<Index: std::cmp::Eq + std::hash::Hash> GraphElementInfos<Index> {
     }
 }
 
+impl Graph {
+    fn try_from_stable(
+        dir: Direction,
+        gatohgraph: &DiGraph<GraphNode, GraphEdge>,
+        mut attrs: Option<DictMap<String, Value>>,
+    ) -> Result<Self, Error> {
+        let id = attrs
+            .as_mut()
+            .and_then(|attributes| {
+                attributes
+                    .shift_remove("id")
+                    .map(|v| v.to_id().map(|id| id.to_string()))
+            })
+            .transpose()?;
+        let mut graph = Graph::new(id, dir, std::iter::empty());
+        if let Some(attributes) = attrs {
+            graph.attributes.extend(attributes);
+        }
+        let mut node_infos = GraphElementInfos::new();
+        for node_index in gatohgraph.node_indices() {
+            let node_obj = gatohgraph.node_weight(node_index);
+            let node_weight: Option<DictMap<String, Value>>;
+
+            match node_obj {
+                Some(node_obj) => {
+                    let mut dict_map = DictMap::new();
+                    dict_map.insert(String::from("weight"), Value::Float(node_obj.agent.opinion));
+                    node_weight = Some(dict_map);
+                }
+                None => node_weight = None,
+            }
+
+            node_infos.insert(node_index, node_weight)?;
+        }
+        let mut edge_infos = GraphElementInfos::new();
+        for edge_index in gatohgraph.edge_indices() {
+            let edge_obj = gatohgraph.edge_weight(edge_index);
+            let edge_weight: Option<DictMap<String, Value>>;
+
+            match edge_obj {
+                Some(edge_obj) => {
+                    let mut dict_map = DictMap::new();
+                    dict_map.insert(
+                        String::from("source"),
+                        Value::Int(isize::value_from(edge_obj.from_node).unwrap()),
+                    );
+                    dict_map.insert(
+                        String::from("target"),
+                        Value::Int(isize::value_from(edge_obj.to_node).unwrap()),
+                    );
+                    dict_map.insert(String::from("weight"), Value::Float(edge_obj.weighting));
+                    edge_weight = Some(dict_map);
+                }
+                None => edge_weight = None,
+            }
+
+            edge_infos.insert(edge_index, edge_weight)?;
+        }
+        let mut node_ids = DictMap::new();
+        let mut fresh_index_counter = 0;
+        for (node_index, element_info) in node_infos.vec {
+            let id = element_info.id.unwrap_or_else(|| {
+                loop {
+                    let id = format!("n{fresh_index_counter}");
+                    fresh_index_counter += 1;
+                    if node_infos.id_taken.contains(&id) {
+                        continue;
+                    }
+                    node_infos.id_taken.insert(id.clone());
+                    break id;
+                }
+            });
+            graph.nodes.push(Node {
+                id: id.clone(),
+                data: element_info.attributes,
+            });
+            node_ids.insert(node_index, id);
+        }
+
+        for (edge_index, element_info) in edge_infos.vec {
+            if let Some((source, target)) = gatohgraph.edge_endpoints(edge_index) {
+                let source = node_ids
+                    .get(&source)
+                    .ok_or(Error::ValueError(String::from("Missing source")))?;
+                let target = node_ids
+                    .get(&target)
+                    .ok_or(Error::ValueError(String::from("Missing target")))?;
+                graph.edges.push(Edge {
+                    id: element_info.id,
+                    source: source.clone(),
+                    target: target.clone(),
+                    data: element_info.attributes,
+                });
+            }
+        }
+        Ok(graph)
+    }
+}
+
+impl TryFrom<GatohGraph> for Graph {
+    type Error = Error;
+
+    fn try_from(value: GatohGraph) -> Result<Self, Error> {
+        let gatohgraph = value.borrow();
+        Graph::try_from_stable(Direction::Directed, &gatohgraph.graph, None)
+    }
+}
+
 enum State {
     Start,
     Graph,
@@ -400,6 +515,7 @@ fn infer_keys_for_attributes<'a>(
                 }
                 Entry::Occupied(entry) => {
                     let other_ty = entry.get();
+                    // TODO: FIGURE OUT WHY THIS PARTIAL EQUALITY IS NOT WORKING...
                     if *other_ty != ty {
                         return Err(Error::InvalidDoc(format!(
                             "Mismatch type for key {name}: {ty:?} and {other_ty:?}"
@@ -895,6 +1011,39 @@ impl GraphML {
         )?;
         Ok(())
     }
+
+    fn set_keys(&mut self, keys: Vec<KeySpec>) -> Result<(), Error> {
+        for key in keys {
+            self.get_keys_mut(key.domain).insert(
+                key.id.clone(),
+                Key {
+                    name: key.name.clone(),
+                    ty: key.ty,
+                    default: key.default,
+                },
+            );
+        }
+        Ok(())
+    }
+
+    fn set_or_infer_keys(&mut self, keys: Option<Vec<KeySpec>>) -> Result<(), Error> {
+        match keys {
+            None => self.infer_keys()?,
+            Some(keys) => self.set_keys(keys)?,
+        }
+        Ok(())
+    }
+}
+
+pub fn read_graphml(path: &str, compression: Option<String>) -> Result<Vec<Graph>, Error> {
+    let graphml = GraphML::from_file(path, &compression.unwrap_or_default())?;
+
+    let mut out = Vec::new();
+    for graph in graphml.graphs {
+        out.push(graph)
+    }
+
+    Ok(out)
 }
 
 pub struct KeySpec {
@@ -915,4 +1064,17 @@ impl KeySpec {
             default,
         }
     }
+}
+
+pub fn gatohgraph_write_graphml(
+    graph: GatohGraph,
+    path: &str,
+    keys: Option<Vec<KeySpec>>,
+    compression: Option<String>,
+) -> Result<(), Error> {
+    let mut graphml = GraphML::default();
+    graphml.graphs.push(Graph::try_from(graph)?);
+    graphml.set_or_infer_keys(keys)?;
+    graphml.to_file(path, &compression.unwrap_or_default())?;
+    Ok(())
 }

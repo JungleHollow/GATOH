@@ -21,8 +21,8 @@ use graphrs::readwrite::graphml::*; // To allow for reading and writing Graph ob
 /// A helper struct that allows rustworkx to more efficiently store information about Agents in the graph nodes.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GraphNode {
-    index: u32,
-    agent: Agent,
+    pub index: u32,
+    pub agent: Agent,
 }
 
 impl GraphNode {
@@ -55,10 +55,10 @@ impl fmt::Display for GraphNode {
 /// A places on Agent B will not necessarilly be equally reciprocated.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GraphEdge {
-    index: u32,
-    weighting: f32,
-    from_node: u32,
-    to_node: u32,
+    pub index: u32,
+    pub weighting: f32,
+    pub from_node: u32,
+    pub to_node: u32,
     hierarchy: String,
     rw_params: (f32, f32),
 }
@@ -140,7 +140,7 @@ enum GraphGenerationParams {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Graph {
-    graph: DiGraph<GraphNode, GraphEdge>,
+    pub graph: DiGraph<GraphNode, GraphEdge>,
     node_count: u32,
     edge_count: u32,
     name: String,

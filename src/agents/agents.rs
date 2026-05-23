@@ -33,11 +33,11 @@ enum ParameterTypes {
 /// A struct to define the Agent objects that will interact with each other in an agent-based model.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Agent {
-    id: String,
-    index: u32,
+    pub id: String,
+    pub index: u32,
     social_weightings: HashMap<String, f32>,
     is_silenced: HashMap<String, bool>,
-    opinion: f32,
+    pub opinion: f32,
     previous_opinion: f32,
     personal_benefit: bool,
     social_susceptibility: f32,

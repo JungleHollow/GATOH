@@ -26,6 +26,7 @@ pub enum Error {
     InvalidDoc(String),
     IO(String),
     ValueError(String),
+    StdError(String),
 }
 
 impl From<XmlError> for Error {
