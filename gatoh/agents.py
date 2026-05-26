@@ -192,7 +192,7 @@ class Agent:
         :param parameters: The distribution parameters that will be used with the specified distribution for parameter generation
         :param distribution: String to select which random distribution will be used to generate the value
         """
-        if not value and not (distribution and parameters):
+        if value is None and not (distribution and parameters):
             raise ValueError(
                 "Either explicit `value` or distribution and valid distribution parameters are expected when adding Agent attributes."
             )
@@ -204,7 +204,7 @@ class Agent:
                 category=UserWarning,
             )
         else:
-            if value:
+            if value is not None:
                 # Assume a given explicit value always overrides (mean, sdev)
                 self.__dict__[name] = value
             elif distribution and parameters:

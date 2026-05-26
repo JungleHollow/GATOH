@@ -71,11 +71,10 @@ class SocialSusceptibilityTester:
             agent_opinion: float = rd.uniform(
                 AGENT_PARAMETERS["opinions"][0], AGENT_PARAMETERS["opinions"][1]
             )
-            agent_personality: str = str(agt.draw_personality())
-            agent_susceptibility: float = 0.0  # Treat ZERO as the base case
+            agent_personality: str = agt.draw_personality()
             agent_behaviour: tuple[str, float] = (
                 agent_personality,
-                agent_susceptibility,
+                0.0,  # Treat ZERO as the base case
             )
             agent_benefit: bool = bool(
                 np.random.choice(benefit_flags, size=1, p=benefit_p)[0]
