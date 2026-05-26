@@ -640,7 +640,6 @@ class AgentSet:
 
         # Unpickle each Agent object and add it to the AgentSet.
         for agent_pickle_name in os.listdir(subdirectory_path):
-            print(agent_pickle_name)
             agent_pickle_path: str = f"{subdirectory_path}/{agent_pickle_name}"
             with open(agent_pickle_path, "rb") as agent_pickle:
                 agent_object: Agent = pickle.load(agent_pickle)

@@ -1028,34 +1028,38 @@ class GraphSet:
             subdir_zip.extractall(path=subdirectory_path)
 
         save_dirs: list[str] = list(os.walk(subdirectory_path))[0][1]
+
         for save_dir in save_dirs:
             # Extracts the name of the hierarchy
             graph_name: str = os.path.basename(save_dir)
 
-            graphml_path: str = f"{save_dir}/graph_{graph_name}.graphml"
+            graphml_path: str = (
+                f"{subdirectory_path}/{graph_name}/graph_{graph_name}.graphml"
+            )
 
             graph_object: Graph = Graph("", (0.0, 0.0))
             graph_object.load_graph(graphml_path, graph_name, rw_params[graph_name])
 
             # Load and add the GraphNodes
-            node_dir: str = f"{save_dir}/nodes"
+            node_dir: str = f"{subdirectory_path}/{graph_name}/nodes"
             node_paths: list[str] = list(os.walk(node_dir))[0][2]
+
             for node_path in node_paths:
                 node_index: int = int(
                     (os.path.basename(node_path).split("_")[-1]).split(".")[0]
                 )
-                with open(node_path, "rb") as node_pickle:
+                with open(f"{node_dir}/{node_path}", "rb") as node_pickle:
                     node_object: GraphNode = pickle.load(node_pickle)
                     graph_object.graph[node_index] = node_object
 
             # Load and add the GraphEdges
-            edge_dir: str = f"{save_dir}/edges"
+            edge_dir: str = f"{subdirectory_path}/{graph_name}/edges"
             edge_paths: list[str] = list(os.walk(edge_dir))[0][2]
             for edge_path in edge_paths:
                 edge_index: int = int(
                     (os.path.basename(edge_path).split("_")[-1]).split(".")[0]
                 )
-                with open(edge_path, "rb") as edge_pickle:
+                with open(f"{edge_dir}/{edge_path}", "rb") as edge_pickle:
                     edge_object: GraphEdge = pickle.load(edge_pickle)
                     graph_object.graph.update_edge_by_index(edge_index, edge_object)
 
