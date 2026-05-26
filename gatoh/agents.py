@@ -19,7 +19,7 @@ from .utils import draw_random_value, random_coinflip, value_rw_delta
 PERSONALITIES: list[str] = ["neutral", "rational", "erratic", "impulsive", "social"]
 
 
-def _draw_personality() -> str:
+def draw_personality() -> str:
     """
     An Agent utility function that randomly draws a valid Agent personality type.
 
