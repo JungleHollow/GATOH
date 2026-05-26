@@ -219,7 +219,7 @@ class RandomWalkTester:
 
     def setup_models(self, missing_saves: list[str] | None = None) -> None:
         """
-        Adds the appropriate Agent and Graph obkects to all models.
+        Adds the appropriate Agent and Graph objects to all models.
 
         :param missing_saves: An optional partial list of the model names representing models that should be setup.
         """
