@@ -335,7 +335,7 @@ if __name__ == "__main__":
     tester: RandomWalkTester
 
     # Check for existing saved models and store the relevant information
-    save_dirs = list(os.walk("./experiments/Base/RandomWalk"))[0][1]
+    save_dirs: list[str] = list(os.walk("./experiments/Base/RandomWalk"))[0][1]
 
     directory_missing: bool = False
     existing_savedirs: list[str] = []
