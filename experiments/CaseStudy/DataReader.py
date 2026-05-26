@@ -169,18 +169,18 @@ class DataReader:
 
 if __name__ == "__main__":
     SAVEDIRS: dict[str, str] = {
-        "CHPBA": "./experiments/Chocarpamba-Pangui/Results/CHPBA",
-        "PANGI": "./experiments/Chocarpamba-Pangui/Results/PANGI",
+        "NONMN": "./experiments/CaseStudy/Results/NONMN",
+        "MINNG": "./experiments/CaseStudy/Results/MINNG",
     }
 
     SAVEFILES: dict[str, str] = {
-        "CHPBA": "./experiments/Chocarpamba-Pangui/Results/CHPBA_model_variables.csv",
-        "PANGI": "./experiments/Chocarpamba-Pangui/Results/PANGI_model_variables.csv",
+        "NONMN": "./experiments/CaseStudy/Results/NONMN_model_variables.csv",
+        "MINNG": "./experiments/CaseStudy/Results/MINNG_model_variables.csv",
     }
 
     AGENT_PATHS: dict[str, str] = {
-        "CHPBA": "./data/Chocarpamba.csv",
-        "PANGI": "./data/Pangui.csv",
+        "NONMN": "./data/NonMining.csv",
+        "MINNG": "./data/Mining.csv",
     }
 
     data_reader: DataReader = DataReader()

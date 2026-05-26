@@ -283,8 +283,8 @@ class DataSynthesiser:
 class SynthesiserArgParser:
     def __init__(self):
         self.parser: argparse.ArgumentParser = argparse.ArgumentParser(
-            prog="ABMOS DataSynthesiser",
-            description="Create synthetic data from observed distributions for use with the ABMOS library",
+            prog="GATOH DataSynthesiser",
+            description="Create synthetic data from observed distributions for use with the GATOH library",
         )
         _ = self.parser.add_argument("response_file", type=str)
         _ = self.parser.add_argument("output_path", type=str)

@@ -325,18 +325,18 @@ class ResponseParser:
 
 if __name__ == "__main__":
     RESPONSE_CSV: dict[str, str] = {
-        "CHPBA": "./data/Chocarpamba.csv",
-        "PANGI": "./data/Pangui.csv",
+        "NONMN": "./data/NonMining.csv",
+        "MINNG": "./data/Mining.csv",
     }
 
     AGENT_PATHS: dict[str, str] = {
-        "CHPBA": "./experiments/Chocarpamba-Pangui/CHPBA_Agents.csv",
-        "PANGI": "./experiments/Chocarpamba-Pangui/PANGI_Agents.csv",
+        "NONMN": "./experiments/CaseStudy/NONMN_Agents.csv",
+        "MINNG": "./experiments/CaseStudy/MINNG_Agents.csv",
     }
 
     GRAPH_PATHS: dict[str, str] = {
-        "CHPBA": "./experiments/Chocarpamba-Pangui/CHPBA_Graphs.csv",
-        "PANGI": "./experiments/Chocarpamba-Pangui/PANGI_Graphs.csv",
+        "NONMN": "./experiments/CaseStudy/NONMN_Graphs.csv",
+        "MINNG": "./experiments/CaseStudy/MINNG_Graphs.csv",
     }
 
     HIERARCHIES: list[str] = [
