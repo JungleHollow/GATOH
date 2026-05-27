@@ -4,12 +4,12 @@ from gatoh.utils.utils import plot_graph
 
 if __name__ == "__main__":
     DATAFILES: dict[str, str] = {
-        "ZERO": "./experiments/Base/SocialSusceptibility/ZERO_model_variables.csv",
-        "POINT-TWO": "./experiments/Base/SocialSusceptibility/POINT-TWO_model_variables.csv",
-        "POINT-FOUR": "./experiments/Base/SocialSusceptibility/POINT-FOUR_model_variables.csv",
-        "POINT-SIX": "./experiments/Base/SocialSusceptibility/POINT-SIX_model_variables.csv",
-        "POINT-EIGHT": "./experiments/Base/SocialSusceptibility/POINT-EIGHT_model_variables.csv",
-        "ONE": "./experiments/Base/SocialSusceptibility/ONE_model_variables.csv",
+        "ZERO": "./gatoh/experiments/Base/SocialSusceptibility/ZERO_model_variables.csv",
+        "POINT-TWO": "./gatoh/experiments/Base/SocialSusceptibility/POINT-TWO_model_variables.csv",
+        "POINT-FOUR": "./gatoh/experiments/Base/SocialSusceptibility/POINT-FOUR_model_variables.csv",
+        "POINT-SIX": "./gatoh/experiments/Base/SocialSusceptibility/POINT-SIX_model_variables.csv",
+        "POINT-EIGHT": "./gatoh/experiments/Base/SocialSusceptibility/POINT-EIGHT_model_variables.csv",
+        "ONE": "./gatoh/experiments/Base/SocialSusceptibility/ONE_model_variables.csv",
     }
 
     aggregate_opinions: dict[str, list[float]] = {
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Network Aggregate Opinions",
         title="Network Aggregate Opinions over Iterations",
-        save_path="./experiments/Base/SocialSusceptibility/SocialSusceptibility_AggOps.png",
+        save_path="./gatoh/experiments/Base/SocialSusceptibility/SocialSusceptibility_AggOps.png",
     )
 
     # Plot the radicalised agents
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Number of Radicalised Agents",
         title="Number of Radicalised Agents over Iterations",
-        save_path="./experiments/Base/SocialSusceptibility/SocialSusceptibility_RadicalAgents.png",
+        save_path="./gatoh/experiments/Base/SocialSusceptibility/SocialSusceptibility_RadicalAgents.png",
     )
 
     # Plot the polarisations
@@ -86,5 +86,5 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Network Polarisation",
         title="Network Polarisation over Iterations",
-        save_path="./experiments/Base/SocialSusceptibility/SocialSusceptibility_Polarisations.png",
+        save_path="./gatoh/experiments/Base/SocialSusceptibility/SocialSusceptibility_Polarisations.png",
     )

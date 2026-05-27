@@ -318,24 +318,24 @@ if __name__ == "__main__":
 
     # The save directories for each model instance
     SAVEDIRS: dict[str, str] = {
-        "BASE": "./experiments/Base/RandomWalk/RandomWalk_BASE",
-        "RELS": "./experiments/Base/RandomWalk/RandomWalk_RELS",
-        "HIER": "./experiments/Base/RandomWalk/RandomWalk_HIER",
-        "BOTH": "./experiments/Base/RandomWalk/RandomWalk_BOTH",
+        "BASE": "./gatoh/experiments/Base/RandomWalk/RandomWalk_BASE",
+        "RELS": "./gatoh/experiments/Base/RandomWalk/RandomWalk_RELS",
+        "HIER": "./gatoh/experiments/Base/RandomWalk/RandomWalk_HIER",
+        "BOTH": "./gatoh/experiments/Base/RandomWalk/RandomWalk_BOTH",
     }
 
     # The save paths for each model's logger outputs (must point to .csv files)
     SAVEFILES: dict[str, str] = {
-        "BASE": "./experiments/Base/RandomWalk/BASE_model_variables.csv",
-        "RELS": "./experiments/Base/RandomWalk/RELS_model_variables.csv",
-        "HIER": "./experiments/Base/RandomWalk/HIER_model_variables.csv",
-        "BOTH": "./experiments/Base/RandomWalk/BOTH_model_variables.csv",
+        "BASE": "./gatoh/experiments/Base/RandomWalk/BASE_model_variables.csv",
+        "RELS": "./gatoh/experiments/Base/RandomWalk/RELS_model_variables.csv",
+        "HIER": "./gatoh/experiments/Base/RandomWalk/HIER_model_variables.csv",
+        "BOTH": "./gatoh/experiments/Base/RandomWalk/BOTH_model_variables.csv",
     }
 
     tester: RandomWalkTester
 
     # Check for existing saved models and store the relevant information
-    save_dirs: list[str] = list(os.walk("./experiments/Base/RandomWalk"))[0][1]
+    save_dirs: list[str] = list(os.walk("./gatoh/experiments/Base/RandomWalk"))[0][1]
 
     directory_missing: bool = False
     existing_savedirs: list[str] = []

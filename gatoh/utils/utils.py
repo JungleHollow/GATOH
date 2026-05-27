@@ -134,7 +134,7 @@ def connected_watts_strogatz_graph(
 # ========== Math utils ========== #
 
 
-def beta_value_attenuation(input_value: float, a: float = 0.9, b: float = 0.9) -> Any:
+def beta_value_attenuation(input_value: float, a: float = 0.9, b: float = 0.9) -> float:
     """
     Takes an input value and rescales it using a beta distribution. This function is intended to be used exclusively
     for the attenuation of indirect neighbouring opinions when an agent is estimating an opinion climate in a hierarchy.
@@ -188,7 +188,9 @@ def beta_value_attenuation(input_value: float, a: float = 0.9, b: float = 0.9) -
 # ========== Random Generation Utils ==========
 
 
-def draw_random_value(distribution: str, parameters: dict[str, Any] | None = None) -> float:
+def draw_random_value(
+    distribution: str, parameters: dict[str, Any] | None = None
+) -> float:
     """
     Utility function that handles random value generation from multiple distributions in the same function.
 
@@ -245,7 +247,9 @@ def draw_random_value(distribution: str, parameters: dict[str, Any] | None = Non
             else:
                 drawn_value = gamma.rvs(1.0)
         case _:
-            raise ValueError(f"The given distribution ({distribution}) does not match any valid implemented types.")
+            raise ValueError(
+                f"The given distribution ({distribution}) does not match any valid implemented types."
+            )
     return drawn_value
 
 
@@ -273,6 +277,8 @@ def random_coinflip(return_type: str) -> Any:
             if coinflip_result:
                 return "yes"
             return "no"
+        case _:
+            pass
 
     return coinflip_result  # Defaults to boolean if no valid input type was passed.
 

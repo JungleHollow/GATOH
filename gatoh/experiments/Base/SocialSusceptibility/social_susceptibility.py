@@ -301,30 +301,30 @@ if __name__ == "__main__":
 
     # The save directories for each model instance
     SAVEDIRS: dict[str, str] = {
-        "ZERO": "./experiments/Base/SocialSusceptibility/SocialSusceptibility_ZERO",
-        "POINT-TWO": "./experiments/Base/SocialSusceptibility/SocialSusceptibility_POINT-TWO",
-        "POINT-FOUR": "./experiments/Base/SocialSusceptibility/SocialSusceptibility_POINT-FOUR",
-        "POINT-SIX": "./experiments/Base/SocialSusceptibility/SocialSusceptibility_POINT-SIX",
-        "POINT-EIGHT": "./experiments/Base/SocialSusceptibility/SocialSusceptibility_POINT-EIGHT",
-        "ONE": "./experiments/Base/SocialSusceptibility/SocialSusceptibility_ONE",
+        "ZERO": "./gatoh/experiments/Base/SocialSusceptibility/SocialSusceptibility_ZERO",
+        "POINT-TWO": "./gatoh/experiments/Base/SocialSusceptibility/SocialSusceptibility_POINT-TWO",
+        "POINT-FOUR": "./gatoh/experiments/Base/SocialSusceptibility/SocialSusceptibility_POINT-FOUR",
+        "POINT-SIX": "./gatoh/experiments/Base/SocialSusceptibility/SocialSusceptibility_POINT-SIX",
+        "POINT-EIGHT": "./gatoh/experiments/Base/SocialSusceptibility/SocialSusceptibility_POINT-EIGHT",
+        "ONE": "./gatoh/experiments/Base/SocialSusceptibility/SocialSusceptibility_ONE",
     }
 
     # The save paths for each model's logger output (must point to a .csv file)
     SAVEFILES: dict[str, str] = {
-        "ZERO": "./experiments/Base/SocialSusceptibility/ZERO_model_variables.csv",
-        "POINT-TWO": "./experiments/Base/SocialSusceptibility/POINT-TWO_model_variables.csv",
-        "POINT-FOUR": "./experiments/Base/SocialSusceptibility/POINT-FOUR_model_variables.csv",
-        "POINT-SIX": "./experiments/Base/SocialSusceptibility/POINT-SIX_model_variables.csv",
-        "POINT-EIGHT": "./experiments/Base/SocialSusceptibility/POINT-EIGHT_model_variables.csv",
-        "ONE": "./experiments/Base/SocialSusceptibility/ONE_model_variables.csv",
+        "ZERO": "./gatoh/experiments/Base/SocialSusceptibility/ZERO_model_variables.csv",
+        "POINT-TWO": "./gatoh/experiments/Base/SocialSusceptibility/POINT-TWO_model_variables.csv",
+        "POINT-FOUR": "./gatoh/experiments/Base/SocialSusceptibility/POINT-FOUR_model_variables.csv",
+        "POINT-SIX": "./gatoh/experiments/Base/SocialSusceptibility/POINT-SIX_model_variables.csv",
+        "POINT-EIGHT": "./gatoh/experiments/Base/SocialSusceptibility/POINT-EIGHT_model_variables.csv",
+        "ONE": "./gatoh/experiments/Base/SocialSusceptibility/ONE_model_variables.csv",
     }
 
     tester: SocialSusceptibilityTester
 
     # Check for existing saved models and store the relevant information
-    save_dirs: list[str] = list(os.walk("./experiments/Base/SocialSusceptibility"))[0][
-        1
-    ]
+    save_dirs: list[str] = list(
+        os.walk("./gatoh/experiments/Base/SocialSusceptibility")
+    )[0][1]
 
     directory_missing: bool = False
     existing_savedirs: list[str] = []
