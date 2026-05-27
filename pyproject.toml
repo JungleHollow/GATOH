@@ -16,7 +16,8 @@ dependencies = [
     "polars",
     "rustworkx",
     "matplotlib",
-    "scipy"
+    "scipy",
+    "pyyaml"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

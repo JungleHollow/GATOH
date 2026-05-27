@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 import polars as pl
 
-from gatoh.agents import PERSONALITIES
+from gatoh.agents.agents import PERSONALITIES
 
 
 @dataclass

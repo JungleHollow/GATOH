@@ -5,9 +5,9 @@ from copy import deepcopy
 
 import rustworkx as rx
 
-import src.GATOH.agents as agt
-import src.GATOH.graphs as gr
-import src.GATOH.model as md
+import gatoh.agents.agents as agt
+import gatoh.graphs.graphs as gr
+import gatoh.model.model as md
 
 # rd.seed(1312)
 N_INDIVIDUALS: int = 80

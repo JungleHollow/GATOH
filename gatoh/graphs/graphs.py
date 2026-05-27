@@ -15,8 +15,8 @@ import numpy as np
 import polars as pl
 import rustworkx as rx
 
-from .agents import Agent
-from .utils import (
+from gatoh.agents.agents import Agent
+from gatoh.utils.utils import (
     beta_value_attenuation,
     connected_watts_strogatz_graph,
     value_rw_delta,

@@ -3,14 +3,13 @@ from __future__ import annotations
 import os
 import random as rd
 from copy import deepcopy
-from hashlib import algorithms_available
 from typing import Any
 
 import numpy as np
 
-import gatoh.agents as agt
-import gatoh.graphs as gr
-import gatoh.model as md
+import gatoh.agents.agents as agt
+import gatoh.graphs.graphs as gr
+import gatoh.model.model as md
 
 
 class GraphAlgTester:

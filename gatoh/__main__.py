@@ -1,13 +1,13 @@
 import argparse
 
-from .agents import Agent as Agent
-from .agents import AgentSet as AgentSet
-from .graphs import Graph as Graph
-from .graphs import GraphEdge as GraphEdge
-from .graphs import GraphNode as GraphNode
-from .graphs import GraphSet as GraphSet
-from .logging import GATOHLogger as GATOHLogger
-from .model import ABModel as ABModel
+from gatoh.agents.agents import Agent as Agent
+from gatoh.agents.agents import AgentSet as AgentSet
+from gatoh.graphs.graphs import Graph as Graph
+from gatoh.graphs.graphs import GraphEdge as GraphEdge
+from gatoh.graphs.graphs import GraphNode as GraphNode
+from gatoh.graphs.graphs import GraphSet as GraphSet
+from gatoh.logging.logging import GATOHLogger as GATOHLogger
+from gatoh.model.model import ABModel as ABModel
 
 __version__ = "0.1"
 __authors__ = "Manuel Munizaga Sepulveda"

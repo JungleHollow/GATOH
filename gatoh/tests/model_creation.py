@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest as ut
 
-import src.GATOH.model as md
+import gatoh.model.model as md
 
 HIERARCHY_NAMES: list[str] = ["Test_1", "Test_2"]
 HIERARCHY_RW_DISTRIB: list[tuple[float, float]] = [(0, 0.01), (0, 0.2)]

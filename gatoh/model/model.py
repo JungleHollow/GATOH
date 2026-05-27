@@ -11,11 +11,11 @@ import numpy as np
 import yaml
 from rustworkx.rustworkx import NoEdgeBetweenNodes
 
-from .agents import Agent, AgentSet
-from .graphs import Graph, GraphEdge, GraphSet
-from .logging import GATOHLogger
-from .utils import YamlLoader, create_config_file
-from .visualisation import ABVisualiser
+from gatoh.agents.agents import Agent, AgentSet
+from gatoh.graphs.graphs import Graph, GraphEdge, GraphSet
+from gatoh.logging.logging import GATOHLogger
+from gatoh.utils.utils import YamlLoader, create_config_file
+from gatoh.visualisation.visualisation import ABVisualiser
 
 
 class ABModel:
