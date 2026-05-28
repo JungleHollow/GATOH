@@ -129,6 +129,7 @@ class SocialSusceptibilityTester:
         self.model_agents["ONE"] = deepcopy(created_agents)
 
         print("==== Finished Agent creation ====")
+        return None
 
     def create_graphs(self) -> None:
         """

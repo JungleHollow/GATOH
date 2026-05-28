@@ -70,19 +70,123 @@ class OpinionChangesTester:
         """
         :param existing: A flag indicating if the experiment has already been run and saved models are present to inspect.
         """
-        pass
+        self.num_agents: int = AGENT_PARAMETERS["n_agents"]
+        self.model_intervals: list[int] = list(
+            np.linspace(
+                0,
+                TEST_PARAMETERS["iterations"],
+                num=int(
+                    TEST_PARAMETERS["iterations"]
+                    // TEST_PARAMETERS["opinion_change_interval"]
+                ),
+                dtype=np.int64,
+            )
+        )
+
+        self.existing: bool = existing
+
+        # Dynamic model space
+        self.models: list[ModelStruct] = []
+
+        # Define the lists that will contain the populations of Agents and Graphs
+        self.model_agents: list[agt.Agent] = []
+        self.model_graphs: list[gr.Graph] = []
+
+        if not self.existing:
+            self.create_agents()
+            self.create_graphs(self.model_agents)
 
     def create_agents(self) -> None:
         """
         Generates and sets the shared population of Agent objects that will be used across the instances.
         """
-        pass
+        print("==== Starting Agent creation ====")
+        created_agents: list[agt.Agent] = []
+
+        benefit_flags: list[bool] = list(AGENT_PARAMETERS["personal_benefit"].keys())
+        benefit_p: list[float] = list(AGENT_PARAMETERS["personal_benefit"].values())
+
+        for i in range(self.num_agents):
+            agent_id: str = f"{AGENT_PARAMETERS['id_base']}{i + 1:04}"
+            agent_opinion: float = rd.uniform(
+                AGENT_PARAMETERS["opinions"][0], AGENT_PARAMETERS["opinions"][1]
+            )
+            agent_personality: str = agt.draw_personality()
+            agent_susceptibility: float = rd.uniform(
+                AGENT_PARAMETERS["social_susceptibility"][0],
+                AGENT_PARAMETERS["social_susceptibility"][1],
+            )
+            agent_behaviour: tuple[str, float] = (
+                agent_personality,
+                agent_susceptibility,
+            )
+            agent_benefit: bool = bool(
+                np.random.choice(benefit_flags, size=1, p=benefit_p)[0]
+            )
+
+            hierarchy_weightings: dict[str, float] = {}
+            for hierarchy_name in TEST_PARAMETERS["hierarchy_names"]:
+                generated_weighting: float = rd.uniform(
+                    AGENT_PARAMETERS["hierarchy_weighting"][0],
+                    AGENT_PARAMETERS["hierarchy_weighting"][1],
+                )
+                hierarchy_weightings[hierarchy_name] = generated_weighting
+
+            created_agent: agt.Agent = agt.Agent(
+                agent_id,
+                agent_opinion,
+                hierarchy_weightings,
+                agent_behaviour,
+                agent_benefit,
+            )
+
+            created_agents.append(deepcopy(created_agent))
+
+            # Manual garbage collection
+            del created_agent
+
+        self.model_agents = deepcopy(created_agents)
+
+        # Manual garbage collection
+        del created_agents
+
+        print("==== Finished Agent creation ====")
+        return None
 
     def create_graphs(self, agents: list[agt.Agent]) -> None:
         """
         Generates and sets the shared collection of social hierarchy Graph objects that will be used across the instances.
         """
-        pass
+        print("==== Starting Graph creation ====")
+        created_graphs: list[gr.Graph] = []
+
+        # Workaround to allow for np random choice
+        agent_indices: list[int] = [i for i in range(len(agents))]
+
+        for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+            graph: gr.Graph = gr.Graph(hierarchy, TEST_PARAMETERS["relationship_rw"])
+
+            hierarchy_n_agents: int = rd.randint(0, self.num_agents)
+            selected_agents: list[int] = list(
+                np.random.choice(agent_indices, size=hierarchy_n_agents, replace=False)
+            )
+
+            agent_sample: list[agt.Agent] = []
+            for index in selected_agents:
+                agent_sample.append(deepcopy(agents[index]))
+
+            graph.generate_graph(
+                deepcopy(agent_sample),
+                method=TEST_PARAMETERS["graph_generation_alg"],
+                relationship_range=AGENT_PARAMETERS["relationships"],
+            )
+
+            created_graphs.append(deepcopy(graph))
+
+            # Manual garbage collection
+            del agent_sample, graph
+        print("==== Graph creation finished ====")
+        return None
 
     def load_models(self, existing_saves: list[str] | None = None) -> None:
         """
@@ -133,6 +237,7 @@ if __name__ == "__main__":
     # The relevant parameters that are defined for the identical model instances
     TEST_PARAMETERS: dict[str, Any] = {
         "iterations": 100,
+        "opinion_change_interval": 20,
         "hierarchy_names": ["A", "B", "C", "D"],
         "hierarchy_rw": {
             "A": (0.0, 0.3),
@@ -152,6 +257,7 @@ if __name__ == "__main__":
         "relationships": (-0.9, 0.9),
         "hierarchy_weighting": (-0.75, 0.75),
         "personal_benefit": {True: 0.3, False: 0.7},
+        "social_susceptibility": (0.0, 1.0),
         "id_base": "EXOC",
     }
 
