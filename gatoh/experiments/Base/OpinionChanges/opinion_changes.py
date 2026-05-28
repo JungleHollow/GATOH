@@ -82,8 +82,10 @@ class OpinionChangesTester:
                 dtype=np.int64,
             )
         )
+        self.model_repeats: int = TEST_PARAMETERS["repeats"]
 
         self.existing: bool = existing
+        self.model_saves: dict[str, str] = {}
 
         # Dynamic model space
         self.models: list[ModelStruct] = []
@@ -95,6 +97,8 @@ class OpinionChangesTester:
         if not self.existing:
             self.create_agents()
             self.create_graphs(self.model_agents)
+        else:
+            self.model_saves = SAVEDIRS
 
     def create_agents(self) -> None:
         """
@@ -166,25 +170,41 @@ class OpinionChangesTester:
         for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
             graph: gr.Graph = gr.Graph(hierarchy, TEST_PARAMETERS["relationship_rw"])
 
-            hierarchy_n_agents: int = rd.randint(0, self.num_agents)
-            selected_agents: list[int] = list(
-                np.random.choice(agent_indices, size=hierarchy_n_agents, replace=False)
-            )
+            if (
+                hierarchy == "A"
+            ):  # Ensures that every Agent in the population belongs to at least one hierarchy
+                graph.generate_graph(
+                    deepcopy(agents),
+                    method=TEST_PARAMETERS["graph_generation_alg"],
+                    relationship_range=AGENT_PARAMETERS["relationships"],
+                )
+            else:
+                hierarchy_n_agents: int = rd.randint(
+                    self.num_agents // 10, self.num_agents
+                )
+                selected_agents: list[int] = list(
+                    np.random.choice(
+                        agent_indices, size=hierarchy_n_agents, replace=False
+                    )
+                )
 
-            agent_sample: list[agt.Agent] = []
-            for index in selected_agents:
-                agent_sample.append(deepcopy(agents[index]))
+                agent_sample: list[agt.Agent] = []
+                for index in selected_agents:
+                    agent_sample.append(deepcopy(agents[index]))
 
-            graph.generate_graph(
-                deepcopy(agent_sample),
-                method=TEST_PARAMETERS["graph_generation_alg"],
-                relationship_range=AGENT_PARAMETERS["relationships"],
-            )
+                graph.generate_graph(
+                    deepcopy(agent_sample),
+                    method=TEST_PARAMETERS["graph_generation_alg"],
+                    relationship_range=AGENT_PARAMETERS["relationships"],
+                )
+
+                # Manual garbage colleciton
+                del agent_sample
 
             created_graphs.append(deepcopy(graph))
 
             # Manual garbage collection
-            del agent_sample, graph
+            del graph
         print("==== Graph creation finished ====")
         return None
 
@@ -204,7 +224,83 @@ class OpinionChangesTester:
         This is done in order to allow for checking of missing instance save directories if the tester is being initialised
         from an existing run.
         """
-        pass
+        with open(LOGGED_SAVEDIRS, "w", newline="") as csv_file:
+            field_names: list[str] = ["model_name", "model_savedir"]
+
+            csv_writer: csv.DictWriter = csv.DictWriter(
+                csv_file, fieldnames=field_names
+            )
+            csv_writer.writeheader()
+
+            for model_struct in self.models:
+                csv_row: dict[str, str] = {
+                    model_struct.model.model_id: model_struct.model.save_dir
+                }
+                csv_writer.writerow(csv_row)
+
+        return None
+
+    def initialise_model_structs(self) -> None:
+        """
+        Uses the relevant information provided to create appropriate ABModel objects and wrap them in a ModelStruct.
+        """
+        # Workaround to allow for np random choice
+        agent_indices: list[int] = [i for i in range(len(self.model_agents))]
+
+        for interval in self.model_intervals:
+            for repeat in range(self.model_repeats):
+                # Generate the unique model ID for this instance
+                model_name: str = f"ITER-{interval:03}_NUM-{repeat + 1:02}"
+
+                # Create the ABModel object for this instance
+                new_model: md.ABModel = md.ABModel(
+                    deepcopy(TEST_PARAMETERS["hierarchy_names"]),
+                    deepcopy(list(TEST_PARAMETERS["hierarchy_rw"].values())),
+                    save_dir=f"{SAVEDIR_ROOT}/OpinionChanges_{model_name}",
+                    data_file=f"{SAVEDIR_ROOT}/OpinionChanges_{model_name}/{model_name}_model_variables.csv",
+                    model_id=model_name,
+                )
+
+                # Add the Agents and Graphs to the new model
+                _ = new_model.add_agents(deepcopy(self.model_agents))
+                _ = new_model.add_graphs(
+                    deepcopy(self.model_graphs),
+                    deepcopy(TEST_PARAMETERS["hierarchy_names"]),
+                    deepcopy(TEST_PARAMETERS["hierarchy_rw"]),
+                )
+
+                # Sample Agents for which the opinion changes will be introduced in
+                agents_to_change: int = rd.randint(1, self.num_agents)
+                agent_ids: list[str] = list(
+                    np.random.choice(
+                        agent_indices, size=agents_to_change, replace=False
+                    )
+                )
+
+                # Extract the names of all the hierarchies that each sampled Agent belongs to in the model
+                changed_agents: dict[str, list[str]] = {}
+                for agent_id in agent_ids:
+                    agent_obj: Any = new_model.agents.get_agent_by_id(agent_id)
+                    agent_hierarchies: list[str] = (
+                        new_model.graphs.get_agent_hierarchies(agent_obj)
+                    )
+                    changed_agents[agent_id] = deepcopy(agent_hierarchies)
+
+                # Create the ModelStruct object
+                model_struct: ModelStruct = ModelStruct(
+                    deepcopy(new_model),
+                    TEST_PARAMETERS["iterations"],
+                    interval,
+                    changed_agents,
+                )
+
+                self.models.append(deepcopy(model_struct))
+
+                # Manual garbage collection
+                del new_model, model_struct
+
+        self.create_savedir_validation()
+        return None
 
     def setup_models(self, missing_saves: list[str] | None = None) -> None:
         """
@@ -238,12 +334,15 @@ if __name__ == "__main__":
     TEST_PARAMETERS: dict[str, Any] = {
         "iterations": 100,
         "opinion_change_interval": 20,
-        "hierarchy_names": ["A", "B", "C", "D"],
+        "repeats": 5,
+        "hierarchy_names": ["A", "B", "C", "D", "E", "F"],
         "hierarchy_rw": {
             "A": (0.0, 0.3),
             "B": (0.0, 0.1),
             "C": (0.0, 0.45),
             "D": (0.0, 0.15),
+            "E": (0.0, 0.05),
+            "F": (0.0, 0.25),
         },
         "relationship_rw": (0.0, 0.1),
         "graph_generation_alg": "small-world",
