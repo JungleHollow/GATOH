@@ -1138,6 +1138,19 @@ class GraphSet:
 
         return social_hierarchies
 
+    def get_agent_hierarchies(self, agent: Agent) -> list[str]:
+        """
+        A helper function that determines which social hierarchies an Agent is contained in.
+
+        :param agent: The Agent object for which hierarchy memberships are being determined.
+        :return: A list containing the names of all the social hierarchies to which the input Agent belongs in.
+        """
+        member_of: list[str] = []
+        for hierarchy in self.graphs:
+            if hierarchy.agent_in_graph(agent):
+                member_of.append(hierarchy.name)
+        return member_of
+
     def calculate_polarisation(self, hierarchy: str) -> float:
         """
         A wrapper that calls a specific hierarchy graph's calculate_polarisation function and returns its value.
