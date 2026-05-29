@@ -145,6 +145,27 @@ class OpinionChangesTester:
             self.load_agents()
             self.load_graphs()
 
+    def get_struct(self, model_name: str) -> ModelStruct:
+        """
+        A getter function that iterates over self.models, returning the appropriate ModelStruct object.
+
+        :param model_name: The unique model ID that was generated and assigned for this instance.
+        :return: The ModelStruct corresponding to the model ID.
+        """
+        return_struct: ModelStruct | None = None
+
+        for model_struct in self.models:
+            if model_struct.model.model_id == model_name:
+                return_struct = model_struct
+                break
+
+        if return_struct is None:
+            raise RuntimeError(
+                f"Model {model_name} was not found in the tester's instances..."
+            )
+        else:
+            return return_struct
+
     def create_agents(self) -> None:
         """
         Generates and sets the shared population of Agent objects that will be used across the instances.
@@ -456,9 +477,11 @@ class OpinionChangesTester:
 
         return None
 
-    def initialise_model_structs(self) -> None:
+    def initialise_model_structs(self, missing_saves: list[str] | None = None) -> None:
         """
         Uses the relevant information provided to create appropriate ABModel objects and wrap them in a ModelStruct.
+
+        :param missing_saves: An optional partial list of the model names representing models that should be initialised.
         """
         # Workaround to allow for np random choice
         agent_indices: list[int] = [i for i in range(len(self.model_agents))]
@@ -467,6 +490,11 @@ class OpinionChangesTester:
             for repeat in range(self.model_repeats):
                 # Generate the unique model ID for this instance
                 model_name: str = f"ITER-{interval:03}_NUM-{repeat + 1:02}"
+
+                # Only models in missing saves need to be initialised
+                if missing_saves:
+                    if model_name not in missing_saves:
+                        continue
 
                 # Create the ABModel object for this instance
                 new_model: md.ABModel = md.ABModel(
@@ -518,28 +546,33 @@ class OpinionChangesTester:
         self.create_savedir_validation()
         return None
 
-    def save_models(self) -> None:
+    def save_models(self, missing_saves: list[str] | None = None) -> None:
         """
         Saves the model objects along with the information contained in their correpsonnding ModelStruct to allow for future loading.
+
+        :param missing_saves: An optional partial list of model names representing the models that should be saved.
         """
-        for model_struct in self.models:
-            model_struct.model.save_model()  # Will save the model to a newly created savedir
+        save_struct: SaveStruct
+        if missing_saves is None:
+            for model_struct in self.models:
+                model_struct.model.save_model()  # Will save the model to a newly created savedir
 
-            # Extract the ModelStruct info (without the ABModel) and immediately pickle it to the Model's newly created save directory
-            save_struct: SaveStruct = SaveStruct(
-                model_struct, model_struct.model.save_dir
-            )
+                # Extract the ModelStruct info (without the ABModel) and immediately pickle it to the Model's newly created save directory
+                save_struct = SaveStruct(model_struct, model_struct.model.save_dir)
 
-            # Manual garbage collection
-            del save_struct
+                # Manual garbage collection
+                del save_struct
+        else:
+            for missing_save in missing_saves:
+                struct_to_save: ModelStruct = self.get_struct(missing_save)
 
-    def setup_models(self, missing_saves: list[str] | None = None) -> None:
-        """
-        Adds copies of the shared Agent and Graph populations to all the models.
+                struct_to_save.model.save_model()
 
-        :param missing_saves: An optional partial list of the model names representing models that should be setup.
-        """
-        pass
+                save_struct = SaveStruct(struct_to_save, struct_to_save.model.save_dir)
+
+                # Manual garbage collection
+                del save_struct
+        return None
 
     def run_models(self, missing_saves: list[str] | None = None) -> None:
         """
@@ -548,7 +581,19 @@ class OpinionChangesTester:
 
         :param missing_saves: An optional partial list of the model names representing models that should be run.
         """
-        pass
+        print("==== Beginning model iterations ====\n\n")
+        if missing_saves:
+            for missing_save in missing_saves:
+                missing_struct: ModelStruct = self.get_struct(missing_save)
+                self.custom_iterate(missing_struct)
+            # Only save the models which were missing
+            self.save_models(missing_saves=missing_saves)
+            return None
+
+        for model_struct in self.models:
+            self.custom_iterate(model_struct)
+        self.save_models()
+        return None
 
     def custom_iterate(self, model_struct: ModelStruct) -> None:
         """
@@ -604,8 +649,18 @@ if __name__ == "__main__":
         "./gatoh/experiments/Base/OpinionChanges/OpinionChanges_logged_savedirs.csv"
     )
 
+    # A path to which a validation file will be written -- serialising a <model name, [Agent IDs]> mapping that outlines which Agents
+    # are having opinion changes introduced for that model
+    LOGGED_CHANGED_AGENTS: str = (
+        "./gatoh/experiments/Base/OpinionChanges/OpinionChanges_changed_agents.pkl"
+    )
+
     # A <model name, path> mapping of all the model instances that were initially created by the tester
     SAVEDIRS: dict[str, str] = {}
+    # A <model name, [Agent IDs]> mapping of all the Agents in which the opinion changes are being introduced
+    if os.path.exists(LOGGED_CHANGED_AGENTS):
+        with open(LOGGED_CHANGED_AGENTS, "rb") as pickle_file:
+            CHANGED_AGENTS: dict[str, dict[str, list[str]]] = pickle.load(pickle_file)
 
     tester: OpinionChangesTester
 
@@ -621,28 +676,32 @@ if __name__ == "__main__":
     ):  # The tester has not yet been run, or the validation file was removed
         directory_missing = True
     else:
-        with open(LOGGED_SAVEDIRS, "r", newline="") as csv_file:
-            csv_reader: csv.DictReader = csv.DictReader(csv_file)
-            for row in csv_reader:
-                SAVEDIRS[row["model_name"]] = row["model_savedir"]
+        if not os.path.exists(LOGGED_CHANGED_AGENTS):
+            # If the changed agents have not been logged, the instances cannot be loaded appropriately...
+            directory_missing = True
+        else:
+            with open(LOGGED_SAVEDIRS, "r", newline="") as csv_file:
+                csv_reader: csv.DictReader = csv.DictReader(csv_file)
+                for row in csv_reader:
+                    SAVEDIRS[row["model_name"]] = row["model_savedir"]
 
-        for model, save_dir in SAVEDIRS.items():
-            dir_name: str = deepcopy(save_dir).split("/")[-1]
-            if dir_name in save_dirs:
-                existing_savedirs.append(model)
-            else:
-                directory_missing = True
-                missing_savedirs.append(model)
+            for model, save_dir in SAVEDIRS.items():
+                dir_name: str = deepcopy(save_dir).split("/")[-1]
+                if dir_name in save_dirs:
+                    existing_savedirs.append(model)
+                else:
+                    directory_missing = True
+                    missing_savedirs.append(model)
 
     if directory_missing:
         tester = OpinionChangesTester()
 
         if len(existing_savedirs) > 0:  # At least one model exists
             tester.load_models(existing_saves=existing_savedirs)
-            tester.setup_models(missing_saves=missing_savedirs)
+            tester.initialise_model_structs(missing_saves=missing_savedirs)
             tester.run_models(missing_saves=missing_savedirs)
         else:
-            tester.setup_models()
+            tester.initialise_model_structs()
             tester.run_models()
     else:
         tester = OpinionChangesTester(existing=True)
