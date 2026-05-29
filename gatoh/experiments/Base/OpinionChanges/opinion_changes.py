@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import os
+import pickle
 import random as rd
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -12,6 +13,48 @@ import numpy as np
 import gatoh.agents.agents as agt
 import gatoh.graphs.graphs as gr
 import gatoh.model.model as md
+
+
+@dataclass
+class SaveStruct:
+    """
+    Dataclass that is used to store the supporting information from a ModelStruct alongside an ABModel's already defined
+    save files.
+    """
+
+    # All attributes correspond directly to those in ModelStruct (except for the missing `model', which is replaced with the model ID)
+    model_id: str
+    max_iterations: int
+    change_iteration: int
+    changed_agents: dict[str, list[str]] = field(default_factory=dict)
+    current_iteration: int = 0
+
+    def __init__(self, struct_to_save: ModelStruct, save_dir: str) -> None:
+        """
+        Extract all the accompanying information from the given ModelStruct, and then pickle the information to the
+        ABModel savedir.
+
+        :param struct_to_save: The ModelStruct object that is being saved.
+        :param save_dir: The path to the save directory that was written by the ABModel.
+        """
+        self.model_id = deepcopy(struct_to_save.model.model_id)
+        self.max_iterations = struct_to_save.max_iterations
+        self.change_iteration = struct_to_save.change_iteration
+        self.changed_agents = deepcopy(struct_to_save.changed_agents)
+        self.current_iteration = struct_to_save.current_iteration
+
+        # Immediately call self.pickle
+        self.pickle_struct(save_dir)
+
+    def pickle_struct(self, save_dir: str) -> None:
+        """
+        Serialise the accompanying information from the ModelStruct and store it in a pickle file within the
+        main ABModel's save directory.
+
+        :param save_dir: The path to the save directory that was written by the ABModel.
+        """
+        with open(f"{save_dir}/{self.model_id}.pkl", "wb") as pickle_file:
+            pickle.dump(self.__dict__, pickle_file)
 
 
 @dataclass
@@ -99,6 +142,8 @@ class OpinionChangesTester:
             self.create_graphs(self.model_agents)
         else:
             self.model_saves = SAVEDIRS
+            self.load_agents()
+            self.load_graphs()
 
     def create_agents(self) -> None:
         """
@@ -154,7 +199,46 @@ class OpinionChangesTester:
         # Manual garbage collection
         del created_agents
 
+        # Serialise the created Agent objects so that they remain unchanged across future runs
+        self.pickle_agents()
+
         print("==== Finished Agent creation ====")
+        return None
+
+    def pickle_agents(self) -> None:
+        """
+        Serialises the tester's initial shared Agent population to a subdirectory within the experiment directory.
+        """
+        agents_path: str = f"{ROOT_DIR}/agents"
+
+        if not os.path.exists(agents_path):
+            os.mkdir(agents_path)
+
+        for agent in self.model_agents:
+            agent_pickle_path: str = f"{agents_path}/agent_{agent.id}.pkl"
+            with open(agent_pickle_path, "wb") as pickle_file:
+                pickle.dump(agent, pickle_file)
+
+        return None
+
+    def load_agents(self) -> None:
+        """
+        Deserialises the tester's initial shared Agent population and loads them into memory.
+        """
+        agents_path: str = f"{ROOT_DIR}/agents"
+
+        for i in range(self.num_agents):
+            agent_id: str = f"{AGENT_PARAMETERS['id_base']}{i + 1:04}"
+            agent_pickle_path: str = f"{agents_path}/agent_{agent_id}.pkl"
+            agent_obj: agt.Agent
+            with open(agent_pickle_path, "rb") as pickle_file:
+                agent_obj = pickle.load(pickle_file)
+
+            self.model_agents.append(deepcopy(agent_obj))
+
+            # Manual garbage collection
+            del agent_id, agent_pickle_path, agent_obj
+
         return None
 
     def create_graphs(self, agents: list[agt.Agent]) -> None:
@@ -205,7 +289,88 @@ class OpinionChangesTester:
 
             # Manual garbage collection
             del graph
+
+        # Serialise the created Graph objects so that they remain unchanged across future runs
+        self.pickle_graphs()
+
         print("==== Graph creation finished ====")
+        return None
+
+    def pickle_graphs(self) -> None:
+        """
+        Serialises the tester's initial shared Graph population to a subdirectory within the experiment directory.
+        """
+        graphs_path: str = f"{ROOT_DIR}/graphs"
+
+        if not os.path.exists(graphs_path):
+            os.mkdir(graphs_path)
+
+        for graph in self.model_graphs:
+            graph_dir: str = f"{graphs_path}/{graph.name}"
+            if not os.path.exists(graph_dir):
+                os.mkdir(graph_dir)
+
+            # Write the graphml file for the graph
+            graph.save_graph(f"{graph_dir}/graph_{graph.name}.graphml")
+
+            nodes_dir: str = f"{graph_dir}/nodes"
+            if not os.path.exists(nodes_dir):
+                os.mkdir(nodes_dir)
+
+            for idx, node in enumerate(graph.graph.nodes()):
+                node_pickle_path: str = f"{nodes_dir}/node_{idx}.pkl"
+                with open(node_pickle_path, "rb") as pickle_file:
+                    pickle.dump(node, pickle_file)
+
+            edges_dir: str = f"{graph_dir}/edges"
+            if not os.path.exists(edges_dir):
+                os.mkdir(edges_dir)
+
+            for idx, edge in enumerate(graph.graph.edges()):
+                edge_pickle_path: str = f"{edges_dir}/edge_{idx}.pkl"
+                with open(edge_pickle_path, "rb") as pickle_file:
+                    pickle.dump(edge, pickle_file)
+
+        return None
+
+    def load_graphs(self) -> None:
+        """
+        Deserialises the tester's initial shared Graph population and loads it into memory.
+        """
+        graphs_path: str = f"{ROOT_DIR}/graphs"
+
+        for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+            hierarchy_dir: str = f"{graphs_path}/{hierarchy}"
+
+            new_graph: gr.Graph = gr.Graph("", (0.0, 0.0))
+            new_graph.load_graph(
+                f"{hierarchy_dir}/graph_{hierarchy}.graphml",
+                hierarchy,
+                rw_params=TEST_PARAMETERS["hierarchy_rw"][hierarchy],
+            )
+
+            nodes_dir: str = f"{hierarchy_dir}/nodes"
+            node_paths: list[str] = list(os.walk(nodes_dir))[0][2]
+
+            for node_path in node_paths:
+                node_index: int = int(
+                    (os.path.basename(node_path).split("_")[-1]).split(".")[0]
+                )
+                with open(f"{nodes_dir}/{node_path}", "rb") as pickle_file:
+                    node_object: gr.GraphNode = pickle.load(pickle_file)
+                    new_graph.graph[node_index] = node_object
+
+            edges_dir: str = f"{hierarchy_dir}/edges"
+            edge_paths: list[str] = list(os.walk(edges_dir))[0][2]
+            for edge_path in edge_paths:
+                edge_index: int = int(
+                    (os.path.basename(edge_path).split("_")[-1]).split(".")[0]
+                )
+                with open(f"{edges_dir}/{edge_path}", "rb") as pickle_file:
+                    edge_object: gr.GraphEdge = pickle.load(pickle_file)
+                    new_graph.graph.update_edge_by_index(edge_index, edge_object)
+
+            self.model_graphs.append(deepcopy(new_graph))
         return None
 
     def load_models(self, existing_saves: list[str] | None = None) -> None:
@@ -214,7 +379,58 @@ class OpinionChangesTester:
 
         :param existing_saves: An optional partial list of the model names representing the models that can be loaded.
         """
-        pass
+        if existing_saves:
+            for existing_save in existing_saves:
+                # Create an empty dummy model object
+                new_model: md.ABModel = md.ABModel(
+                    TEST_PARAMETERS["hierarchy_names"], TEST_PARAMETERS["hierarchy_rw"]
+                )
+                new_model.load_model(SAVEDIRS[existing_save])
+
+                save_struct_path: str = (
+                    f"{SAVEDIRS[existing_save]}/{new_model.model_id}.pkl"
+                )
+                save_struct_dict: dict[str, Any]
+                with open(save_struct_path, "rb") as pickle_file:
+                    save_struct_dict = pickle.load(pickle_file)
+
+                model_struct: ModelStruct = ModelStruct(
+                    deepcopy(new_model),
+                    save_struct_dict["max_iterations"],
+                    save_struct_dict["change_iteration"],
+                    save_struct_dict["changed_agents"],
+                )
+
+                self.models.append(deepcopy(model_struct))
+
+                # Manual garbage collection
+                del new_model, save_struct_dict, model_struct
+            return None
+
+        for model_name, model_savedir in SAVEDIRS.items():
+            new_model: md.ABModel = md.ABModel(
+                TEST_PARAMETERS["hierarchy_names"],
+                TEST_PARAMETERS["hierarchy_rw"],
+            )
+            new_model.load_model(model_savedir)
+
+            save_struct_path: str = f"{model_savedir}/{model_name}.pkl"
+            save_struct_dict: dict[str, Any]
+            with open(save_struct_path, "rb") as pickle_file:
+                save_struct_dict = pickle.load(pickle_file)
+
+            model_struct: ModelStruct = ModelStruct(
+                deepcopy(new_model),
+                save_struct_dict["max_iterations"],
+                save_struct_dict["change_iteration"],
+                save_struct_dict["changed_agents"],
+            )
+
+            self.models.append(deepcopy(model_struct))
+
+            # Manual garbage collection
+            del new_model, save_struct_dict, model_struct
+        return None
 
     def create_savedir_validation(self) -> None:
         """
@@ -302,6 +518,21 @@ class OpinionChangesTester:
         self.create_savedir_validation()
         return None
 
+    def save_models(self) -> None:
+        """
+        Saves the model objects along with the information contained in their correpsonnding ModelStruct to allow for future loading.
+        """
+        for model_struct in self.models:
+            model_struct.model.save_model()  # Will save the model to a newly created savedir
+
+            # Extract the ModelStruct info (without the ABModel) and immediately pickle it to the Model's newly created save directory
+            save_struct: SaveStruct = SaveStruct(
+                model_struct, model_struct.model.save_dir
+            )
+
+            # Manual garbage collection
+            del save_struct
+
     def setup_models(self, missing_saves: list[str] | None = None) -> None:
         """
         Adds copies of the shared Agent and Graph populations to all the models.
@@ -360,8 +591,12 @@ if __name__ == "__main__":
         "id_base": "EXOC",
     }
 
+    # The root directory of the experiment itself
+    ROOT_DIR: str = "./gatoh/experiments/Base/OpinionChanges"
+
     # The root of the directory in which each instance's save directory will be located
-    SAVEDIR_ROOT: str = "./gatoh/experiments/Base/OpinionChanges"
+    # (using a /models subdirectory just for this experiment due to significant increase in number of instances)
+    SAVEDIR_ROOT: str = "./gatoh/experiments/Base/OpinionChanges/models"
 
     # A path to which a validation file will be written -- outlining the model name and generated save directory that were generated
     # for each instance during the tester initialisation (to allow for checking of missing saves in the future)
