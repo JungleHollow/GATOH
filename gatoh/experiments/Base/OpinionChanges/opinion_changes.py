@@ -279,7 +279,7 @@ class OpinionChangesTester:
             if (
                 hierarchy == "A"
             ):  # Ensures that every Agent in the population belongs to at least one hierarchy
-                graph.generate_graph(
+                _ = graph.generate_graph(
                     deepcopy(agents),
                     method=TEST_PARAMETERS["graph_generation_alg"],
                     relationship_range=AGENT_PARAMETERS["relationships"],
@@ -298,7 +298,7 @@ class OpinionChangesTester:
                 for index in selected_agents:
                     agent_sample.append(deepcopy(agents[index]))
 
-                graph.generate_graph(
+                _ = graph.generate_graph(
                     deepcopy(agent_sample),
                     method=TEST_PARAMETERS["graph_generation_alg"],
                     relationship_range=AGENT_PARAMETERS["relationships"],

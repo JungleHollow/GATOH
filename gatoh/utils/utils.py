@@ -348,6 +348,10 @@ def plot_graph(
     y_label: str | None = None,
     title: str | None = None,
     save_path: str | None = None,
+    vertical_x: int | None = None,
+    vertical_name: str | None = None,
+    horizontal_y: int | None = None,
+    horizontal_name: str | None = None,
 ) -> None:
     """
     A helper function that handles 2D plotting of data point, with possible separation by categories.
@@ -360,6 +364,10 @@ def plot_graph(
     :param y_label: An optional label to give to the y-axis.
     :param title: An optional title to give to the graph.
     :param save_path: The path to save the graph image to.
+    :param vertical_x: An optional X-axis value specifying where a vertical line should be added to the graph.
+    :param vertical_name: An optional string to label the graph's vertical line.
+    :param horizontal_y: An optional Y-axis value specifying where a horizontal line should be added to the graph.
+    :param horizontal_name: An optional string to label the graph's horizontal line.
     """
     fig, ax = plt.subplots()
 
@@ -378,6 +386,17 @@ def plot_graph(
                 raise NotImplementedError(
                     "Currently only 'line', 'scatter', and 'bar' graphs are supported by this function."
                 )
+
+    if vertical_x:
+        if vertical_name:
+            _ = ax.axvline(x=vertical_x, label=vertical_name)
+        else:
+            _ = ax.axvline(x=vertical_x)
+    if horizontal_y:
+        if horizontal_name:
+            _ = ax.axhline(y=horizontal_y, label=horizontal_name)
+        else:
+            _ = ax.axhline(y=horizontal_y)
 
     ax.legend()
 

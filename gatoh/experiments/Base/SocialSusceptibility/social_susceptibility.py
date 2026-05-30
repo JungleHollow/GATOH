@@ -140,7 +140,7 @@ class SocialSusceptibilityTester:
 
         for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
             graph: gr.Graph = gr.Graph(hierarchy, TEST_PARAMETERS["relationship_rw"])
-            graph.generate_graph(
+            _ = graph.generate_graph(
                 deepcopy(self.model_agents["ZERO"]),
                 method=TEST_PARAMETERS["graph_generation_alg"],
                 relationship_range=AGENT_PARAMETERS["relationships"],
