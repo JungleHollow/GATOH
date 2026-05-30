@@ -13,6 +13,7 @@ import numpy as np
 import gatoh.agents.agents as agt
 import gatoh.graphs.graphs as gr
 import gatoh.model.model as md
+from gatoh.utils.utils import random_coinflip
 
 
 @dataclass
@@ -595,6 +596,38 @@ class OpinionChangesTester:
         self.save_models()
         return None
 
+    def agent_opinion_change(self, initial_opinion: float) -> float:
+        """
+        A helper function that looks at the direction and magnitude of an initial Agent opinion and then
+        significantly changes it following a set process.
+
+        :param initial_opinion: The initial opinion of the Agent (in the range [-1, 1]).
+        :return: An opinion value which is significantly different to the initial one (still in range [-1, 1]).
+        """
+        changed_opinion: float = 0.0
+
+        if initial_opinion < 0.0:
+            # A strong negative opinion becomes moderate, and a weak one becomes strongly positive
+            changed_opinion = initial_opinion + 1.0
+        elif 0.0 < initial_opinion:
+            # A strong positive opinion becomes moderate, and a weak one becomes strongly negative
+            changed_opinion = -1.0 + initial_opinion
+        else:  # opinion == 0...
+            # A moderate opinion has an equal change of becoming strongly positive or strongly negative
+            negative_coinflip: bool = random_coinflip("bool")
+            if negative_coinflip:
+                changed_opinion = rd.uniform(-1.0, -0.75)
+            else:
+                changed_opinion = rd.uniform(0.75, 1.0)
+
+        # The values should always remain in the range [-1, 1], but a check is made just in case
+        if changed_opinion < -1.0:
+            changed_opinion = -1.0
+        elif 1.0 < changed_opinion:
+            changed_opinion = 1.0
+
+        return changed_opinion
+
     def custom_iterate(self, model_struct: ModelStruct) -> None:
         """
         A custom model iteration function that is able to introduce the opinion changes at the correct iterations across
@@ -602,7 +635,107 @@ class OpinionChangesTester:
 
         :param model_struct: A ModelStruct object containing all the relevant information needed to handle the model runtime.
         """
-        pass
+        print(f"==== Iterating model {model_struct.model.model_id} ====")
+
+        while model_struct.current_iteration < model_struct.max_iterations:
+            if model_struct.current_iteration == 0:
+                model_struct.model.logger.new_iteration(init=True)
+            else:
+                model_struct.model.logger.new_iteration()
+
+            is_change_iteration: bool = (
+                model_struct.current_iteration == model_struct.change_iteration
+            )
+
+            for agent in model_struct.model.agents:
+                agent.store_previous_opinion()
+                for hierarchy in model_struct.model.graphs:
+                    hierarchy.agent_previous_opinion(agent)
+
+                if (
+                    is_change_iteration
+                    and agent.id in model_struct.changed_agents.keys()
+                ):
+                    agent_hierarchies: list[str] = model_struct.changed_agents[agent.id]
+
+                    changed_opinion: float = self.agent_opinion_change(agent.opinion)
+
+                    # Change the value in the Model's AgentSet
+                    agent.change_opinion(changed_opinion)
+
+                    # Change the value in each social hierarchy
+                    for agent_hierarchy in agent_hierarchies:
+                        hierarchy: gr.Graph | None = (
+                            model_struct.model.graphs.get_hierarchy(agent_hierarchy)
+                        )
+                        if hierarchy is None:
+                            continue
+
+                        agent_node: gr.GraphNode | None = hierarchy.node_from_agent(
+                            agent
+                        )
+                        if agent_node is None:
+                            continue
+
+                        agent_node.agent.change_opinion(changed_opinion)
+                else:
+                    collective_changes: list[float] = []
+                    for hierarchy in model_struct.model.graphs:
+                        neighbour_influences: float | None = (
+                            hierarchy.neighbour_influences(agent)
+                        )
+                        if neighbour_influences is not None:
+                            collective_changes.append(neighbour_influences)
+                    total_change: float = sum(collective_changes)
+                    if (agent.opinion + total_change < -1.0) or (
+                        agent.opinion + total_change > 1.0
+                    ):
+                        # Constrain to [-1, 1]
+                        continue
+                    else:
+                        agent.change_opinion(total_change)
+                        for hierarchy in model_struct.model.graphs:
+                            # Update the opinion across all hierarchies
+                            hierarchy.agent_opinion_change(agent, total_change)
+
+                    # After the opinion change, determine if the Agent has become radicalised
+                    was_radicalised: bool = agent.radicalisation(
+                        collective_changes,
+                        list(model_struct.model.hierarchy_information.keys()),
+                        model_struct.model.radicalisation_threshold,
+                    )
+
+                    for hierarchy in model_struct.model.graphs:
+                        # Update the radicalisation status of the Agent across all hierarchies
+                        hierarchy.agent_radicalisation_change(agent, was_radicalised)
+
+                    # Update the radicalisation count in the logger as needed
+                    model_struct.model.logger.variables.increment_radicalised(
+                        was_radicalised
+                    )
+
+            model_struct.model.step()
+            model_struct.model.update()
+
+            # Handle the logger's iteration() calculations and call its method
+            model_struct.model.logger_iteration()
+
+            # Get this iteration's print string (will be formatted appropriately based on the print interval)
+            iteration_print_string: str = model_struct.model.logger.iteration_print()
+            print(iteration_print_string)
+
+            model_struct.model.current_iteration += 1
+            model_struct.current_iteration += 1
+
+        # Call the logger's save_data function which handles data persistence appropriately
+        data_saved: bool = model_struct.model.logger.save_data(
+            model_struct.model.data_file
+        )
+        if data_saved:
+            print(
+                f"\n\nGATOH logger data was successfully written to the file at path: {model_struct.model.data_file}\n\n"
+            )
+        return None
 
 
 if __name__ == "__main__":
