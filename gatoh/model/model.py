@@ -343,7 +343,11 @@ class ABModel:
                 # TODO: Implement a check and handling for if the current agent is radicalised
                 collective_changes: list[float] = []
                 for hierarchy in self.graphs:
-                    collective_changes.append(hierarchy.neighbour_influences(agent))
+                    neighbour_influences: float | None = hierarchy.neighbour_influences(
+                        agent
+                    )
+                    if neighbour_influences is not None:
+                        collective_changes.append(neighbour_influences)
                 total_change: float = sum(collective_changes)
 
                 if (agent.opinion + total_change < -1.0) or (
@@ -619,7 +623,12 @@ class ABModel:
 
         :param graph: The new Graph object that is being added to self.graphs.
         """
-        new_edges: dict[str, list[Any]] = {"from_node": [], "to_node": [], "weighting": [], "name": []}
+        new_edges: dict[str, list[Any]] = {
+            "from_node": [],
+            "to_node": [],
+            "weighting": [],
+            "name": [],
+        }
 
         for idx, edge in graph.graph.edge_index_map().items():
             graph_edge: GraphEdge = deepcopy(edge[2])

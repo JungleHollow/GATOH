@@ -189,7 +189,7 @@ def beta_value_attenuation(input_value: float, a: float = 0.9, b: float = 0.9) -
 
 
 def draw_random_value(
-    distribution: str, parameters: dict[str, Any] | None = None
+    distribution: str, parameters: dict[str, float] | None = None
 ) -> float:
     """
     Utility function that handles random value generation from multiple distributions in the same function.
@@ -256,6 +256,12 @@ def draw_random_value(
 def random_coinflip(return_type: str) -> Any:
     """
     Simulates a random coinflip, returning the result as either a boolean, an integer, a float, or a string.
+
+    The exact return type strings supported are:
+        - "bool"
+        - "int"
+        - "float"
+        - "string"
 
     :param return_type: The data type of the returned coinflip result.
     :return: The outcome of the random coinflip.
@@ -363,20 +369,24 @@ def plot_graph(
 
         match plot_type:
             case "line":
-                ax.plot(current_x, current_y, label=key)
+                _ = ax.plot(current_x, current_y, label=key)
             case "scatter":
-                ax.scatter(current_x, current_y, label=key)
+                _ = ax.scatter(current_x, current_y, label=key)
             case "bar":
-                ax.bar(current_x, current_y, label=key)
+                _ = ax.bar(current_x, current_y, label=key)
+            case _:
+                raise NotImplementedError(
+                    "Currently only 'line', 'scatter', and 'bar' graphs are supported by this function."
+                )
 
     ax.legend()
 
     if x_label:
-        ax.set_xlabel(x_label)
+        _ = ax.set_xlabel(x_label)
     if y_label:
-        ax.set_ylabel(y_label)
+        _ = ax.set_ylabel(y_label)
     if title:
-        ax.set_title(title)
+        _ = ax.set_title(title)
     if save_path:
         plt.savefig(save_path, dpi=300.0)
         print(f"Plotted graph successfully saved to path: {save_path}")

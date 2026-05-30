@@ -9,7 +9,7 @@ from collections.abc import Iterable, Iterator
 from copy import deepcopy
 from random import Random
 from shutil import rmtree
-from typing import Any, override
+from typing import Any, Self, override
 
 import numpy as np
 import polars as pl
@@ -234,7 +234,7 @@ class Graph:
 
         return None
 
-    def get_node(self, node_index: int) -> Any:
+    def get_node(self, node_index: int) -> GraphNode | None:
         """
         A getter function to access GraphNode objects.
 
@@ -250,7 +250,7 @@ class Graph:
             )
             return None
 
-    def get_edge(self, edge_index: int) -> Any:
+    def get_edge(self, edge_index: int) -> GraphEdge | None:
         """
         A getter function to access GraphEdge objects.
 
@@ -406,7 +406,7 @@ class Graph:
         agents: list[Agent],
         method: str = "small-world",
         relationship_range: tuple[float, float] = (-1.0, 1.0),
-    ) -> Any:
+    ) -> Self:
         """
         Randomly generate edges between existing Graph nodes and add them to the graph.
 
@@ -556,10 +556,18 @@ class Graph:
         :param to_node: The node that the relationship points to.
         :return: The weighting of the directed relationship (from_node -> to_node).
         """
-        relationship_dict: dict[int, Any] = self.graph.adj_direction(
-            self.get_agent_index(from_node), False
-        )
-        graph_edge: GraphEdge = relationship_dict[self.get_agent_index(to_node)]
+        from_index: int | None = self.get_agent_index(from_node)
+        if from_index is None:
+            # This should never be reached and is included for type checking purposes
+            return 0.0
+
+        relationship_dict: dict[int, Any] = self.graph.adj_direction(from_index, False)
+
+        to_index: int | None = self.get_agent_index(to_node)
+        if to_index is None:
+            return 0.0
+
+        graph_edge: GraphEdge = relationship_dict[to_index]
         return graph_edge.weighting
 
     def change_weights(self, node_1: int, node_2: int, value: float) -> None:
@@ -634,8 +642,9 @@ class Graph:
 
         :param agent: The Agent whose previous opinion is being set.
         """
-        agent_node: Any = self.node_from_agent(agent)
-        agent_node.agent.store_previous_opinion()
+        agent_node: GraphNode | None = self.node_from_agent(agent)
+        if agent_node:
+            agent_node.agent.store_previous_opinion()
         return None
 
     def agent_opinion_change(self, agent: Agent, change_delta: float) -> None:
@@ -645,8 +654,9 @@ class Graph:
         :param agent: The Agent whose current opinion is being changed.
         :param change_delta: The value by which to change the Agent's current opinion.
         """
-        agent_node: Any = self.node_from_agent(agent)
-        agent_node.agent.change_opinion(change_delta)
+        agent_node: GraphNode | None = self.node_from_agent(agent)
+        if agent_node:
+            agent_node.agent.change_opinion(change_delta)
         return None
 
     def agent_radicalisation_change(self, agent: Agent, radicalisation: bool) -> None:
@@ -656,22 +666,25 @@ class Graph:
         :param agent: The Agent whose radicalisation status is being changed.
         :param radicalisation: The boolean radicalisation status.
         """
-        agent_node: Any = self.node_from_agent(agent)
-        agent_node.agent.change_radicalisation(radicalisation)
+        agent_node: GraphNode | None = self.node_from_agent(agent)
+        if agent_node:
+            agent_node.agent.change_radicalisation(radicalisation)
         return None
 
-    def node_from_agent(self, agent: Agent) -> Any:
+    def node_from_agent(self, agent: Agent) -> GraphNode | None:
         """
         Returns the GraphNode object corresponding to the given Agent object.
 
         :param agent: The Agent object being searched for in the GraphNodes.
         :return: The GraphNode object corresponding to the input Agent.
         """
-        agent_index: int = self.get_agent_index(agent)
-        agent_node: Any = self.get_node(agent_index)
-        return agent_node
+        agent_index: int | None = self.get_agent_index(agent)
+        if agent_index is not None:
+            agent_node: GraphNode | None = self.get_node(agent_index)
+            return agent_node
+        return None
 
-    def get_agent_index(self, agent: Agent) -> int:
+    def get_agent_index(self, agent: Agent) -> int | None:
         """
         Searches for the node index in the Graph which corresponds to the input Agent object.
 
@@ -681,9 +694,9 @@ class Graph:
         for idx, node in enumerate(self.graph.nodes()):
             if agent.id == node.agent.id:
                 return idx
-        return 0
+        return None
 
-    def get_neighbours(self, agent: Agent) -> list[GraphNode]:
+    def get_neighbours(self, agent: Agent) -> list[GraphNode] | None:
         """
         Finds all the nodes in the graph with direct relationships to the specified Agent.
 
@@ -691,10 +704,19 @@ class Graph:
         :return: A list of the GraphNode objects belonging to the direct neighbours of the agent.
         """
         neighbour_nodes: list[GraphNode] = []
-        agent_index: int = self.get_agent_index(agent)
+        agent_index: int | None = self.get_agent_index(agent)
+        if not agent_index:
+            warnings.warn(
+                f"Input Agent does not exist in this hierarchy ({self.name})",
+                category=UserWarning,
+            )
+            return None
         neighbour_indices: rx.rustworkx.NodeIndices = self.graph.neighbors(agent_index)
         for index in neighbour_indices:
-            neighbour_node: GraphNode = self.get_node(index)
+            neighbour_node: GraphNode | None = self.get_node(index)
+            if neighbour_node is None:
+                # Should never be reached and is just included for type checking purposes
+                continue
             neighbour_nodes.append(neighbour_node)
         return neighbour_nodes
 
@@ -706,7 +728,7 @@ class Graph:
         self.dynamic_relationships()
         return None
 
-    def neighbour_influences(self, agent: Agent) -> float:
+    def neighbour_influences(self, agent: Agent) -> float | None:
         """
         Looks at all the neighbours for an Agent and uses the neighbours' own opinions plus the
         weight of the relationship between Agents to return a final value by which the given
@@ -716,16 +738,27 @@ class Graph:
         :return: The final change in the Agent's opinion caused by their neighbours in this hierarchy.
         """
         agent_hierarchy_weighting: float = agent.social_weightings[self.name]
-        agent_index: int = self.get_agent_index(agent)
+        agent_index: int | None = self.get_agent_index(agent)
+        if agent_index is None:
+            warnings.warn(
+                f"Input Agent does not exist in this hierarchy ({self.name})",
+                category=UserWarning,
+            )
+            return None
         neighbour_indices: rx.NodeIndices = self.graph.neighbors(agent_index)
 
         # TODO: Account for neighbour radicalisation in this function
         final_change: float = 0.0
         for neighbour_index in neighbour_indices:
+            neighbour_node: GraphNode | None = self.get_node(neighbour_index)
+
+            if neighbour_node is None:
+                # This should never be reached and is only included for type checking purposes
+                continue
+
             relationship_strength: float = self.get_relationship(
-                agent, self.get_node(neighbour_index).agent
+                agent, neighbour_node.agent
             )
-            neighbour_node: GraphNode = self.get_node(neighbour_index)
 
             average_opinion: float = (
                 agent.opinion + neighbour_node.agent.opinion
@@ -775,10 +808,11 @@ class Graph:
         """
         observed_opinions: dict[str, float] = {}
 
-        direct_neighbours: list[GraphNode] = self.get_neighbours(agent)
-        for direct_neighbour in direct_neighbours:
-            observed_opinion: float = deepcopy(direct_neighbour.agent.opinion)
-            observed_opinions[direct_neighbour.agent.id] = observed_opinion
+        direct_neighbours: list[GraphNode] | None = self.get_neighbours(agent)
+        if direct_neighbours is not None:
+            for direct_neighbour in direct_neighbours:
+                observed_opinion: float = deepcopy(direct_neighbour.agent.opinion)
+                observed_opinions[direct_neighbour.agent.id] = observed_opinion
 
         for node in self.graph.nodes():
             if node.agent.id == agent.id or node in direct_neighbours:
@@ -804,10 +838,11 @@ class Graph:
             float
         ] = []  # The observed opinions of the agent's direct neighbours and the relevant observed opinions of indirect neighbours
 
-        direct_neighbours: list[GraphNode] = self.get_neighbours(agent)
-        for direct_neighbour in direct_neighbours:
-            observed_opinion: float = deepcopy(direct_neighbour.agent.opinion)
-            observed_opinions.append(observed_opinion)
+        direct_neighbours: list[GraphNode] | None = self.get_neighbours(agent)
+        if direct_neighbours is not None:
+            for direct_neighbour in direct_neighbours:
+                observed_opinion: float = deepcopy(direct_neighbour.agent.opinion)
+                observed_opinions.append(observed_opinion)
 
         for node in self.graph.nodes():
             if node.agent.id == agent.id or node in direct_neighbours:
