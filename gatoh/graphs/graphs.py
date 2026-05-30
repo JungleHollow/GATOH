@@ -151,16 +151,20 @@ class Graph:
     with respect to different social hierarchies.
     """
 
-    def __init__(self, name: str, rw_params: tuple[float, float]) -> None:
+    def __init__(
+        self, name: str, rw_params: tuple[float, float], suppress_warnings: bool = False
+    ) -> None:
         """
-        :param name: The name of the social hierarchy that this Graph object will be representing
-        :param rw_params: The (mean, variance) of the normal distribution used for the dynamic relationships random walk
+        :param name: The name of the social hierarchy that this Graph object will be representing.
+        :param rw_params: The (mean, variance) of the normal distribution used for the dynamic relationships random walk.
+        :param suppress_warnings: A boolean flag indicating if non-critical warnings should be suppressed.
         """
         # Defined as DiGraph as it is common in social networks for relationships to be unidirectional or unbalanced
         self.graph: rx.PyDiGraph = rx.PyDiGraph()
         self.node_count: int = 0
         self.edge_count: int = 0
         self.name: str = name
+        self.suppress_warnings: bool = suppress_warnings
         self.rw_params: tuple[float, float] = rw_params
         self.generation_params: dict[
             str, Any
@@ -706,10 +710,11 @@ class Graph:
         neighbour_nodes: list[GraphNode] = []
         agent_index: int | None = self.get_agent_index(agent)
         if not agent_index:
-            warnings.warn(
-                f"Input Agent does not exist in this hierarchy ({self.name})",
-                category=UserWarning,
-            )
+            if not self.suppress_warnings:
+                warnings.warn(
+                    f"Input Agent does not exist in this hierarchy ({self.name})",
+                    category=UserWarning,
+                )
             return None
         neighbour_indices: rx.rustworkx.NodeIndices = self.graph.neighbors(agent_index)
         for index in neighbour_indices:
@@ -740,10 +745,11 @@ class Graph:
         agent_hierarchy_weighting: float = agent.social_weightings[self.name]
         agent_index: int | None = self.get_agent_index(agent)
         if agent_index is None:
-            warnings.warn(
-                f"Input Agent does not exist in this hierarchy ({self.name})",
-                category=UserWarning,
-            )
+            if not self.suppress_warnings:
+                warnings.warn(
+                    f"Input Agent {agent.id} does not exist in this hierarchy ({self.name})",
+                    category=UserWarning,
+                )
             return None
         neighbour_indices: rx.NodeIndices = self.graph.neighbors(agent_index)
 
@@ -813,6 +819,9 @@ class Graph:
             for direct_neighbour in direct_neighbours:
                 observed_opinion: float = deepcopy(direct_neighbour.agent.opinion)
                 observed_opinions[direct_neighbour.agent.id] = observed_opinion
+        else:
+            # Set it to an empty list to simplify the `node in direct_neighbours` check below
+            direct_neighbours = []
 
         for node in self.graph.nodes():
             if node.agent.id == agent.id or node in direct_neighbours:
@@ -843,6 +852,9 @@ class Graph:
             for direct_neighbour in direct_neighbours:
                 observed_opinion: float = deepcopy(direct_neighbour.agent.opinion)
                 observed_opinions.append(observed_opinion)
+        else:
+            # Set it to an empty list to simplify the `node in direct_neighbours` check below
+            direct_neighbours = []
 
         for node in self.graph.nodes():
             if node.agent.id == agent.id or node in direct_neighbours:

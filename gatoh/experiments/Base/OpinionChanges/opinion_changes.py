@@ -268,13 +268,14 @@ class OpinionChangesTester:
         Generates and sets the shared collection of social hierarchy Graph objects that will be used across the instances.
         """
         print("==== Starting Graph creation ====")
-        created_graphs: list[gr.Graph] = []
 
         # Workaround to allow for np random choice
         agent_indices: list[int] = [i for i in range(len(agents))]
 
         for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
-            graph: gr.Graph = gr.Graph(hierarchy, TEST_PARAMETERS["relationship_rw"])
+            graph: gr.Graph = gr.Graph(
+                hierarchy, TEST_PARAMETERS["relationship_rw"], suppress_warnings=True
+            )
 
             if (
                 hierarchy == "A"
@@ -307,7 +308,7 @@ class OpinionChangesTester:
                 # Manual garbage colleciton
                 del agent_sample
 
-            created_graphs.append(deepcopy(graph))
+            self.model_graphs.append(deepcopy(graph))
 
             # Manual garbage collection
             del graph
@@ -341,7 +342,7 @@ class OpinionChangesTester:
 
             for idx, node in enumerate(graph.graph.nodes()):
                 node_pickle_path: str = f"{nodes_dir}/node_{idx}.pkl"
-                with open(node_pickle_path, "rb") as pickle_file:
+                with open(node_pickle_path, "wb") as pickle_file:
                     pickle.dump(node, pickle_file)
 
             edges_dir: str = f"{graph_dir}/edges"
@@ -350,7 +351,7 @@ class OpinionChangesTester:
 
             for idx, edge in enumerate(graph.graph.edges()):
                 edge_pickle_path: str = f"{edges_dir}/edge_{idx}.pkl"
-                with open(edge_pickle_path, "rb") as pickle_file:
+                with open(edge_pickle_path, "wb") as pickle_file:
                     pickle.dump(edge, pickle_file)
 
         return None
@@ -472,7 +473,8 @@ class OpinionChangesTester:
 
             for model_struct in self.models:
                 csv_row: dict[str, str] = {
-                    model_struct.model.model_id: model_struct.model.save_dir
+                    "model_name": model_struct.model.model_id,
+                    "model_savedir": model_struct.model.save_dir,
                 }
                 csv_writer.writerow(csv_row)
 
@@ -501,6 +503,7 @@ class OpinionChangesTester:
                 new_model: md.ABModel = md.ABModel(
                     deepcopy(TEST_PARAMETERS["hierarchy_names"]),
                     deepcopy(list(TEST_PARAMETERS["hierarchy_rw"].values())),
+                    suppress_warnings=True,
                     save_dir=f"{SAVEDIR_ROOT}/OpinionChanges_{model_name}",
                     data_file=f"{SAVEDIR_ROOT}/OpinionChanges_{model_name}/{model_name}_model_variables.csv",
                     model_id=model_name,
@@ -516,11 +519,15 @@ class OpinionChangesTester:
 
                 # Sample Agents for which the opinion changes will be introduced in
                 agents_to_change: int = rd.randint(1, self.num_agents)
-                agent_ids: list[str] = list(
+                agents_to_change_idxs: list[int] = list(
                     np.random.choice(
                         agent_indices, size=agents_to_change, replace=False
                     )
                 )
+
+                agent_ids: list[str] = []
+                for agt_idx in agents_to_change_idxs:
+                    agent_ids.append(self.model_agents[agt_idx].id)
 
                 # Extract the names of all the hierarchies that each sampled Agent belongs to in the model
                 changed_agents: dict[str, list[str]] = {}

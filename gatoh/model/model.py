@@ -32,6 +32,7 @@ class ABModel:
         silencing_threshold: float = 0.8,
         negation_threshold: float = 0.99,
         radicalisation_threshold: float = 0.9,
+        suppress_warnings: bool = False,
         save_dir: str = "",
         data_file: str = "",
         model_id: str = "",
@@ -44,6 +45,7 @@ class ABModel:
         :param silencing_threshold: A threshold that, when surpassed by Agents, will cause them to cease expressing their opinions in a given hierarchy.
         :param negation_threshold: A threshold that, when surpassed by Agents, will cause their opinion to become its additive inverse.
         :param radicalisation_threshold: A threshold that determined how strong of an absolute opinion an Agent must hold before they begin to consider becoming radicalised.
+        :param suppress_warnings: A boolean flag indicating if non-critical warnings should be suppressed during runtime.
         :param save_dir: The path to a directory in which all of this model's non-logger data should be saved to.
         :param data_file: The path to which the logger's data should be saved to after iterations are run.
         :param model_id: An optional field to give the created model object a referencable ID.
@@ -69,6 +71,8 @@ class ABModel:
         self.silencing_threshold: float = silencing_threshold
         self.negation_threshold: float = negation_threshold
         self.radicalisation_threshold: float = radicalisation_threshold
+
+        self.suppress_warnings: bool = suppress_warnings
 
         self.save_dir: str = save_dir
         self.data_file: str = data_file
@@ -106,6 +110,7 @@ class ABModel:
             "silencing_threshold": self.silencing_threshold,
             "negation_threshold": self.negation_threshold,
             "radicalisation_threshold": self.radicalisation_threshold,
+            "suppress_warnings": self.suppress_warnings,
             "save_dir": self.save_dir,
             "data_file": self.data_file,
             "model_id": self.model_id,
@@ -159,6 +164,7 @@ class ABModel:
                             self.radicalisation_threshold = config_data[
                                 "radicalisation_threshold"
                             ]
+                            self.suppress_warnings = config_data["suppress_warnings"]
                             self.save_dir = config_data["save_dir"]
                             self.data_file = config_data["data_file"]
                             self.model_id = config_data["model_id"]
@@ -248,7 +254,9 @@ class ABModel:
             if rw_params:
                 hierarchy_rw_param = rw_params[idx]
 
-            hierarchy_graph: Graph = Graph(hierarchy, hierarchy_rw_param)
+            hierarchy_graph: Graph = Graph(
+                hierarchy, hierarchy_rw_param, suppress_warnings=self.suppress_warnings
+            )
             hierarchy_graph = hierarchy_graph.generate_graph(
                 agent_sample, method=method
             )
@@ -400,7 +408,10 @@ class ABModel:
         for graph in self.graphs:
             graph.step()
         for agent in self.agents:
-            agent.step(self.hierarchy_information, self.agent_opinion_rw)
+            agent.step(
+                self.hierarchy_information,
+                self.agent_opinion_rw,
+            )
         return None
 
     def update(self) -> None:
@@ -408,25 +419,31 @@ class ABModel:
         Updates the agents' internal states to match the model step. This mainly handles the construction of agents'
         perceived opinion climates within their hierarchies, and the simulation of opinion silencing behaviours depending
         on these climates.
+
+        :param suppress_warnings: A boolean flag indicating if non-critical warnings should be suppressed.
         """
         for agent in self.agents:
             silenced: dict[str, bool] = {}
             was_silenced: bool = False
             negation: bool = False
             for graph in self.graphs:
-                est_opinion_climate: float = graph.estimate_opinion_climate(agent)
-                is_silenced: tuple[bool, float] = agent.opinion_silencing(
-                    graph.name, est_opinion_climate
-                )
-                silenced[graph.name] = is_silenced[0]
-
-                if is_silenced[0]:
-                    was_silenced = True
-
-                if not negation:
-                    negation = agent.opinion_negation(
-                        graph.name, is_silenced[1], self.negation_threshold
+                if not graph.agent_in_graph(agent):
+                    # The Agent does not have membership in a specific hierarchy
+                    continue
+                else:
+                    est_opinion_climate: float = graph.estimate_opinion_climate(agent)
+                    is_silenced: tuple[bool, float] = agent.opinion_silencing(
+                        graph.name, est_opinion_climate
                     )
+                    silenced[graph.name] = is_silenced[0]
+
+                    if is_silenced[0]:
+                        was_silenced = True
+
+                    if not negation:
+                        negation = agent.opinion_negation(
+                            graph.name, is_silenced[1], self.negation_threshold
+                        )
 
             # Update the logger variables as needed
             self.logger.variables.increment_silenced(was_silenced)
