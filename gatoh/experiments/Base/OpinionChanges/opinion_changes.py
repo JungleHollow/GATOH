@@ -734,6 +734,10 @@ class OpinionChangesTester:
             model_struct.model.current_iteration += 1
             model_struct.current_iteration += 1
 
+        # Create the model save directory
+        if not os.path.exists(model_struct.model.save_dir):
+            os.mkdir(model_struct.model.save_dir)
+
         # Call the logger's save_data function which handles data persistence appropriately
         data_saved: bool = model_struct.model.logger.save_data(
             model_struct.model.data_file
