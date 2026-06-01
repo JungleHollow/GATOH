@@ -90,7 +90,7 @@ class GraphAlgTester:
 
             # Stochastically generate the important Agent attributes
             agent_opinion = rd.uniform(opinion_range[0], opinion_range[1])
-            agent_behaviour = (agt._draw_personality(), rd.uniform(0.0, 1.0))
+            agent_behaviour = (agt.draw_personality(), rd.uniform(0.0, 1.0))
             personal_benefit = rd.choice([True, False])
 
             agent = agt.Agent(
@@ -134,7 +134,7 @@ class GraphAlgTester:
         for idx, hierarchy in enumerate(hierarchies):
             graph: gr.Graph = gr.Graph(hierarchy, rw_distributions[idx])
 
-            graph.generate_graph(
+            _ = graph.generate_graph(
                 deepcopy(agents), method=algorithm, relationship_range=rel_range
             )
 
@@ -213,7 +213,7 @@ if __name__ == "__main__":
             "random",
             "blockmodel",
         ],
-        "num_agents": 50,
+        "num_agents": 100,
     }
 
     # Default model parameters will be used for all scenarios, no need to set explicitly
@@ -257,20 +257,20 @@ if __name__ == "__main__":
     MODEL_DATAFILES: dict[str, str] = {}
     for algorithm in TEST_PARAMETERS["generation_algorithms"]:
         MODEL_DATAFILES[algorithm] = (
-            f"./experiments/Base/GraphAlgorithms/{algorithm}_model_variables.csv"
+            f"./gatoh/experiments/Base/GraphAlgorithms/{algorithm}_model_variables.csv"
         )
 
     # Define the save directories for each model
     MODEL_SAVEDIRS: dict[str, str] = {}
     for algorithm in TEST_PARAMETERS["generation_algorithms"]:
         MODEL_SAVEDIRS[algorithm] = (
-            f"./experiments/Base/GraphAlgorithms/GraphAlgorithms_{algorithm}"
+            f"./gatoh/experiments/Base/GraphAlgorithms/GraphAlgorithms_{algorithm}"
         )
 
     tester: GraphAlgTester
 
     # Check for existing saved models and store the relevant information
-    save_dirs = list(os.walk("./experiments/Base/GraphAlgorithms"))[0][1]
+    save_dirs = list(os.walk("./gatoh/experiments/Base/GraphAlgorithms"))[0][1]
 
     directory_missing: bool = False
     existing_savedirs: list[str] = []

@@ -233,7 +233,7 @@ class InfluentialTester:
         created_li_graphs: list[gr.Graph] = []
 
         # Create a set of the agent indices to be used later in iteration
-        agent_indices: set = {i for i in range(len(agents))}
+        agent_indices: set[int] = {i for i in range(len(agents))}
 
         # The valid range of relationship strengths originating from noninfluential agents
         noninf_rel_range: tuple[float, float] = AGENT_CHARACTERISTICS["relationship"]
@@ -244,7 +244,7 @@ class InfluentialTester:
             # Initialise the graph nodes using the population of Agents
             graph.add_nodes(deepcopy(agents))
 
-            new_edges: dict[str, list] = {
+            new_edges: dict[str, list[int | float]] = {
                 "from_node": [],
                 "to_node": [],
                 "weighting": [],
@@ -303,7 +303,7 @@ class InfluentialTester:
         n_ni_agents: int = self.n_agents - self.n_negative
 
         # Create a set of the agent indices to be used later in iteration
-        agent_indices: set = {i for i in range(len(agents))}
+        agent_indices: set[int] = {i for i in range(len(agents))}
 
         noninf_rel_range: tuple[float, float] = AGENT_CHARACTERISTICS["relationship"]
         inf_rel_range: tuple[float, float] = AGENT_CHARACTERISTICS[
@@ -316,7 +316,7 @@ class InfluentialTester:
             # Initialise the graph nodes using the full Agent population
             graph.add_nodes(deepcopy(agents))
 
-            new_edges: dict[str, list] = {
+            new_edges: dict[str, list[int | float]] = {
                 "from_node": [],
                 "to_node": [],
                 "weighting": [],
@@ -387,15 +387,15 @@ class InfluentialTester:
         """
         Adds the appropriate Agent and Graph objects to both models.
         """
-        self.li_model.add_agents(deepcopy(self.li_agents))
-        self.li_model.add_graphs(
+        _ = self.li_model.add_agents(deepcopy(self.li_agents))
+        _ = self.li_model.add_graphs(
             deepcopy(self.li_graphs),
             deepcopy(HIERARCHY_NAMES),
             deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
         )
 
-        self.hi_model.add_agents(deepcopy(self.hi_agents))
-        self.hi_model.add_graphs(
+        _ = self.hi_model.add_agents(deepcopy(self.hi_agents))
+        _ = self.hi_model.add_graphs(
             deepcopy(self.hi_graphs),
             deepcopy(HIERARCHY_NAMES),
             deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
@@ -422,8 +422,8 @@ class InfluentialTester:
 if __name__ == "__main__":
     # The parameters set for the tester class itself
     TEST_PARAMETERS: dict[str, Any] = {
-        "n_agents": 40,
-        "n_negative": 4,
+        "n_agents": 100,
+        "n_negative": 10,
     }
 
     # The model parameters used when creating the ABModel instances
@@ -476,15 +476,15 @@ if __name__ == "__main__":
 
     # Define the save paths for each model's logged variables (must point to a .csv file)
     LI_MODEL_DATAFILE: str = (
-        "./experiments/Base/InfluentialAgents/li_model_variables.csv"
+        "./gatoh/experiments/Base/InfluentialAgents/li_model_variables.csv"
     )
     HI_MODEL_DATAFILE: str = (
-        "./experiments/Base/InfluentialAgents/hi_model_variables.csv"
+        "./gatoh/experiments/Base/InfluentialAgents/hi_model_variables.csv"
     )
 
     # Define the save directories for each model
-    LI_SAVEDIR: str = "./experiments/Base/InfluentialAgents/InfluentialAgents_LI"
-    HI_SAVEDIR: str = "./experiments/Base/InfluentialAgents/InfluentialAgents_HI"
+    LI_SAVEDIR: str = "./gatoh/experiments/Base/InfluentialAgents/InfluentialAgents_LI"
+    HI_SAVEDIR: str = "./gatoh/experiments/Base/InfluentialAgents/InfluentialAgents_HI"
 
     tester: InfluentialTester
 

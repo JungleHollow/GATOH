@@ -292,7 +292,7 @@ if __name__ == "__main__":
 
     # The parameters that will be used to create the Agent population that is shared across models
     AGENT_PARAMETERS: dict[str, Any] = {
-        "n_agents": 40,
+        "n_agents": 100,
         "opinions": (-0.8, 0.8),
         "relationships": (-0.8, 0.8),
         "hierarchy_weighting": (-0.6, 0.6),

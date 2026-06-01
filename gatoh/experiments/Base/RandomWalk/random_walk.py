@@ -188,7 +188,7 @@ class RandomWalkTester:
             graph: gr.Graph = gr.Graph(
                 hierarchy, TEST_PARAMETERS["shared_relationship_rw"]
             )
-            graph.generate_graph(
+            _ = graph.generate_graph(
                 deepcopy(agents),
                 method=TEST_PARAMETERS["graph_generation_alg"],
                 relationship_range=AGENT_PARAMETERS["relationships"],
@@ -299,7 +299,7 @@ if __name__ == "__main__":
 
     # The parameters that will be used to create the shared population of Agents to be used across models
     AGENT_PARAMETERS: dict[str, Any] = {
-        "n_agents": 40,
+        "n_agents": 100,
         "opinions": (-0.8, 0.8),
         "relationships": (-0.8, 0.8),
         "social_susceptibility": (0.2, 0.8),
