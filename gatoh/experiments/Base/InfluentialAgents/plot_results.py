@@ -4,8 +4,8 @@ from gatoh.utils.utils import plot_graph
 
 if __name__ == "__main__":
     DATAFILES: dict[str, str] = {
-        "high-influence": "./experiments/Base/InfluentialAgents/hi_model_variables.csv",
-        "low-influence": "./experiments/Base/InfluentialAgents/li_model_variables.csv",
+        "high-influence": "./gatoh/experiments/Base/InfluentialAgents/hi_model_variables.csv",
+        "low-influence": "./gatoh/experiments/Base/InfluentialAgents/li_model_variables.csv",
     }
 
     aggregate_opinions: dict[str, list[float]] = {
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Network Aggregate Opinions",
         title="Network Aggregate Opinions over Iterations",
-        save_path="./experiments/Base/InfluentialAgents/InfluentialAgents_AggOps.png",
+        save_path="./gatoh/experiments/Base/InfluentialAgents/InfluentialAgents_AggOps.png",
     )
 
     # Plot the radicalised agents
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Number of Radicalised Agents",
         title="Number of Radicalised Agents over Iterations",
-        save_path="./experiments/Base/InfluentialAgents/InfluentialAgents_RadicalAgents.png",
+        save_path="./gatoh/experiments/Base/InfluentialAgents/InfluentialAgents_RadicalAgents.png",
     )
 
     # Plot the polarisations
@@ -67,5 +67,5 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Network Polarisation",
         title="Network Polarisation over Iterations",
-        save_path="./experiments/Base/InfluentialAgents/InfluentialAgents_Polarisations.png",
+        save_path="./gatoh/experiments/Base/InfluentialAgents/InfluentialAgents_Polarisations.png",
     )

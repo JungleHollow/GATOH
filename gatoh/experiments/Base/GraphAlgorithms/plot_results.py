@@ -4,10 +4,10 @@ from gatoh.utils.utils import plot_graph
 
 if __name__ == "__main__":
     DATAFILES: dict[str, str] = {
-        "blockmodel": "./experiments/Base/GraphAlgorithms/blockmodel_model_variables.csv",
-        "random": "./experiments/Base/GraphAlgorithms/random_model_variables.csv",
-        "scale-free": "./experiments/Base/GraphAlgorithms/scale-free_model_variables.csv",
-        "small-world": "./experiments/Base/GraphAlgorithms/small-world_model_variables.csv",
+        "blockmodel": "./gatoh/experiments/Base/GraphAlgorithms/blockmodel_model_variables.csv",
+        "random": "./gatoh/experiments/Base/GraphAlgorithms/random_model_variables.csv",
+        "scale-free": "./gatoh/experiments/Base/GraphAlgorithms/scale-free_model_variables.csv",
+        "small-world": "./gatoh/experiments/Base/GraphAlgorithms/small-world_model_variables.csv",
     }
 
     aggregate_opinions: dict[str, list[float]] = {
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Network Aggregate Opinions",
         title="Network Aggregate Opinions over Iterations",
-        save_path="./experiments/Base/GraphAlgorithms/GraphAlgorithms_AggOps.png",
+        save_path="./gatoh/experiments/Base/GraphAlgorithms/GraphAlgorithms_AggOps.png",
     )
 
     # Plot the radicalised agents
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Number of Radicalised Agents",
         title="Number of Radicalised Agents over Iterations",
-        save_path="./experiments/Base/GraphAlgorithms/GraphAlgorithms_RadicalAgents.png",
+        save_path="./gatoh/experiments/Base/GraphAlgorithms/GraphAlgorithms_RadicalAgents.png",
     )
 
     # Plot the polarisations
@@ -77,5 +77,5 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Network Polarisation",
         title="Network Polarisation over Iterations",
-        save_path="./experiments/Base/GraphAlgorithms/GraphAlgorithms_Polarisations.png",
+        save_path="./gatoh/experiments/Base/GraphAlgorithms/GraphAlgorithms_Polarisations.png",
     )
