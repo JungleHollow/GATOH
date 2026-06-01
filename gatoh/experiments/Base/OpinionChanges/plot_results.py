@@ -51,7 +51,8 @@ if __name__ == "__main__":
     # Load the data
     for graph_group, data_files in graph_groups.items():
         for data_file in data_files:
-            with open(data_file[1], "r", newline="") as csv_file:
+            save_file_path: str = f"{data_file[1]}/{data_file[0]}_model_variables.csv"
+            with open(save_file_path, "r", newline="") as csv_file:
                 csv_reader = csv.DictReader(csv_file)
 
                 # In this experiment, Agent membership is not equal, so polarisations must be averaged

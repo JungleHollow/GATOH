@@ -561,9 +561,20 @@ class OpinionChangesTester:
         :param missing_saves: An optional partial list of model names representing the models that should be saved.
         """
         save_struct: SaveStruct
+        data_saved: bool
         if missing_saves is None:
             for model_struct in self.models:
                 model_struct.model.save_model()  # Will save the model to a newly created savedir
+
+                # Call the logger's save_data function which handles data persistence appropriately after the model is saved
+                data_saved = model_struct.model.logger.save_data(
+                    model_struct.model.data_file
+                )
+
+                if data_saved:
+                    print(
+                        f"\n\nGATOH logger data was successfully written to the file at path: {model_struct.model.data_file}\n\n"
+                    )
 
                 # Extract the ModelStruct info (without the ABModel) and immediately pickle it to the Model's newly created save directory
                 save_struct = SaveStruct(model_struct, model_struct.model.save_dir)
@@ -575,6 +586,15 @@ class OpinionChangesTester:
                 struct_to_save: ModelStruct = self.get_struct(missing_save)
 
                 struct_to_save.model.save_model()
+
+                data_saved = struct_to_save.model.logger.save_data(
+                    struct_to_save.model.data_file
+                )
+
+                if data_saved:
+                    print(
+                        f"\n\nGATOH logger data was successfully written to the file at path: {struct_to_save.model.data_file}\n\n"
+                    )
 
                 save_struct = SaveStruct(struct_to_save, struct_to_save.model.save_dir)
 
@@ -733,19 +753,6 @@ class OpinionChangesTester:
 
             model_struct.model.current_iteration += 1
             model_struct.current_iteration += 1
-
-        # Create the model save directory
-        if not os.path.exists(model_struct.model.save_dir):
-            os.mkdir(model_struct.model.save_dir)
-
-        # Call the logger's save_data function which handles data persistence appropriately
-        data_saved: bool = model_struct.model.logger.save_data(
-            model_struct.model.data_file
-        )
-        if data_saved:
-            print(
-                f"\n\nGATOH logger data was successfully written to the file at path: {model_struct.model.data_file}\n\n"
-            )
         return None
 
 
