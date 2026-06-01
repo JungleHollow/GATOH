@@ -377,7 +377,11 @@ def plot_graph(
 
         match plot_type:
             case "line":
-                _ = ax.plot(current_x, current_y, label=key)
+                # If "Average" is a key for a line graph, plot it using a different style and distinct colour
+                if key == "Average":
+                    _ = ax.plot(current_x, current_y, "--k", label=key)
+                else:
+                    _ = ax.plot(current_x, current_y, label=key)
             case "scatter":
                 _ = ax.scatter(current_x, current_y, label=key)
             case "bar":
