@@ -379,9 +379,9 @@ def plot_graph(
             case "line":
                 # If "Average" is a key for a line graph, plot it using a different style and distinct colour
                 if key == "Average":
-                    _ = ax.plot(current_x, current_y, "--k", label=key)
+                    _ = ax.plot(current_x, current_y, "--k", linewidth=0.8, label=key)
                 else:
-                    _ = ax.plot(current_x, current_y, label=key)
+                    _ = ax.plot(current_x, current_y, linewidth=0.8, label=key)
             case "scatter":
                 _ = ax.scatter(current_x, current_y, label=key)
             case "bar":
@@ -393,14 +393,18 @@ def plot_graph(
 
     if vertical_x:
         if vertical_name:
-            _ = ax.axvline(x=vertical_x, label=vertical_name)
+            _ = ax.axvline(
+                x=vertical_x, color="r", ls="--", linewidth=0.8, label=vertical_name
+            )
         else:
-            _ = ax.axvline(x=vertical_x)
+            _ = ax.axvline(x=vertical_x, color="r", ls="--", linewidth=0.8)
     if horizontal_y:
         if horizontal_name:
-            _ = ax.axhline(y=horizontal_y, label=horizontal_name)
+            _ = ax.axhline(
+                y=horizontal_y, color="r", ls="--", linewidth=0.8, label=horizontal_name
+            )
         else:
-            _ = ax.axhline(y=horizontal_y)
+            _ = ax.axhline(y=horizontal_y, color="r", ls="--", linewidth=0.8)
 
     ax.legend()
 

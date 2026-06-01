@@ -186,24 +186,24 @@ if __name__ == "__main__":
     plot_graph(
         group_iterations,
         group_averages["agg_opps"],
-        x_label="Average Aggregate Opinions",
-        y_label="Iterations",
+        x_label="Iterations",
+        y_label="Average Aggregate Opinions",
         title="Average Aggregate Opinions over Iterations",
         save_path="./gatoh/experiments/Base/OpinionChanges/OpinionChanges_AggOpps.png",
     )
     plot_graph(
         group_iterations,
         group_averages["rad_agents"],
-        x_label="Average Number of Radicalised Agents",
-        y_label="Iterations",
+        x_label="Iterations",
+        y_label="Average Number of Radicalised Agents",
         title="Average Number of Radicalised Agents over Iterations",
         save_path="./gatoh/experiments/Base/OpinionChanges/OpinionChanges_RadicalAgents.png",
     )
     plot_graph(
         group_iterations,
         group_averages["polarisations"],
-        x_label="Average Network Polarisation",
-        y_label="Iterations",
+        x_label="Iterations",
+        y_label="Average Network Polarisation",
         title="Average Network Polarisation over Iterations",
         save_path="./gatoh/experiments/Base/OpinionChanges/OpinionChanges_Polarisations.png",
     )
