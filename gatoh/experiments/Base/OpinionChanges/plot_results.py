@@ -189,7 +189,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Average Aggregate Opinions",
         title="Average Aggregate Opinions over Iterations",
-        save_path="./gatoh/experiments/Base/OpinionChanges/OpinionChanges_AggOpps.png",
+        save_path="./gatoh/experiments/Base/OpinionChanges/OpinionChanges_AggOps.png",
     )
     plot_graph(
         group_iterations,
