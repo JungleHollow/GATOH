@@ -1,5 +1,5 @@
 current_iteration: 100
-data_file: ./experiments/Base/RandomWalk/BASE_model_variables.csv
+data_file: ./gatoh/experiments/Base/RandomWalk/BOTH_model_variables.csv
 hierarchy_information:
   A: &id001 !!python/tuple
   - 0.0
@@ -10,8 +10,9 @@ hierarchy_information:
   E: *id001
   F: *id001
 max_iterations: 100
-model_id: BASE
+model_id: BOTH
 negation_threshold: 0.99
 radicalisation_threshold: 0.9
-save_dir: ./experiments/Base/RandomWalk/RandomWalk_BASE
+save_dir: ./gatoh/experiments/Base/RandomWalk/RandomWalk_BOTH
 silencing_threshold: 0.8
+suppress_warnings: false

@@ -169,7 +169,7 @@ class Graph:
         self.generation_params: dict[
             str, Any
         ] = {  # Used for random graph generation, can be manually set by the user if desired
-            "p": 0.4,
+            "p": 0.25,
             "m": 3,
             "sbm_sizes": 10,
         }

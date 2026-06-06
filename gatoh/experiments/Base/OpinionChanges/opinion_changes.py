@@ -800,18 +800,8 @@ if __name__ == "__main__":
         "./gatoh/experiments/Base/OpinionChanges/OpinionChanges_logged_savedirs.csv"
     )
 
-    # A path to which a validation file will be written -- serialising a <model name, [Agent IDs]> mapping that outlines which Agents
-    # are having opinion changes introduced for that model
-    LOGGED_CHANGED_AGENTS: str = (
-        "./gatoh/experiments/Base/OpinionChanges/OpinionChanges_changed_agents.pkl"
-    )
-
     # A <model name, path> mapping of all the model instances that were initially created by the tester
     SAVEDIRS: dict[str, str] = {}
-    # A <model name, [Agent IDs]> mapping of all the Agents in which the opinion changes are being introduced
-    if os.path.exists(LOGGED_CHANGED_AGENTS):
-        with open(LOGGED_CHANGED_AGENTS, "rb") as pickle_file:
-            CHANGED_AGENTS: dict[str, dict[str, list[str]]] = pickle.load(pickle_file)
 
     tester: OpinionChangesTester
 
@@ -827,22 +817,18 @@ if __name__ == "__main__":
     ):  # The tester has not yet been run, or the validation file was removed
         directory_missing = True
     else:
-        if not os.path.exists(LOGGED_CHANGED_AGENTS):
-            # If the changed agents have not been logged, the instances cannot be loaded appropriately...
-            directory_missing = True
-        else:
-            with open(LOGGED_SAVEDIRS, "r", newline="") as csv_file:
-                csv_reader: csv.DictReader = csv.DictReader(csv_file)
-                for row in csv_reader:
-                    SAVEDIRS[row["model_name"]] = row["model_savedir"]
+        with open(LOGGED_SAVEDIRS, "r", newline="") as csv_file:
+            csv_reader: csv.DictReader = csv.DictReader(csv_file)
+            for row in csv_reader:
+                SAVEDIRS[row["model_name"]] = row["model_savedir"]
 
-            for model, save_dir in SAVEDIRS.items():
-                dir_name: str = deepcopy(save_dir).split("/")[-1]
-                if dir_name in save_dirs:
-                    existing_savedirs.append(model)
-                else:
-                    directory_missing = True
-                    missing_savedirs.append(model)
+        for model, save_dir in SAVEDIRS.items():
+            dir_name: str = deepcopy(save_dir).split("/")[-1]
+            if dir_name in save_dirs:
+                existing_savedirs.append(model)
+            else:
+                directory_missing = True
+                missing_savedirs.append(model)
 
     if directory_missing:
         tester = OpinionChangesTester()

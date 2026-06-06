@@ -213,7 +213,7 @@ if __name__ == "__main__":
             "random",
             "blockmodel",
         ],
-        "num_agents": 100,
+        "num_agents": 50,
     }
 
     # Default model parameters will be used for all scenarios, no need to set explicitly
