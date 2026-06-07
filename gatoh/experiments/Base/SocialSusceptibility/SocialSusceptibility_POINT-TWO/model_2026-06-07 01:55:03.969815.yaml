@@ -1,5 +1,5 @@
 current_iteration: 100
-data_file: ./experiments/Base/SocialSusceptibility/POINT-EIGHT_model_variables.csv
+data_file: ./gatoh/experiments/Base/SocialSusceptibility/POINT-TWO_model_variables.csv
 hierarchy_information:
   A: !!python/tuple
   - 0.0
@@ -14,8 +14,9 @@ hierarchy_information:
   - 0.0
   - 0.15
 max_iterations: 100
-model_id: POINT-EIGHT
+model_id: POINT-TWO
 negation_threshold: 0.99
 radicalisation_threshold: 0.9
-save_dir: ./experiments/Base/SocialSusceptibility/SocialSusceptibility_POINT-EIGHT
+save_dir: ./gatoh/experiments/Base/SocialSusceptibility/SocialSusceptibility_POINT-TWO
 silencing_threshold: 0.8
+suppress_warnings: false
