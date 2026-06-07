@@ -1,0 +1,24 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: GATOH
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Manuel Ernesto Amaru
+    family-names: Munizaga Sepúlveda
+    email: manuel.chile@yahoo.com
+    affiliation: Curtin University
+    orcid: 'https://orcid.org/0009-0002-4324-6548'
+repository-code: 'https://github.com/JungleHollow/GATOH'
+abstract: An open source agent-based modelling framework for Python
+keywords:
+  - Agent-Based Modeling
+  - Multi-layer
+  - Social Contagion
+  - Social Networks
+  - Social Simulation
+license: MIT
