@@ -26,14 +26,14 @@ class AnalysisResults:
     def __init__(self) -> None:
         self.aggregate_opinions: dict[str, list[float]] = {}
         self.radicalised_agents: dict[str, list[int]] = {}
-        self.polarisations: dict[str, list[float]] = {}
+        self.polarisations: dict[str, dict[str, list[float]]] = {}
 
     def init_model(
         self,
         model_id: str,
         aggregate_opinion: list[float],
         radicalised_agent: list[int],
-        polarisation: list[float],
+        polarisation: dict[str, list[float]],
     ) -> None:
         """
         An initialisation function that creates the appropriate entries in the data dicts for the specified model.
@@ -49,6 +49,136 @@ class AnalysisResults:
             self.radicalised_agents[model_id] = deepcopy(radicalised_agent)
         if model_id not in self.polarisations.keys():
             self.polarisations[model_id] = deepcopy(polarisation)
+
+    def save_results(self) -> None:
+        """
+        Saves the results stored within this class into separate .csv files for each model parameter type.
+        """
+        aggregates_path: str = f"{ROOT_DIR}/aggregate_opinions.csv"
+        radicalised_path: str = f"{ROOT_DIR}/radicalised_agents.csv"
+        polarisation_path: str = f"{ROOT_DIR}/polarisations.csv"
+
+        aggregates_fieldnames: list[str] = ["model_id"]
+        radicalised_fieldnames: list[str] = ["model_id"]
+        polarisation_fieldnames: list[str] = ["model_id"]
+
+        for i in range(TEST_PARAMETERS["iterations"]):
+            aggregates_fieldnames.append(f"iteration_{i + 1}")
+            radicalised_fieldnames.append(f"iteration_{i + 1}")
+            for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+                polarisation_fieldnames.append(f"{hierarchy}_iteration_{i + 1}")
+
+        csv_writer: csv.DictWriter
+        row_dict: dict[str, str | int | float]
+
+        # First store the aggregate opinions
+        with open(aggregates_path, "w", newline="") as csv_file:
+            csv_writer = csv.DictWriter(csv_file, aggregates_fieldnames)
+            csv_writer.writeheader()
+
+            for model_id, parameter_list in self.aggregate_opinions.items():
+                row_dict = {"model_id": model_id}
+                for idx, parameter in enumerate(parameter_list):
+                    row_dict[f"iteration_{idx + 1}"] = parameter
+
+                csv_writer.writerow(row_dict)
+
+        # Next store the radicalised agents
+        with open(radicalised_path, "w", newline="") as csv_file:
+            csv_writer = csv.DictWriter(csv_file, radicalised_fieldnames)
+            csv_writer.writeheader()
+
+            for model_id, parameter_list in self.radicalised_agents.items():
+                row_dict = {"model_id": model_id}
+                for idx, parameter in enumerate(parameter_list):
+                    row_dict[f"iteration_{idx + 1}"] = parameter
+
+                csv_writer.writerow(row_dict)
+
+        # Finally, store the polarisations
+        with open(polarisation_path, "w", newline="") as csv_file:
+            csv_writer = csv.DictWriter(csv_file, polarisation_fieldnames)
+            csv_writer.writeheader()
+
+            for model_id, parameter_dict in self.polarisations.items():
+                row_dict = {"model_id": model_id}
+                for hierarchy, parameter_list in parameter_dict.items():
+                    for idx, parameter in enumerate(parameter_list):
+                        row_dict[f"{hierarchy}_iteration_{idx + 1}"] = parameter
+
+                csv_writer.writerow(row_dict)
+        return None
+
+    def calculate_average_opinions(self) -> list[float]:
+        """
+        Calculates the average of the aggregate opinion across the models.
+
+        :return: A list containing the average value of the aggregate opinion at each iteration.
+        """
+        average_opinions: list[float] = []
+
+        for i in range(TEST_PARAMETERS["iterations"]):
+            iteration_sum: float = 0.0
+
+            for model_values in self.aggregate_opinions.values():
+                iteration_sum += model_values[i]
+
+            iteration_average: float = iteration_sum / len(
+                list(self.aggregate_opinions.keys())
+            )
+
+            average_opinions.append(iteration_average)
+
+        return average_opinions
+
+    def calculate_average_radicalised(self) -> list[float]:
+        """
+        Calculates the average total number of radicalised agents across the models.
+
+        :return: A list containing the average value of total radicalised agents at each iteration.
+        """
+        average_radicalised: list[float] = []
+
+        for i in range(TEST_PARAMETERS["iterations"]):
+            iteration_sum: float = 0.0
+
+            for model_values in self.radicalised_agents.values():
+                iteration_sum += model_values[i]
+
+            iteration_average: float = iteration_sum / len(
+                list(self.radicalised_agents.keys())
+            )
+
+            average_radicalised.append(iteration_average)
+
+        return average_radicalised
+
+    def calculate_average_polarisation(self) -> dict[str, list[float]]:
+        """
+        Calculates the average polarisation across models for each hierarchy.
+
+        :return: A <hierarchy, list> mapping containing the average value of polarisation at each iteration per hierarchy.
+        """
+        average_polarisation: dict[str, list[float]] = {}
+
+        for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+            average_polarisation[hierarchy] = []
+
+        for i in range(TEST_PARAMETERS["iterations"]):
+            iteration_sums: dict[str, float] = {
+                hierarchy: 0.0 for hierarchy in TEST_PARAMETERS["hierarchy_names"]
+            }
+
+            for hierarchy_dict in self.polarisations.values():
+                for hierarchy, hierarchy_values in hierarchy_dict.items():
+                    iteration_sums[hierarchy] += hierarchy_values[i]
+
+            for hierarchy, iteration_sum in iteration_sums.items():
+                average_polarisation[hierarchy].append(
+                    iteration_sum / len(list(self.polarisations.keys()))
+                )
+
+        return average_polarisation
 
 
 class VarianceTester:
@@ -365,6 +495,8 @@ class VarianceTester:
 
                 self.models[existing_save] = deepcopy(new_model)
 
+                self.store_model_results(new_model)
+
                 # Manual garbage collection
                 del new_model
             return None
@@ -377,6 +509,8 @@ class VarianceTester:
             new_model.load_model(model_savedir)
 
             self.models[model_name] = deepcopy(new_model)
+
+            self.store_model_results(new_model)
 
             # Manual garbage collection
             del new_model
@@ -433,6 +567,27 @@ class VarianceTester:
             )
         return None
 
+    def store_model_results(self, model: md.ABModel) -> None:
+        """
+        A helper class that takes a model which has finished iterating and calls AnalysisResults.init_model() appropriately.
+
+        :param model: The model that is being initialised in the AnalysisResults.
+        """
+        self.results.init_model(
+            model.model_id,
+            model.logger.variables.aggregate_opinions,
+            model.logger.variables.radicalised_agents,
+            model.logger.variables.layer_polarisations,
+        )
+        return None
+
+    def save_results(self) -> None:
+        """
+        Stores the parameters stored within the AnalysisResults object into separate .csv files for each of the parameters.
+        """
+        self.results.save_results()
+        return None
+
     def run_models(self, missing_saves: list[str] | None = None) -> None:
         """
         Runs each model instance in the tester class.
@@ -443,11 +598,13 @@ class VarianceTester:
             for missing_save in missing_saves:
                 self.models[missing_save].iterate()
                 self.models[missing_save].save_model()
+                self.store_model_results(self.models[missing_save])
             return None
 
         for model in self.models.values():
             model.iterate()
             model.save_model()
+            self.store_model_results(model)
 
         return None
 
@@ -530,9 +687,11 @@ if __name__ == "__main__":
             tester.load_models(existing_saves=existing_savedirs)
             tester.setup_models(missing_saves=missing_savedirs)
             tester.run_models(missing_saves=missing_savedirs)
+            tester.save_results()
         else:
             tester.setup_models()
             tester.run_models()
+            tester.save_results()
     else:
         results = AnalysisResults()
         tester = VarianceTester(results, existing=True)
