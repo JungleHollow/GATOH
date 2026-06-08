@@ -24,8 +24,31 @@ class AnalysisResults:
     """
 
     def __init__(self) -> None:
-        """ """
-        pass
+        self.aggregate_opinions: dict[str, list[float]] = {}
+        self.radicalised_agents: dict[str, list[int]] = {}
+        self.polarisations: dict[str, list[float]] = {}
+
+    def init_model(
+        self,
+        model_id: str,
+        aggregate_opinion: list[float],
+        radicalised_agent: list[int],
+        polarisation: list[float],
+    ) -> None:
+        """
+        An initialisation function that creates the appropriate entries in the data dicts for the specified model.
+
+        :param model_id: The ID that has been assigned to the model object.
+        :param aggregate_opinion: The runtime aggregate opinions that the model logged over its iterations.
+        :param radicalised_agent: The total radicalised agents that the model logged over its iterations.
+        :param polarisation: The network polarisations that the model logged over its iterations.
+        """
+        if model_id not in self.aggregate_opinions.keys():
+            self.aggregate_opinions[model_id] = deepcopy(aggregate_opinion)
+        if model_id not in self.radicalised_agents.keys():
+            self.radicalised_agents[model_id] = deepcopy(radicalised_agent)
+        if model_id not in self.polarisations.keys():
+            self.polarisations[model_id] = deepcopy(polarisation)
 
 
 class VarianceTester:
@@ -54,19 +77,47 @@ class VarianceTester:
         self.model_saves: dict[str, str] = {}
 
         # Dynamic model space
-        self.models: list[md.ABModel] = []
+        self.models: dict[str, md.ABModel] = {}
 
         # Define the lists that will contain the populations of Agents and Graphs
         self.model_agents: list[agt.Agent] = []
         self.model_graphs: list[gr.Graph] = []
 
         if not self.existing:
+            self.create_models()
             self.create_agents()
             self.create_graphs(self.model_agents)
         else:
             self.model_saves = SAVEDIRS
+            # load_models is called from __main__ as any missing savefiles are checked for there
             self.load_agents()
             self.load_graphs()
+
+    def create_models(self) -> None:
+        """
+        Creates the empty model objects that will later be set up and run for the experiment.
+        """
+        for i in range(TEST_PARAMETERS["repetitions"]):
+            model_id: str = f"{TEST_PARAMETERS['model_id_base']}-{i + 1:03}"
+
+            model_savedir: str = f"{SAVEDIR_ROOT}/{model_id}"
+            if not os.path.exists(model_savedir):
+                os.mkdir(model_savedir)
+
+            model_datafile: str = f"{model_savedir}/{model_id}_variables.csv"
+
+            new_model: md.ABModel = md.ABModel(
+                deepcopy(TEST_PARAMETERS["hierarchy_names"]),
+                deepcopy(list(TEST_PARAMETERS["hierarchy_rw"].values())),
+                save_dir=model_savedir,
+                data_file=model_datafile,
+                model_id=model_id,
+            )
+            self.models[model_id] = deepcopy(new_model)
+
+            # Manual garbage collection
+            del new_model
+        return None
 
     def create_agents(self) -> None:
         """
@@ -226,12 +277,76 @@ class VarianceTester:
         """
         Serialises the tester's initial shared Graph population to a subdirectory within the experiment directory.
         """
+        graphs_path: str = f"{ROOT_DIR}/graphs"
+
+        if not os.path.exists(graphs_path):
+            os.mkdir(graphs_path)
+
+        for graph in self.model_graphs:
+            graph_dir: str = f"{graphs_path}/{graph.name}"
+            if not os.path.exists(graph_dir):
+                os.mkdir(graph_dir)
+
+            # Write the graphml file for the graph
+            graph.save_graph(f"{graph_dir}/graph_{graph.name}.graphml")
+
+            nodes_dir: str = f"{graph_dir}/nodes"
+            if not os.path.exists(nodes_dir):
+                os.mkdir(nodes_dir)
+
+            for idx, node in enumerate(graph.graph.nodes()):
+                node_pickle_path: str = f"{nodes_dir}/node_{idx}.pkl"
+                with open(node_pickle_path, "wb") as pickle_file:
+                    pickle.dump(node, pickle_file)
+
+            edges_dir: str = f"{graph_dir}/edges"
+            if not os.path.exists(edges_dir):
+                os.mkdir(edges_dir)
+
+            for idx, edge in enumerate(graph.graph.edges()):
+                edge_pickle_path: str = f"{edges_dir}/edge_{idx}.pkl"
+                with open(edge_pickle_path, "wb") as pickle_file:
+                    pickle.dump(edge, pickle_file)
+
         return None
 
     def load_graphs(self) -> None:
         """
         Deserialises the tester's initial shared Graph population and loads it into memory.
         """
+        graphs_path: str = f"{ROOT_DIR}/graphs"
+
+        for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+            hierarchy_dir: str = f"{graphs_path}/{hierarchy}"
+
+            new_graph: gr.Graph = gr.Graph("", (0.0, 0.0))
+            new_graph.load_graph(
+                f"{hierarchy_dir}/graph_{hierarchy}.graphml",
+                hierarchy,
+                rw_params=TEST_PARAMETERS["hierarchy_rw"][hierarchy],
+            )
+
+            nodes_dir: str = f"{hierarchy_dir}/nodes"
+            node_paths: list[str] = list(os.walk(nodes_dir))[0][2]
+            for node_path in node_paths:
+                node_index: int = int(
+                    (os.path.basename(node_path).split("_")[-1]).split(".")[0]
+                )
+                with open(f"{nodes_dir}/{node_path}", "rb") as pickle_file:
+                    node_object: gr.GraphNode = pickle.load(pickle_file)
+                    new_graph.graph[node_index] = node_object
+
+            edges_dir: str = f"{hierarchy_dir}/edges"
+            edge_paths: list[str] = list(os.walk(edges_dir))[0][2]
+            for edge_path in edge_paths:
+                edge_index: int = int(
+                    (os.path.basename(edge_path).split("_")[-1]).split(".")[0]
+                )
+                with open(f"{edges_dir}/{edge_path}", "rb") as pickle_file:
+                    edge_object: gr.GraphEdge = pickle.load(pickle_file)
+                    new_graph.graph.update_edge_by_index(edge_index, edge_object)
+
+            self.model_graphs.append(deepcopy(new_graph))
         return None
 
     def load_models(self, existing_saves: list[str] | None = None) -> None:
@@ -240,6 +355,31 @@ class VarianceTester:
 
         :param existing_saves: An optional partial list of the model names representing the models that can be loaded.
         """
+        if existing_saves:
+            for existing_save in existing_saves:
+                # Create an empty dummy model object
+                new_model: md.ABModel = md.ABModel(
+                    TEST_PARAMETERS["hierarchy_names"], TEST_PARAMETERS["hierarchy_rw"]
+                )
+                new_model.load_model(SAVEDIRS[existing_save])
+
+                self.models[existing_save] = deepcopy(new_model)
+
+                # Manual garbage collection
+                del new_model
+            return None
+
+        for model_name, model_savedir in SAVEDIRS.items():
+            new_model: md.ABModel = md.ABModel(
+                TEST_PARAMETERS["hierarchy_names"],
+                TEST_PARAMETERS["hierarchy_rw"],
+            )
+            new_model.load_model(model_savedir)
+
+            self.models[model_name] = deepcopy(new_model)
+
+            # Manual garbage collection
+            del new_model
         return None
 
     def create_savedir_validation(self) -> None:
@@ -250,6 +390,21 @@ class VarianceTester:
         This is done in order to allow for checking of missing instance save directories if the tester is being initialised
         from an existing run.
         """
+        with open(LOGGED_SAVEDIRS, "w", newline="") as csv_file:
+            field_names: list[str] = ["model_name", "model_savedir"]
+
+            csv_writer: csv.DictWriter = csv.DictWriter(
+                csv_file, fieldnames=field_names
+            )
+            csv_writer.writeheader()
+
+            for model in self.models.values():
+                csv_row: dict[str, str] = {
+                    "model_name": model.model_id,
+                    "model_savedir": model.save_dir,
+                }
+                csv_writer.writerow(csv_row)
+
         return None
 
     def setup_models(self, missing_saves: list[str] | None = None) -> None:
@@ -258,6 +413,24 @@ class VarianceTester:
 
         :param missing_saves: An optional partial list of the model names representing the models that should be set up.
         """
+        print("==== Setting up the model instances ====")
+        if missing_saves:
+            for missing_save in missing_saves:
+                _ = self.models[missing_save].add_agents(deepcopy(self.model_agents))
+                _ = self.models[missing_save].add_graphs(
+                    deepcopy(self.model_graphs),
+                    deepcopy(TEST_PARAMETERS["hierarchy_names"]),
+                    deepcopy(TEST_PARAMETERS["hierarchy_rw"]),
+                )
+            return None
+
+        for model in self.models.values():
+            _ = model.add_agents(deepcopy(self.model_agents))
+            _ = model.add_graphs(
+                deepcopy(self.model_graphs),
+                deepcopy(TEST_PARAMETERS["hierarchy_names"]),
+                deepcopy(TEST_PARAMETERS["hierarchy_rw"]),
+            )
         return None
 
     def run_models(self, missing_saves: list[str] | None = None) -> None:
@@ -266,6 +439,16 @@ class VarianceTester:
 
         :param missing_saves: An optional partial list of the model names representing models that should be run.
         """
+        if missing_saves:
+            for missing_save in missing_saves:
+                self.models[missing_save].iterate()
+                self.models[missing_save].save_model()
+            return None
+
+        for model in self.models.values():
+            model.iterate()
+            model.save_model()
+
         return None
 
 
@@ -273,6 +456,7 @@ if __name__ == "__main__":
     # The relevant parameters that are defined for the identical model instances
     TEST_PARAMETERS: dict[str, Any] = {
         "iterations": 100,
+        "repetitions": 100,
         "hierarchy_names": ["A", "B", "C"],
         "hierarchy_rw": {
             "A": (0.0, 0.3),
@@ -281,6 +465,7 @@ if __name__ == "__main__":
         },
         "relationship_rw": (0.0, 0.1),
         "graph_generation_alg": "small-world",
+        "model_id_base": "SARV-Model",
     }
 
     # The parameters that will be used to create the Agent population that is shared across models
