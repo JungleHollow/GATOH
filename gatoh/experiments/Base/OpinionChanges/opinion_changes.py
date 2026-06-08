@@ -266,6 +266,8 @@ class OpinionChangesTester:
     def create_graphs(self, agents: list[agt.Agent]) -> None:
         """
         Generates and sets the shared collection of social hierarchy Graph objects that will be used across the instances.
+
+        :param agents: The population of Agents to use for Graph creation.
         """
         print("==== Starting Graph creation ====")
 
@@ -784,7 +786,7 @@ if __name__ == "__main__":
         "hierarchy_weighting": (-0.75, 0.75),
         "personal_benefit": {True: 0.3, False: 0.7},
         "social_susceptibility": (0.0, 1.0),
-        "id_base": "EXOC",
+        "id_base": "EXOC",  # (EXperiment Opinion Changes)
     }
 
     # The root directory of the experiment itself
@@ -792,13 +794,11 @@ if __name__ == "__main__":
 
     # The root of the directory in which each instance's save directory will be located
     # (using a /models subdirectory just for this experiment due to significant increase in number of instances)
-    SAVEDIR_ROOT: str = "./gatoh/experiments/Base/OpinionChanges/models"
+    SAVEDIR_ROOT: str = f"{ROOT_DIR}/models"
 
-    # A path to which a validation file will be written -- outlining the model name and generated save directory that were generated
+    # A path to which a validation file will be written -- outlining the model name and save directory that were generated
     # for each instance during the tester initialisation (to allow for checking of missing saves in the future)
-    LOGGED_SAVEDIRS: str = (
-        "./gatoh/experiments/Base/OpinionChanges/OpinionChanges_logged_savedirs.csv"
-    )
+    LOGGED_SAVEDIRS: str = f"{ROOT_DIR}/OpinionChanges_logged_savedirs.csv"
 
     # A <model name, path> mapping of all the model instances that were initially created by the tester
     SAVEDIRS: dict[str, str] = {}
