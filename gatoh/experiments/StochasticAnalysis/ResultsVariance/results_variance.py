@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import os
+import pickle
 import random as rd
 from copy import deepcopy
 from typing import Any
@@ -47,23 +48,120 @@ class VarianceTester:
         :param existing: A flag indicating if the experiment has already been run and saved models are present to inspect.
         """
         self.results: AnalysisResults = results_container
+        self.num_agents: int = AGENT_PARAMETERS["n_agents"]
+
+        self.existing: bool = existing
+        self.model_saves: dict[str, str] = {}
+
+        # Dynamic model space
+        self.models: list[md.ABModel] = []
+
+        # Define the lists that will contain the populations of Agents and Graphs
+        self.model_agents: list[agt.Agent] = []
+        self.model_graphs: list[gr.Graph] = []
+
+        if not self.existing:
+            self.create_agents()
+            self.create_graphs(self.model_agents)
+        else:
+            self.model_saves = SAVEDIRS
+            self.load_agents()
+            self.load_graphs()
 
     def create_agents(self) -> None:
         """
         Generates and sets the shared population of Agent objects that will be used across the instances.
         """
+        print("==== Starting Agent creation ====")
+        created_agents: list[agt.Agent] = []
+
+        benefit_flags: list[bool] = list(AGENT_PARAMETERS["personal_benefit"].keys())
+        benefit_p: list[float] = list(AGENT_PARAMETERS["personal_benefit"].values())
+
+        for i in range(self.num_agents):
+            agent_id: str = f"{AGENT_PARAMETERS['id_base']}{i + 1:04}"
+            agent_opinion: float = rd.uniform(
+                AGENT_PARAMETERS["opinions"][0], AGENT_PARAMETERS["opinions"][1]
+            )
+            agent_personality: str = agt.draw_personality()
+            agent_susceptibility: float = rd.uniform(
+                AGENT_PARAMETERS["social_susceptibility"][0],
+                AGENT_PARAMETERS["social_susceptibility"][1],
+            )
+            agent_behaviour: tuple[str, float] = (
+                agent_personality,
+                agent_susceptibility,
+            )
+            agent_benefit: bool = bool(
+                np.random.choice(benefit_flags, size=1, p=benefit_p)[0]
+            )
+
+            hierarchy_weightings: dict[str, float] = {}
+            for hierarchy_name in TEST_PARAMETERS["hierarchy_names"]:
+                generated_weighting: float = rd.uniform(
+                    AGENT_PARAMETERS["hierarchy_weighting"][0],
+                    AGENT_PARAMETERS["hierarchy_weighting"][1],
+                )
+                hierarchy_weightings[hierarchy_name] = generated_weighting
+
+            created_agent: agt.Agent = agt.Agent(
+                agent_id,
+                agent_opinion,
+                hierarchy_weightings,
+                agent_behaviour,
+                agent_benefit,
+            )
+
+            created_agents.append(deepcopy(created_agent))
+
+            # Manual garbage collection
+            del created_agent
+
+        self.model_agents = deepcopy(created_agents)
+
+        # Manual garbage collection
+        del created_agents
+
+        # Serialise the created Agent objects so that they remain unchanged across future runs
+        self.pickle_agents()
+
+        print("==== Finished Agent creation ====")
         return None
 
     def pickle_agents(self) -> None:
         """
         Serialises the tester's initial shared Agent population to a subdirectory within the experiment directory.
         """
+        agents_path: str = f"{ROOT_DIR}/agents"
+
+        if not os.path.exists(agents_path):
+            os.mkdir(agents_path)
+
+        for agent in self.model_agents:
+            agent_pickle_path: str = f"{agents_path}/agent_{agent.id}.pkl"
+            with open(agent_pickle_path, "wb") as pickle_file:
+                pickle.dump(agent, pickle_file)
+
         return None
 
     def load_agents(self) -> None:
         """
         Deserialises the tester's initial shared Agent population and loads them into memory.
         """
+        agents_path: str = f"{ROOT_DIR}/agents"
+
+        for i in range(self.num_agents):
+            agent_id: str = f"{AGENT_PARAMETERS['id_base']}{i + 1:04}"
+            agent_pickle_path: str = f"{agents_path}/agent_{agent_id}.pkl"
+            agent_obj: agt.Agent
+            with open(agent_pickle_path, "rb") as pickle_file:
+                agent_obj = pickle.load(pickle_file)
+
+            self.model_agents.append(deepcopy(agent_obj))
+
+            # Manual garbage collection
+            del agent_id, agent_pickle_path, agent_obj
+
         return None
 
     def create_graphs(self, agents: list[agt.Agent]) -> None:
@@ -72,6 +170,56 @@ class VarianceTester:
 
         :param agents: The population of Agents to use for Graph creation.
         """
+        print("==== Starting Graph creation ====")
+
+        # Workaround to allow for np random choice
+        agent_indices: list[int] = [i for i in range(len(agents))]
+
+        for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+            graph: gr.Graph = gr.Graph(
+                hierarchy, TEST_PARAMETERS["relationship_rw"], suppress_warnings=True
+            )
+
+            # Ensures that every Agent in the population belongs to at least one hierarchy
+            if hierarchy == "B":
+                _ = graph.generate_graph(
+                    deepcopy(agents),
+                    method=TEST_PARAMETERS["graph_generation_alg"],
+                    relationship_range=AGENT_PARAMETERS["relationships"],
+                )
+            else:
+                hierarchy_n_agents: int = rd.randint(
+                    AGENT_PARAMETERS["subset_size_range"][0],
+                    AGENT_PARAMETERS["subset_size_range"][1],
+                )
+                selected_agents: list[int] = list(
+                    np.random.choice(
+                        agent_indices, size=hierarchy_n_agents, replace=False
+                    )
+                )
+
+                agent_sample: list[agt.Agent] = []
+                for index in selected_agents:
+                    agent_sample.append(deepcopy(agents[index]))
+
+                _ = graph.generate_graph(
+                    deepcopy(agent_sample),
+                    method=TEST_PARAMETERS["graph_generation_alg"],
+                    relationship_range=AGENT_PARAMETERS["relationships"],
+                )
+
+                # Manual garbage collection
+                del agent_sample
+
+            self.model_graphs.append(deepcopy(graph))
+
+            # Manual garbage collection
+            del graph
+
+        # Serialise the created Graph objects so that they remain unchanged across future runs
+        self.pickle_graphs()
+
+        print("==== Graph creation finished ====")
         return None
 
     def pickle_graphs(self) -> None:
@@ -138,6 +286,7 @@ if __name__ == "__main__":
     # The parameters that will be used to create the Agent population that is shared across models
     AGENT_PARAMETERS: dict[str, Any] = {
         "n_agents": 100,
+        "subset_size_range": (25, 50),
         "opinions": (-1.0, 1.0),
         "relationships": (-1.0, 1.0),
         "hierarchy_weighting": (-1.0, 1.0),
