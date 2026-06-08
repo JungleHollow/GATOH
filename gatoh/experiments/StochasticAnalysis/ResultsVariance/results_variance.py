@@ -109,76 +109,90 @@ class AnalysisResults:
                 csv_writer.writerow(row_dict)
         return None
 
-    def calculate_average_opinions(self) -> list[float]:
+    def load_results(self) -> None:
         """
-        Calculates the average of the aggregate opinion across the models.
+        Loads results that have been saved following the above format.
+        """
+        return None
 
-        :return: A list containing the average value of the aggregate opinion at each iteration.
+    def calculate_opinions_statistics(self) -> tuple[list[float], list[float]]:
+        """
+        Calculates the basic statistics of the aggregate opinion across the models.
+
+        :return: A tuple containing two lists -- the average and the standard deviation of the aggregate opinions across the models.
         """
         average_opinions: list[float] = []
+        opinions_sd: list[float] = []
 
         for i in range(TEST_PARAMETERS["iterations"]):
-            iteration_sum: float = 0.0
+            iteration_values: list[float] = []
 
             for model_values in self.aggregate_opinions.values():
-                iteration_sum += model_values[i]
+                iteration_values.append(model_values[i])
 
-            iteration_average: float = iteration_sum / len(
-                list(self.aggregate_opinions.keys())
-            )
+            iteration_average: float = np.average(iteration_values)
+            iteration_sd: float = float(np.std(iteration_values))
 
             average_opinions.append(iteration_average)
+            opinions_sd.append(iteration_sd)
 
-        return average_opinions
+        return average_opinions, opinions_sd
 
-    def calculate_average_radicalised(self) -> list[float]:
+    def calculate_radicalisation_statistics(self) -> tuple[list[float], list[float]]:
         """
-        Calculates the average total number of radicalised agents across the models.
+        Calculates the basic statistics of the total number of radicalised agents across the models.
 
-        :return: A list containing the average value of total radicalised agents at each iteration.
+        :return: A tuple containing two lists -- the average and the standard deviation of the total number of radicalised agents across the models.
         """
         average_radicalised: list[float] = []
+        radicalised_sd: list[float] = []
 
         for i in range(TEST_PARAMETERS["iterations"]):
-            iteration_sum: float = 0.0
+            iteration_values: list[int] = []
 
             for model_values in self.radicalised_agents.values():
-                iteration_sum += model_values[i]
+                iteration_values.append(model_values[i])
 
-            iteration_average: float = iteration_sum / len(
-                list(self.radicalised_agents.keys())
-            )
+            iteration_average: float = np.average(iteration_values)
+            iteration_sd: float = float(np.std(iteration_values))
 
             average_radicalised.append(iteration_average)
+            radicalised_sd.append(iteration_sd)
 
-        return average_radicalised
+        return average_radicalised, radicalised_sd
 
-    def calculate_average_polarisation(self) -> dict[str, list[float]]:
+    def calculate_polarisation_statistics(
+        self,
+    ) -> tuple[dict[str, list[float]], dict[str, list[float]]]:
         """
-        Calculates the average polarisation across models for each hierarchy.
+        Calculates the basic statistics for the polarisation across models for each hierarchy.
 
-        :return: A <hierarchy, list> mapping containing the average value of polarisation at each iteration per hierarchy.
+        :return: A tuple of two <hierarchy, list> mappings containing the average and standard deviation values of polarisation at each iteration per hierarchy.
         """
         average_polarisation: dict[str, list[float]] = {}
+        polarisation_sd: dict[str, list[float]] = {}
 
         for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
             average_polarisation[hierarchy] = []
+            polarisation_sd[hierarchy] = []
 
         for i in range(TEST_PARAMETERS["iterations"]):
-            iteration_sums: dict[str, float] = {
-                hierarchy: 0.0 for hierarchy in TEST_PARAMETERS["hierarchy_names"]
+            iteration_values: dict[str, list[float]] = {
+                hierarchy: [] for hierarchy in TEST_PARAMETERS["hierarchy_names"]
             }
 
             for hierarchy_dict in self.polarisations.values():
                 for hierarchy, hierarchy_values in hierarchy_dict.items():
-                    iteration_sums[hierarchy] += hierarchy_values[i]
+                    iteration_values[hierarchy].append(hierarchy_values[i])
 
-            for hierarchy, iteration_sum in iteration_sums.items():
-                average_polarisation[hierarchy].append(
-                    iteration_sum / len(list(self.polarisations.keys()))
-                )
+            for hierarchy, values_list in iteration_values.items():
+                hierarchy_average: float = np.average(values_list)
+                hierarchy_sd: float = float(np.std(values_list))
 
-        return average_polarisation
+                average_polarisation[hierarchy].append(hierarchy_average)
+                polarisation_sd[hierarchy].append(hierarchy_sd)
+
+        return average_polarisation, polarisation_sd
 
 
 class VarianceTester:
