@@ -12,14 +12,17 @@ from gatoh.model.model import ABModel
 class DataReader:
     """
     A class that will be used to create and handle an appropriate GATOH model from the given agent and
-    social hierarchy CSV file paths
+    social hierarchy CSV file paths.
+
+    The expected agent and graph inputs for this class are structured according to the outputs from the
+    ResponseParser script.
     """
 
     def __init__(
         self,
         agents_path: str,
+        graphs_path: str,
         initial_hierarchies: list[str],
-        hierarchy_matrices: list[str],
         social_path: str,
         base_hierarchies: list[str] | None = None,
         opinions_path: str | None = None,
@@ -27,8 +30,8 @@ class DataReader:
     ) -> None:
         """
         :param agents_path: A relative or absolute file path to a CSV file containing relevant data on model agent characteristics.
+        :param graphs_path: A relative or absolute file path to a CSV file containing relevant data on model graph characteristics.
         :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
-        :param hierarchy_matrices: A list of paths to .csv files containing adjacency matrices that outline the presence and relative strength of relationships in each social hierarchy.
         :param social_path: A relative or absolute file path to a CSV file containing relevant data on the relative influence of the existing social hierarchies in the community.
         :param base_hierarchies: A list containing the most basic hierarchies that exist; will be created before <initial_hierarchies>.
         :optional param opinions_path: A relative or absolute file path to a CSV file containing the dependant variables of actual agent opinions; used to compare model accuracy after execution.
@@ -181,36 +184,24 @@ if __name__ == "__main__":
     }
 
     AGENT_PATHS: dict[str, str] = {
-        "NONMN": "./data/NONMN/NonMining.csv",
-        "MINNG": "./data/MINNG/Mining.csv",
+        "NONMN": "./gatoh/experiments/CaseStudy/NONMN_Agents.csv",
+        "MINNG": "./gatoh/experiments/CaseStudy/MINNG_Agents.csv",
+    }
+
+    GRAPH_PATHS: dict[str, str] = {
+        "NONMN": "./gatoh/experiments/CaseStudy/NONMN_Graphs.csv",
+        "MINNG": "./gatoh/experiments/CaseStudy/MINNG_Graphs.csv",
     }
 
     BASE_HIERARCHIES: list[str] = [
+        "Age",
+        "Gender",
         "Friends",
         "Family",
         "Cultural",
-        "Religion",
+        "Religious",
         "Geographical",
         "Social",
     ]
-
-    HIERARCHY_PATHS: dict[str, dict[str, str]] = {
-        "NONMN": {
-            "Friends": "./data/NONMN/NONMN_Friends.csv",
-            "Family": "./data/NONMN/NONMN_Family.csv",
-            "Cultural": "./data/NONMN/NONMN_Cultural.csv",
-            "Religion": "./data/NONMN/NONMN_Religion.csv",
-            "Geographical": "./data/NONMN/NONMN_Geographical.csv",
-            "Social": "./data/NONMN/NONMN_Social.csv",
-        },
-        "MINNG": {
-            "Friends": "./data/MINNG/MINNG_Friends.csv",
-            "Family": "./data/MINNG/MINNG_Family.csv",
-            "Cultural": "./data/MINNG/MINNG_Cultural.csv",
-            "Religion": "./data/MINNG/MINNG_Religion.csv",
-            "Geographical": "./data/MINNG/MINNG_Geographical.csv",
-            "Social": "./data/MINNG/MINNG_Social.csv",
-        },
-    }
 
     data_reader: DataReader = DataReader()

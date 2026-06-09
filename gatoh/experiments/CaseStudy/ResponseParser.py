@@ -325,18 +325,18 @@ class ResponseParser:
 
 if __name__ == "__main__":
     RESPONSE_CSV: dict[str, str] = {
-        "NONMN": "./data/NonMining.csv",
-        "MINNG": "./data/Mining.csv",
+        "NONMN": "./data/NONMN/NonMining.csv",
+        "MINNG": "./data/MINNG/Mining.csv",
     }
 
     AGENT_PATHS: dict[str, str] = {
-        "NONMN": "./experiments/CaseStudy/NONMN_Agents.csv",
-        "MINNG": "./experiments/CaseStudy/MINNG_Agents.csv",
+        "NONMN": "./gatoh/experiments/CaseStudy/NONMN_Agents.csv",
+        "MINNG": "./gatoh/experiments/CaseStudy/MINNG_Agents.csv",
     }
 
     GRAPH_PATHS: dict[str, str] = {
-        "NONMN": "./experiments/CaseStudy/NONMN_Graphs.csv",
-        "MINNG": "./experiments/CaseStudy/MINNG_Graphs.csv",
+        "NONMN": "./gatoh/experiments/CaseStudy/NONMN_Graphs.csv",
+        "MINNG": "./gatoh/experiments/CaseStudy/MINNG_Graphs.csv",
     }
 
     HIERARCHIES: list[str] = [
@@ -346,7 +346,28 @@ if __name__ == "__main__":
         "Family",
         "Religious",
         "Cultural",
+        "Geographical",
+        "Social",
     ]
+
+    ADJ_MATRIX_PATHS: dict[str, dict[str, str]] = {
+        "NONMN": {
+            "Friends": "./data/NONMN/NONMN_Friends.csv",
+            "Family": "./data/NONMN/NONMN_Family.csv",
+            "Cultural": "./data/NONMN/NONMN_Cultural.csv",
+            "Religion": "./data/NONMN/NONMN_Religion.csv",
+            "Geographical": "./data/NONMN/NONMN_Geographical.csv",
+            "Social": "./data/NONMN/NONMN_Social.csv",
+        },
+        "MINNG": {
+            "Friends": "./data/MINNG/MINNG_Friends.csv",
+            "Family": "./data/MINNG/MINNG_Family.csv",
+            "Cultural": "./data/MINNG/MINNG_Cultural.csv",
+            "Religion": "./data/MINNG/MINNG_Religion.csv",
+            "Geographical": "./data/MINNG/MINNG_Geographical.csv",
+            "Social": "./data/MINNG/MINNG_Social.csv",
+        },
+    }
 
     SURVEY_VALUES: str = "./data/SurveyValues.json"
     SURVEY_TYPES: str = "./data/SurveyQuestionTypes.json"
