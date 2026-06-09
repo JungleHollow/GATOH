@@ -19,6 +19,7 @@ class DataReader:
         self,
         agents_path: str,
         initial_hierarchies: list[str],
+        hierarchy_matrices: list[str],
         social_path: str,
         base_hierarchies: list[str] | None = None,
         opinions_path: str | None = None,
@@ -27,6 +28,7 @@ class DataReader:
         """
         :param agents_path: A relative or absolute file path to a CSV file containing relevant data on model agent characteristics.
         :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
+        :param hierarchy_matrices: A list of paths to .csv files containing adjacency matrices that outline the presence and relative strength of relationships in each social hierarchy.
         :param social_path: A relative or absolute file path to a CSV file containing relevant data on the relative influence of the existing social hierarchies in the community.
         :param base_hierarchies: A list containing the most basic hierarchies that exist; will be created before <initial_hierarchies>.
         :optional param opinions_path: A relative or absolute file path to a CSV file containing the dependant variables of actual agent opinions; used to compare model accuracy after execution.
@@ -169,18 +171,46 @@ class DataReader:
 
 if __name__ == "__main__":
     SAVEDIRS: dict[str, str] = {
-        "NONMN": "./experiments/CaseStudy/Results/NONMN",
-        "MINNG": "./experiments/CaseStudy/Results/MINNG",
+        "NONMN": "./gatoh/experiments/CaseStudy/Results/NONMN",
+        "MINNG": "./gatoh/experiments/CaseStudy/Results/MINNG",
     }
 
     SAVEFILES: dict[str, str] = {
-        "NONMN": "./experiments/CaseStudy/Results/NONMN_model_variables.csv",
-        "MINNG": "./experiments/CaseStudy/Results/MINNG_model_variables.csv",
+        "NONMN": "./gatoh/experiments/CaseStudy/Results/NONMN_model_variables.csv",
+        "MINNG": "./gatoh/experiments/CaseStudy/Results/MINNG_model_variables.csv",
     }
 
     AGENT_PATHS: dict[str, str] = {
-        "NONMN": "./data/NonMining.csv",
-        "MINNG": "./data/Mining.csv",
+        "NONMN": "./data/NONMN/NonMining.csv",
+        "MINNG": "./data/MINNG/Mining.csv",
+    }
+
+    BASE_HIERARCHIES: list[str] = [
+        "Friends",
+        "Family",
+        "Cultural",
+        "Religion",
+        "Geographical",
+        "Social",
+    ]
+
+    HIERARCHY_PATHS: dict[str, dict[str, str]] = {
+        "NONMN": {
+            "Friends": "./data/NONMN/NONMN_Friends.csv",
+            "Family": "./data/NONMN/NONMN_Family.csv",
+            "Cultural": "./data/NONMN/NONMN_Cultural.csv",
+            "Religion": "./data/NONMN/NONMN_Religion.csv",
+            "Geographical": "./data/NONMN/NONMN_Geographical.csv",
+            "Social": "./data/NONMN/NONMN_Social.csv",
+        },
+        "MINNG": {
+            "Friends": "./data/MINNG/MINNG_Friends.csv",
+            "Family": "./data/MINNG/MINNG_Family.csv",
+            "Cultural": "./data/MINNG/MINNG_Cultural.csv",
+            "Religion": "./data/MINNG/MINNG_Religion.csv",
+            "Geographical": "./data/MINNG/MINNG_Geographical.csv",
+            "Social": "./data/MINNG/MINNG_Social.csv",
+        },
     }
 
     data_reader: DataReader = DataReader()

@@ -160,7 +160,7 @@ if __name__ == "__main__":
     )
     table_reader.parse_values()
     table_reader.write_out(
-        "/home/manuelms/Desktop/Uni Work/Masters Thesis/GATOH/data/NonMining.csv"
+        "/home/manuelms/Desktop/Uni Work/Masters Thesis/GATOH/data/NONMN/NonMining.csv"
     )
 
     table_reader_two: TableReader = TableReader(
@@ -168,6 +168,6 @@ if __name__ == "__main__":
         "MINNG",
     )
     table_reader_two.parse_values()
-    table_reader.write_out(
-        "/home/manuelms/Desktop/Uni Work/Masters Thesis/GATOH/data/Mining.csv"
+    table_reader_two.write_out(
+        "/home/manuelms/Desktop/Uni Work/Masters Thesis/GATOH/data/MINNG/Mining.csv"
     )
