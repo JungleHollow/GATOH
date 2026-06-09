@@ -94,12 +94,16 @@ class ResponseParser:
 
         self.survey_values: dict[str, Any]
         self.survey_question_types: dict[str, list[str]]
+        self.adjacency_matrix_values: dict[str, Any]
 
         with open(SURVEY_VALUES, "r") as survey_values:
             self.survey_values = json.load(survey_values)
 
         with open(SURVEY_TYPES, "r") as survey_types:
             self.survey_question_types = json.load(survey_types)
+
+        with open(HIERARCHY_MATRIX_VALUES, "r") as hierarchy_values:
+            self.adjacency_matrix_values = json.load(hierarchy_values)
 
         self.surveys: dict[str, pl.DataFrame] = {}
 
@@ -241,6 +245,7 @@ class ResponseParser:
                 )
 
                 self.agents[community].append(agent_attributes)
+        return None
 
     def create_base_hierarchies(self) -> None:
         """
@@ -283,26 +288,92 @@ class ResponseParser:
                 # Append the Agent ID
                 agent_ids.append(agent_i.id)
 
-            # Generate the random walk parameters for each hierarchy
-            age_rw: tuple[float, float] = (0.0, rd.uniform(0.01, 0.2))
-            gender_rw: tuple[float, float] = (0.0, rd.uniform(0.01, 0.2))
-
             # After both matrices are populated, add them to self.graphs
             self.graphs[community]["hierarchies"].append("Age")
             self.graphs[community]["adj_matrices"].append(age_matrix)
-            self.graphs[community]["rw_params"].append(age_rw)
+            self.graphs[community]["rw_params"].append(HIERARCHY_RW["Age"])
             self.graphs[community]["agents"].append(agent_ids)
 
             self.graphs[community]["hierarchies"].append("Gender")
             self.graphs[community]["adj_matrices"].append(gender_matrix)
-            self.graphs[community]["rw_params"].append(gender_rw)
+            self.graphs[community]["rw_params"].append(HIERARCHY_RW["Gender"])
             self.graphs[community]["agents"].append(agent_ids)
+        return None
+
+    def generate_relationship_strengths(
+        self, adj_matrix: np.ndarray, hierarchy: str | None = None
+    ) -> np.ndarray:
+        """
+        A helper function that transforms the codified values of an adjacency matrix to float values representing
+        the relationship strengths.
+
+        :param adj_matrix: The codified social hierarchy adjacency matrix.
+        :param hierarchy: An optional string indicating that explicit conversion values are used for this hierarchy.
+        :return: The modified adjacency matrix.
+        """
+        if hierarchy:
+            for i in range(adj_matrix.shape[0]):
+                for j in range(adj_matrix.shape[1]):
+                    if i == j:
+                        # Ensure that the diagonal is always zero
+                        adj_matrix[i, j] = 0
+
+                    matrix_value = self.adjacency_matrix_values[hierarchy][
+                        f"{adj_matrix[i, j]}"
+                    ]
+
+                    # The value is "false"
+                    if not matrix_value:
+                        adj_matrix[i, j] = 0
+                    # The value is a [min, max] generation range
+                    else:
+                        adj_matrix[i, j] = rd.uniform(matrix_value[0], matrix_value[1])
+        else:
+            min_value = np.min(adj_matrix)
+            max_value = np.max(adj_matrix)
+            mid_value: float = (max_value + min_value) / 2
+
+            for i in range(adj_matrix.shape[0]):
+                for j in range(adj_matrix.shape[1]):
+                    if i == j:
+                        continue
+                    cell_value = adj_matrix[i, j]
+                    if cell_value < mid_value:
+                        adj_matrix[i, j] = -1.0 * ((mid_value - cell_value) / mid_value)
+                    else:
+                        adj_matrix[i, j] = (cell_value - mid_value) / mid_value
+        return adj_matrix
 
     def generate_hierarchies(self) -> None:
         """
         Creates the remaining hierarchy graphs using the available information and the input adjacency matrices.
         """
-        pass
+        for community, adj_matrix_paths in ADJ_MATRIX_PATHS.items():
+            num_agents: int = len(self.agents[community])
+
+            for hierarchy, adj_matrix_path in adj_matrix_paths.items():
+                adj_matrix = pl.read_csv(adj_matrix_path)
+
+                # Remove the ID column, leaving only the codified adjacency matrix
+                adj_matrix = adj_matrix.drop("Persona")
+                adj_matrix = adj_matrix.to_numpy()
+
+                # Convert the adjacency matrix from coded values to float strengths
+                adj_matrix = self.generate_relationship_strengths(
+                    adj_matrix, hierarchy=hierarchy
+                )
+
+                # In this case study, some matrices are sparse, but it is rare for any individual to not have
+                # at least one relationship in a hierarchy
+                agent_ids: list[str] = []
+                for agent in self.agents[community]:
+                    agent_ids.append(agent.id)
+
+                self.graphs[community]["hierarchies"].append(hierarchy)
+                self.graphs[community]["adj_matrices"].append(adj_matrix)
+                self.graphs[community]["rw_params"].append(HIERARCHY_RW[hierarchy])
+                self.graphs[community]["agents"].append(agent_ids)
+        return None
 
     def write_agents(self) -> None:
         """
@@ -318,7 +389,7 @@ class ResponseParser:
         Writes CSV files where each row contains all the necessary information to create a unique Graph object
         within the models.
 
-        One CSV file is created per community.
+        One CSV file is created per hierarchy, per community.
         """
         pass
 
@@ -350,12 +421,26 @@ if __name__ == "__main__":
         "Social",
     ]
 
+    HIERARCHY_RW: dict[str, tuple[float, float]] = {
+        "Age": (0.0, 0.04),
+        "Gender": (0.0, 0.02),
+        "Friends": (0.0, 0.05),
+        "Family": (0.0, 0.01),
+        "Religious": (0.0, 0.1),
+        "Cultural": (0.0, 0.15),
+        "Geographical": (
+            0.0,
+            0.0,
+        ),  # 0.0 var will be treated as hierarchy without dynamic relationships
+        "Social": (0.0, 0.1),
+    }
+
     ADJ_MATRIX_PATHS: dict[str, dict[str, str]] = {
         "NONMN": {
             "Friends": "./data/NONMN/NONMN_Friends.csv",
             "Family": "./data/NONMN/NONMN_Family.csv",
             "Cultural": "./data/NONMN/NONMN_Cultural.csv",
-            "Religion": "./data/NONMN/NONMN_Religion.csv",
+            "Religious": "./data/NONMN/NONMN_Religion.csv",
             "Geographical": "./data/NONMN/NONMN_Geographical.csv",
             "Social": "./data/NONMN/NONMN_Social.csv",
         },
@@ -363,7 +448,7 @@ if __name__ == "__main__":
             "Friends": "./data/MINNG/MINNG_Friends.csv",
             "Family": "./data/MINNG/MINNG_Family.csv",
             "Cultural": "./data/MINNG/MINNG_Cultural.csv",
-            "Religion": "./data/MINNG/MINNG_Religion.csv",
+            "Religious": "./data/MINNG/MINNG_Religion.csv",
             "Geographical": "./data/MINNG/MINNG_Geographical.csv",
             "Social": "./data/MINNG/MINNG_Social.csv",
         },
@@ -371,3 +456,4 @@ if __name__ == "__main__":
 
     SURVEY_VALUES: str = "./data/SurveyValues.json"
     SURVEY_TYPES: str = "./data/SurveyQuestionTypes.json"
+    HIERARCHY_MATRIX_VALUES: str = "./data/MatrixValues.json"

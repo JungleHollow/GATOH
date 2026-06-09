@@ -152,18 +152,24 @@ class Graph:
     """
 
     def __init__(
-        self, name: str, rw_params: tuple[float, float], suppress_warnings: bool = False
+        self,
+        name: str,
+        rw_params: tuple[float, float],
+        suppress_warnings: bool = False,
+        dynamic_rels: bool = True,
     ) -> None:
         """
         :param name: The name of the social hierarchy that this Graph object will be representing.
         :param rw_params: The (mean, variance) of the normal distribution used for the dynamic relationships random walk.
         :param suppress_warnings: A boolean flag indicating if non-critical warnings should be suppressed.
+        :param dynamic_rels: A boolean flag indicating if dynamic relationships should be modelled for this social hierarchy.
         """
         # Defined as DiGraph as it is common in social networks for relationships to be unidirectional or unbalanced
         self.graph: rx.PyDiGraph = rx.PyDiGraph()
         self.node_count: int = 0
         self.edge_count: int = 0
         self.name: str = name
+        self.dynamic_rels: bool = dynamic_rels
         self.suppress_warnings: bool = suppress_warnings
         self.rw_params: tuple[float, float] = rw_params
         self.generation_params: dict[
@@ -784,6 +790,10 @@ class Graph:
         Uses the (mean, variance) passed at initialisation to draw random walk values by which each edge (relationship)
         in the hierarchy will be shifted. Aims to simulate dynamic relationships between agents across timesteps.
         """
+        if not self.dynamic_rels:
+            # No need to iterate the edges...
+            return None
+
         for edge in self.graph.edges():
             new_weighting: float
 
