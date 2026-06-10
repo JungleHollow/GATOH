@@ -92,7 +92,7 @@ class ResponseParser:
                     # Favourite music genres
                     "Traditional": [],
                     "Popular": [],
-                    "Relgiious": [],
+                    "Religious": [],
                     "International": [],
                     "Varied": [],
                 },
@@ -154,7 +154,10 @@ class ResponseParser:
                     elif column in self.survey_question_types["Age"]:
                         agent_values["age"] = str(value)
                     elif column in self.survey_question_types["Gender"]:
-                        agent_values["gender"] = str(value)
+                        if str(value) == "No response":
+                            agent_values["gender"] = "Other"
+                        else:
+                            agent_values["gender"] = str(value)
                     elif column in self.survey_question_types["Religious"]:
                         agent_values["religious"] = str(value)
                     elif column in self.survey_question_types["ReligiousStrength"]:
@@ -168,7 +171,7 @@ class ResponseParser:
                             case "Q22":  # Preferred sport
                                 agent_values["sport"] = str(value)
                             case "Q29":  # Favourite music genre
-                                agent_values["music"] = str(value)
+                                agent_values["music"] = self.survey_values["Q29"][value]
                             case _:
                                 pass
                     elif column in self.survey_question_types["CulturalStrength"]:
