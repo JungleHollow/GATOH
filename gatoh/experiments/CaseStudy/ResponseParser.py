@@ -589,3 +589,10 @@ if __name__ == "__main__":
     SURVEY_VALUES: str = "./data/SurveyValues.json"
     SURVEY_TYPES: str = "./data/SurveyQuestionTypes.json"
     HIERARCHY_MATRIX_VALUES: str = "./data/MatrixValues.json"
+
+    response_parser: ResponseParser = ResponseParser()
+    response_parser.generate_agents()
+    response_parser.create_base_hierarchies()
+    response_parser.generate_hierarchies()
+    response_parser.write_agents()
+    response_parser.write_graphs()
