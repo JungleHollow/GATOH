@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import json
+import os
+import pickle
 import random as rd
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
 import polars as pl
 
-from gatoh.agents.agents import PERSONALITIES
+import gatoh.agents.agents as agt
+import gatoh.graphs.graphs as gr
 
 
 @dataclass
@@ -48,17 +52,23 @@ class AgentAttributes:
 class ResponseParser:
     def __init__(self) -> None:
         self.agents: dict[str, list[AgentAttributes]] = {}
+        self.agent_objects: dict[str, dict[str, agt.Agent]] = {}
         self.graphs: dict[str, dict[str, list[Any]]] = {}
+        self.graph_objects: dict[str, list[gr.Graph]] = {}
         self.hierarchy_clusters: dict[str, dict[str, dict[str, list[str]]]] = {}
 
         for key in RESPONSE_CSV.keys():
             self.agents[key] = []
+            self.agent_objects[
+                key
+            ] = {}  # <ID: Agent> mapping to simplify lookups later
             self.graphs[key] = {
                 "hierarchies": [],  # String names
                 "adj_matrices": [],  # 2D matrices indicating presence and strength of graph relationships (ranges [-1, 1])
                 "rw_params": [],  # (mean, variance) defining the dynamic relationship random walk distributions
                 "agents": [],  # List of IDs of all agents contained within the hierarchy
             }
+            self.graph_objects[key] = []
             self.hierarchy_clusters[
                 key
             ] = {  # All values are dictionaries that will represent <cluster, list[agent ids]> within each hierarchy
@@ -229,7 +239,7 @@ class ResponseParser:
                     agent_values["dependant_sum"] / dependant_total - 0.5
                 )
                 agent_values["benefit"] = rd.choice([True, False])
-                agent_personality: str = rd.choice(PERSONALITIES)
+                agent_personality: str = agt.draw_personality()
                 agent_susceptibility: float = rd.uniform(-1.0, 1.0)
                 agent_values["sociability"] = (agent_personality, agent_susceptibility)
 
@@ -377,21 +387,143 @@ class ResponseParser:
 
     def write_agents(self) -> None:
         """
-        Writes CSV files where each row contains all the necessary information to create a unique Agent object
-        within the models.
+        Writes Agent objects for the models, serliases them to Pickle objects, and then saves them to
+        the appropriate subdirectory.
 
-        One CSV file is created per community.
+        One subdirectory is created per community.
         """
-        pass
+        for community, agents_dir in AGENT_PATHS.items():
+            # Create the agents subdirectory if needed
+            if not os.path.exists(agents_dir):
+                os.mkdir(agents_dir)
+
+            for agent_attributes in self.agents[community]:
+                new_agent: agt.Agent = agt.Agent(
+                    agent_attributes.id,
+                    agent_attributes.weightings,
+                    agent_attributes.opinion,
+                    agent_attributes.benefit,
+                    agent_attributes.sociability,
+                    age=agent_attributes.age,
+                    gender=agent_attributes.gender,
+                )
+
+                self.agent_objects[community][new_agent.id] = deepcopy(new_agent)
+
+                agent_path: str = f"{agents_dir}/agent_{new_agent.id}.pkl"
+
+                with open(agent_path, "wb") as pickle_file:
+                    pickle.dump(new_agent, pickle_file)
+
+                # Manual garbage collection
+                del new_agent, agent_path
+
+        return None
 
     def write_graphs(self) -> None:
         """
-        Writes CSV files where each row contains all the necessary information to create a unique Graph object
-        within the models.
+        Writes Graph objects for the models, serialises their GraphNode and GraphEdge objects, and then
+        saves these along with the graph's graphml file to the appropriate subdirectory.
 
-        One CSV file is created per hierarchy, per community.
+        One subdirectory is created per hierarchy, per community.
         """
-        pass
+        for community, graphs_dir in GRAPH_PATHS.items():
+            # Create the Graphs subdirectory if needed
+            if not os.path.exists(graphs_dir):
+                os.mkdir(graphs_dir)
+
+            for idx, hierarchy in enumerate(self.graphs[community]["hierarchies"]):
+                hierarchy_subdir: str = f"{graphs_dir}/{hierarchy}"
+
+                if not os.path.exists(hierarchy_subdir):
+                    os.mkdir(hierarchy_subdir)
+
+                new_graph: gr.Graph = gr.Graph(
+                    hierarchy,
+                    self.graphs[community]["rw_params"][idx],
+                )
+
+                included_agents: list[agt.Agent] = []
+
+                # Only select the Agents from the population which have been included in this hierarchy's agents list
+                for agent_id, agent_obj in self.agent_objects[community].items():
+                    if agent_id in self.graphs[community]["agents"][idx]:
+                        included_agents.append(deepcopy(agent_obj))
+
+                # Add the relevant Agent object as GraphNodes
+                new_graph.add_nodes(included_agents)
+
+                edges_dict: dict[str, list[int | float]] = {}
+                edges_dict["to_node"] = []
+                edges_dict["from_node"] = []
+                edges_dict["weighting"] = []
+
+                for i in range(len(included_agents)):
+                    for j in range(len(included_agents)):
+                        adj_matrix_value: float = float(
+                            self.graphs[community]["adj_matrices"][idx][i, j]
+                        )
+
+                        # No valid relationship exists from i to j
+                        if adj_matrix_value == 0.0:
+                            continue
+
+                        edges_dict["from_node"].append(i)
+                        edges_dict["to_node"].append(j)
+                        edges_dict["weighting"].append(adj_matrix_value)
+
+                # Create the GraphEdge relationships using the information from the adjacency matrix
+                new_graph.add_edges(edges_dict)
+
+                # Serialise and save the graph object
+                self.save_graph(new_graph, hierarchy_subdir)
+
+                self.graph_objects[community].append(new_graph)
+
+                # Manual garbage collection
+                del new_graph
+        return None
+
+    def save_graph(self, graph_obj: gr.Graph, hierarchy_dir: str) -> None:
+        """
+        A helper function that handles the serialising and saving of a Graph object to a subdirectory within the input
+        hierarchy subdirectory.
+
+        :param graph_obj: The Graph object that is being serialised and saved.
+        :param hierarchy_dir: The directory for this Graph's hierarchy within the community's `graphs' subdirectory.
+        """
+        graphml_path: str = f"{hierarchy_dir}/graph_{graph_obj.name}.graphml"
+
+        # Begin by saving the Graph structure to a graphml format
+        graph_obj.save_graph(graphml_path)
+
+        # Next, serialise and save all GraphNodes
+        nodes_subdir: str = f"{hierarchy_dir}/nodes"
+        if not os.path.exists(nodes_subdir):
+            os.mkdir(nodes_subdir)
+
+        node_save_paths: list[str] = []
+
+        for idx, node in enumerate(graph_obj.graph.nodes()):
+            node_save_path: str = f"{nodes_subdir}/node_{idx}.pkl"
+            with open(node_save_path, "wb") as node_file:
+                pickle.dump(node, node_file)
+            node_save_paths.append(node_save_path)
+
+        # Finally, serialise and save all GraphEdges
+        edges_subdir: str = f"{hierarchy_dir}/edges"
+        if not os.path.exists(edges_subdir):
+            os.mkdir(edges_subdir)
+
+        edge_save_paths: list[str] = []
+
+        for idx, edge in enumerate(graph_obj.graph.edges()):
+            edge_save_path: str = f"{edges_subdir}/edge_{idx}.pkl"
+            with open(edge_save_path, "wb") as edge_file:
+                pickle.dump(edge, edge_file)
+            edge_save_paths.append(edge_save_path)
+
+        return None
 
 
 if __name__ == "__main__":
@@ -401,13 +533,13 @@ if __name__ == "__main__":
     }
 
     AGENT_PATHS: dict[str, str] = {
-        "NONMN": "./gatoh/experiments/CaseStudy/NONMN_Agents.csv",
-        "MINNG": "./gatoh/experiments/CaseStudy/MINNG_Agents.csv",
+        "NONMN": "./gatoh/experiments/CaseStudy/Agents/NONMN_Agents",
+        "MINNG": "./gatoh/experiments/CaseStudy/Agents/MINNG_Agents",
     }
 
     GRAPH_PATHS: dict[str, str] = {
-        "NONMN": "./gatoh/experiments/CaseStudy/NONMN_Graphs.csv",
-        "MINNG": "./gatoh/experiments/CaseStudy/MINNG_Graphs.csv",
+        "NONMN": "./gatoh/experiments/CaseStudy/Graphs/NONMN_Graphs",
+        "MINNG": "./gatoh/experiments/CaseStudy/Graphs/MINNG_Graphs",
     }
 
     HIERARCHIES: list[str] = [
