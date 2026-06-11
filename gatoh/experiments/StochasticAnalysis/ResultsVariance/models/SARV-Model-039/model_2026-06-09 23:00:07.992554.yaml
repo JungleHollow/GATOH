@@ -1,0 +1,19 @@
+current_iteration: 100
+data_file: ./gatoh/experiments/StochasticAnalysis/ResultsVariance/models/SARV-Model-039/SARV-Model-039_variables.csv
+hierarchy_information:
+  A: !!python/tuple
+  - 0.0
+  - 0.3
+  B: !!python/tuple
+  - 0.0
+  - 0.1
+  C: !!python/tuple
+  - 0.0
+  - 0.45
+max_iterations: 100
+model_id: SARV-Model-039
+negation_threshold: 0.999
+radicalisation_threshold: 0.99
+save_dir: ./gatoh/experiments/StochasticAnalysis/ResultsVariance/models/SARV-Model-039
+silencing_threshold: 0.95
+suppress_warnings: false
