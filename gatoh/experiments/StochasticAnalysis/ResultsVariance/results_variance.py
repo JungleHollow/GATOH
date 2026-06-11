@@ -113,6 +113,51 @@ class AnalysisResults:
         """
         Loads results that have been saved following the above format.
         """
+        aggregates_path: str = f"{ROOT_DIR}/aggregate_opinions.csv"
+        radicalised_path: str = f"{ROOT_DIR}/radicalised_agents.csv"
+        polarisation_path: str = f"{ROOT_DIR}/polarisations.csv"
+
+        csv_reader: csv.DictReader
+        model_name: str = ""
+
+        # First load the aggregate opinions
+        with open(aggregates_path, "r", newline="") as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for row in csv_reader:
+                for idx, value in enumerate(row.values()):
+                    if idx == 0:
+                        model_name = value
+                        self.aggregate_opinions[model_name] = []
+                    else:
+                        self.aggregate_opinions[model_name].append(float(value))
+
+        # Next load the total radicalised agents
+        with open(radicalised_path, "r", newline="") as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for row in csv_reader:
+                for idx, value in enumerate(row.values()):
+                    if idx == 0:
+                        model_name = value
+                        self.radicalised_agents[model_name] = []
+                    else:
+                        self.aggregate_opinions[model_name].append(int(value))
+
+        # Finally load the radicalised agents
+        with open(polarisation_path, "r", newline="") as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for row in csv_reader:
+                hierarchy_name: str
+                for key, value in row.items():
+                    if key == "model_id":
+                        model_name = value
+                        self.polarisations[model_name] = {}
+                    else:
+                        hierarchy_name = key.split("_")[0]
+                        if hierarchy_name not in self.polarisations[model_name].keys():
+                            self.polarisations[model_name][hierarchy_name] = []
+                        self.polarisations[model_name][hierarchy_name].append(
+                            float(value)
+                        )
         return None
 
     def calculate_opinions_statistics(self) -> tuple[list[float], list[float]]:
