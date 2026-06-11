@@ -647,6 +647,37 @@ class VarianceTester:
         self.results.save_results()
         return None
 
+    def load_results(self) -> None:
+        """
+        Loads existing AnalysisResults that have been previously saved to their corresponding .csv files.
+        """
+        self.results.load_results()
+        return None
+
+    def calculate_results_statistics(self) -> dict[str, Any]:
+        """
+        Calculate and return all of the AnalysisResults statistics.
+
+        :return: A <parameter name: statistics> mapping containing the relevant means and standard deviations for each model parameter.
+        """
+        opinion_statistics: tuple[list[float], list[float]] = (
+            self.results.calculate_opinions_statistics()
+        )
+        radicalised_statistics: tuple[list[float], list[float]] = (
+            self.results.calculate_radicalisation_statistics()
+        )
+        polarisation_statistics: tuple[
+            dict[str, list[float]], dict[str, list[float]]
+        ] = self.results.calculate_polarisation_statistics()
+
+        output_dict: dict[str, Any] = {
+            "opinion_statistics": opinion_statistics,
+            "radicalised_statistics": radicalised_statistics,
+            "polarisation_statistics": polarisation_statistics,
+        }
+
+        return output_dict
+
     def run_models(self, missing_saves: list[str] | None = None) -> None:
         """
         Runs each model instance in the tester class.
@@ -755,3 +786,7 @@ if __name__ == "__main__":
         results = AnalysisResults()
         tester = VarianceTester(results, existing=True)
         tester.load_models()
+        tester.load_results()
+
+        # Calculate the means and standard deviations for all relevant model parameters
+        analysis_statistics: dict[str, Any] = tester.calculate_results_statistics()
