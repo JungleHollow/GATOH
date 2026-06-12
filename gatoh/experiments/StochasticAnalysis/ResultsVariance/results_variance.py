@@ -5,7 +5,7 @@ import os
 import pickle
 import random as rd
 from copy import deepcopy
-from typing import Any
+from typing import Any, Self
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -110,7 +110,7 @@ class AnalysisResults:
                 csv_writer.writerow(row_dict)
         return None
 
-    def load_results(self) -> None:
+    def load_results(self) -> Self:
         """
         Loads results that have been saved following the above format.
         """
@@ -141,7 +141,7 @@ class AnalysisResults:
                         model_name = value
                         self.radicalised_agents[model_name] = []
                     else:
-                        self.aggregate_opinions[model_name].append(int(value))
+                        self.radicalised_agents[model_name].append(int(value))
 
         # Finally load the radicalised agents
         with open(polarisation_path, "r", newline="") as csv_file:
@@ -159,7 +159,7 @@ class AnalysisResults:
                         self.polarisations[model_name][hierarchy_name].append(
                             float(value)
                         )
-        return None
+        return self
 
     def calculate_opinions_statistics(self) -> tuple[list[float], list[float]]:
         """
@@ -549,13 +549,12 @@ class VarianceTester:
             for existing_save in existing_saves:
                 # Create an empty dummy model object
                 new_model: md.ABModel = md.ABModel(
-                    TEST_PARAMETERS["hierarchy_names"], TEST_PARAMETERS["hierarchy_rw"]
+                    TEST_PARAMETERS["hierarchy_names"],
+                    list(TEST_PARAMETERS["hierarchy_rw"].values()),
                 )
                 new_model.load_model(SAVEDIRS[existing_save])
 
                 self.models[existing_save] = deepcopy(new_model)
-
-                self.store_model_results(new_model)
 
                 # Manual garbage collection
                 del new_model
@@ -564,13 +563,11 @@ class VarianceTester:
         for model_name, model_savedir in SAVEDIRS.items():
             new_model: md.ABModel = md.ABModel(
                 TEST_PARAMETERS["hierarchy_names"],
-                TEST_PARAMETERS["hierarchy_rw"],
+                list(TEST_PARAMETERS["hierarchy_rw"].values()),
             )
             new_model.load_model(model_savedir)
 
             self.models[model_name] = deepcopy(new_model)
-
-            self.store_model_results(new_model)
 
             # Manual garbage collection
             del new_model
@@ -653,7 +650,7 @@ class VarianceTester:
         """
         Loads existing AnalysisResults that have been previously saved to their corresponding .csv files.
         """
-        self.results.load_results()
+        self.results = self.results.load_results()
         return None
 
     def calculate_results_statistics(self) -> dict[str, Any]:
@@ -774,14 +771,10 @@ def plot_parameter_whiskers(analysis_statistics: dict[str, Any]) -> None:
     unpacked_results: list[list[float | int]] = []
     tick_labels: list[str] = []
 
-    unpacked_results.append(deepcopy(analysis_statistics["opinion_statistics"][0]))
-    tick_labels.append("Aggregate Opinions")
-
-    unpacked_results.append(deepcopy(analysis_statistics["radicalised_statistics"][0]))
-    tick_labels.append("Radicalised Agents")
-
-    for hierarchy, statistics in analysis_statistics["polarisation_statistics"].items():
-        unpacked_results.append(deepcopy(statistics[0]))
+    for hierarchy, statistics in analysis_statistics["polarisation_statistics"][
+        0
+    ].items():
+        unpacked_results.append(deepcopy(statistics))
         tick_labels.append(f"Hierarchy Polarisation ({hierarchy})")
 
     fig, ax = plt.subplots()
@@ -797,14 +790,72 @@ def plot_parameter_whiskers(analysis_statistics: dict[str, Any]) -> None:
 
     _ = ax.set(
         axisbelow=True,
-        title="ResultsVariance -- Model Parameter Statistics",
+        title="ResultsVariance -- Polarisation Statistics",
         xlabel="Parameter",
         ylabel="Value",
     )
 
-    _ = ax.set_xticklabels(tick_labels, rotation=45, fontsize=8)
+    _ = ax.set_xticklabels(tick_labels, rotation=0, fontsize=8)
 
-    save_path: str = f"{ROOT_DIR}/ParameterStatistics.png"
+    save_path: str = f"{ROOT_DIR}/PolarisationStatistics.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    unpacked_opinion: list[float] = deepcopy(
+        analysis_statistics["opinion_statistics"][0]
+    )
+    opinion_label: list[str] = ["Aggregate Opinions"]
+
+    fig, ax = plt.subplots()
+
+    box_plot = ax.boxplot(
+        unpacked_opinion, notch=False, orientation="vertical", whis=1.5
+    )
+    _ = plt.setp(box_plot["boxes"], color="black")
+    _ = plt.setp(box_plot["whiskers"], color="black")
+    _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+    ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+    _ = ax.set(
+        axisbelow=True,
+        title="ResultsVariance -- Aggregate Opinion Statistics",
+        xlabel="Parameter",
+        ylabel="Value",
+    )
+
+    _ = ax.set_xticklabels(opinion_label, rotation=0, fontsize=8)
+
+    save_path = f"{ROOT_DIR}/OpinionStatistics.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    unpacked_radicalised: list[float] = deepcopy(
+        analysis_statistics["radicalised_statistics"][0]
+    )
+    radicalised_label: list[str] = ["Radicalised Agents"]
+
+    fig, ax = plt.subplots()
+
+    box_plot = ax.boxplot(
+        unpacked_radicalised, notch=False, orientation="vertical", whis=1.5
+    )
+    _ = plt.setp(box_plot["boxes"], color="black")
+    _ = plt.setp(box_plot["whiskers"], color="black")
+    _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+    ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+    _ = ax.set(
+        axisbelow=True,
+        title="ResultsVariance -- Radicalised Agents Statistics",
+        xlabel="Parameter",
+        ylabel="Value",
+    )
+
+    _ = ax.set_xticklabels(radicalised_label, rotation=0, fontsize=8)
+
+    save_path = f"{ROOT_DIR}/RadicalisedStatistics.png"
 
     plt.savefig(save_path, dpi=300.0)
 
@@ -896,6 +947,9 @@ if __name__ == "__main__":
                 missing_savedirs.append(model)
 
     if directory_missing:
+        print(
+            "One or more model subdirectories are missing; initialising and running the missing models..."
+        )
         results = AnalysisResults()
         tester = VarianceTester(results)
 
@@ -910,6 +964,9 @@ if __name__ == "__main__":
             tester.run_models()
             tester.save_results()
     else:
+        print(
+            "Loading a saved, previously run instance of the ResultsVariance experiment..."
+        )
         results = AnalysisResults()
         tester = VarianceTester(results, existing=True)
         tester.load_models()
