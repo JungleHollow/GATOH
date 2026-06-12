@@ -8,6 +8,7 @@ from copy import deepcopy
 from typing import Any
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 import gatoh.agents.agents as agt
 import gatoh.graphs.graphs as gr
@@ -699,6 +700,120 @@ class VarianceTester:
         return None
 
 
+def plot_var_over_models(analysis_results: AnalysisResults) -> None:
+    """
+    :param analysis_results: An AnalysisResults object containing all of the result data from the experiment.
+    """
+    current_opinion_values: list[float] = []
+
+    y_values: list[float] = [] # Variance of n models' values
+    x_values: list[int] = []  # Number of models
+
+    for idx, values in enumerate(analysis_results.aggregate_opinions.values()):
+        current_opinion_values += deepcopy(values)
+
+        current_vals_variance: float = float(np.var(current_opinion_values))
+
+        y_values.append(current_vals_variance)
+        x_values.append(idx + 1)
+
+    fig, ax = plt.subplots()
+
+    _ = ax.plot(x_values, y_values, "--k")
+    _ ax.set_xlabel("Number of Models")
+    _ = ax.set_ylabel("Aggregate Opinion Variance")
+    _ = ax.set_title("Variance of Aggregate Opinions by Number of Models Used")
+
+    save_path: str = f"{ROOT_DIR}/VarianceOverModels.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    return None
+
+
+def plot_model_runtimes(analysis_results: AnalysisResults, analysis_statistics: dict[str, Any]) -> None:
+    """
+    :param analysis_results: An AnalysisResults object containing all of the result data from the experiment.
+    :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations for the model parameters.
+    """
+    iterations: list[int] = [i + 1 for i in range(TEST_PARAMETERS["iterations"])]
+    fig, ax = plt.subplots()
+
+    for model_name, values in analysis_results.aggregate_opinions.items():
+        _ = ax.plot(iterations, values, "-k", linewidth=0.7, alpha=0.25)
+
+    _ = ax.plot(iterations, analysis_statistics["opinion_statistics"][0], "-r", linewidth=0.8, alpha=1.0, label="Average")
+
+    ax.legend()
+
+    _ = ax.set_xlabel("Iterations")
+    _ = ax.set_ylabel("Aggregate Opinion")
+    _ = ax.set_title("Model Aggregate Opinions over Iterations")
+
+    save_path: str = f"{ROOT_DIR}/ModelRuntimes.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    return None
+
+
+def plot_parameter_whiskers(analysis_statistics: dict[str, Any]) -> None:
+    """
+    :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations for the model parameters.
+    """
+    unpacked_results: list[list[float | int]] = []
+    tick_labels: list[str] = []
+
+    unpacked_results.append(deepcopy(analysis_statistics["opinion_statistics"][0]))
+    tick_labels.append("Aggregate Opinions")
+
+    unpacked_results.append(deepcopy(analysis_statistics["radicalised_statistics"][0]))
+    tick_labels.append("Radicalised Agents")
+
+    for hierarchy, statistics in analysis_statistics["polarisation_statistics"].items():
+        unpacked_results.append(deepcopy(statistics[0]))
+        tick_labels.append(f"Hierarchy Polarisation ({hierarchy})")
+
+    fig, ax = plt.subplots()
+
+    box_plot = ax.boxplot(unpacked_results, notch=False, orientation="vertical", whis=1.5)
+    _ = plt.setp(box_plot["boxes"], color="black")
+    _ = plt.setp(box_plot["whiskers"], color="black")
+    _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+    ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+    _ = ax.set(
+        axisbelow=True,
+        title="ResultsVariance -- Model Parameter Statistics",
+        xlabel="Parameter",
+        ylabel="Value",
+    )
+
+    _ = ax.set_xticklabels(tick_labels, rotation=45, fontsize=8)
+
+    save_path: str = f"{ROOT_DIR}/ParameterStatistics.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    return None
+
+
+def create_analysis_plots(
+    analysis_results: AnalysisResults, analysis_statistics: dict[str, Any]
+) -> None:
+    """
+    Create all relevant analysis plots and then store them to the experiment's save directory.
+
+    :param analysis_results: An AnalysisResults object containing all of the result data from the experiment.
+    :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations for all model parameters.
+    """
+    plot_var_over_models(analysis_results)
+    plot_model_runtimes(analysis_results, analysis_statistics)
+    plot_parameter_whiskers(analysis_statistics)
+    return None
+
+
 if __name__ == "__main__":
     # The relevant parameters that are defined for the identical model instances
     TEST_PARAMETERS: dict[str, Any] = {
@@ -790,3 +905,6 @@ if __name__ == "__main__":
 
         # Calculate the means and standard deviations for all relevant model parameters
         analysis_statistics: dict[str, Any] = tester.calculate_results_statistics()
+
+        # Create all relevant output plots for this experiment
+        create_analysis_plots(tester.results, analysis_statistics)
