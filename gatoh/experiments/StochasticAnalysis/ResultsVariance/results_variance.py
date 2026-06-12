@@ -7,8 +7,8 @@ import random as rd
 from copy import deepcopy
 from typing import Any
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 import gatoh.agents.agents as agt
 import gatoh.graphs.graphs as gr
@@ -645,6 +645,7 @@ class VarianceTester:
         """
         Stores the parameters stored within the AnalysisResults object into separate .csv files for each of the parameters.
         """
+        self.create_savedir_validation()
         self.results.save_results()
         return None
 
@@ -706,7 +707,7 @@ def plot_var_over_models(analysis_results: AnalysisResults) -> None:
     """
     current_opinion_values: list[float] = []
 
-    y_values: list[float] = [] # Variance of n models' values
+    y_values: list[float] = []  # Variance of n models' values
     x_values: list[int] = []  # Number of models
 
     for idx, values in enumerate(analysis_results.aggregate_opinions.values()):
@@ -720,7 +721,7 @@ def plot_var_over_models(analysis_results: AnalysisResults) -> None:
     fig, ax = plt.subplots()
 
     _ = ax.plot(x_values, y_values, "--k")
-    _ ax.set_xlabel("Number of Models")
+    _ = ax.set_xlabel("Number of Models")
     _ = ax.set_ylabel("Aggregate Opinion Variance")
     _ = ax.set_title("Variance of Aggregate Opinions by Number of Models Used")
 
@@ -731,7 +732,9 @@ def plot_var_over_models(analysis_results: AnalysisResults) -> None:
     return None
 
 
-def plot_model_runtimes(analysis_results: AnalysisResults, analysis_statistics: dict[str, Any]) -> None:
+def plot_model_runtimes(
+    analysis_results: AnalysisResults, analysis_statistics: dict[str, Any]
+) -> None:
     """
     :param analysis_results: An AnalysisResults object containing all of the result data from the experiment.
     :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations for the model parameters.
@@ -742,7 +745,14 @@ def plot_model_runtimes(analysis_results: AnalysisResults, analysis_statistics: 
     for model_name, values in analysis_results.aggregate_opinions.items():
         _ = ax.plot(iterations, values, "-k", linewidth=0.7, alpha=0.25)
 
-    _ = ax.plot(iterations, analysis_statistics["opinion_statistics"][0], "-r", linewidth=0.8, alpha=1.0, label="Average")
+    _ = ax.plot(
+        iterations,
+        analysis_statistics["opinion_statistics"][0],
+        "-r",
+        linewidth=0.8,
+        alpha=1.0,
+        label="Average",
+    )
 
     ax.legend()
 
@@ -776,7 +786,9 @@ def plot_parameter_whiskers(analysis_statistics: dict[str, Any]) -> None:
 
     fig, ax = plt.subplots()
 
-    box_plot = ax.boxplot(unpacked_results, notch=False, orientation="vertical", whis=1.5)
+    box_plot = ax.boxplot(
+        unpacked_results, notch=False, orientation="vertical", whis=1.5
+    )
     _ = plt.setp(box_plot["boxes"], color="black")
     _ = plt.setp(box_plot["whiskers"], color="black")
     _ = plt.setp(box_plot["fliers"], color="red", marker="+")
