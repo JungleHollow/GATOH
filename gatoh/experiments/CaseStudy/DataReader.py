@@ -1,18 +1,81 @@
 from __future__ import annotations
 
+from copy import deepcopy
+from dataclasses import dataclass
 from typing import Any
 
 import polars as pl
 
-from gatoh.agents.agents import Agent, AgentSet
-from gatoh.graphs.graphs import Graph, GraphEdge, GraphNode, GraphSet
+from gatoh.agents.agents import Agent
+from gatoh.graphs.graphs import Graph, GraphEdge, GraphNode
 from gatoh.model.model import ABModel
+
+
+@dataclass
+class ModelParameters:
+    """
+    Dataclass that is used to store the model initialisation parameters for each model that is being run in the
+    experiment.
+    """
+
+    model_id: str
+    max_iterations: int
+    hierarchy_names: list[str]
+    hierarchy_rw_distributions: list[tuple[float, float]]
+    agent_opinion_rw: tuple[float, float]
+    silencing_threshold: float
+    negation_threshold: float
+    radicalisation_threshold: float
+    suppress_warnings: bool
+    save_dir: str
+    data_file: str
+
+    def __init__(
+        self,
+        parameters_dict: dict[str, Any],
+    ) -> None:
+        self.model_id = parameters_dict["model_id"]
+        self.hierarchy_names = deepcopy(parameters_dict["hierarchies"])
+        self.hierarchy_rw_distributions = deepcopy(parameters_dict["hierarchy_rw"])
+        self.max_iterations = parameters_dict["iterations"]
+
+        if "agent_opinion_rw" in parameters_dict.keys():
+            self.agent_opinion_rw = deepcopy(parameters_dict["agent_opinion_rw"])
+        else:
+            self.agent_opinion_rw = TEST_PARAMETERS["DEFAULT"]["agent_opinion_rw"]
+
+        if "silencing_threshold" in parameters_dict.keys():
+            self.silencing_threshold = parameters_dict["silencing_threshold"]
+        else:
+            self.silencing_threshold = TEST_PARAMETERS["DEFAULT"]["silencing_threshold"]
+
+        if "negation_threshold" in parameters_dict.keys():
+            self.negation_threshold = parameters_dict["negation_threshold"]
+        else:
+            self.negation_threshold = TEST_PARAMETERS["DEFAULT"]["negation_threshold"]
+
+        if "radicalisation_threshold" in parameters_dict.keys():
+            self.radicalisation_threshold = parameters_dict["radicalisation_threshold"]
+        else:
+            self.radicalisation_threshold = TEST_PARAMETERS["DEFAULT"][
+                "radicalisation_threshold"
+            ]
+
+        if "save_dir" in parameters_dict.keys():
+            self.save_dir = parameters_dict["save_dir"]
+        else:
+            self.save_dir = SAVEDIRS[self.model_id]
+
+        if "data_file" in parameters_dict.keys():
+            self.data_file = parameters_dict["data_file"]
+        else:
+            self.data_file = SAVEFILES[self.model_id]
 
 
 class DataReader:
     """
     A class that will be used to create and handle an appropriate GATOH model from the given agent and
-    social hierarchy CSV file paths.
+    social hierarchy graph subdirectories.
 
     The expected agent and graph inputs for this class are structured according to the outputs from the
     ResponseParser script.
@@ -20,156 +83,56 @@ class DataReader:
 
     def __init__(
         self,
-        agents_path: str,
-        graphs_path: str,
+        agent_paths: dict[str, str],
+        graph_paths: dict[str, str],
         initial_hierarchies: list[str],
-        social_path: str,
-        base_hierarchies: list[str] | None = None,
-        opinions_path: str | None = None,
-        iterations: int = 100,
+        opinion_paths: dict[str, str] | None = None,
+        test_parameters: dict[str, dict[str, Any]] | None = None,
     ) -> None:
         """
-        :param agents_path: A relative or absolute file path to a CSV file containing relevant data on model agent characteristics.
-        :param graphs_path: A relative or absolute file path to a CSV file containing relevant data on model graph characteristics.
+        :param agent_paths: A <model name : path> mapping pointing to the subdirectories at which each model's Agent objects are saved.
+        :param graph_paths: A <model name: path> mapping pointing to the subdirectories at which each model's Graph objects are saved.
         :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
-        :param social_path: A relative or absolute file path to a CSV file containing relevant data on the relative influence of the existing social hierarchies in the community.
-        :param base_hierarchies: A list containing the most basic hierarchies that exist; will be created before <initial_hierarchies>.
-        :optional param opinions_path: A relative or absolute file path to a CSV file containing the dependant variables of actual agent opinions; used to compare model accuracy after execution.
-        :optional param iterations: The number of iterations that the ABModel will be run for.
+        :optional param opinion_paths: An optional <model name: path> mapping pointing to csv files containing dependant variable data (for model validation after running).
+        :optional param test_parameters: An optional mapping of <model: parameters> specifying explicit initialisation parameters for each model.
         """
-        self.agents_path: str = agents_path
-        self.agents_df: pl.DataFrame
+        self.agent_paths: dict[str, str] = agent_paths
+        self.graph_paths: dict[str, str] = graph_paths
 
-        self.base_hierarchies: list[str]
-        if base_hierarchies:
-            self.base_hierarchies = base_hierarchies
-        else:
-            self.base_hierarchies = [
-                "Age",
-                "Gender",
-            ]
         self.initial_hierarchies: list[str] = initial_hierarchies
         self.hierarchy_influences: dict[str, dict[str, Any]] = {}
 
-        self.social_path: str = social_path
-        self.social_df: pl.DataFrame
+        self.opinion_paths: dict[str, str] | None = opinion_paths
+        self.opinion_dfs: dict[str, pl.DataFrame] = {}
 
-        self.opinions_path: str | None = opinions_path
-        self.opinions_df: pl.DataFrame
+        self.agent_objects: list[Agent] = []
+        self.graph_objects: list[Graph] = []
 
-        self.agent_objects: list[Agent]
-        self.graph_objects: list[Graph]
+        if self.opinion_paths:
+            for key, value in self.opinion_paths.items():
+                with open(value, "r") as csv_file:
+                    self.opinion_dfs[key] = pl.read_csv(csv_file)
 
-        with open(self.agents_path, "r") as file:
-            self.agents_df = pl.read_csv(file)
-        with open(self.social_path, "r") as file:
-            self.social_df = pl.read_csv(file)
-
-        if self.opinions_path:
-            with open(self.opinions_path, "r") as file:
-                self.opinions_df = pl.read_csv(file)
-
-        self.model: ABModel = ABModel(iterations=iterations, xlims=xlims, ylims=ylims)
-
-    def extract_hierarchy_influences(self):
-        """
-        Calculates the influence of each social hierarchy for each agent
-        """
-        general_column: pl.Series | None = self.social_df.get_column(
-            "General", default=None
-        )
-        if general_column is not None:
-            for hierarchy in set(
-                list(general_column)
-            ):  # set() to reduce the number that will be iterated over
-                if hierarchy not in self.initial_hierarchies:
-                    self.initial_hierarchies.append(hierarchy)
-
-        for agent_row in self.social_df.iter_rows(named=True):
-            hierarchy_effects: dict[str, Any] = {}
-            for hierarchy in self.initial_hierarchies:
-                hierarchy_effects[hierarchy] = (
-                    0.0  # Initialise each hierarchy effect, even if not explicitly seen in the current agent row
-                )
-
-            raw_hierarchy_values: dict[str, list[int]] = {}
-            for key, value in agent_row:
-                if key == "AgentId":
+        self.model_params: dict[str, ModelParameters] = {}
+        if test_parameters:
+            for key, value in test_parameters.items():
+                if key == "DEFAULT":
                     continue
-                elif key == "General":
-                    hierarchy_effects[value] = (
-                        1.0  # Placeholder of 1.0 strength for the moment
-                    )
                 else:
-                    hierarchy_name: str = key.split("_")[0]
-                    if hierarchy_name not in raw_hierarchy_values.keys():
-                        raw_hierarchy_values[hierarchy_name] = []
-                    raw_hierarchy_values[hierarchy_name].append(abs(int(value)))
-
-            for key, value in raw_hierarchy_values.items():
-                sum_values: int = sum(value)
-                averaged_sum: float = sum_values / len(value)
-                final_effect: float = averaged_sum / 10.0
-                hierarchy_effects[key] = final_effect
-
-            self.hierarchy_influences[agent_row["AgentId"]] = hierarchy_effects
-
-    def create_model_agents(self):
-        """
-        Uses agents_df and the extracted hierarchy influences to create Agent objects for the ABModel
-        """
-        self.agent_objects = []
-        for key, value in self.hierarchy_influences.items():
-            new_agent: Agent = Agent(
-                key, value
-            )  # This should create an Agent with id <key> and social_weightings <value>
-            self.agent_objects.append(new_agent)
-        _ = self.model.add_agents(self.agent_objects)
-        self.create_initial_graphs()
-
-    def create_initial_graphs(self):
-        """
-        Uses the available agent information to generate the initial basic graphs for the model (Age, Gender, Time in community, etc...)
-        """
-        self.graph_objects = []
-        for hierarchy in self.base_hierarchies:
-            new_graph = Graph(hierarchy)
-            new_graph.add_nodes(self.agent_objects)
-            graph_edges: dict[str, list[Any]] = {
-                "from_node": [],
-                "to_node": [],
-                "weighting": [],
-            }
-            for i in range(new_graph.node_count):
-                for j in range(new_graph.node_count):
-                    if i == j:
-                        continue
-                    else:
-                        node_i = new_graph.get_node(i)
-                        node_j = new_graph.get_node(j)
-                        # TODO: FINISH THIS FUNCTION
-
-    def create_model_graphs(self):
-        """
-        Uses initial_hierarchies and the extracted hierarchy influences to create Graph objects with the appropriate GraphNodes
-        """
-        for hierarchy in self.initial_hierarchies:
-            new_graph = Graph(hierarchy)
-            new_graph.add_nodes(self.agent_objects)
-            graph_edges: dict[str, list[Any]] = {
-                "from_node": [],
-                "to_node": [],
-                "weighting": [],
-            }
-            for i in range(new_graph.node_count):
-                for j in range(new_graph.node_count):
-                    if i == j:
-                        continue
-                    else:
-                        # Check for and create all appropriate graph edges between nodes
-                        node_i = new_graph.get_node(i)
-                        node_j = new_graph.get_node(j)
-                        # TODO: FINISH THIS FUNCTION
+                    param_struct: ModelParameters = ModelParameters(value)
+                    self.model_params[key] = deepcopy(param_struct)
+        else:
+            for key in agent_paths.keys():
+                param_dict: dict[str, Any] = {
+                    "model_id": key,
+                    "hierarchies": deepcopy(TEST_PARAMETERS["DEFAULT"]["hierarchies"]),
+                    "hierarchy_rw": deepcopy(
+                        TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"]
+                    ),
+                    "iterations": TEST_PARAMETERS["DEFAULT"]["iterations"],
+                }
+                param_struct = ModelParameters(param_dict)
+                self.model_params[key] = deepcopy(param_struct)
 
 
 if __name__ == "__main__":
@@ -184,13 +147,13 @@ if __name__ == "__main__":
     }
 
     AGENT_PATHS: dict[str, str] = {
-        "NONMN": "./gatoh/experiments/CaseStudy/NONMN_Agents.csv",
-        "MINNG": "./gatoh/experiments/CaseStudy/MINNG_Agents.csv",
+        "NONMN": "./gatoh/experiments/CaseStudy/Agents/NONMN_Agents",
+        "MINNG": "./gatoh/experiments/CaseStudy/Agents/MINNG_Agents",
     }
 
     GRAPH_PATHS: dict[str, str] = {
-        "NONMN": "./gatoh/experiments/CaseStudy/NONMN_Graphs.csv",
-        "MINNG": "./gatoh/experiments/CaseStudy/MINNG_Graphs.csv",
+        "NONMN": "./gatoh/experiments/CaseStudy/Graphs/NONMN_Graphs",
+        "MINNG": "./gatoh/experiments/CaseStudy/Graphs/MINNG_Graphs",
     }
 
     BASE_HIERARCHIES: list[str] = [
@@ -203,5 +166,45 @@ if __name__ == "__main__":
         "Geographical",
         "Social",
     ]
+
+    HIERARCHY_RW: dict[str, tuple[float, float]] = {
+        "Age": (0.0, 0.04),
+        "Gender": (0.0, 0.02),
+        "Friends": (0.0, 0.05),
+        "Family": (0.0, 0.01),
+        "Religious": (0.0, 0.1),
+        "Cultural": (0.0, 0.15),
+        "Geographical": (0.0, 0.0),
+        "Social": (0.0, 0.1),
+    }
+
+    # The relevant parameters that are defined for the model instances
+    TEST_PARAMETERS: dict[str, dict[str, Any]] = {
+        "NONMN": {
+            "model_id": "NONMN",
+            "iterations": 100,
+            "hierarchies": deepcopy(BASE_HIERARCHIES),
+            "hierarchy_rw": deepcopy(HIERARCHY_RW),
+        },
+        "MINNG": {
+            "model_id": "MINNG",
+            "iterations": 100,
+            "hierarchies": deepcopy(BASE_HIERARCHIES),
+            "hierarchy_rw": deepcopy(HIERARCHY_RW),
+        },
+        "DEFAULT": {
+            "iterations": 100,
+            "hierarchies": deepcopy(BASE_HIERARCHIES),
+            "hierarchy_rw": deepcopy(HIERARCHY_RW),
+            "agent_opinion_rw": (0.0, 0.05),
+            "silencing_threshold": 0.95,
+            "negation_threshold": 0.999,
+            "radicalisation_threshold": 0.99,
+            "suppress_warnings": True,
+        },
+    }
+
+    # Specify the dependant variable CSV paths here:
+    OPINION_PATHS: dict[str, str] = {}
 
     data_reader: DataReader = DataReader()
