@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import pickle
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
@@ -21,7 +23,7 @@ class ModelParameters:
     model_id: str
     max_iterations: int
     hierarchy_names: list[str]
-    hierarchy_rw_distributions: list[tuple[float, float]]
+    hierarchy_rw_distributions: dict[str, tuple[float, float]]
     agent_opinion_rw: tuple[float, float]
     silencing_threshold: float
     negation_threshold: float
@@ -30,10 +32,7 @@ class ModelParameters:
     save_dir: str
     data_file: str
 
-    def __init__(
-        self,
-        parameters_dict: dict[str, Any],
-    ) -> None:
+    def __init__(self, parameters_dict: dict[str, Any]) -> None:
         self.model_id = parameters_dict["model_id"]
         self.hierarchy_names = deepcopy(parameters_dict["hierarchies"])
         self.hierarchy_rw_distributions = deepcopy(parameters_dict["hierarchy_rw"])
@@ -86,27 +85,28 @@ class DataReader:
         agent_paths: dict[str, str],
         graph_paths: dict[str, str],
         initial_hierarchies: list[str],
+        test_parameters: dict[str, dict[str, Any]],
         opinion_paths: dict[str, str] | None = None,
-        test_parameters: dict[str, dict[str, Any]] | None = None,
     ) -> None:
         """
         :param agent_paths: A <model name : path> mapping pointing to the subdirectories at which each model's Agent objects are saved.
         :param graph_paths: A <model name: path> mapping pointing to the subdirectories at which each model's Graph objects are saved.
         :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
+        :param test_parameters: A <model: parameters> mapping specifying explicit initialisation and runtime parameters for each model.
         :optional param opinion_paths: An optional <model name: path> mapping pointing to csv files containing dependant variable data (for model validation after running).
-        :optional param test_parameters: An optional mapping of <model: parameters> specifying explicit initialisation parameters for each model.
         """
         self.agent_paths: dict[str, str] = agent_paths
         self.graph_paths: dict[str, str] = graph_paths
 
         self.initial_hierarchies: list[str] = initial_hierarchies
-        self.hierarchy_influences: dict[str, dict[str, Any]] = {}
 
         self.opinion_paths: dict[str, str] | None = opinion_paths
         self.opinion_dfs: dict[str, pl.DataFrame] = {}
 
-        self.agent_objects: list[Agent] = []
-        self.graph_objects: list[Graph] = []
+        self.agent_objects: dict[str, list[Agent]] = {}
+        self.graph_objects: dict[str, list[Graph]] = {}
+
+        self.load_objects()
 
         if self.opinion_paths:
             for key, value in self.opinion_paths.items():
@@ -114,25 +114,147 @@ class DataReader:
                     self.opinion_dfs[key] = pl.read_csv(csv_file)
 
         self.model_params: dict[str, ModelParameters] = {}
-        if test_parameters:
-            for key, value in test_parameters.items():
-                if key == "DEFAULT":
-                    continue
-                else:
-                    param_struct: ModelParameters = ModelParameters(value)
-                    self.model_params[key] = deepcopy(param_struct)
-        else:
-            for key in agent_paths.keys():
-                param_dict: dict[str, Any] = {
-                    "model_id": key,
-                    "hierarchies": deepcopy(TEST_PARAMETERS["DEFAULT"]["hierarchies"]),
-                    "hierarchy_rw": deepcopy(
-                        TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"]
-                    ),
-                    "iterations": TEST_PARAMETERS["DEFAULT"]["iterations"],
-                }
-                param_struct = ModelParameters(param_dict)
+        for key, value in test_parameters.items():
+            if key == "DEFAULT":
+                continue
+            else:
+                param_struct: ModelParameters = ModelParameters(value)
                 self.model_params[key] = deepcopy(param_struct)
+
+                # Also initialise the appropriate object lists
+                self.agent_objects[key] = []
+                self.graph_objects[key] = []
+
+        self.models: dict[str, ABModel] = {}
+
+    def load_objects(self) -> None:
+        """
+        Loads the Agent and Graph objects for each model in the experiment.
+        """
+        # First, load the Agent objects
+        for model_name, agent_path in self.agent_paths.items():
+            agent_pickle_paths: list[str] = list(os.walk(agent_path))[0][2]
+            for pickle_path in agent_pickle_paths:
+                agent_obj: Agent
+                with open(pickle_path, "rb") as pickle_file:
+                    agent_obj = pickle.load(pickle_file)
+
+                self.agent_objects[model_name].append(deepcopy(agent_obj))
+
+                # Manual garbage collection
+                del agent_obj
+
+        # Next, load the unpopulated Graph objects
+        for model_name, graph_path in self.graph_paths.items():
+            graph_names: list[str] = list(os.walk(graph_path))[0][1]
+            for graph_name in graph_names:
+                graph_subdir: str = f"{graph_path}/{graph_name}"
+
+                new_graph: Graph = Graph("", (0.0, 0.0))
+                new_graph.load_graph(
+                    f"{graph_subdir}/graph_{graph_name}.graphml",
+                    graph_name,
+                    rw_params=self.model_params[model_name].hierarchy_rw_distributions[
+                        graph_name
+                    ],
+                )
+
+                nodes_dir: str = f"{graph_subdir}/nodes"
+                node_names: list[str] = list(os.walk(nodes_dir))[0][2]
+                for node_name in node_names:
+                    node_index: int = int(node_name.split("_")[-1].split(".")[0])
+                    with open(f"{nodes_dir}/{node_name}", "rb") as pickle_file:
+                        node_object: GraphNode = pickle.load(pickle_file)
+                        new_graph.graph[node_index] = node_object
+
+                edges_dir: str = f"{graph_subdir}/edges"
+                edge_names: list[str] = list(os.walk(edges_dir))[0][2]
+                for edge_name in edge_names:
+                    edge_index: int = int(edge_name.split("_")[-1].split(".")[0])
+                    with open(f"{edges_dir}/{edge_name}", "rb") as pickle_file:
+                        edge_object: GraphEdge = pickle.load(pickle_file)
+                        new_graph.graph.update_edge_by_index(edge_index, edge_object)
+
+                self.graph_objects[model_name].append(deepcopy(new_graph))
+
+                # Manual garbage collection
+                del new_graph, nodes_dir, node_names, edges_dir, edge_names
+        return None
+
+    def create_models(self, missing_saves: list[str] | None = None) -> None:
+        """
+        Use the loaded Agent and Graph objects plus the defined ModelParameters to create the appropriate model
+        instances to use in this experiment.
+
+        :param missing_saves: An optional partial list of model names representing models that should be initialised.
+        """
+        for model_name, model_parameters in self.model_params.items():
+            # Only models in missing saves need to be initialised
+            if missing_saves:
+                if model_name not in missing_saves:
+                    continue
+
+            # Create the ABModel for this instance
+            new_model: ABModel = ABModel(
+                deepcopy(model_parameters.hierarchy_names),
+                deepcopy(list(model_parameters.hierarchy_rw_distributions.values())),
+                agent_opinion_rw=model_parameters.agent_opinion_rw,
+                iterations=model_parameters.max_iterations,
+                silencing_threshold=model_parameters.silencing_threshold,
+                negation_threshold=model_parameters.negation_threshold,
+                radicalisation_threshold=model_parameters.radicalisation_threshold,
+                suppress_warnings=model_parameters.suppress_warnings,
+                save_dir=model_parameters.save_dir,
+                data_file=model_parameters.data_file,
+                model_id=model_parameters.model_id,
+            )
+
+            # Add the Agents and Graphs to the new model
+            _ = new_model.add_agents(deepcopy(self.agent_objects[model_name]))
+            _ = new_model.add_graphs(
+                deepcopy(self.graph_objects[model_name]),
+                deepcopy(model_parameters.hierarchy_names),
+                deepcopy(list(model_parameters.hierarchy_rw_distributions.values())),
+            )
+
+            # Store the model object
+            self.models[model_name] = deepcopy(new_model)
+
+            # Manual garbage collection
+            del new_model
+        return None
+
+    def save_models(self, missing_saves: list[str] | None = None) -> None:
+        """
+        Saves the model objects to allow for future loading.
+
+        :param missing_saves: An optional partial list of model names representing the models that should be saved.
+        """
+        if missing_saves is None:
+            for model in self.models.values():
+                # Save the model to a newly created savedir
+                model.save_model()
+
+                # Call the logger's save_data function which handles data persistence appropriately after the model is saved
+                data_saved = model.logger.save_data(model.data_file)
+
+                if data_saved:
+                    print(
+                        f"\n\nGATOH logger data was successfully written to the file at path: {model.data_file}\n\n"
+                    )
+        else:
+            for missing_save in missing_saves:
+                model_to_save: ABModel = self.models[missing_save]
+
+                model_to_save.save_model()
+
+                data_saved = model_to_save.logger.save_data(model_to_save.data_file)
+
+                if data_saved:
+                    print(
+                        f"\n\nGATOH logger data was successfully written to the file at path: {model_to_save.data_file}\n\n"
+                    )
+        return None
 
 
 if __name__ == "__main__":
@@ -207,4 +329,12 @@ if __name__ == "__main__":
     # Specify the dependant variable CSV paths here:
     OPINION_PATHS: dict[str, str] = {}
 
-    data_reader: DataReader = DataReader()
+    data_reader: DataReader = DataReader(
+        AGENT_PATHS,
+        GRAPH_PATHS,
+        BASE_HIERARCHIES,
+        TEST_PARAMETERS,
+        opinion_paths=None,
+    )
+
+    data_reader.create_models()
