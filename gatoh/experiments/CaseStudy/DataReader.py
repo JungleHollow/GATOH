@@ -87,14 +87,18 @@ class DataReader:
         initial_hierarchies: list[str],
         test_parameters: dict[str, dict[str, Any]],
         opinion_paths: dict[str, str] | None = None,
+        existing: bool = False,
     ) -> None:
         """
         :param agent_paths: A <model name : path> mapping pointing to the subdirectories at which each model's Agent objects are saved.
         :param graph_paths: A <model name: path> mapping pointing to the subdirectories at which each model's Graph objects are saved.
         :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
         :param test_parameters: A <model: parameters> mapping specifying explicit initialisation and runtime parameters for each model.
-        :optional param opinion_paths: An optional <model name: path> mapping pointing to csv files containing dependant variable data (for model validation after running).
+        :param opinion_paths: An optional <model name: path> mapping pointing to csv files containing dependant variable data (for model validation after running).
+        :param existing: A flag indicating if the DataReader is loading an existing experiment.
         """
+        self.existing: bool = existing
+
         self.agent_paths: dict[str, str] = agent_paths
         self.graph_paths: dict[str, str] = graph_paths
 
@@ -113,17 +117,18 @@ class DataReader:
                 with open(value, "r") as csv_file:
                     self.opinion_dfs[key] = pl.read_csv(csv_file)
 
-        self.model_params: dict[str, ModelParameters] = {}
-        for key, value in test_parameters.items():
-            if key == "DEFAULT":
-                continue
-            else:
-                param_struct: ModelParameters = ModelParameters(value)
-                self.model_params[key] = deepcopy(param_struct)
+        if not self.existing:
+            self.model_params: dict[str, ModelParameters] = {}
+            for key, value in test_parameters.items():
+                if key == "DEFAULT":
+                    continue
+                else:
+                    param_struct: ModelParameters = ModelParameters(value)
+                    self.model_params[key] = deepcopy(param_struct)
 
-                # Also initialise the appropriate object lists
-                self.agent_objects[key] = []
-                self.graph_objects[key] = []
+                    # Also initialise the appropriate object lists
+                    self.agent_objects[key] = []
+                    self.graph_objects[key] = []
 
         self.models: dict[str, ABModel] = {}
 
@@ -179,6 +184,40 @@ class DataReader:
 
                 # Manual garbage collection
                 del new_graph, nodes_dir, node_names, edges_dir, edge_names
+        return None
+
+    def load_models(self, existing_saves: list[str] | None = None) -> None:
+        """
+        Loads the model objects that have been previously saved in their respective directories.
+
+        :param existing_saves: An optional partial list of the model names representing the models that can be loaded.
+        """
+        if existing_saves:
+            for existing_save in existing_saves:
+                # Create an empty dummy model
+                new_model: ABModel = ABModel(
+                    TEST_PARAMETERS["DEFAULT"]["hierarchies"],
+                    TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"],
+                )
+                new_model.load_model(SAVEDIRS[existing_save])
+
+                self.models[existing_save] = deepcopy(new_model)
+
+                # Manual garbage collection
+                del new_model
+            return None
+
+        for model_name, model_savedir in SAVEDIRS.items():
+            new_model: ABModel = ABModel(
+                TEST_PARAMETERS["DEFAULT"]["hierarchies"],
+                TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"],
+            )
+            new_model.load_model(model_savedir)
+
+            self.models[model_name] = deepcopy(new_model)
+
+            # Manual garbage collection
+            del new_model
         return None
 
     def create_models(self, missing_saves: list[str] | None = None) -> None:
@@ -256,16 +295,38 @@ class DataReader:
                     )
         return None
 
+    def run_models(self, missing_saves: list[str] | None = None) -> None:
+        """
+        Runs each model instance in the experiment.
+
+        :param missing_saves: An optional partial list of the model names representing models that should be run.
+        """
+        print("==== Beginning model iterations ====\n\n")
+        if missing_saves:
+            for missing_save in missing_saves:
+                model_to_run: ABModel = self.models[missing_save]
+                model_to_run.iterate()
+            # Only save the models which were missing
+            self.save_models(missing_saves=missing_saves)
+            return None
+
+        for model in self.models.values():
+            model.iterate()
+        self.save_models()
+        return None
+
 
 if __name__ == "__main__":
+    SAVEDIR_ROOT: str = "./gatoh/experiments/CaseStudy/Results"
+
     SAVEDIRS: dict[str, str] = {
-        "NONMN": "./gatoh/experiments/CaseStudy/Results/NONMN",
-        "MINNG": "./gatoh/experiments/CaseStudy/Results/MINNG",
+        "NONMN": f"{SAVEDIR_ROOT}/NONMN",
+        "MINNG": f"{SAVEDIR_ROOT}/MINNG",
     }
 
     SAVEFILES: dict[str, str] = {
-        "NONMN": "./gatoh/experiments/CaseStudy/Results/NONMN_model_variables.csv",
-        "MINNG": "./gatoh/experiments/CaseStudy/Results/MINNG_model_variables.csv",
+        "NONMN": f"{SAVEDIR_ROOT}/NONMN_model_variables.csv",
+        "MINNG": f"{SAVEDIR_ROOT}/MINNG_model_variables.csv",
     }
 
     AGENT_PATHS: dict[str, str] = {
@@ -329,12 +390,48 @@ if __name__ == "__main__":
     # Specify the dependant variable CSV paths here:
     OPINION_PATHS: dict[str, str] = {}
 
-    data_reader: DataReader = DataReader(
-        AGENT_PATHS,
-        GRAPH_PATHS,
-        BASE_HIERARCHIES,
-        TEST_PARAMETERS,
-        opinion_paths=None,
-    )
+    # Check for existing saved models and store the relevant information
+    save_dirs: list[str] = list(os.walk(SAVEDIR_ROOT))[0][1]
 
-    data_reader.create_models()
+    directory_missing: bool = False
+    existing_savedirs: list[str] = []
+    missing_savedirs: list[str] = []
+
+    for model_name, save_dir in SAVEDIRS.items():
+        dir_name: str = os.path.basename(save_dir)
+        if dir_name in save_dirs:
+            existing_savedirs.append(model_name)
+        else:
+            directory_missing = True
+            missing_savedirs.append(model_name)
+
+    if directory_missing:
+        # Create the tester normally, setup the models, and begin iterations
+        data_reader: DataReader = DataReader(
+            AGENT_PATHS,
+            GRAPH_PATHS,
+            BASE_HIERARCHIES,
+            TEST_PARAMETERS,
+            opinion_paths=None,
+        )
+
+        if len(existing_savedirs) > 0:  # At least one model exists
+            data_reader.load_models(existing_saves=existing_savedirs)
+            data_reader.create_models(missing_saves=missing_savedirs)
+            data_reader.run_models(missing_saves=missing_savedirs)
+        else:
+            data_reader.create_models()
+            data_reader.run_models()
+    else:
+        # Create the tester in "existing" mode, and examine the results
+        data_reader: DataReader = DataReader(
+            AGENT_PATHS,
+            GRAPH_PATHS,
+            BASE_HIERARCHIES,
+            TEST_PARAMETERS,
+            opinion_paths=OPINION_PATHS,
+            existing=True,
+        )
+        data_reader.load_models()
+
+    # TODO: Add the graph visualisation functions here once those features are implemented...
