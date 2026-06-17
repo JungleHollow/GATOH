@@ -18,12 +18,16 @@ class ABVisualiser:
         - Per-graph lifetime information
     """
 
-    # TODO: Implement visualisation features
-
-    def __init__(self, model: Any, visualisation_dir: str) -> None:
+    def __init__(
+        self,
+        model: Any,
+        visualisation_dir: str,
+        aggregation_method: str = "median",
+    ) -> None:
         """
         :param model: The ABModel object that this visualiser is being attached to.
         :param visualisation_dir: A path to a subdirectory to which all relevant visualisation outputs should be saved to.
+        :param aggregation_method: The method to use for aggregating parameters (i.e. ``mean'', ``median'', etc.).
         """
         self.parent_model: Any = model
         self.visualisation_dir: str = visualisation_dir
