@@ -9,6 +9,11 @@ from typing import Any
 
 import numpy as np
 import yaml
+from matplotlib import pyplot as plt
+
+# Used for type declarations in ABModel __init__
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from rustworkx.rustworkx import NoEdgeBetweenNodes
 
 from gatoh.agents.agents import Agent, AgentSet
@@ -33,6 +38,9 @@ class ABModel:
         negation_threshold: float = 0.999,
         radicalisation_threshold: float = 0.99,
         suppress_warnings: bool = False,
+        visualise: bool = True,
+        visualisation_dir: str = "",
+        vis_aggregation_method: str = "median",
         save_dir: str = "",
         data_file: str = "",
         model_id: str = "",
@@ -46,6 +54,9 @@ class ABModel:
         :param negation_threshold: A threshold that, when surpassed by Agents, will cause their opinion to become its additive inverse.
         :param radicalisation_threshold: A threshold that determined how strong of an absolute opinion an Agent must hold before they begin to consider becoming radicalised.
         :param suppress_warnings: A boolean flag indicating if non-critical warnings should be suppressed during runtime.
+        :param visualise: A boolean flag indicating if the model should visualise emergent behaviour in real time.
+        :param visualisation_dir: The path to a directory in which all of this model's visualiser outputs should be saved to.
+        :param vis_aggregation_method: A string indicating what aggregation method should be used when relevant in visualisation (i.e. "median", "mean", etc.).
         :param save_dir: The path to a directory in which all of this model's non-logger data should be saved to.
         :param data_file: The path to which the logger's data should be saved to after iterations are run.
         :param model_id: An optional field to give the created model object a referencable ID.
@@ -64,7 +75,20 @@ class ABModel:
         self.base_graph: Graph = Graph("base", (0.0, 0.0))
 
         self.logger: GATOHLogger = GATOHLogger(self, iterations, hierarchy_names)
-        self.visualiser: ABVisualiser = ABVisualiser(self)
+
+        self.visualise: bool = visualise
+        self.visualisation_dir: str = visualisation_dir
+        self.visualiser: ABVisualiser
+        self.fig: Figure
+        self.ax: Axes
+
+        # Only create the visualisation objects if visualisation is required
+        if self.visualise:
+            self.visualiser = ABVisualiser(
+                self, self.visualisation_dir, aggregation_method=vis_aggregation_method
+            )
+            self.fig, self.ax = plt.subplots()
+
         self.current_iteration: int = 0
         self.max_iterations: int = iterations
 
@@ -391,6 +415,9 @@ class ABModel:
             iteration_print_string: str = self.logger.iteration_print()
             print(iteration_print_string)
 
+            if self.visualise:
+                self.visualiser.visualiser_iteration()
+
             self.current_iteration += 1
         # Call the logger's save_data function which handles data persistence appropriately
         data_saved: bool = self.logger.save_data(self.data_file)
@@ -398,6 +425,9 @@ class ABModel:
             print(
                 f"\n\nGATOH logger data was successfully written to the file at path: {self.data_file}\n\n"
             )
+        if self.visualise:
+            # Make sure that the pyplot figure is closed after iterations to prevent excess memory usage
+            plt.close(self.fig)
         return None
 
     def step(self) -> None:
