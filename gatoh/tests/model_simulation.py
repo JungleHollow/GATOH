@@ -80,6 +80,52 @@ class TestModelSimulation(ut.TestCase):
             "The ABModel's iterate function did not appropriately close the visualiser's figure at the end of the iterations",
         )
 
+    def test_save_model(self) -> None:
+        """
+        Test function that checks if the ABModel will save itself appropriately.
+        """
+        self._model.save_model()
+        save_dir_exists: bool = os.path.exists(SAVEPATHS["savedir"])
+        self.assertTrue(
+            save_dir_exists,
+            "The ABModel's save_model function did not create the correct save directory",
+        )
+        savedir_filelist: list[str] = list(os.walk(self._model.save_dir))[0][2]
+        graphml_exists: bool = False
+        yaml_exists: bool = False
+        unexpected_file_written: bool = False
+        for file in savedir_filelist:
+            filename, file_extension = os.path.splitext(file)
+            match file_extension:
+                case ".graphml":
+                    self.assertEqual(
+                        filename,
+                        "graph_base_graph",
+                        "The ABModel's save_model function did not name the base graph's graphml file as expected",
+                    )
+                    graphml_exists = True
+                case ".yaml":
+                    self.assertStartsWith(
+                        filename,
+                        "model_",
+                        "The ABModel's save_model function did not save the config file with the correct prefix",
+                    )
+                    yaml_exists = True
+                case _:
+                    unexpected_file_written = True
+        self.assertTrue(
+            graphml_exists,
+            "The ABModel's save_model function did not create a base graph graphml file",
+        )
+        self.assertTrue(
+            yaml_exists,
+            "The ABModel's save_model function did not create a model YAML config file",
+        )
+        self.assertFalse(
+            unexpected_file_written,
+            "The ABModel's save_model function wrote an unexpected file to the save directory",
+        )
+
     @classmethod
     @override
     def tearDownClass(cls) -> None:
