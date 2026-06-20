@@ -26,6 +26,11 @@ class TestModelCreation(ut.TestCase):
             visualise=False,
             model_id="TEST_MODEL",
         )
+
+    def test_model_creation(self) -> None:
+        """
+        Check that the created model object is of the correct ABModel type.
+        """
         self.assertIsInstance(
             self.model, md.ABModel, "ABModel object is not being created appropriately"
         )
@@ -65,6 +70,11 @@ class TestModelCreation(ut.TestCase):
         )
         self.assertEqual(
             self.model.model_id, "TEST_MODEL", "Model ID not being stored correctly"
+        )
+        self.assertEqual(
+            self.model.suppress_warnings,
+            False,
+            "Default value for suppress_warnings is not being applied correctly",
         )
 
     def test_add_agent(self) -> None:
@@ -122,6 +132,85 @@ class TestModelCreation(ut.TestCase):
             "The add_agent function caused an existing agent to disappear from the AgentSet",
         )
 
+    def test_add_agents(self) -> None:
+        """
+        Test function that checks if addings multiple Agents at once to the ABModel is working correctly.
+        """
+        agents_to_add: list[agt.Agent] = [
+            agt.Agent(
+                "TEST_AGENT_1",
+                0.1,
+                True,
+                ("social", 0.1),
+            ),
+            agt.Agent(
+                "TEST_AGENT_2",
+                0.2,
+                False,
+                ("social", 0.2),
+            ),
+            agt.Agent(
+                "TEST_AGENT_3",
+                0.3,
+                True,
+                ("impulsive", 0.3),
+            ),
+            agt.Agent(
+                "TEST_AGENT_4",
+                0.99,
+                True,
+                ("erratic", 0.01),
+            ),
+        ]
+        agentset: agt.AgentSet = self.model.add_agents(agents_to_add)
+        self.assertIsInstance(
+            agentset,
+            agt.AgentSet,
+            "The add_agents function's return type is not the expected one",
+        )
+        for idx, agent in enumerate(agents_to_add):
+            self.assertIn(
+                agent,
+                self.model.agents,
+                f"The add_agents function did not add Agent {agent.id} correctly",
+            )
+            agent_in_agentset: agt.Agent | None = self.model.agents.get_agent_by_id(
+                agent.id
+            )
+            if (
+                agent_in_agentset is not None
+            ):  # Simply added to satisfy typing requirements
+                self.assertEqual(
+                    idx,
+                    agent_in_agentset.index,
+                    "The add_agents function is adding agent objects out of order",
+                )
+                self.assertEqual(
+                    agent.id,
+                    agent_in_agentset.id,
+                    "The add_agents function is dropping the id attribute during addition",
+                )
+                self.assertEqual(
+                    agent.opinion,
+                    agent_in_agentset.opinion,
+                    "The add_agents function is dropping the opinion attribute during addition",
+                )
+                self.assertEqual(
+                    agent.personal_benefit,
+                    agent_in_agentset.personal_benefit,
+                    "The add_agents function is dropping the personal_benefit attribute during addition",
+                )
+                self.assertEqual(
+                    agent.personality,
+                    agent_in_agentset.personality,
+                    "The add_agents function is dropping the personality attribute during addition",
+                )
+                self.assertEqual(
+                    agent.social_susceptibility,
+                    agent_in_agentset.social_susceptibility,
+                    "The add_agents function is dropping the social_susceptibility attribute during addition",
+                )
+
     def test_add_graph(self) -> None:
         """
         Test function that checks if adding Graphs to the ABModel is working correctly.
@@ -150,6 +239,37 @@ class TestModelCreation(ut.TestCase):
             self.model.graphs,
             "The add_graph function is causing existing graphs to disappear from the GraphSet",
         )
+
+    def test_add_graphs(self) -> None:
+        """
+        Test function that checks if adding multiple Graphs at once to the ABModel is working correctly.
+        """
+        graphs_to_add: list[gr.Graph] = [
+            gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0]),
+            gr.Graph(HIERARCHY_NAMES[1], HIERARCHY_RW_DISTRIB[1]),
+        ]
+        graphset: gr.GraphSet = self.model.add_graphs(
+            graphs_to_add, HIERARCHY_NAMES, HIERARCHY_RW_DISTRIB
+        )
+        self.assertIsInstance(
+            graphset, gr.GraphSet, "The add_graphs return type is not the expected one"
+        )
+        for graph in graphs_to_add:
+            self.assertIn(
+                graph,
+                self.model.graphs,
+                f"The add_graphs function did not add Graph {graph.name} correctly",
+            )
+            graph_in_graphset: gr.Graph | None = self.model.graphs.get_hierarchy(
+                graph.name
+            )
+            if graph_in_graphset is not None:
+                self.assertEqual(
+                    graph.rw_params,
+                    graph_in_graphset.rw_params,
+                    "The add_graphs function is dropping the rw_params attribute during addition",
+                )
+                # Checks on further parameters are done from the graph-centric tests scripts
 
     @override
     def tearDown(self) -> None:
