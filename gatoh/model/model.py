@@ -428,6 +428,7 @@ class ABModel:
         if self.visualise:
             # Make sure that the pyplot figure is closed after iterations to prevent excess memory usage
             plt.close(self.fig)
+            del self.fig, self.ax
         return None
 
     def step(self) -> None:
