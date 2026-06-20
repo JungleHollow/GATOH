@@ -271,6 +271,47 @@ class TestModelCreation(ut.TestCase):
                 )
                 # Checks on further parameters are done from the graph-centric tests scripts
 
+    def test_generate_agents(self) -> None:
+        """
+        Test function that checks if random Agent generation is working as intended within an ABModel.
+        """
+        self.model.generate_agents(
+            "TEST",  # id_base
+            {  # personality_probs
+                "social": 0.4,
+                "rational": 0.4,
+                "impulsuive": 0.2,
+            },
+            number=8,
+        )
+        self.assertEqual(
+            len(self.model.agents),
+            8,
+            "The generate_agents function is creating an unexpected number of Agents",
+        )
+        for agent in self.model.agents:
+            self.assertStartsWith(
+                agent.id,
+                "TEST",
+                "The generate_agents function is not applying the correct ID base",
+            )
+            self.assertEndsWith(
+                agent.id,
+                f"{agent.index:04}",
+                "The generate_agents function is not numbering the IDs appropriately",
+            )
+            self.assertIn(
+                agent.personality,
+                ["social", "rational", "impulsive"],
+                "The generate_agents function is creating agents with non-specified personality types",
+            )
+            for hierarchy in self.model.hierarchy_information.keys():
+                self.assertIn(
+                    hierarchy,
+                    list(agent.social_weightings.keys()),
+                    "The generate_agents function is not generating hierarchy weightings for all model hierarchies",
+                )
+
     @override
     def tearDown(self) -> None:
         """
