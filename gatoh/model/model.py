@@ -41,6 +41,7 @@ class ABModel:
         visualise: bool = True,
         visualisation_dir: str = "",
         vis_aggregation_method: str = "median",
+        checkpointing: bool = True,
         save_dir: str = "",
         data_file: str = "",
         model_id: str = "",
@@ -57,6 +58,7 @@ class ABModel:
         :param visualise: A boolean flag indicating if the model should visualise emergent behaviour in real time.
         :param visualisation_dir: The path to a directory in which all of this model's visualiser outputs should be saved to.
         :param vis_aggregation_method: A string indicating what aggregation method should be used when relevant in visualisation (i.e. "median", "mean", etc.).
+        :param checkpointing: A boolean flag indicating if the model's progress should be saved at the end of each iteration (useful in case of interrupted runtimes).
         :param save_dir: The path to a directory in which all of this model's non-logger data should be saved to.
         :param data_file: The path to which the logger's data should be saved to after iterations are run.
         :param model_id: An optional field to give the created model object a referencable ID.
@@ -98,6 +100,7 @@ class ABModel:
 
         self.suppress_warnings: bool = suppress_warnings
 
+        self.checkpointing: bool = checkpointing
         self.save_dir: str = save_dir
         self.data_file: str = data_file
         self.model_id: str = model_id
@@ -108,6 +111,7 @@ class ABModel:
         """
         if self.save_dir == "":
             # An empty save directory is assumed to mean that no saving is desired.
+            # This will automatically override a checkpointing = True flag.
             return None
 
         # In the case when attempting to save the model, an existing directory with the specified name will be deleted and newly created.
@@ -126,7 +130,11 @@ class ABModel:
         self.base_graph.save_graph(base_graph_path)
 
         # Store the model's configurations in a YAML config file
-        config_path: str = f"{self.save_dir}/model_{datetime.now()}.yaml"
+        config_path: str
+        if self.model_id != "":
+            config_path = f"{self.save_dir}/model_{self.model_id}.yaml"
+        else:
+            config_path = f"{self.save_dir}/model_{datetime.now()}.yaml"
         config_data: dict[str, Any] = {
             "hierarchy_information": self.hierarchy_information,
             "current_iteration": self.current_iteration,
@@ -134,7 +142,10 @@ class ABModel:
             "silencing_threshold": self.silencing_threshold,
             "negation_threshold": self.negation_threshold,
             "radicalisation_threshold": self.radicalisation_threshold,
+            "visualise": self.visualise,
+            "visualisation_dir": self.visualisation_dir,
             "suppress_warnings": self.suppress_warnings,
+            "checkpointing": self.checkpointing,
             "save_dir": self.save_dir,
             "data_file": self.data_file,
             "model_id": self.model_id,
@@ -188,7 +199,10 @@ class ABModel:
                             self.radicalisation_threshold = config_data[
                                 "radicalisation_threshold"
                             ]
+                            self.visualise = config_data["visualise"]
+                            self.visualisation_dir = config_data["visualisation_dir"]
                             self.suppress_warnings = config_data["suppress_warnings"]
+                            self.checkpointing = config_data["checkpointing"]
                             self.save_dir = config_data["save_dir"]
                             self.data_file = config_data["data_file"]
                             self.model_id = config_data["model_id"]
@@ -365,6 +379,10 @@ class ABModel:
             else:
                 self.logger.new_iteration()
 
+            # Initialise a dictionary to keep track of agent opinion changes
+            # (this is done to prevent recursive updating of opinions during the evolution of opinions)
+            new_agent_opinions: dict[str, tuple[float, list[float]]] = {}
+
             # First each agent looks at its neighbours to see how their opinion will evolve this iterations
             for agent in self.agents:
                 agent.previous_opinion = agent.opinion
@@ -382,30 +400,21 @@ class ABModel:
                         collective_changes.append(neighbour_influences)
                 total_change: float = sum(collective_changes)
 
-                if (agent.opinion + total_change < -1.0) or (
-                    agent.opinion + total_change > 1.0
-                ):
-                    # Constrain the agent opinion to [-1, 1]
-                    continue
+                # Constrain to [-1, 1]
+                # 100.0 and -100.0 are used as key delta values indicating that the opinion needs to be constrained
+                if agent.opinion + total_change < -1.0:
+                    new_agent_opinions[agent.id] = (
+                        -100.0,
+                        deepcopy(collective_changes),
+                    )
+                elif agent.opinion + total_change > 1.0:
+                    new_agent_opinions[agent.id] = (100.0, deepcopy(collective_changes))
                 else:
-                    agent.opinion += total_change
-                    for hierarchy in self.graphs:
-                        # Update the current opinion across all hierarchies
-                        hierarchy.agent_opinion_change(agent, total_change)
-
-                # After the opinion change, determine if the agent has become radicalised
-                was_radicalised: bool = agent.radicalisation(
-                    collective_changes,
-                    list(self.hierarchy_information.keys()),
-                    self.radicalisation_threshold,
-                )
-
-                for hierarchy in self.graphs:
-                    # Update the radicalisation status of the agent across all hierarchies
-                    hierarchy.agent_radicalisation_change(agent, was_radicalised)
-
-                # Update the radicalisation count in the logger as needed
-                self.logger.variables.increment_radicalised(was_radicalised)
+                    new_agent_opinions[agent.id] = (
+                        total_change,
+                        deepcopy(collective_changes),
+                    )
+            self.iteration_opinion_changes(new_agent_opinions)
             self.step()
             self.update()
 
@@ -417,6 +426,8 @@ class ABModel:
 
             if self.visualise:
                 self.visualiser.visualiser_iteration()
+            if self.checkpointing:
+                self.save_model()
 
             self.current_iteration += 1
         # Call the logger's save_data function which handles data persistence appropriately
@@ -429,6 +440,37 @@ class ABModel:
             # Make sure that the pyplot figure is closed after iterations to prevent excess memory usage
             plt.close(self.fig)
             del self.fig, self.ax
+        return None
+
+    def iteration_opinion_changes(
+        self, changes_dict: dict[str, tuple[float, list[float]]]
+    ) -> None:
+        """
+        A helper function for iterate that simply applies all agent opinion changes and then checks
+        for radicalisation.
+
+        :param changes_dict: A <agent ID : opinion change information> mapping of the opinion values to apply.
+        """
+        for agent_id, opinion_change_info in changes_dict.items():
+            agent_object: Agent | None = self.agents.get_agent_by_id(agent_id)
+            if agent_object is not None:
+                for hierarchy in self.graphs:
+                    # Update the current opinion across all hierarchies
+                    hierarchy.agent_opinion_change(agent_object, opinion_change_info[0])
+
+                # After the opinion change, determine if the agent has become radicalised
+                was_radicalised: bool = agent_object.radicalisation(
+                    opinion_change_info[1],
+                    list(self.hierarchy_information.keys()),
+                    self.radicalisation_threshold,
+                )
+
+                for hierarchy in self.graphs:
+                    # Update the radicalisation status of the agent across all hierarchies
+                    hierarchy.agent_radicalisation_change(agent_object, was_radicalised)
+
+                # Update the radicalisation count in the logger as needed
+                self.logger.variables.increment_radicalised(was_radicalised)
         return None
 
     def step(self) -> None:
