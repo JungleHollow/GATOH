@@ -389,7 +389,7 @@ class ABModel:
 
             # Initialise a dictionary to keep track of agent opinion changes
             # (this is done to prevent recursive updating of opinions during the evolution of opinions)
-            new_agent_opinions: dict[str, tuple[float, list[float]]] = {}
+            new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
             # First each agent looks at its neighbours to see how their opinion will evolve this iterations
             for agent in self.agents:
@@ -408,19 +408,28 @@ class ABModel:
                         collective_changes.append(neighbour_influences)
                 total_change: float = sum(collective_changes)
 
+                # Check for the existence of personal benefit across all of the agent's neighbours
+                all_neighbour_indices: list[int] = list(self.base_graph.graph.neighbors(agent.index))
+                all_neighbour_benefits: list[bool] = []
+                for neighbour_index in all_neighbour_indices:
+                    neighbour_object: Agent = self.base_graph.graph[neighbour_index]
+                    all_neighbour_benefits.append(neighbour_object.personal_benefit)
+
                 # Constrain to [-1, 1]
                 # 100.0 and -100.0 are used as key delta values indicating that the opinion needs to be constrained
                 if agent.opinion + total_change < -1.0:
                     new_agent_opinions[agent.id] = (
                         -100.0,
                         deepcopy(collective_changes),
+                        deepcopy(all_neighbour_benefits),
                     )
                 elif agent.opinion + total_change > 1.0:
-                    new_agent_opinions[agent.id] = (100.0, deepcopy(collective_changes))
+                    new_agent_opinions[agent.id] = (100.0, deepcopy(collective_changes), deepcopy(all_neighbour_benefits))
                 else:
                     new_agent_opinions[agent.id] = (
                         total_change,
                         deepcopy(collective_changes),
+                        deepcopy(all_neighbour_benefits)
                     )
             self.iteration_opinion_changes(new_agent_opinions)
             self.step()
@@ -451,7 +460,7 @@ class ABModel:
         return None
 
     def iteration_opinion_changes(
-        self, changes_dict: dict[str, tuple[float, list[float]]]
+        self, changes_dict: dict[str, tuple[float, list[float], list[bool]]]
     ) -> None:
         """
         A helper function for iterate that simply applies all agent opinion changes and then checks
@@ -469,6 +478,7 @@ class ABModel:
                 # After the opinion change, determine if the agent has become radicalised
                 was_radicalised: bool = agent_object.radicalisation(
                     opinion_change_info[1],
+                    opinion_change_info[2],
                     list(self.hierarchy_information.keys()),
                     self.radicalisation_threshold,
                 )

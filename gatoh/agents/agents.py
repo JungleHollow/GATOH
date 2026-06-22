@@ -389,6 +389,7 @@ class Agent:
     def radicalisation(
         self,
         hierarchy_changes: list[float],
+        neighbour_benefits: list[bool],
         hierarchies: list[str],
         threshold: float,
     ) -> bool:
@@ -397,6 +398,7 @@ class Agent:
         the agent has become radicalised in their actions.
 
         :param hierarchy_changes: A list of the opinion changes caused in each social hierarchy by neighbours during this iteration.
+        :param neighbour_benefits: A list of boolean flags indicating the presence of personal benefit across an agent's neighbours.
         :param hierarchy_names: A list of hierarchy names in an order corresponding to the passed hierarchy changes list.
         :param threshold: The radicalisation threshold that has been defined at the global level in the model.
         :return: A boolean indicating if the Agent has become radicalised or not.
@@ -408,6 +410,13 @@ class Agent:
         # Absolute opinion declared here to reduce calls to abs() in the match statement
         absolute_opinion: float = abs(self.opinion)
 
+        # Calculate "aggregate benefit" as a simple fraction of (personal benefit = True) / (length of neighbours)
+        aggregate_benefit_count: float = 0.0
+        for neighbour_benefit in neighbour_benefits:
+            if neighbour_benefit:
+                aggregate_benefit_count += 1.0
+        aggregate_benefit: float = aggregate_benefit_count / len(neighbour_benefits)
+
         match self.personality:
             case "neutral":
                 # This will mean that radicalisation is exclusively determined by the strength of the Agent's opinion
@@ -417,11 +426,10 @@ class Agent:
             case "rational":
                 # This will likely mean that the agent is more disposed towards considering tangible benefits and their own
                 # opinions when determining radicalisation, rather than external influences
-                # TODO: Change this from self.personal_benefit to some measure of the community's aggregate benefit
-                if absolute_opinion >= threshold and self.personal_benefit:
+                if absolute_opinion >= threshold and aggregate_benefit >= 0.5:
                     self.radicalised = True
                     return self.radicalised
-                elif absolute_opinion >= threshold and not self.personal_benefit:
+                elif absolute_opinion >= threshold and not aggregate_benefit >= 0.5:
                     # In the case where the threshold is met but there is no explicit personal benefit, radicalisation is treated as a coinflip
                     self.radicalised = random_coinflip("bool")
                     return self.radicalised
