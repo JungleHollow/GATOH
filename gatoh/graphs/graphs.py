@@ -20,6 +20,7 @@ from gatoh.utils.utils import (
     beta_value_attenuation,
     connected_watts_strogatz_graph,
     value_rw_delta,
+    watts_strogatz_graph,
 )
 
 
@@ -416,6 +417,7 @@ class Graph:
         agents: list[Agent],
         method: str = "small-world",
         relationship_range: tuple[float, float] = (-1.0, 1.0),
+        ensure_complete: bool = True,
     ) -> Self:
         """
         Randomly generate edges between existing Graph nodes and add them to the graph.
@@ -423,6 +425,7 @@ class Graph:
         :param agents: The subset of Agents in the base model that are being used as the nodes for this graph.
         :param method: The random generation method to use. Possible choices include: 'small-world', 'scale-free', 'random', 'blockmodel'; Defaults to 'small-world'.
         :param relationship_range: The valid range of generated relationship strengths (at most, constrained to [-1.0, 1.0]).
+        :param ensure_complete: A boolean flag indicating if the generated graph should be complete or not (in the case of `small-world').
         :return: A reference to this Graph object.
         """
         if len(agents) <= 0:
@@ -442,9 +445,14 @@ class Graph:
                 k: int = int(
                     np.ceil(np.log(n))
                 )  # The smallest integer which is larger than log(n) to guarantee graph connectivity
-                generated_graph = connected_watts_strogatz_graph(
-                    n, k, self.generation_params["p"]
-                )
+                if ensure_complete:
+                    generated_graph = connected_watts_strogatz_graph(
+                        n, k, self.generation_params["p"]
+                    )
+                else:
+                    generated_graph = watts_strogatz_graph(
+                        n, k, self.generation_params["p"]
+                    )
             case "scale-free":
                 # Barbasi-Albert
                 generated_graph = rx.directed_barabasi_albert_graph(
