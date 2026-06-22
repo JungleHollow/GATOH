@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rustworkx as rx
 import yaml
+from multimethod import multimethod
 from scipy.stats import beta, gamma, levy, norm, truncnorm, uniform
 
 # ========== Graph utils ========== #
@@ -36,8 +37,25 @@ def pygraph_to_pydigraph(input_graph: rx.PyGraph) -> rx.PyDiGraph:
     return new_graph
 
 
+@multimethod
+def watts_strogatz_graph(n: int, k: int, p: float, seed: int) -> rx.PyGraph:
+    """
+    Returns an undirected Watts-Strogatz small-world graph generated using rustworkx.
+    An adapted version of watts_strogatz_graph() from the NetworkX library.
+
+    :param n: The number of nodes in the graph.
+    :param k: The number of nearest neighbours that each node is joined to initially.
+    :param p: The probability of rewiring each edge of the original ring lattice.
+    :param seed: The random seed to use for random generation.
+    """
+    random_gen: random.Random = random.Random(seed)
+    created_graph: rx.PyGraph = watts_strogatz_creator(n, k, p, random_gen)
+    return created_graph
+
+
+@multimethod
 def watts_strogatz_graph(
-    n: int, k: int, p: float, seed: int | np.random.RandomState | None = None
+    n: int, k: int, p: float, seed: np.random.RandomState
 ) -> rx.PyGraph:
     """
     Returns an undirected Watts-Strogatz small-world graph generated using rustworkx.
@@ -46,18 +64,44 @@ def watts_strogatz_graph(
     :param n: The number of nodes in the graph.
     :param k: The number of nearest neighbours that each node is joined to initially.
     :param p: The probability of rewiring each edge of the original ring lattice.
-    :param seed: The random seed to use for random generation
+    :param seed: The random seed to use for random generation.
     """
-    random_gen: random.Random | np.random.Generator
-    match type(seed):
-        case int():
-            random_gen = random.Random(seed)
-        case np.random.RandomState():
-            random_gen = np.random.default_rng()
-            np.random.set_state(seed)
-        case _:
-            random_gen = random.Random()
+    random_gen: np.random.RandomState = seed
+    created_graph: rx.PyGraph = watts_strogatz_creator(n, k, p, random_gen)
+    return created_graph
 
+
+@multimethod
+def watts_strogatz_graph(n: int, k: int, p: float) -> rx.PyGraph:
+    """
+    Returns an undirected Watts-Strogatz small-world graph generated using rustworkx.
+    An adapted version of watts_strogatz_graph() from the NetworkX library.
+
+    :param n: The number of nodes in the graph.
+    :param k: The number of nearest neighbours that each node is joined to initially.
+    :param p: The probability of rewiring each edge of the original ring lattice.
+    :return: The created Graph object.
+    """
+    random_gen: random.Random = random.Random()
+    created_graph: rx.PyGraph = watts_strogatz_creator(n, k, p, random_gen)
+    return created_graph
+
+
+def watts_strogatz_creator(
+    n: int,
+    k: int,
+    p: float,
+    random_gen: random.Random | np.random.RandomState,
+) -> rx.PyGraph:
+    """
+    A helper function that performs the actual Graph object creation for the multidispatched functions above.
+
+    :param n: The number of nodes in the graph.
+    :param k: The number of nearest neighbours that each node is joined to initially.
+    :param p: The probability of rewiring each edge of the original ring lattice.
+    :param random_gen: The random generator to use for Graph creation.
+    :return: The created Graph object.
+    """
     if k >= n:
         # >= instead of == as this utility function does not care about accounting for complete graphs...
         raise ValueError(
@@ -121,10 +165,14 @@ def connected_watts_strogatz_graph(
     :param tries: The number of times to try producing a connected graph after rewiring, before raising an exception.
     :param seed: The random seed to use for random generation.
     """
-    for i in range(tries):
-        G: rx.PyGraph = watts_strogatz_graph(n, k, p, seed=seed)
-        if rx.is_connected(G):
-            directed_graph: rx.PyDiGraph = pygraph_to_pydigraph(G)
+    for _ in range(tries):
+        graph: rx.PyGraph
+        if seed is not None:
+            graph = watts_strogatz_graph(n, k, p, seed)
+        else:
+            graph = watts_strogatz_graph(n, k, p)
+        if rx.is_connected(graph):
+            directed_graph: rx.PyDiGraph = pygraph_to_pydigraph(graph)
             return directed_graph
     raise RuntimeError(
         "Exceeded maximum number of tries generating a connected Watts-Strogatz small-world graph..."

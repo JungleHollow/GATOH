@@ -250,9 +250,9 @@ class ABModel:
             for graph in graphs:
                 self.graphs.add_graph(graph)
         else:
-            for idx, graph in enumerate(graphs):
+            for idx, graph_path in enumerate(graphs):
                 new_graph: Graph = Graph(names[idx], rw_params[idx])
-                new_graph.load_graph(graph, names[idx])
+                new_graph.load_graph(graph_path, names[idx])
                 self.graphs.add_graph(new_graph)
         self.update_base_graph()
         return self.graphs
@@ -260,7 +260,7 @@ class ABModel:
     def generate_graphs(
         self,
         hierarchies: list[str],
-        agents: list[Any] | AgentSet,
+        agents: list[Agent] | AgentSet,
         method: str = "small-world",
         agent_subsetting: bool = False,
         rw_params: list[tuple[float, float]] | None = None,
