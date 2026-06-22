@@ -264,6 +264,7 @@ class ABModel:
         method: str = "small-world",
         agent_subsetting: bool = False,
         rw_params: list[tuple[float, float]] | None = None,
+        individual_methods: dict[str, str] | None = None,
     ) -> None:
         """
         Randomly generates graphs for the given social hierarchy names using the specified method.
@@ -274,6 +275,7 @@ class ABModel:
         :param method: The social network graph generation method to use. Options include: 'small-world', 'scale-free', 'random', 'blockmodel'. Defaults to 'small-world'.
         :param agent_subsetting: A boolean indicating if the agents should be sampled into random subsets when generating each graph.
         :param rw_params: A list of (mean, variance) tuples containing the random-walk distributions for each of the generated graphs.
+        :param individual_methods: A <hierarchy : generation method> mapping indicating the per-hierarchy generation methods that should be used.
         """
         agent_array: np.ndarray = np.array(agents)
         agent_sample: list[Agent] = []
@@ -295,9 +297,15 @@ class ABModel:
             hierarchy_graph: Graph = Graph(
                 hierarchy, hierarchy_rw_param, suppress_warnings=self.suppress_warnings
             )
-            hierarchy_graph = hierarchy_graph.generate_graph(
-                agent_sample, method=method
-            )
+
+            if individual_methods is not None:
+                hierarchy_graph = hierarchy_graph.generate_graph(
+                    agent_sample, method=individual_methods[hierarchy]
+                )
+            else:
+                hierarchy_graph = hierarchy_graph.generate_graph(
+                    agent_sample, method=method
+                )
 
             _ = self.add_graph(hierarchy_graph)
         return None
