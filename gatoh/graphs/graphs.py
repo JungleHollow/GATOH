@@ -19,6 +19,7 @@ from gatoh.agents.agents import Agent
 from gatoh.utils.utils import (
     beta_value_attenuation,
     connected_watts_strogatz_graph,
+    random_coinflip,
     value_rw_delta,
     watts_strogatz_graph,
 )
@@ -299,7 +300,7 @@ class Graph:
             agent_node = GraphNode(agent)
             nodes.append(agent_node)
 
-        self.graph.add_nodes_from(nodes)
+        _ = self.graph.add_nodes_from(nodes)
         self.update_node_indices()
         return None
 
@@ -767,8 +768,8 @@ class Graph:
             return None
         neighbour_indices: rx.NodeIndices = self.graph.neighbors(agent_index)
 
-        # TODO: Account for neighbour radicalisation in this function
-        final_change: float = 0.0
+        weighted_deltas: list[float] = []
+        delta_weightings: list[float] = []
         for neighbour_index in neighbour_indices:
             neighbour_node: GraphNode | None = self.get_node(neighbour_index)
 
@@ -790,7 +791,44 @@ class Graph:
                 distance_from_avg * agent_hierarchy_weighting * relationship_strength
             )  # The final opinion change
 
-            final_change += weighted_delta
+            # Account for neighbour radicalisation
+            # (neutral personality means that the existence or lack of neighbour radicalisation will have no effect)
+            relative_weighting: float = 1.0
+            if (
+                neighbour_node.agent.radicalised
+                and agent.personality != "neutral"
+                and not agent.radicalised
+            ):
+                if agent.personality in ["rational", "social"]:
+                    # "rational" or "social" agents that are not radicalised will have a generally lesser view of radicalised opinions
+                    relative_weighting = 0.5
+                elif agent.personality == "impulsive":
+                    # "impulsive" agents will always view radicalised opinions more favourably
+                    relative_weighting = 2.0
+                else:  # Agent personality is "erratic"
+                    # "erratic" agents act randomly...
+                    erratic_coinflip: bool = random_coinflip("bool")
+                    if erratic_coinflip:
+                        relative_weighting = 2.0
+                    else:
+                        relative_weighting = 0.5
+            elif neighbour_node.agent.radicalised and agent.radicalised:
+                if distance_from_avg <= 0.25:
+                    # Both agents are radicalised towards the same opinion
+                    relative_weighting = 4.0
+                else:
+                    # Both agent are radicalised in opposing opinions
+                    relative_weighting = 0.25
+
+            weighted_deltas.append(weighted_delta)
+            delta_weightings.append(relative_weighting)
+        
+        # Calculate the final change
+        final_change: float = 0.0
+        total_weightings: float = sum(delta_weightings)
+        for idx, weighted_delta in enumerate(weighted_deltas):
+            final_change += weighted_delta * (delta_weightings[idx] / total_weightings)
+
         return final_change
 
     def dynamic_relationships(self) -> None:
