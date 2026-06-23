@@ -332,9 +332,7 @@ def random_coinflip(return_type: str) -> Any:
                 return "yes"
             return "no"
         case _:
-            pass
-
-    return coinflip_result  # Defaults to boolean if no valid input type was passed.
+            return coinflip_result  # Defaults to boolean if no valid input type was passed.
 
 
 # ========== Random Walk Utils ==========
