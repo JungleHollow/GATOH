@@ -86,6 +86,56 @@ class TestGraphEdges(ut.TestCase):
             "GraphEdge -- set_rw_params() not updating the rw_params attribute correctly",
         )
 
+    def test_update_from_node(self) -> None:
+        """
+        Test that GraphEdge.update_from_node() is working correctly.
+        """
+        self.graph_edge.update_from_node(3)
+        self.assertEqual(
+            self.graph_edge.from_node,
+            3,
+            "GraphEdge -- update_from_node() not updating the from_node attribute correctly",
+        )
+
+    def test_update_to_node(self) -> None:
+        """
+        Test that GraphEdge.update_to_node() is working correctly.
+        """
+        self.graph_edge.update_to_node(2)
+        self.assertEqual(
+            self.graph_edge.to_node,
+            2,
+            "GraphEdge -- update_to_node() not updating the to_node attribute correctly",
+        )
+
+    def test_has_rw_params(self) -> None:
+        """
+        Test that GraphEdge.set_rw_params() is working correctly
+        """
+        self.assertFalse(
+            self.graph_edge.has_rw_params(),
+            "GraphEdge -- has_rw_params() not detecting the absence of rw_params",
+        )
+        self.graph_edge.set_rw_params((0.0, 0.0))
+        self.assertTrue(
+            self.graph_edge.has_rw_params(),
+            "GraphEdge -- has_rw_params() not detecting the presence of rw_params",
+        )
+
+    def test_str_repr(self) -> None:
+        """
+        Test that GraphEdge.__str__() returns the correct representation after operations on the object.
+        """
+        self.graph_edge.set_weighting(0.44)
+        self.graph_edge.update_from_node(3)
+        self.graph_edge.update_to_node(2)
+        str_repr: str = self.graph_edge.__str__()
+        self.assertEqual(
+            str_repr,
+            "GraphEdge of weight (0.44) from node (3) to node (2) in the TestGraph social layer",
+            "GraphEdge -- __str__ is not producing the expected representation (after operations)",
+        )
+
     @override
     def tearDown(self) -> None:
         del self.graph_edge
