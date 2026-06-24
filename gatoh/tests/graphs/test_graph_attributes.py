@@ -25,6 +25,11 @@ class TestGraphAttributes(ut.TestCase):
         self.assertEqual(
             empty_graph.name, "TestGraph", "Graph -- name not initialised correctly"
         )
+        self.assertEqual(
+            empty_graph.generation_method,
+            "",
+            "Graph -- generation_method not initialised correctly",
+        )
         self.assertTrue(
             empty_graph.dynamic_rels, "Graph -- dynamic_rels not initialised correctly"
         )
@@ -70,7 +75,16 @@ class TestGraphAttributes(ut.TestCase):
         Test that the keyword values for Graph __init__ are working correctly.
         """
         empty_graph: gr.Graph = gr.Graph(
-            "TestGraph", (0.0, 0.0), suppress_warnings=True, dynamic_rels=False
+            "TestGraph",
+            (0.0, 0.0),
+            generation_method="random",
+            suppress_warnings=True,
+            dynamic_rels=False,
+        )
+        self.assertEqual(
+            empty_graph.generation_method,
+            "random",
+            "Graph -- optional argument generation_method is not working correctly",
         )
         self.assertTrue(
             empty_graph.suppress_warnings,

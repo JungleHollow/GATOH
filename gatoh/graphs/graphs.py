@@ -157,12 +157,14 @@ class Graph:
         self,
         name: str,
         rw_params: tuple[float, float],
+        generation_method: str = "",
         suppress_warnings: bool = False,
         dynamic_rels: bool = True,
     ) -> None:
         """
         :param name: The name of the social hierarchy that this Graph object will be representing.
         :param rw_params: The (mean, variance) of the normal distribution used for the dynamic relationships random walk.
+        :param generation_method: A string indicating what specific random graph generation method should be used where relevant.
         :param suppress_warnings: A boolean flag indicating if non-critical warnings should be suppressed.
         :param dynamic_rels: A boolean flag indicating if dynamic relationships should be modelled for this social hierarchy.
         """
@@ -171,6 +173,7 @@ class Graph:
         self.node_count: int = 0
         self.edge_count: int = 0
         self.name: str = name
+        self.generation_method: str = generation_method
         self.dynamic_rels: bool = dynamic_rels
         self.suppress_warnings: bool = suppress_warnings
         self.rw_params: tuple[float, float] = rw_params
@@ -416,7 +419,7 @@ class Graph:
     def generate_graph(
         self,
         agents: list[Agent],
-        method: str = "small-world",
+        method: str = "",
         relationship_range: tuple[float, float] = (-1.0, 1.0),
         ensure_complete: bool = True,
     ) -> Self:
@@ -433,6 +436,16 @@ class Graph:
             raise ValueError(
                 f"Attempting to generate random graph for hierarchy '{self.name}' without passing any valid Agents."
             )
+
+        if self.generation_method != "":
+            method = self.generation_method
+        elif method == "":
+            # Default to small-world if no explicit method was passed during initialisation or to this function
+            method = "small-world"
+            self.generation_method = "small-world"
+        else:
+            # Update self.generation_method with the explicit method that was passed
+            self.generation_method = method
 
         n: int = len(agents)
         generated_graph: rx.PyDiGraph = rx.PyDiGraph()  # Initialise an empty graph for predictable behaviour in case of assignation errors
@@ -454,16 +467,21 @@ class Graph:
                     generated_graph = watts_strogatz_graph(
                         n, k, self.generation_params["p"]
                     )
+
+                # Explicitly set the generation method again to mark the method that has been used (for clarity)
+                self.generation_method = "small-world"
             case "scale-free":
                 # Barbasi-Albert
                 generated_graph = rx.directed_barabasi_albert_graph(
                     n, self.generation_params["m"]
                 )
+                self.generation_method = "scale-free"
             case "random":
                 # Erdos-Renyi
                 generated_graph = rx.directed_gnp_random_graph(
                     n, self.generation_params["p"]
                 )
+                self.generation_method = "random"
             case "blockmodel":
                 # Holland et al.
                 sbm_remainder: int = (
@@ -491,7 +509,9 @@ class Graph:
                 generated_graph = rx.directed_sbm_random_graph(
                     sbm_sizes, sbm_probabilities, False
                 )  # "False" to disallow existence of self loops in the graph
+                self.generation_method = "blockmodel"
             case _:
+                self.generation_method = "INVALID"
                 raise ValueError(
                     f"Attempting to generate random graph with a non-supported method ({method}).\n\nUse one of the supported methods: 'small-world', 'scale-free', 'random', or 'blockmodel'..."
                 )
@@ -822,7 +842,7 @@ class Graph:
 
             weighted_deltas.append(weighted_delta)
             delta_weightings.append(relative_weighting)
-        
+
         # Calculate the final change
         final_change: float = 0.0
         total_weightings: float = sum(delta_weightings)
