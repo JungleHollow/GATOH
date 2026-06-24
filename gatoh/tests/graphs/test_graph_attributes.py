@@ -65,3 +65,19 @@ class TestGraphAttributes(ut.TestCase):
             "Graph representing the TestGraph social hierarchy with 0 nodes and 0 edges",
             "Graph -- __str__ is not returning the expected representation (from __init__)",
         )
+
+    def test_optional_attributes(self) -> None:
+        """
+        Test that the keyword values for Graph __init__ are working correctly.
+        """
+        empty_graph: gr.Graph = gr.Graph(
+            "TestGraph", (0.0, 0.0), suppress_warnings=True, dynamic_rels=False
+        )
+        self.assertTrue(
+            empty_graph.suppress_warnings,
+            "Graph -- optional argument suppress_warnings is not working correctly",
+        )
+        self.assertFalse(
+            empty_graph.dynamic_rels,
+            "Graph -- optional argument dynamic_rels is not working correctly",
+        )
