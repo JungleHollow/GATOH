@@ -17,35 +17,6 @@ class TestGraphCreation(ut.TestCase):
         """
         self.graph: gr.Graph = gr.Graph("Test Graph", (0.0, 0.1))
 
-    def test_node_creation(self) -> None:
-        """
-        Create a GraphNode object with some arbitrary Agent and check that it has been
-        initialised appropriately.
-        """
-        test_agent: Agent = Agent("TEST0001", {"Test Graph": 0.5})
-        graph_node: gr.GraphNode = gr.GraphNode(test_agent)
-        self.assertEqual(
-            test_agent,
-            graph_node.agent,
-            "GraphNode object is not assigning its contained Agent correctly",
-        )
-        self.assertIsNone(
-            graph_node.index,
-            "GraphNode has an existing index attribute before any assignation",
-        )
-        graph_node.set_index(4)
-        self.assertEqual(
-            graph_node.index,
-            4,
-            "GraphNode set_index is not correctly updating the object's index",
-        )
-        node_str_repr: str = graph_node.__str__()
-        self.assertEqual(
-            node_str_repr,
-            "Agent (TEST0001) at graph node (4)",
-            "GraphNode __str__ representation is not producing the expected output",
-        )
-
     def test_edge_creation(self) -> None:
         """
         Create a GraphEdge object with some arbitrary properties and check that it has been\

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import unittest as ut
-from typing import override
 
 from rustworkx import PyDiGraph
 

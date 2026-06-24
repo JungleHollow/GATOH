@@ -1,0 +1,91 @@
+from __future__ import annotations
+
+import unittest as ut
+from typing import override
+
+import gatoh.graphs.graphs as gr
+
+
+class TestGraphEdges(ut.TestCase):
+    @override
+    def setUp(self) -> None:
+        """
+        The base GraphEdge object that is repeated across tests.
+        """
+        self.graph_edge: gr.GraphEdge = gr.GraphEdge("TestGraph", 13, 12)
+
+    def test_edge_creation(self) -> None:
+        """
+        Test that GraphEdges are initialised correctly with no optional arguments passed.
+        """
+        self.assertIsNone(
+            self.graph_edge.index,
+            "GraphEdge -- existing edge index before any assignation",
+        )
+        self.assertEqual(
+            self.graph_edge.weighting,
+            0.0,
+            "GraphEdge -- default value for optional weighting argument is not being used",
+        )
+        self.assertEqual(
+            self.graph_edge.from_node,
+            13,
+            "GraphEdge -- from_node not being initialised correctly",
+        )
+        self.assertEqual(
+            self.graph_edge.to_node,
+            12,
+            "GraphEdge -- to_node not being initialised correctly",
+        )
+        self.assertEqual(
+            self.graph_edge.hierarchy,
+            "TestGraph",
+            "GraphEdge -- hierarchy not being initialised correctly",
+        )
+        self.assertIsNone(
+            self.graph_edge.rw_params,
+            "GraphEdge -- default value for optional rw_params argument is not being used",
+        )
+        str_repr: str = self.graph_edge.__str__()
+        self.assertEqual(
+            str_repr,
+            "GraphEdge of weight (0.0) from node (13) to node (12) in the TestGraph social layer",
+            "GraphEdge -- __str__ is not producing the expected representation (from __init__)",
+        )
+
+    def test_set_index(self) -> None:
+        """
+        Test that GraphEdge.set_index() is working correctly.
+        """
+        self.graph_edge.set_index(44)
+        self.assertEqual(
+            self.graph_edge.index,
+            44,
+            "GraphEdge -- set_index() not updating the index attribute correctly",
+        )
+
+    def test_set_weighting(self) -> None:
+        """
+        Test that GraphEdge.set_weighting() is working correctly.
+        """
+        self.graph_edge.set_weighting(0.44)
+        self.assertEqual(
+            self.graph_edge.weighting,
+            0.44,
+            "GraphEdge -- set_weighting() not updating the weighting attribute correctly",
+        )
+
+    def test_set_rw_params(self) -> None:
+        """
+        Test that GraphEdge.set_rw_params() is working correctly.
+        """
+        self.graph_edge.set_rw_params((0.0, 0.1))
+        self.assertEqual(
+            self.graph_edge.rw_params,
+            (0.0, 0.1),
+            "GraphEdge -- set_rw_params() not updating the rw_params attribute correctly",
+        )
+
+    @override
+    def tearDown(self) -> None:
+        del self.graph_edge
