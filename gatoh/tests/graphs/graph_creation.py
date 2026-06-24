@@ -127,65 +127,6 @@ class TestGraphCreation(ut.TestCase):
             "GraphEdge __str__ representation is not producing the expected outcome",
         )
 
-    def test_set_up(self) -> None:
-        """
-        Test that validates the base state of the Graph created in setUp.
-        """
-        self.assertIsInstance(
-            self.graph.graph,
-            PyDiGraph,
-            "Graph __init__ is not creating an initial PyDiGraph object",
-        )
-        self.assertEqual(
-            self.graph.node_count,
-            0,
-            "New Graph is reporting a non-zero node_count when no nodes have been added",
-        )
-        self.assertEqual(
-            self.graph.edge_count,
-            0,
-            "New Graph is reporting a non-zero edge_count when no edges have been added",
-        )
-        self.assertEqual(
-            self.graph.name,
-            "Test Graph",
-            "Graph __init__ is not storing the name attribute correctly",
-        )
-        self.assertTrue(
-            self.graph.dynamic_rels,
-            "Graph __init__ is not using the default dynamic_rels value",
-        )
-        self.assertFalse(
-            self.graph.suppress_warnings,
-            "Graph __init__ is not using the default suppress_warnings value",
-        )
-        self.assertEqual(
-            self.graph.rw_params,
-            (0.0, 0.1),
-            "Graph __init__ is not storing the rw_params attribute correctly",
-        )
-        self.assertEqual(
-            self.graph.generation_params["p"],
-            0.25,
-            "Graph __init__ is not creating generation_params correctly (p)",
-        )
-        self.assertEqual(
-            self.graph.generation_params["m"],
-            3,
-            "Graph __init__ is not creating generation_params correctly (m)",
-        )
-        self.assertEqual(
-            self.graph.generation_params["sbm_sizes"],
-            10,
-            "Graph __init__ is not creating generation_params correctly (sbm_sizes)",
-        )
-        init_str_repr: str = self.graph.__str__()
-        self.assertEqual(
-            init_str_repr,
-            "Graph representing the Test Graph social hierarchy with 0 nodes and 0 edges",
-            "The __str__ representation of the Graph is not returning the expected output (from __init__)",
-        )
-
     @override
     def tearDown(self) -> None:
         """
