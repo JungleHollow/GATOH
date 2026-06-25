@@ -7,11 +7,11 @@ import gatoh.graphs.graphs as gr
 from gatoh.agents.agents import Agent
 
 
-class TestGraphObjects(ut.TestCase):
+class TestGraphObjectsEmpty(ut.TestCase):
     @override
     def setUp(self) -> None:
         """
-        Initialise a Graph object with basic initial parameters, and a population of Agents.
+        Initialise a Graph object with basic initial parameters.
         """
         self.graph: gr.Graph = gr.Graph("TestGraph", (0.0, 0.0))
 
