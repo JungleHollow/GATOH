@@ -58,6 +58,22 @@ class TestGraphAttributes(ut.TestCase):
             "Graph -- generation_params (sbm_sizes) not initialised correctly",
         )
 
+    def test_graph_in(self) -> None:
+        """
+        Test that __in__() correctly sees a Graph in an iterable.
+        """
+        empty_graph: gr.Graph = gr.Graph("TestGraph", (0.0, 0.0))
+        graph_iterable: list[gr.Graph] = []
+        self.assertFalse(
+            empty_graph in graph_iterable,
+            "Graph -- __in__() is not returning False when the Graph is not in an iterable",
+        )
+        graph_iterable.append(empty_graph)
+        self.assertTrue(
+            empty_graph in graph_iterable,
+            "Graph -- __in__() is not returning True when the Graph is in an iterable",
+        )
+
     def test_initial_str(self) -> None:
         """
         Test that the __str__ representation is returning the expected output initially.
@@ -93,4 +109,35 @@ class TestGraphAttributes(ut.TestCase):
         self.assertFalse(
             empty_graph.dynamic_rels,
             "Graph -- optional argument dynamic_rels is not working correctly",
+        )
+
+    def test_change_generation_params(self) -> None:
+        """
+        Test that Graph.change_generation_params() is working correctly.
+        """
+        empty_graph: gr.Graph = gr.Graph("TestGraph", (0.0, 0.0))
+        empty_graph.change_generation_params(p=0.4, m=5, sbm_sizes=6)
+        self.assertEqual(
+            empty_graph.generation_params["p"],
+            0.4,
+            "Graph -- change_generation_params() is not updating 'p' correctly",
+        )
+        self.assertEqual(
+            empty_graph.generation_params["m"],
+            5,
+            "Graph -- change_generation_params() is not updating 'm' correctly",
+        )
+        self.assertEqual(
+            empty_graph.generation_params["sbm_sizes"],
+            6,
+            "Graph -- change_generation_params() is not updating 'sbm_sizes' correctly",
+        )
+        empty_graph.change_generation_params(ensure_complete=False)
+        self.assertIsNotNone(
+            empty_graph.generation_params["ensure_complete"],
+            "Graph -- change_generation_params() is not adding a new generation parameter correctly",
+        )
+        self.assertFalse(
+            empty_graph.generation_params["ensure_complete"],
+            "Graph -- change_generation_params() is not storing new generation parameter values correctly",
         )
