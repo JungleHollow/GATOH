@@ -365,6 +365,17 @@ class TestGraphObjects(ut.TestCase):
             "Graph -- node_from_agent() with a valid Agent is not returning a GraphNode which corresponds to the same Agent",
         )
 
+    def test_node_from_agent_invalid(self) -> None:
+        """
+        Test that node_from_agent() with an invalid Agent in a populated Graph returns None.
+        """
+        invalid_agent: Agent = Agent("INVLD404")
+        agent_node = self.graph.node_from_agent(invalid_agent)
+        self.assertIsNone(
+            agent_node,
+            "Graph -- node_from_agent() with an invalid Agent in a populated Graph is returning an object",
+        )
+
     def test_get_agent_index(self) -> None:
         """
         Test that get_agent_index() on a valid Agent in the Graph returns an index.
@@ -378,6 +389,17 @@ class TestGraphObjects(ut.TestCase):
             agent_index,
             0,
             "Graph -- get_agent_index() with a valid Agent is not returning the correct index",
+        )
+
+    def test_get_agent_index_invalid(self) -> None:
+        """
+        Test that get_agent_index() with an invalid Agent in a populated Graph returns None.
+        """
+        invalid_agent: Agent = Agent("INVLD404")
+        agent_index = self.graph.get_agent_index(invalid_agent)
+        self.assertIsNone(
+            agent_index,
+            "Graph -- get_agent_index() with an invalid Agent in a populated Graph is returning an object",
         )
 
     def test_get_neighbours_solo(self) -> None:
@@ -399,3 +421,142 @@ class TestGraphObjects(ut.TestCase):
         """
         Test that get_neighbours() on a valid Agent with neighbours returns a list of GraphNodes.
         """
+        edges_to_add = {
+            "from_node": [1, 1, 1, 1],
+            "to_node": [2, 17, 4, 8],
+            "weighting": [0.1, 0.2, 0.3, 0.4],
+        }
+        self.graph.add_edges(edges_to_add)
+        agent_neighbours = self.graph.get_neighbours(self.agents[1])
+        self.assertIsNotNone(
+            agent_neighbours,
+            "Graph -- get_neighbours() on a valid Agent with neighbours is returning None",
+        )
+        self.assertEqual(
+            len(agent_neighbours),
+            4,
+            "Graph -- get_neighbours() on a valid Agent with neighbours is not reporting the correct number of neighbours",
+        )
+        for neighbour in agent_neighbours:
+            self.assertIn(
+                neighbour.index,
+                edges_to_add["to_node"],
+                "Graph -- get_neighbours() on a valid Agent with neighbours is not returning the correct neighbour GraphNodes",
+            )
+
+    def test_agent_previous_opinion(self) -> None:
+        """
+        Test that agent_previous_opinion() correctly stores the previous opinion.
+        """
+        self.graph.graph.nodes()[0].agent.previous_opinion = 0.0
+        self.graph.graph.nodes()[0].agent.opinion = 0.44
+        self.graph.agent_previous_opinion(self.graph.graph.nodes()[0].agent)
+        self.assertEqual(
+            self.graph.graph.nodes()[0].agent.previous_opinion,
+            0.44,
+            "Graph -- agent_previous_opinion() is not updating the Agent previous_opinion correctly",
+        )
+
+    def test_agent_opinion_change_increment(self) -> None:
+        """
+        Test that agent_opinion_change() correctly increments the current opinion.
+        """
+        self.graph.graph.nodes()[0].agent.opinion = 0.4
+        self.graph.agent_opinion_change(self.graph.graph.nodes()[0].agent, 0.12)
+        self.assertAlmostEqual(
+            self.graph.graph.nodes()[0].agent.opinion,
+            0.52,
+            5,
+            "Graph -- agent_opinion_change() is not incrementing Agent current_opinion correctly",
+        )
+
+    def test_agent_opinion_change_decrement(self) -> None:
+        """
+        Test that agent_opinion_change() correctly decrements the current opinion.
+        """
+        self.graph.graph.nodes()[0].agent.opinion = 0.4
+        self.graph.agent_opinion_change(self.graph.graph.nodes()[0].agent, -0.09)
+        self.assertAlmostEqual(
+            self.graph.graph.nodes()[0].agent.opinion,
+            0.31,
+            5,
+            "Graph -- agent_opinion_change is not decrementing Agent current_opinion correctly",
+        )
+
+    def test_agent_radicalisation_change(self) -> None:
+        """
+        Test that agent_radicalisation_change() correctly changes the Agent's radicalisation.
+        """
+        self.graph.graph.nodes()[0].agent.radicalisation = False
+        self.graph.agent_radicalisation_change(self.graph.graph.nodes()[0].agent, True)
+        self.assertTrue(
+            self.graph.graph.nodes()[0].agent.radicalisation,
+            "Graph -- agent_radicalisation_change() is not updating the Agent radicalisation correctly",
+        )
+
+    def test_neighbour_influences_solo(self) -> None:
+        """
+        Test that neighbour_influences() on a valid, solitary Agent returns 0.0.
+        """
+        neighbour_influences = self.graph.neighbour_influences(self.agents[0])
+        self.assertIsNotNone(
+            neighbour_influences,
+            "Graph -- neighbour_influences() on a valid, solitary Agent is returning None",
+        )
+        self.assertEqual(
+            neighbour_influences,
+            0.0,
+            "Graph -- neighbour_influences() on a valid, solitary Agent is not returning 0.0",
+        )
+
+    def test_neighbour_influences_simple(self) -> None:
+        """
+        Test that neighbour_influences() on a valid Agent with a single neighbour returns the expected value.
+        """
+        # These values will mean an average opinion of 0.5, with Agent 13 having a distance of -0.1 from the average
+        # weighted_delta = distance_from_avg * agent_hierarchy_weighting * relationship_strength
+        # therefore weighted_delta = -0.1 * 0.5 * 0.5
+        # = -0.025
+        # No other neighbours to affect the relative weighting, so the final_change should equal -0.025
+        self.graph.graph.nodes()[13].opinion = 0.6
+        self.graph.graph.nodes()[12].opinion = 0.4
+        edge_to_add = {
+            "from_node": [13],
+            "to_node": [12],
+            "weighting": [0.5],
+        }
+        self.graph.add_edges(edge_to_add)
+        final_change = self.graph.neighbour_influences(self.graph.get_node(13).agent)
+        expected_final_change = -0.025
+        self.assertIsNotNone(
+            final_change,
+            "Graph -- neighbour_influences() on a valid Agent with a single neighbour is returning None",
+        )
+        if final_change is not None:  # Included for type checking warnings
+            self.assertAlmostEqual(
+                final_change,
+                expected_final_change,
+                5,
+                "Graph -- neighbour_influences() on a valid Agent with a single neighbour is not calculating the correct value",
+            )
+
+    def test_neighbour_influences_complex(self) -> None:
+        """
+        Test that neighbour_influences() on a valid Agent with multiple neighbours returns the expected value.
+        """
+        # TODO: Design and calculate a scenario and expected value to implement this test case
+
+    def test_estimate_neighbour_opinions_solo(self) -> None:
+        """
+        Test that estimate_neighbour_opinions() on a valid, solitary Agent returns an empty dictionary.
+        """
+        estimated_opinions = self.graph.estimate_neighbour_opinions(self.agents[0])
+        self.assertIsNotNone(
+            estimated_opinions,
+            "Graph -- estimate_neighbour_opinions() on a valid, solitary Agent is returning None",
+        )
+        self.assertEqual(
+            estimated_opinions,
+            {},
+            "Graph -- estimate_neighbour_opinions() on a valid, solitary Agent is not returning an empty dictionary",
+        )
