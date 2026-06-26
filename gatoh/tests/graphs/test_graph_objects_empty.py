@@ -122,6 +122,19 @@ class TestGraphObjectsEmpty(ut.TestCase):
             agent_index, "Graph -- get_agent_index() on an empty Graph returns an index"
         )
 
+    def test_remove_edge_empty(self) -> None:
+        """
+        Test that remove_edge() on an empty Graph raises the appropriate warning.
+        """
+        with self.assertWarns(UserWarning) as cm:
+            self.graph.remove_edge(13, 12)
+        re_warning = cm.warning
+        self.assertEqual(
+            re_warning.message,
+            "WARNING: Attempted to remove edge (13 -> 12) which does not exist in the graph.",
+            "Graph -- remove_edge() on an empty Graph does not raise the expected warning",
+        )
+
     def test_get_neighbours_empty(self) -> None:
         """
         Test that get_neighbours() on an empty Graph returns None and raises an appropriate warning.
