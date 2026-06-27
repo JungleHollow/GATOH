@@ -593,7 +593,7 @@ class TestGraphObjects(ut.TestCase):
                 "Graph -- neighbour_influences() on a valid Agent with multiple neighbours is not calculating the correct value",
             )
 
-    def test_neighbour_influences_solo_radicalised(self) -> None:
+    def test_neighbour_influences_simple_radicalised(self) -> None:
         """
         Test that neighbour_influences() on a valid Agent with a single radicalised neighbour will return the correct value.
         """
@@ -692,12 +692,157 @@ class TestGraphObjects(ut.TestCase):
         Test that estimate_neighbour_opinions() on a valid, solitary Agent returns an empty dictionary.
         """
         estimated_opinions = self.graph.estimate_neighbour_opinions(self.agents[0])
-        self.assertIsNotNone(
-            estimated_opinions,
-            "Graph -- estimate_neighbour_opinions() on a valid, solitary Agent is returning None",
-        )
         self.assertEqual(
             estimated_opinions,
             {},
             "Graph -- estimate_neighbour_opinions() on a valid, solitary Agent is not returning an empty dictionary",
+        )
+
+    def test_estimate_neighbour_opinions_complex(self) -> None:
+        """
+        Test that estimate_neighbour_opinions() on a valid Agent with multiple neighbours returns the expected output.
+        """
+        self.graph.graph.nodes()[12].opinion = 0.1
+        self.graph.graph.nodes()[4].opinion = 0.93
+        self.graph.graph.nodes()[2].opinion = 0.44
+        self.graph.graph.nodes()[9].opinion = -0.99
+        edges_to_add = {
+            "from_node": [13, 13],
+            "to_node": [12, 4],
+            "weighting": [0.1, 0.1],
+        }
+        # 12 and 4 are direct neighbours with the node of interest; 2 and 9 are not
+        self.graph.add_edges(edges_to_add)
+        estimated_opinions = self.graph.estimate_neighbour_opinions(
+            self.graph.get_node(13).agent
+        )
+        # Indirect neighbour 2 should not have a strong enough opinion to be passively detected by 13
+        self.assertNotIn(
+            self.graph.get_node(2).agent.id,
+            estimated_opinions.keys(),
+            "Graph -- estimate_neighbour_opinions() on a valid Agent with multiple neighbours is including a 'weak' indirect opinion in the estimate",
+        )
+        for neighbour_index in [12, 4]:
+            direct_id = self.graph.get_node(neighbour_index).agent.id
+            self.assertIn(
+                direct_id,
+                estimated_opinions.keys(),
+                "Graph -- estimate_neighbour_opinions() on a valid Agent with multiple neighbours is not including the direct opinions in the estimate",
+            )
+            if neighbour_index == 12:
+                self.assertEqual(
+                    estimated_opinions[direct_id],
+                    0.1,
+                    "Graph -- estimate_neighbour_opinions() on a valid Agent with multiple neighbours is not reporting the correct weak direct opinions",
+                )
+            elif neighbour_index == 4:
+                self.assertEqual(
+                    estimated_opinions[direct_id],
+                    0.93,
+                    "Graph -- estimate_neighbour_opinions() on a valid Agent with multiple neighbours is not reporting the correct strong direct opinions",
+                )
+        strong_indirect_id = self.graph.get_node(9).agent.id
+        self.assertIn(
+            strong_indirect_id,
+            estimated_opinions.keys(),
+            "Graph -- estimate_neighbour_opinions() on a valid Agent with multiple neighbours is not including strong indirect opinions in the estimate",
+        )
+        self.assertEqual(
+            estimated_opinions[strong_indirect_id],
+            -0.99,
+            "Graph -- estimate_neighbour_opinions() on a valid Agent with multiple neighbours is not reporting the correct strong indirect opinions",
+        )
+
+    def test_estimate_opinion_climate_solo(self) -> None:
+        """
+        Test that estimate_opinion_climate() on a valid, solitary Agent will return 0.0.
+        """
+        opinion_climate = self.graph.estimate_opinion_climate(self.agents[13])
+        self.assertIsInstance(
+            opinion_climate,
+            float,
+            "Graph -- estimate_opinion_climate() on a valid, solitary Agent is not returning a float value",
+        )
+        self.assertEqual(
+            opinion_climate,
+            0.0,
+            "Graph -- estimate_opinion_climate() on a valid, solitary Agent is not returning 0.0",
+        )
+
+    def test_estimate_opinion_climate_simple(self) -> None:
+        """
+        Test that estimate_opinion_climate() on a vaild Agent with a single neighbour will return the expected value.
+        """
+        self.graph.graph.nodes()[12].opinion = 0.21
+        edge_to_add = {
+            "from_node": [13],
+            "to_node": [12],
+            "weighting": [0.75],
+        }
+        self.graph.add_edges(edge_to_add)
+        opinion_climate = self.graph.estimate_opinion_climate(
+            self.graph.get_node(13).agent
+        )
+        self.assertIsInstance(
+            opinion_climate,
+            float,
+            "Graph -- estimate_opinion_climate() on a valid Agent with a single neighbour is not returning a float value",
+        )
+        self.assertEqual(
+            opinion_climate,
+            0.21,
+            "Graph -- estimate_opinion_climate() on a valid Agent with a single neighbour is not calculating the expected value",
+        )
+
+    def test_estimate_opinion_climate_indirect(self) -> None:
+        """
+        Test that estimate_opinion_climate() on a valid Agent with no neighbours, but strong indirect opinions will return the expected value.
+        """
+        self.graph.graph.nodes()[12].opinion = 0.99
+        opinion_climate = self.graph.estimate_opinion_climate(
+            self.graph.get_node(13).agent
+        )
+        self.assertIsInstance(
+            opinion_climate,
+            float,
+            "Graph -- estimate_opinion_climate() on a valid Agent with strong indirect opinions is not returning a float value",
+        )
+        self.assertEqual(
+            opinion_climate,
+            0.99,
+            "Graph -- estimate_opinion_climate() on a valid Agent with strong indirect opinions is not returning the expected value",
+        )
+
+    def test_estimate_opinion_climate_complex(self) -> None:
+        """
+        Test that estimate_opinion_climate on a valid Agent with direct neighbours and a strong indirect opinion will return the expected value.
+        """
+        self.graph.graph.nodes()[12].opinion = 0.99
+        self.graph.graph.nodes()[4].opinion = 0.44
+        self.graph.graph.nodes()[15].opinion = -0.12
+        edges_to_add = {
+            "from_node": [13, 13],
+            "to_node": [4, 15],
+            "weighting": [0.3, 0.74],
+        }
+        self.graph.add_edges(edges_to_add)
+        opinion_climate = self.graph.estimate_opinion_climate(
+            self.graph.get_node(13).agent
+        )
+        self.assertIsInstance(
+            opinion_climate,
+            float,
+            "Graph -- estimate_opinion_climate() on a valid Agent (complex case) is not returning a float value",
+        )
+        # Worked example:
+        # observed_opinions will include [0.99, 0.44, -0.12]
+        # therefore summed_opinions = 1.31
+        # expected opinion climate = summed_opinions / len(observed_opinions)
+        # -> expected opinion climate = 0.436666666
+        expected_opinion_climate = 0.4366666
+        self.assertAlmostEqual(
+            opinion_climate,
+            expected_opinion_climate,
+            5,
+            "Graph -- estimate_opinion_climate() on a valid Agent (complex case) is not returning the expected value",
         )
