@@ -544,7 +544,148 @@ class TestGraphObjects(ut.TestCase):
         """
         Test that neighbour_influences() on a valid Agent with multiple neighbours returns the expected value.
         """
-        # TODO: Design and calculate a scenario and expected value to implement this test case
+        self.graph.graph.nodes()[13].opinion = 0.0
+        self.graph.graph.nodes()[12].opinion = 0.85
+        self.graph.graph.nodes()[4].opinion = 0.44
+        self.graph.graph.nodes()[7].opinion = -0.15
+        self.graph.graph.nodes()[21].opinion = 0.17
+        edges_to_add = {
+            "from_node": [13, 13, 13, 13],
+            "to_node": [12, 4, 7, 21],
+            "weighting": [0.41, 0.1, 0.35, -0.34],
+        }
+        self.graph.add_edges(edges_to_add)
+        final_change = self.graph.neighbour_influences(self.graph.get_node(13).agent)
+        # Worked example:
+        # 1. (13 -> 12):
+        #   - avg_opinion = (0.0 + 0.85) / 2 = 0.425
+        #   - dist_from_avg = (0.425 - 0.0) = 0.425
+        #   - delta_value = 0.425 * 0.5 * 0.41 = 0.087125
+        # 2. (13 -> 4):
+        #   - avg_opinion = (0.0 + 0.44) / 2 = 0.22
+        #   - dist_from_avg = (0.22 - 0.0) = 0.22
+        #   - delta_value = 0.22 * 0.5 * 0.1 = 0.011
+        # 3. (13 -> 7):
+        #   - avg_opinion = (0.0 + -0.15) / 2 = -0.075
+        #   - dist_from_avg = (-0.075 - 0.0) = -0.075
+        #   - delta_value = -0.075 * 0.5 * 0.35 = -0.013125
+        # 4. (13 -> 21):
+        #   - avg_opinion = (0.0 + 0.17) / 2 = 0.085
+        #   - dist_from_avg = (0.085 - 0.0) = 0.085
+        #   - delta_value = 0.085 * 0.5 * -0.34 = -0.01445
+        # ---
+        # All are non-radicalised, therefore each delta_value has a relative_weighting = 1.0
+        # and total_weightings = 4.0
+        # ---
+        # final_change = (0.25 * 0.087125) + (0.25 * 0.011) + (0.25 * -0.013125) + (0.25 * -0.01445)
+        #   = 0.02178125 + 0.00275 + -0.00328125 + -0.0036125
+        #   = 0.0176375
+        expected_final_change = 0.0176375
+        self.assertIsNotNone(
+            final_change,
+            "Graph -- neighbour_influences() on a valid Agent with multiple neighbours is returning None",
+        )
+        if final_change is not None:  # Included for type checking warnings
+            self.assertAlmostEqual(
+                final_change,
+                expected_final_change,
+                5,
+                "Graph -- neighbour_influences() on a valid Agent with multiple neighbours is not calculating the correct value",
+            )
+
+    def test_neighbour_influences_solo_radicalised(self) -> None:
+        """
+        Test that neighbour_influences() on a valid Agent with a single radicalised neighbour will return the correct value.
+        """
+        # These values will mean an average opinion of 0.5, with Agent 13 having a distance of -0.1 from the average
+        # weighted_delta = distance_from_avg * agent_hierarchy_weighting * relationship_strength
+        # therefore weighted_delta = -0.1 * 0.5 * 0.5
+        # = -0.025
+        # No other neighbours to affect the relative weighting, so the final_change should equal -0.025
+        self.graph.graph.nodes()[13].opinion = 0.6
+        self.graph.graph.nodes()[12].opinion = 0.4
+        self.graph.graph.nodes()[12].radicalised = True
+        edge_to_add = {
+            "from_node": [13],
+            "to_node": [12],
+            "weighting": [0.5],
+        }
+        self.graph.add_edges(edge_to_add)
+        final_change = self.graph.neighbour_influences(self.graph.get_node(13).agent)
+        # For the solitary case, the expected final change is the same as if the neighbour were non-radicalised
+        # (as the relative weighting should have no effect)
+        expected_final_change = -0.025
+        self.assertIsNotNone(
+            final_change,
+            "Graph -- neighbour_influences() on a valid Agent with a single radicalised neighbour is returning None",
+        )
+        if final_change is not None:  # Included for type checking warnings
+            self.assertAlmostEqual(
+                final_change,
+                expected_final_change,
+                5,
+                "Graph -- neighbour_influences() on a valid Agent with a single radicalised neighbour is not calculating the correct value",
+            )
+
+    def test_neighbour_influences_complex_radicalised(self) -> None:
+        """
+        Test that neighbour_influences() on a valid Agent with multiple, partially radicalised Agents will return the correct value.
+        """
+        self.graph.graph.nodes()[13].opinion = 0.0
+        self.graph.graph.nodes()[13].personality = "rational"
+        self.graph.graph.nodes()[12].opinion = 0.85
+        self.graph.graph.nodes()[12].radicalised = True
+        self.graph.graph.nodes()[4].opinion = 0.44
+        self.graph.graph.nodes()[7].opinion = -0.15
+        self.graph.graph.nodes()[21].opinion = 0.17
+        edges_to_add = {
+            "from_node": [13, 13, 13, 13],
+            "to_node": [12, 4, 7, 21],
+            "weighting": [0.41, 0.1, 0.35, -0.34],
+        }
+        self.graph.add_edges(edges_to_add)
+        final_change = self.graph.neighbour_influences(self.graph.get_node(13).agent)
+        # Worked example:
+        # 1. (13 -> 12):
+        #   - avg_opinion = (0.0 + 0.85) / 2 = 0.425
+        #   - dist_from_avg = (0.425 - 0.0) = 0.425
+        #   - delta_value = 0.425 * 0.5 * 0.41 = 0.087125
+        # 2. (13 -> 4):
+        #   - avg_opinion = (0.0 + 0.44) / 2 = 0.22
+        #   - dist_from_avg = (0.22 - 0.0) = 0.22
+        #   - delta_value = 0.22 * 0.5 * 0.1 = 0.011
+        # 3. (13 -> 7):
+        #   - avg_opinion = (0.0 + -0.15) / 2 = -0.075
+        #   - dist_from_avg = (-0.075 - 0.0) = -0.075
+        #   - delta_value = -0.075 * 0.5 * 0.35 = -0.013125
+        # 4. (13 -> 21):
+        #   - avg_opinion = (0.0 + 0.17) / 2 = 0.085
+        #   - dist_from_avg = (0.085 - 0.0) = 0.085
+        #   - delta_value = 0.085 * 0.5 * -0.34 = -0.01445
+        # ---
+        # All are non-radicalised, except for neighbour 12, and node 13 has personality "rational",
+        # therefore (13 -> 12) is given relative weighting 0.5, and all others are given relative weighting 1.0
+        # for a final total_weightings = 3.5
+        # ---
+        # let:
+        # normal_weighting (n_w) = 1.0 / 3.5 = 0.285714285714
+        # radical_weighting (r_w) = 0.5 / 3.5 = 0.142857142857
+        # ---
+        # final_change = (r_w * 0.087125) + (n_w * 0.011) + (n_w * -0.013125) + (n_w * -0.01445)
+        #   = 0.0124464285714 + 0.00314285714285 + -0.00375 + -0.00412857142857
+        #   = 0.00771071428568
+        expected_final_change = 0.00771071428568
+        self.assertIsNotNone(
+            final_change,
+            "Graph -- neighbour_influences() on a valid Agent with multiple partially radicalised neighbours is returning None",
+        )
+        if final_change is not None:  # Included for type checking warnings
+            self.assertAlmostEqual(
+                final_change,
+                expected_final_change,
+                5,
+                "Graph -- neighbour_influences() on a valid Agent with multiple partially radicalised neighbours is not calculating the correct value",
+            )
 
     def test_estimate_neighbour_opinions_solo(self) -> None:
         """
