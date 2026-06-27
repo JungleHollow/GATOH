@@ -134,7 +134,7 @@ class ABModel:
         if self.model_id != "":
             config_path = f"{self.save_dir}/model_{self.model_id}.yaml"
         else:
-            config_path = f"{self.save_dir}/model_{datetime.now()}.yaml"
+            config_path = f"{self.save_dir}/model_{datetime.now().strftime('%y-%m-%d %H-%M')}.yaml"
         config_data: dict[str, Any] = {
             "hierarchy_information": self.hierarchy_information,
             "current_iteration": self.current_iteration,
@@ -409,7 +409,9 @@ class ABModel:
                 total_change: float = sum(collective_changes)
 
                 # Check for the existence of personal benefit across all of the agent's neighbours
-                all_neighbour_indices: list[int] = list(self.base_graph.graph.neighbors(agent.index))
+                all_neighbour_indices: list[int] = list(
+                    self.base_graph.graph.neighbors(agent.index)
+                )
                 all_neighbour_benefits: list[bool] = []
                 for neighbour_index in all_neighbour_indices:
                     neighbour_object: Agent = self.base_graph.graph[neighbour_index]
@@ -424,12 +426,16 @@ class ABModel:
                         deepcopy(all_neighbour_benefits),
                     )
                 elif agent.opinion + total_change > 1.0:
-                    new_agent_opinions[agent.id] = (100.0, deepcopy(collective_changes), deepcopy(all_neighbour_benefits))
+                    new_agent_opinions[agent.id] = (
+                        100.0,
+                        deepcopy(collective_changes),
+                        deepcopy(all_neighbour_benefits),
+                    )
                 else:
                     new_agent_opinions[agent.id] = (
                         total_change,
                         deepcopy(collective_changes),
-                        deepcopy(all_neighbour_benefits)
+                        deepcopy(all_neighbour_benefits),
                     )
             self.iteration_opinion_changes(new_agent_opinions)
             self.step()
