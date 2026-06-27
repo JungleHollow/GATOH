@@ -846,3 +846,61 @@ class TestGraphObjects(ut.TestCase):
             5,
             "Graph -- estimate_opinion_climate() on a valid Agent (complex case) is not returning the expected value",
         )
+
+    def test_calculate_polarisation_equal(self) -> None:
+        """
+        Test that calculate_polarisation() on a populated Graph where all Agents have the same opinion returns a polarisation of 0.0.
+        """
+        polarisation = self.graph.calculate_polarisation()
+        self.assertIsInstance(
+            polarisation,
+            float,
+            "Graph -- calculate_polarisation() on a populated Graph is not returning a float value",
+        )
+        self.assertEqual(
+            polarisation,
+            0.0,
+            "Graph -- calculate_polarisation() on a Graph with uniform Agent opinions is not returning 0.0",
+        )
+
+    def test_calculate_polarisation_simple(self) -> None:
+        """
+        Test that calculate_polarisation() on a simple 2-Agent Graph returns the expected value.
+        """
+        simple_graph: gr.Graph = gr.Graph("SimpleGraph", (0.0, 0.0))
+        agents_to_add: list[Agent] = [
+            Agent("SIMPLE1", 0.2),
+            Agent("SIMPLE2", 0.8),
+        ]
+        simple_graph.add_nodes(agents_to_add)
+        polarisation = simple_graph.calculate_polarisation()
+        self.assertIsInstance(
+            polarisation,
+            float,
+            "Graph -- calculate_polarisation() on a populated Graph is not returning a float value",
+        )
+        # Worked example:
+        # ---
+        # distance (SIMPLE1 -> SIMPLE2) = 0.6
+        # distance (SIMPLE2 -> SIMPLE1) = -0.6
+        # average of all distances (y) = sum(distances) / len(distances) = 0.0
+        # ---
+        # square_distance = (distance - y) ** 2
+        # therefore square distance (SIMPLE1 -> SIMPLE2) = (0.6 - 0.0) ** 2 = 0.36
+        #   square distance (SIMPLE2 -> SIMPLE1) = (-0.6 - 0.0) ** 2 = 0.36
+        # and Sum of Squares (SoS) = sum(square_distances) = 0.72
+        # ---
+        # polarisation_measure = SoS / (K * (K - 1)) where K is node_count
+        #   = 0.72 / (2 * (2 - 1))
+        #   = 0.36
+        self.assertEqual(
+            polarisation,
+            0.36,
+            "Graph -- calculate_polarisation() on a populated Graph (simple case) is not calculating the correct value",
+        )
+
+    def test_calculate_polarisation_complex(self) -> None:
+        """
+        Test that calculate_polarisation() on a more complex example returns the expected value.
+        """
+        # TODO: Design and calculate a complex scenario to implement this test.
