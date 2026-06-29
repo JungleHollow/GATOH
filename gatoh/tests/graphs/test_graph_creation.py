@@ -144,6 +144,53 @@ class TestGraphCreation(ut.TestCase):
             40,
             "Graph -- generate_graph() is generating a graph with an unexpected number of nodes (small-world)",
         )
+        edge_count: int = 0
+        for edge in self.graph.graph.edges():
+            self.assertEqual(
+                edge.hierarchy,
+                "TestGraph",
+                "Graph -- generate_graph() is creating edges with incorrect hierarchy attributes (small-world)",
+            )
+            self.assertGreaterEqual(
+                edge.from_node,
+                0,
+                "Graph -- generate_graph() is creating edges originating from invalid nodes (small-world)",
+            )
+            self.assertGreaterEqual(
+                edge.to_node,
+                0,
+                "Graph -- generate_graph() is creating edges pointing to invalid nodes (small-world)",
+            )
+            self.assertLessEqual(
+                edge.from_node,
+                self.graph.node_count,
+                "Graph -- generate_graph() is creating edges originating from invalid nodes (small-world)",
+            )
+            self.assertLessEqual(
+                edge.to_node,
+                self.graph.node_count,
+                "Graph -- generate_graph() is creating edges pointing to invalid nodes (small-world)",
+            )
+            self.assertGreaterEqual(
+                edge.weighting,
+                -1.0,
+                "Graph -- generate_graph() is producing relationships with weightings less than -1.0 (small-world)",
+            )
+            self.assertLessEqual(
+                edge.weighting,
+                1.0,
+                "Graph -- generate_graph() is producing relationships with weightings greater than 1.0 (small-world)",
+            )
+            self.assertIsNone(
+                edge.rw_params,
+                "Graph -- generate_graph() is assigning relationship-level rw_params (small-world)",
+            )
+            edge_count += 1
+        self.assertEqual(
+            self.graph.edge_count,
+            edge_count,
+            "Graph -- generate_graph() is not appropriately updating the edge_count attribute (small-world)",
+        )
 
     def test_generate_scale_free(self) -> None:
         """
@@ -164,6 +211,53 @@ class TestGraphCreation(ut.TestCase):
             self.graph.node_count,
             40,
             "Graph -- generate_graph() is generating a graph with an unexpected number of nodes (scale-free)",
+        )
+        edge_count: int = 0
+        for edge in self.graph.graph.edges():
+            self.assertEqual(
+                edge.hierarchy,
+                "TestGraph",
+                "Graph -- generate_graph() is creating edges with incorrect hierarchy attributes (scale-free)",
+            )
+            self.assertGreaterEqual(
+                edge.from_node,
+                0,
+                "Graph -- generate_graph() is creating edges originating from invalid nodes (scale-free)",
+            )
+            self.assertGreaterEqual(
+                edge.to_node,
+                0,
+                "Graph -- generate_graph() is creating edges pointing to invalid nodes (scale-free)",
+            )
+            self.assertLessEqual(
+                edge.from_node,
+                self.graph.node_count,
+                "Graph -- generate_graph() is creating edges originating from invalid nodes (scale-free)",
+            )
+            self.assertLessEqual(
+                edge.to_node,
+                self.graph.node_count,
+                "Graph -- generate_graph() is creating edges pointing to invalid nodes (scale-free)",
+            )
+            self.assertGreaterEqual(
+                edge.weighting,
+                -1.0,
+                "Graph -- generate_graph() is producing relationships with weightings less than -1.0 (scale-free)",
+            )
+            self.assertLessEqual(
+                edge.weighting,
+                1.0,
+                "Graph -- generate_graph() is producing relationships with weightings greater than 1.0 (scale-free)",
+            )
+            self.assertIsNone(
+                edge.rw_params,
+                "Graph -- generate_graph() is assigning relationship-level rw_params (scale-free)",
+            )
+            edge_count += 1
+        self.assertEqual(
+            self.graph.edge_count,
+            edge_count,
+            "Graph -- generate_graph() is not appropriately updating the edge_count attribute (scale-free)",
         )
 
     def test_generate_random(self) -> None:
@@ -186,6 +280,53 @@ class TestGraphCreation(ut.TestCase):
             40,
             "Graph -- generate_graph() is generating a graph with an unexpected number of nodes (random)",
         )
+        edge_count: int = 0
+        for edge in self.graph.graph.edges():
+            self.assertEqual(
+                edge.hierarchy,
+                "TestGraph",
+                "Graph -- generate_graph() is creating edges with incorrect hierarchy attributes (random)",
+            )
+            self.assertGreaterEqual(
+                edge.from_node,
+                0,
+                "Graph -- generate_graph() is creating edges originating from invalid nodes (random)",
+            )
+            self.assertGreaterEqual(
+                edge.to_node,
+                0,
+                "Graph -- generate_graph() is creating edges pointing to invalid nodes (random)",
+            )
+            self.assertLessEqual(
+                edge.from_node,
+                self.graph.node_count,
+                "Graph -- generate_graph() is creating edges originating from invalid nodes (random)",
+            )
+            self.assertLessEqual(
+                edge.to_node,
+                self.graph.node_count,
+                "Graph -- generate_graph() is creating edges pointing to invalid nodes (random)",
+            )
+            self.assertGreaterEqual(
+                edge.weighting,
+                -1.0,
+                "Graph -- generate_graph() is producing relationships with weightings less than -1.0 (random)",
+            )
+            self.assertLessEqual(
+                edge.weighting,
+                1.0,
+                "Graph -- generate_graph() is producing relationships with weightings greater than 1.0 (random)",
+            )
+            self.assertIsNone(
+                edge.rw_params,
+                "Graph -- generate_graph() is assigning relationship-level rw_params (random)",
+            )
+            edge_count += 1
+        self.assertEqual(
+            self.graph.edge_count,
+            edge_count,
+            "Graph -- generate_graph() is not appropriately updating the edge_count attribute (random)",
+        )
 
     def test_generate_blockmodel(self) -> None:
         """
@@ -206,6 +347,53 @@ class TestGraphCreation(ut.TestCase):
             self.graph.node_count,
             40,
             "Graph -- generate_graph() is generating a graph with an unexpected number of nodes (blockmodel)",
+        )
+        edge_count: int = 0
+        for edge in self.graph.graph.edges():
+            self.assertEqual(
+                edge.hierarchy,
+                "TestGraph",
+                "Graph -- generate_graph() is creating edges with incorrect hierarchy attributes (blockmodel)",
+            )
+            self.assertGreaterEqual(
+                edge.from_node,
+                0,
+                "Graph -- generate_graph() is creating edges originating from invalid nodes (blockmodel)",
+            )
+            self.assertGreaterEqual(
+                edge.to_node,
+                0,
+                "Graph -- generate_graph() is creating edges pointing to invalid nodes (blockmodel)",
+            )
+            self.assertLessEqual(
+                edge.from_node,
+                self.graph.node_count,
+                "Graph -- generate_graph() is creating edges originating from invalid nodes (blockmodel)",
+            )
+            self.assertLessEqual(
+                edge.to_node,
+                self.graph.node_count,
+                "Graph -- generate_graph() is creating edges pointing to invalid nodes (blockmodel)",
+            )
+            self.assertGreaterEqual(
+                edge.weighting,
+                -1.0,
+                "Graph -- generate_graph() is producing relationships with weightings less than -1.0 (blockmodel)",
+            )
+            self.assertLessEqual(
+                edge.weighting,
+                1.0,
+                "Graph -- generate_graph() is producing relationships with weightings greater than 1.0 (blockmodel)",
+            )
+            self.assertIsNone(
+                edge.rw_params,
+                "Graph -- generate_graph() is assigning relationship-level rw_params (blockmodel)",
+            )
+            edge_count += 1
+        self.assertEqual(
+            self.graph.edge_count,
+            edge_count,
+            "Graph -- generate_graph() is not appropriately updating the edge_count attribute (blockmodel)",
         )
 
     @override
