@@ -252,3 +252,102 @@ class TestAgentAttributes(ut.TestCase):
             "very strong",
             "Agent -- unseen attribute value is not being stored correctly (str)",
         )
+
+    def test_init_kwargs_mixed(self) -> None:
+        """
+        Test that a mix of explicit and unseen kwargs are initialised correctly.
+        """
+        agent: agt.Agent = agt.Agent(
+            opinion=0.24,
+            personality="impulsive",
+            discontent=0.04,
+        )
+        self.assertHasAttr(
+            agent,
+            "opinion",
+            "Agent -- explicit opinion attribute in mixed **kwargs is not being assigned correctly",
+        )
+        self.assertHasAttr(
+            agent,
+            "discontent",
+            "Agent -- unseen attribute in mixed **kwargs is not being assigned correctly",
+        )
+        self.assertEqual(
+            agent.opinion,
+            0.24,
+            "Agent -- explicit opinion attribute in mixed **kwargs is not storing the value correctly",
+        )
+        self.assertEqual(
+            agent.personality,
+            "impulsive",
+            "Agent -- explicit personality attribute in mixed **kwargs is not overwriting the default value",
+        )
+        self.assertEqual(
+            agent.discontent,
+            0.04,
+            "Agent -- unseen attribute in mixed **kwargs is not storing its value correctly",
+        )
+
+    def test_init_mixed(self) -> None:
+        """
+        Test that __init__ with a mix of *args and **kwargs is working correctly.
+        """
+        agent: agt.Agent = agt.Agent(
+            "TestAgent",
+            {"TestGraph": 0.05},
+            discontent=0.75,
+        )
+        self.assertHasAttr(
+            agent,
+            "id",
+            "Agent -- id is not being assigned correctly from a mixed args and kwargs agent init",
+        )
+        self.assertHasAttr(
+            agent,
+            "discontent",
+            "Agent -- unseen attribute is not being assigned correctly from a mixed args and kwargs agent init",
+        )
+        self.assertEqual(
+            agent.id,
+            "TestAgent",
+            "Agent -- id is not being stored correctly from a mixed args and kwargs agent init",
+        )
+        self.assertEqual(
+            agent.social_weightings,
+            {"TestGraph": 0.05},
+            "Agent -- social_weightings are not being stored correctly from a mixed args and kwargs agent init",
+        )
+        self.assertEqual(
+            agent.discontent,
+            0.75,
+            "Agent -- unseen attribute is not being stored correctly from a mixed args and kwargs agent init",
+        )
+
+    def test_valid_str_normal(self) -> None:
+        """
+        Test that __str__ on a non-radicalised Agent with all required attributes returns the expected representation.
+        """
+        agent: agt.Agent = agt.Agent(
+            "TestAgent",
+            0.3,
+        )
+        str_repr: str = agent.__str__()
+        self.assertEqual(
+            str_repr,
+            "Agent TestAgent which is not radicalised with an opinion value of 0.3",
+        )
+
+    def test_valid_str_radicalised(self) -> None:
+        """
+        Test that __str__ on a radicalised Agent with all required attributes returns the expected representation.
+        """
+        agent: agt.Agent = agt.Agent(
+            "TestAgent",
+            0.98,
+            radicalised=True,
+        )
+        str_repr: str = agent.__str__()
+        self.assertEqual(
+            str_repr,
+            "Agent TestAgent which is radicalised with an opinion value of 0.98",
+        )
