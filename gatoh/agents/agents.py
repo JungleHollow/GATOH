@@ -24,6 +24,7 @@ def draw_personality() -> str:
     An Agent utility function that randomly draws a valid Agent personality type.
 
     :return: The string representing the drawn personality type.
+    :rtype: str
     """
     drawn_personality: str = rd.choice(PERSONALITIES)
     return drawn_personality
@@ -32,21 +33,24 @@ def draw_personality() -> str:
 class Agent:
     """
     A class to define the Agent objects that will interact with each other in an agent-based model.
+
+    Supported positional arguments:
+        - <string> to set the Agent's id.
+        - <dict> of {hierarchy_name : weight} for the personal value that this Agent assigns to each social hierarchy
+        - <float> in the range [-1, 1] to set the Agent's initial opinion on the topic of interest
+        - <bool> to define if the socially contagious belief will be of personal benefit to this Agent
+        - <(string, float)> for the Agent's defined personality and their social susceptibility (range [0, 1])
+
+    Any arbitrary keyword arguments that are passed to initialise this object will create a new attribute for
+    the Agent object, and store the value of that attribute as the input data type.
+
+    If any pre-existing attributes are passed as keyword arguments, this simply sets the attributes to the input value.
+
+    If both a positional argument and a corresponding keyword argument are passed for the same attribute,
+    the value given to the keyword argument will override whatever was passed as the positional value.
     """
 
     def __init__(self, *args, **kwargs) -> None:
-        """
-        Supported positional arguments:
-            - <string> to set the Agent's id
-            - <dict> of {hierarchy_name : weight} for the personal value that this Agent assigns to each social hierarchy
-            - <float> in the range [-1, 1] to set the Agent's initial opinion on the topic of interest
-            - <bool> to define if the socially contagious belief will be of personal benefit to this Agent
-            - (string, float) for the agent's defined personality and their social susceptibility
-
-        :param args: positional arguments that can be passed to each Agent
-        :param kwargs: keyword arguments that can be passed to each Agent
-        """
-
         # Attributes declared but without initialisation will be defined by self.generate_agent() in a subsequent call if no args are passed
         self.id: str  # Can be any arbitrary string, but likely will follow the form XXXX0000 allowing for up to 9999 agents per community
         self.index: int  # The Agent's index within the AgentSet it belongs in
@@ -109,15 +113,26 @@ class Agent:
         Randomly generate an Agent object based on the input parameters.
 
         :param id: The id that has been assigned for this specific Agent object under the conditions of the model specifications.
+        :type id: str
         :param index: The index of the Agent object within the model's AgentSet.
-        :param hierarchies: A list containing the names of all valid social hierarchies in the model.
+        :type index: int
+        :param hierarchies: The names of all valid social hierarchies in the model.
+        :type hierarchies: list[str]
         :param distribution: The distribution to use for relevant attribute generation (Valid distributions include: 'gaussian', 'beta')
+        :type distribution: str, optional
         :param explicit_rw: A flag indicating if explicit hierarchy weighting random walk parameters should be generated for this Agent.
+        :type explicit_rw: bool, optional
         :param explicit_opinion_rw: A flag indicating if an explicit opinion random walk parameter should be generated for this Agent.
+        :type explicit_opinion_rw: bool, optional
         :param personality: A string defining what type of personality the agent will have (defaults to 'neutral' on Agent __init__)
+        :type personality: str, optional
         :param parameters: A dictionary containing the distribution parameters used to generate random values.
+        :type parameters: dict, optional
         :param personal_benefit: A boolean indicating if the Agent would be personally benefitted by the adoption of the 'social virus' being spread.
+        :type personal_benefit: bool, optional
+        ...
         :return: The generated Agent object.
+        :rtype: Agent
         """
         # Begin by setting crucial information
         self.id = id
@@ -188,9 +203,18 @@ class Agent:
             - "levy"
 
         :param name: The name of the attribute to be added.
+        :type name: str
         :param value: Initial value of the attribute.
-        :param parameters: The distribution parameters that will be used with the specified distribution for parameter generation
-        :param distribution: String to select which random distribution will be used to generate the value
+        :type value: Any, optional
+        :param parameters: The distribution parameters that will be used with the specified distribution for parameter generation.
+        :type parameters: dict, optional
+        :param distribution: String to select which random distribution will be used to generate the value.
+        :type distribution: str, optional
+        :param overwrite: A flag indicating if the added attribute should override any existing attributes of the same name.
+        :type overwrite: bool, optional
+        ...
+        :raises ValueError: If no valid value or distribution parameters are input, the attribute cannot be added.
+        :raises UserWarning: If overwrite is explicitly False but the attribute is existing, a warning is raised without completing the operation.
         """
         if value is None and not (distribution and parameters):
             raise ValueError(
@@ -215,10 +239,13 @@ class Agent:
 
     def get_attribute(self, name: str) -> Any:
         """
-        Return any dynamically added attribute held by the Agent object.
+        Return any existing or dynamically added attribute held by the Agent object.
 
         :param name: The name of the parameter to get.
+        :type name: str
+        ...
         :return: The value stored for the parameter.
+        :rtype: Any
         """
         try:
             return self.__dict__[name]
@@ -241,6 +268,7 @@ class Agent:
         A setter method that changes the Agent's current opinion by a given delta value.
 
         :param opinion_delta: The delta value by which to shift the Agent's current opinion.
+        :type opinion_delta: float
         """
         self.opinion += opinion_delta
 
@@ -255,7 +283,8 @@ class Agent:
         """
         A setter method that changes the Agent's radicalisation value.
 
-        :param radicalisation: The boolean radicalisation value to set.
+        :param radicalisation: The radicalisation flag to set.
+        :type radicalisation: bool
         """
         self.radicalised = radicalisation
         return None
@@ -267,7 +296,9 @@ class Agent:
         A setter method that changes the Agent's explicit random walk parameters for a specific social hierarchy.
 
         :param hierarchy: The name of the hierarchy whose rw parameters are being changes.
+        :type hierarchy: str
         :param parameters: The new (mean, var) for the random walk's gaussian distribution.
+        :type parameters: tuple[float, float]
         """
         # Assume that if this function is being called, rw_distributions should be initialised if not already
         if not self.rw_distributions:
@@ -281,6 +312,7 @@ class Agent:
         A setter method that changes the Agent's explicit opinion random walk parameters.
 
         :param rw_params: The new (mean, var) for the random walk's gaussian distribution.
+        :type rw_params: tuple[float, float]
         """
         self.opinion_rw = rw_params
         return None
@@ -295,9 +327,10 @@ class Agent:
             1. Handle dynamic social hierarchy weightings
             2. Handle the stochastic opinion changes experienced by the Agent
 
-        :param rw_distributions: A dictionary of <hierarchy name : (mean, variance)> defining the random walk distributions of each social
-                                    hierarchy weighting in the model.
+        :param rw_distributions: A mapping of <hierarchy name : (mean, variance)> defining the random walk distributions of each social hierarchy weighting in the model.
+        :type rw_distribution: dict[str, tuple[float, float]]
         :param opinion_rw: A (mean, variance) tuple defining the random walk distribution at the model level for the Agent opinions.
+        :type opinion_rw: tuple[float, float]
         """
         self.evolve_hierarchies(rw_distributions)
         self.stochastic_opinion(opinion_rw)
@@ -309,8 +342,10 @@ class Agent:
             1. Updates what social hierarchies the Agent's opinion is currently silenced in
             2. Inverts the Agent's current opinion if opinion negation ocurred
 
-        :param opinion_silenced: A dictionary of <hierarchy : boolean> indicating which social hierarchies the Agent is silencing themselves in.
-        :param negation_ocurred: A boolean indicating if opinion negation has ocurred in the current iteration.
+        :param opinion_silenced: A mapping of <hierarchy : flag> indicating which social hierarchies the Agent is silencing themselves in.
+        :type opinion_silence: dict[str, bool]
+        :param negation_ocurred: A flag indicating if opinion negation has ocurred in the current iteration.
+        :type negation_ocurred: bool
         """
         self.is_silenced = opinion_silenced  # Update is_silenced
         if negation_ocurred:
@@ -329,9 +364,14 @@ class Agent:
         If no silencing threshold has been passed, each Agent's own social susceptibility is used as the threshold instead.
 
         :param hierarchy: The name of the social hierarchy that opinion silencing is being checked in.
+        :type hierarchy: str
         :param estimated_opinion_climate: The opinion climate perceived by the Agent in this hierarchy (not necessarily objectively 'accurate').
+        :type estimated_opinion_climate: float
         :param silencing_threshold: A hierarchy or global silencing threshold that must be surpassed for silencing to occur.
-        :return: A (boolean, absolute_difference) tuple indicating if silencing occurs, and the absolute difference between the perceived opinion climate and the Agent's own opinion.
+        :type silencing_threshold: float, optional
+        ...
+        :return: A pair of values indicating if silencing occurs, and the absolute difference between the perceived opinion climate and the Agent's own opinion, respectively.
+        :rtype: tuple[bool, float]
         """
         # It is assumed that a radicalised Agent will never silence themselves regardless of the perceived opinion climate
         if self.radicalised:
@@ -362,9 +402,14 @@ class Agent:
         reversal of their opinion.
 
         :param hierarchy: The name of the social hierarchy where opinion negation is being checked for.
+        :type hierarchy: str
         :param absolute_difference: The absolute difference between the perceived opinion climate and the Agent's own opinion.
+        :type absolute_difference: float
         :param threshold: A global model threshold that has been specified for this effect to occur.
-        :return: A boolean indicating if the Agent's opinion experienced a total negation.
+        :type threshold: float
+        ...
+        :return: A flag indicating if the Agent's opinion experienced a total negation.
+        :rtype: bool
         """
         # It is assumed that a radicalised Agent will never experience a total opinion reversal regardless of the perceived opinion climate
         if self.radicalised:
@@ -397,11 +442,17 @@ class Agent:
         Uses the agent's own opinion as well as the neighbours' opinions to determine if
         the agent has become radicalised in their actions.
 
-        :param hierarchy_changes: A list of the opinion changes caused in each social hierarchy by neighbours during this iteration.
-        :param neighbour_benefits: A list of boolean flags indicating the presence of personal benefit across an agent's neighbours.
-        :param hierarchy_names: A list of hierarchy names in an order corresponding to the passed hierarchy changes list.
+        :param hierarchy_changes: The opinion changes caused in each social hierarchy by neighbours during this iteration.
+        :type hierarchy_changes: list[float]
+        :param neighbour_benefits: Flags indicating the presence of personal benefit across an agent's neighbours.
+        :type neighbour_benefits: list[bool]
+        :param hierarchy_names: Hierarchy names in an order corresponding to the passed hierarchy changes.
+        :type hierarchy_names: list[str]
         :param threshold: The radicalisation threshold that has been defined at the global level in the model.
-        :return: A boolean indicating if the Agent has become radicalised or not.
+        :type threshold: float
+        ...
+        :return: A flag indicating if the Agent has become radicalised or not.
+        :rtype: bool
         """
         # If the Agent is already radicalised, always return False (as the Agent cannot become 'radicalised' again)
         if self.radicalised:
@@ -475,7 +526,8 @@ class Agent:
         Experimental function that aims to model the constantly evolving 'intrinsic value' that Agents place on
         the social hierarchies that they belong in over time.
 
-        :param rw_distributions: A dictionary specifying the global random walk distributions defined for each hierarchy in the model.
+        :param rw_distributions: A mapping specifying the global random walk distributions defined for each hierarchy in the model.
+        :type rw_distributions: dict[str, tuple[float, float]]
         """
         for key, value in rw_distributions.items():
             rw_result: float | None = None
@@ -511,7 +563,8 @@ class Agent:
         This is representative of opinion changes in real social networks in which individual opinions may increase or decrease
         away from the aggregate mean (independent of external influences).
 
-        :param opinion_rw: A (mean, variance) tuple which parametrises the Gaussian distribution used for stochastic opinion shift.
+        :param opinion_rw: A (mean, variance) pair which parametrises the Gaussian distribution used for stochastic opinion shift.
+        :type opinion_rw: tuple[float, float]
         """
         rw_result: float | None = None
 
@@ -545,8 +598,11 @@ class Agent:
         """
         Determine if the Agent is contained within an iterable of Agents
 
-        :param iterable: The iterable of Agent objects in which membership is being determined.
-        :return: A boolean indicating if this Agent is contained within the iterable.
+        :param iterable: The Agent objects in which membership is being determined.
+        :type iterable: Iterable[Agent]
+        ...
+        :return: A flag indicating if this Agent is contained within the iterable.
+        :rtype: bool
         """
         for agent in iterable:
             if self == agent:
@@ -556,20 +612,23 @@ class Agent:
     @override
     def __str__(self) -> str:
         """
-        An override to what calling `print()` on this object will output
+        An override to what calling `print()` on this object will output.
+
+        :return: A printable representation of the Agent object
+        :rtype: str
         """
         return f"Agent {self.id} which {'is' if self.radicalised else 'is not'} radicalised with an opinion value of {self.opinion}"
 
 
 class AgentSet:
     """
-    An ordered collection of Agent objects that maintains consistency for the Model
+    An ordered collection of Agent objects that maintains consistency for the Model.
+
+    :param model: The parent model that this AgentSet is being attached to
+    :type model: ABModel
     """
 
     def __init__(self, model: Any) -> None:
-        """
-        :param model: The parent ABModel object that this AgentSet is being attached to
-        """
         self.parent_model: Any = model
         self.agents: list[Agent] = []
         self.random: rd.Random = rd.Random()
@@ -579,6 +638,7 @@ class AgentSet:
         Save the Agent objects into a compressed subdirectory representing the the saved AgentSet.
 
         :param directory_path: The path to the directory where the agentset subdirectory should be created.
+        :type directory_path: str
         """
         subdirectory_path: str = f"{directory_path}/_agentset"
 
@@ -622,6 +682,7 @@ class AgentSet:
         Loads an AgentSet that has been saved following the same process as in the save_agentset() function.
 
         :param load_path: The path to the model's overall save directory.
+        :type load_path: str
         """
         zip_load_path: str = f"{load_path}/_agentset.zip"
 
@@ -659,7 +720,8 @@ class AgentSet:
         """
         A method that defines how an AgentSet object checks its length.
 
-        :return: the number of agents present in the AgentSet
+        :return: the number of agents present in the AgentSet.
+        :rtype: int
         """
         return len(self.agents)
 
@@ -667,7 +729,8 @@ class AgentSet:
         """
         A method that defines how the AgentSet iterates over its Agents.
 
-        :return: An Iterator object that iterates over all the Agents within the AgentSet.
+        :return: An iteration over all the Agents within the AgentSet.
+        :rtype: Iterator[Agent]
         """
         return self.agents.__iter__()
 
@@ -676,7 +739,10 @@ class AgentSet:
         A method defining how an AgentSet checks for an Agent's membership.
 
         :param agent: The specific Agent object to check for.
-        :return: A boolean indicating if the Agent object is in the AgentSet.
+        :type agent: Agent
+        ...
+        :return: A flag indicating if the Agent object is in the AgentSet.
+        :rtype: bool
         """
         return agent in self.agents
 
@@ -685,15 +751,22 @@ class AgentSet:
         A secondary method defining how an AgentSet checks for an Agent's membership.
 
         :param agent: The specific Agent object to check for.
-        :return: A boolean indicating if the specified Agent object is in the AgentSet.
+        :type agent: Agent
+        ...
+        :return: A flag indicating if the specified Agent object is in the AgentSet.
+        :rtype: bool
         """
         return self.agents.__contains__(agent)
 
-    def __getitem__(self, item: int | slice) -> Any:
+    def __getitem__(self, item: int | slice) -> Agent | list[Agent]:
         """
         Retrieve an Agent or slice of Agents from the AgentSet.
-        :param item: The index or slice for selecting the agents.
+
+        :param item: The parameter for selecting the agents.
+        :type item: int | slice
+        ...
         :return: The selected agent or slice of agents based on the specified item.
+        :rtype: Agent | list[Agent]
         """
         return self.agents.__getitem__(item)
 
@@ -702,7 +775,10 @@ class AgentSet:
         Add an Agent to the AgentSet.
 
         :param agent: The Agent object to be added.
+        :type agent: Agent
+        ...
         :return: The index of the newly added Agent.
+        :rtype: int
         """
         self.agents.append(agent)
         self.agents[-1].index = len(self.agents)
@@ -710,7 +786,7 @@ class AgentSet:
 
     def update_indices(self) -> None:
         """
-        Iterate over the AgentSet and update the current Agent object index values
+        Iterate over the AgentSet and update the current Agent object index values.
         """
         for idx, agent in enumerate(self.agents):
             agent.index = idx
@@ -719,8 +795,12 @@ class AgentSet:
     def discard(self, agent: Agent) -> bool:
         """
         Removes an Agent from the AgentSet which matches the input Agent; does not return an error if the Agent does not exist.
-        :param agent: The Agent object that should be removed from the set
-        :return: A boolean to flag if the Agent was removed successfully or not
+
+        :param agent: The Agent object that should be removed from the set.
+        :type agent: Agent
+        ...
+        :return: A flag indicating if the Agent was removed successfully or not.
+        :rtype: bool
         """
         for idx, agnt in enumerate(self.agents):
             if agent == agnt:
@@ -739,13 +819,19 @@ class AgentSet:
         Returns the Agent object at the given index in the AgentSet.
 
         :param index: The index within the AgentSet to inspect.
+        :type index: int
+        ...
+        :raises UserWarning: If the input index is out of bounds, raise a warning and return None.
+        ...
         :return: The Agent object at the specified index.
+        :rtype: Agent
         """
         try:
             return self.agents[index]
         except IndexError:
-            print(
-                f"Index {index} is out of bounds for the AgentSet. Only {len(self.agents)} Agents have been created."
+            warnings.warn(
+                f"WARNING: Index {index} is out of bounds for the AgentSet. Only {len(self.agents)} Agents have been created.",
+                category=UserWarning,
             )
             return None
 
