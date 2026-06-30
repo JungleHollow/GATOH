@@ -60,6 +60,11 @@ class ModelParameters:
                 "radicalisation_threshold"
             ]
 
+        if "suppress_warnings" in parameters_dict.keys():
+            self.suppress_warnings = parameters_dict["suppress_warnings"]
+        else:
+            self.suppress_warnings = TEST_PARAMETERS["DEFAULT"]["suppress_warnings"]
+
         if "save_dir" in parameters_dict.keys():
             self.save_dir = parameters_dict["save_dir"]
         else:
@@ -110,15 +115,14 @@ class DataReader:
         self.agent_objects: dict[str, list[Agent]] = {}
         self.graph_objects: dict[str, list[Graph]] = {}
 
-        self.load_objects()
-
         if self.opinion_paths:
             for key, value in self.opinion_paths.items():
                 with open(value, "r") as csv_file:
                     self.opinion_dfs[key] = pl.read_csv(csv_file)
 
+        self.model_params: dict[str, ModelParameters] = {}
+
         if not self.existing:
-            self.model_params: dict[str, ModelParameters] = {}
             for key, value in test_parameters.items():
                 if key == "DEFAULT":
                     continue
@@ -132,6 +136,8 @@ class DataReader:
 
         self.models: dict[str, ABModel] = {}
 
+        self.load_objects()
+
     def load_objects(self) -> None:
         """
         Loads the Agent and Graph objects for each model in the experiment.
@@ -141,10 +147,13 @@ class DataReader:
             agent_pickle_paths: list[str] = list(os.walk(agent_path))[0][2]
             for pickle_path in agent_pickle_paths:
                 agent_obj: Agent
-                with open(pickle_path, "rb") as pickle_file:
+                with open(
+                    f"{AGENT_PATHS[model_name]}/{pickle_path}", "rb"
+                ) as pickle_file:
                     agent_obj = pickle.load(pickle_file)
 
-                self.agent_objects[model_name].append(deepcopy(agent_obj))
+                model_agents = self.agent_objects.setdefault(model_name, [])
+                model_agents.append(deepcopy(agent_obj))
 
                 # Manual garbage collection
                 del agent_obj
@@ -180,7 +189,8 @@ class DataReader:
                         edge_object: GraphEdge = pickle.load(pickle_file)
                         new_graph.graph.update_edge_by_index(edge_index, edge_object)
 
-                self.graph_objects[model_name].append(deepcopy(new_graph))
+                graph_objects = self.graph_objects.setdefault(model_name, [])
+                graph_objects.append(deepcopy(new_graph))
 
                 # Manual garbage collection
                 del new_graph, nodes_dir, node_names, edges_dir, edge_names
@@ -325,8 +335,8 @@ if __name__ == "__main__":
     }
 
     SAVEFILES: dict[str, str] = {
-        "NONMN": f"{SAVEDIR_ROOT}/NONMN_model_variables.csv",
-        "MINNG": f"{SAVEDIR_ROOT}/MINNG_model_variables.csv",
+        "NONMN": f"{SAVEDIRS['NONMN']}/NONMN_model_variables.csv",
+        "MINNG": f"{SAVEDIRS['MINNG']}/MINNG_model_variables.csv",
     }
 
     AGENT_PATHS: dict[str, str] = {
@@ -405,9 +415,10 @@ if __name__ == "__main__":
             directory_missing = True
             missing_savedirs.append(model_name)
 
+    data_reader: DataReader
     if directory_missing:
         # Create the tester normally, setup the models, and begin iterations
-        data_reader: DataReader = DataReader(
+        data_reader = DataReader(
             AGENT_PATHS,
             GRAPH_PATHS,
             BASE_HIERARCHIES,
@@ -424,7 +435,7 @@ if __name__ == "__main__":
             data_reader.run_models()
     else:
         # Create the tester in "existing" mode, and examine the results
-        data_reader: DataReader = DataReader(
+        data_reader = DataReader(
             AGENT_PATHS,
             GRAPH_PATHS,
             BASE_HIERARCHIES,

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+import os
 from typing import Any
 
-import os
 import matplotlib
 import numpy as np
 import rustworkx as rx
 
-matplotlib.use("GTKAgg")
+matplotlib.use("gtk4agg")
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from rustworkx.visualization import mpl_draw
@@ -114,7 +114,7 @@ class ABVisualiser:
 
         # Determine the colours based on radicalisation
         node_colours: list[str] = []
-        for node in base_graph.graph.nodes()
+        for node in base_graph.graph.nodes():
             if node.agent.radicalised:
                 node_colours.append("red")
             else:
@@ -134,6 +134,9 @@ class ABVisualiser:
             # Ensure that the model_runtime subdirectory exists
             if not os.path.exists(f"{self.visualisation_dir}/model_runtime"):
                 os.mkdir(f"{self.visualisation_dir}/model_runtime")
-            plt.savefig(f"{self.visualisation_dir}/model_runtime/iteration_{self.parent_model.current_iteration}.png", dpi=300.0)
+            plt.savefig(
+                f"{self.visualisation_dir}/model_runtime/iteration_{self.parent_model.current_iteration}.png",
+                dpi=300.0,
+            )
 
         return None
