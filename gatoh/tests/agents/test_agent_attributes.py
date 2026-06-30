@@ -351,3 +351,21 @@ class TestAgentAttributes(ut.TestCase):
             str_repr,
             "Agent TestAgent which is radicalised with an opinion value of 0.98",
         )
+
+    def test_get_attribute_empty(self) -> None:
+        """
+        Test that get_attribute() on a non-existing Agent attribute raises a warning and returns None.
+        """
+        empty_agent: agt.Agent = agt.Agent()
+        with self.assertWarns(UserWarning) as cm:
+            attribute = empty_agent.get_attribute("foobar")
+        ga_warning = cm.warning
+        self.assertEqual(
+            ga_warning.message,
+            "WARNING: Attempting to get an Agent attribute (foobar) which doesn't exist.",
+            "Agent -- get_attribute() on a non-existing attribute is not raising the expected warning",
+        )
+        self.assertIsNone(
+            attribute,
+            "Agent -- get_attribute() on a non-existing attribute is not returning None",
+        )
