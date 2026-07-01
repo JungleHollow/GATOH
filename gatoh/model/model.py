@@ -26,6 +26,37 @@ from gatoh.visualisation.visualisation import ABVisualiser
 class ABModel:
     """
     An agent-based model class that is capable of handling multiple layers that affect agent behaviour.
+
+    :param hierarchy_names: The names of all social hierarchies that will exist in the model.
+    :type hierarchy_names: list[str]
+    :param hierarchy_rw_distributions: (mean, variance) parameters used for random walk effects within each hierarchy.
+    :type hierarchy_rw_distributions: list[tuple[float, float]]
+    :param agent_opinion_rw: Shared (mean, variance) parameters used for stochastic opinion changes across all agents at each timestep.
+    :type agent_opinion_rw: tuple[float, float], optional
+    :param iterations: The number of iterations that the model will run for.
+    :type iterations: int, optional
+    :param silencing_threshold: A threshold that, when surpassed by agents, will cause them to cease expressing their opinions in a given hierarchy.
+    :type silencing_threshold: float, optional
+    :param negation_threshold: A threshold that, when surpassed by agents, will cause their opinion to become its additive inverse.
+    :type negation_threshold: float, optional
+    :param radicalisation_threshold: A threshold that determines how strong of an absolute opinion an agent must hold before they begin to consider becoming radicalised.
+    :type radicalisation_threshold: float, optional
+    :param suppress_warnings: A flag indicating if non-critical runtime warnings should be suppressed.
+    :type suppress_warnings: bool, optional
+    :param visualise: A flag indicating if the model should visualise emergent behaviour in real time.
+    :type visualise: bool, optional
+    :param visualisation_dir: The path to a directory in which all of this model's visualiser outputs should be saved to.
+    :type visualisation_dir: str, optional
+    :param vis_aggregation_method: The aggregation method that should be used when relevant for visualisation (i.e. ``median'', ``mean'', etc.).
+    :type vis_aggregation_method: str, optional
+    :param checkpointing: A flag indicating if the model's progress should be saved at the end of each iteration (useful in case of interrupted runtimes).
+    :type checkpointing: bool, optional
+    :param save_dir: The path to a directory in which all of this model's non-logger data should be saved to.
+    :type save_dir: str, optional
+    :param data_file: The path to which the logger's data should be saved to after iterations are run.
+    :type data_file: str, optional
+    :param model_id: A unique ID assigned to this model to make it referencable amongst other models.
+    :type model_id: str, optional
     """
 
     def __init__(
@@ -46,23 +77,6 @@ class ABModel:
         data_file: str = "",
         model_id: str = "",
     ) -> None:
-        """
-        :param hierarchy_names: A list of strings representing the names of all social hierachies that will exist in the model.
-        :param hierarchy_rw_distributions: A list of (mean, variance) tuples defining the parameters of normal distributions used in random walks for their corresponding hierarchies.
-        :param agent_opinion_rw: A (mean, variance) tuple defining the parameters of the normal distribution used for stochastic opinion changes in Agents at each timestep.
-        :param iterations: The number of iterations that the model will run for.
-        :param silencing_threshold: A threshold that, when surpassed by Agents, will cause them to cease expressing their opinions in a given hierarchy.
-        :param negation_threshold: A threshold that, when surpassed by Agents, will cause their opinion to become its additive inverse.
-        :param radicalisation_threshold: A threshold that determined how strong of an absolute opinion an Agent must hold before they begin to consider becoming radicalised.
-        :param suppress_warnings: A boolean flag indicating if non-critical warnings should be suppressed during runtime.
-        :param visualise: A boolean flag indicating if the model should visualise emergent behaviour in real time.
-        :param visualisation_dir: The path to a directory in which all of this model's visualiser outputs should be saved to.
-        :param vis_aggregation_method: A string indicating what aggregation method should be used when relevant in visualisation (i.e. "median", "mean", etc.).
-        :param checkpointing: A boolean flag indicating if the model's progress should be saved at the end of each iteration (useful in case of interrupted runtimes).
-        :param save_dir: The path to a directory in which all of this model's non-logger data should be saved to.
-        :param data_file: The path to which the logger's data should be saved to after iterations are run.
-        :param model_id: An optional field to give the created model object a referencable ID.
-        """
         self.hierarchy_information: dict[str, tuple[float, float]] = {}
         for idx, hierarchy in enumerate(hierarchy_names):
             self.hierarchy_information[hierarchy] = hierarchy_rw_distributions[idx]
@@ -158,6 +172,8 @@ class ABModel:
         Loads a model and all its components which have been saved following the processes in the save_model() function.
 
         :param load_dir: The path to the directory where all model data was saved.
+        :type load_dir: str
+        :raises FileNotFoundError: If the input load_dir is invalid.
         """
         if not os.path.isdir(load_dir):
             raise FileNotFoundError(f"The input load directory {load_dir} is invalid.")
@@ -226,8 +242,10 @@ class ABModel:
         Add a new Graph to the Model's GraphSet. It is assumed that this is a generated Graph object which already has
         a name and rw_params assigned to it.
 
-        :param graph: The Graph object to be added to the Model's GraphSet.
-        :return: The model's newly updated GraphSet.
+        :param graph: The graph to be added to the Model's GraphSet.
+        :type graph: Graph
+        :return: The model's newly updated graph set.
+        :rtype: GraphSet
         """
         self.graphs.add_graph(graph)
 
@@ -241,10 +259,14 @@ class ABModel:
         """
         Add new Graphs to the Model's GraphSet.
 
-        :param graphs: A list of Graph objects or filepaths to stored GraphML objects.
-        :param names: A list of the corresponding social hierarchy names to give to the Graphs.
+        :param graphs: Graph objects or filepaths to stored GraphML objects.
+        :type graphs: list[Graph | str]
+        :param names: The corresponding social hierarchy names to give to the Graphs.
+        :type names: list[str]
         :param rw_params: The (mean, variance) to assign to the hierarchy when determining normal distributions for random walk dynamic relationships.
-        :return: The model's newly updated GraphSet.
+        :type rw_params: list[tuple[float, float]]
+        :return: The model's newly updated graph set.
+        :rtype: GraphSet
         """
         if type(graphs[0]) is Graph:
             for graph in graphs:
@@ -270,12 +292,18 @@ class ABModel:
         Randomly generates graphs for the given social hierarchy names using the specified method.
         Hierarchies will only contain the agents whose names are passed to the function.
 
-        :param hierarchies: A list containing the names of the social hierarchy graphs to be created.
-        :param agents: A list of Agent objects which determines who is included in the hierarchies.
+        :param hierarchies: The names of the social hierarchy graphs to be created.
+        :type hierarchies: list[str]
+        :param agents: The agents to be included in the hierarchies.
+        :type agents: list[Agent] | AgentSet
         :param method: The social network graph generation method to use. Options include: 'small-world', 'scale-free', 'random', 'blockmodel'. Defaults to 'small-world'.
-        :param agent_subsetting: A boolean indicating if the agents should be sampled into random subsets when generating each graph.
-        :param rw_params: A list of (mean, variance) tuples containing the random-walk distributions for each of the generated graphs.
+        :type method: str, optional
+        :param agent_subsetting: A flag indicating if the agents should be sampled into random subsets when generating each graph.
+        :type agent_subsetting: bool, optional
+        :param rw_params: (mean, variance) parameters containing the random-walk distributions for each of the generated graphs.
+        :type rw_params: list[tuple[float, float]], optional
         :param individual_methods: A <hierarchy : generation method> mapping indicating the per-hierarchy generation methods that should be used.
+        :type individual_methods: dict[str, str], optional
         """
         agent_array: np.ndarray = np.array(agents)
         agent_sample: list[Agent] = []
@@ -314,8 +342,10 @@ class ABModel:
         """
         Add a single new Agent to the model's AgentSet, returning its index within the AgentSet.
 
-        :param agent: The Agent object to add to the AgentSet.
+        :param agent: The agent to add to the AgentSet.
+        :type agent: Agent
         :return: The index of the newly added Agent in the AgentSet.
+        :rtype: int
         """
         # Add the Agent object to the model-handled 'base' graph
         self.base_graph.add_nodes([agent])
@@ -325,8 +355,10 @@ class ABModel:
         """
         Add new Agents to the Model's AgentSet.
 
-        :param agents: A list of Agent objects to be added to the AgentSet.
-        :return: The model's newly updated AgentSet.
+        :param agents: The agents to be added to the AgentSet.
+        :type agents: list[Agent]
+        :return: The model's newly updated agent set.
+        :rtype: AgentSet
         """
         for agent in agents:
             _ = self.agents.add(agent)
@@ -347,10 +379,15 @@ class ABModel:
         Randomly generates a number of Agent objects.
 
         :param id_base: a 4-character alphabetic string that serves as the base of the XXXXnnnn id for each Agent.
-        :param personality_probs: A dictionary of <personality : probability> specifying the probability of an Agent having any given personality.
+        :type id_base: str
+        :param personality_probs: A <personality : probability> mapping specifying the probability of an Agent having any given personality.
+        :type personality_probs: dict[str, float]
         :param distribution: The distribution from which any random values will be drawn.
+        :type distribution: str, optional
         :param parameters: Any explicit parameters that the distribution should use when being created.
+        :type parameters: dict, optional
         :param number: Number of agents to be randomly created.
+        :type number: int, optional
         """
         # Convert to separate lists for use in random.choices()
         personalities: list[str] = list(personality_probs.keys())
@@ -473,6 +510,7 @@ class ABModel:
         for radicalisation.
 
         :param changes_dict: A <agent ID : opinion change information> mapping of the opinion values to apply.
+        :type changes_dict: dict[str, tuple[float, list[float], list[bool]]]
         """
         for agent_id, opinion_change_info in changes_dict.items():
             agent_object: Agent | None = self.agents.get_agent_by_id(agent_id)
@@ -499,8 +537,10 @@ class ABModel:
 
     def step(self) -> None:
         """
-        Steps the model forward one iteration. This does not handle agent opinion changes,
-        but rather dynamic agent relationships and hierarchy weightings.
+        Steps the model forward one iteration.
+
+        This does not handle agent opinion changes, but rather dynamic agent relationships
+        and hierarchy weightings.
         """
         for graph in self.graphs:
             graph.step()
@@ -516,8 +556,6 @@ class ABModel:
         Updates the agents' internal states to match the model step. This mainly handles the construction of agents'
         perceived opinion climates within their hierarchies, and the simulation of opinion silencing behaviours depending
         on these climates.
-
-        :param suppress_warnings: A boolean flag indicating if non-critical warnings should be suppressed.
         """
         for agent in self.agents:
             silenced: dict[str, bool] = {}
@@ -583,6 +621,7 @@ class ABModel:
         Calculates the aggregate network opinion by iterating over each Agent in the model.
 
         :return: The aggregate network opinion value.
+        :rtype: float
         """
         all_opinions: list[float] = []
         for agent in self.agents:
@@ -598,6 +637,7 @@ class ABModel:
         Calculates the log odds of an Agent being radicalised within the model.
 
         :return: The log odds of agent radicalisation.
+        :rtype: float
         """
         radicalised_count: int = 0
         for agent in self.agents:
@@ -614,7 +654,8 @@ class ABModel:
         r"""
         Calculate the polarisation of the opinion climate within each hierarchy by calling each graph's calculate_polarisation() method.
 
-        :return: A <hierarchy : value> dictionary containing the polarisation value for each hierarchy.
+        :return: A <hierarchy : value> mapping containing the polarisation value for each hierarchy.
+        :rtype: dict[str, float]
         """
         layers_polarisation: dict[str, float] = {}
 
@@ -640,9 +681,12 @@ class ABModel:
 
             P[p(s,t)] = \frac{1}{k_{s}} \prod_{j \in p(s,t)} \frac{1}{k_{j} - 1}
 
-        :param from_node: A tuple containing (agent_index, graph_index) for the starting node.
-        :param to_node: A tuple containing (agent_index, graph_index) for the end node.
+        :param from_node: (agent_index, graph_index) for the starting node.
+        :type from_node: tuple[int, int]
+        :param to_node: (agent_index, graph_index) for the end node.
+        :type to_node: tuple[int, int]
         :return: The navigability value for the specified path.
+        :rtype: float
         """
         # TODO: Implement this function
         raise NotImplementedError(
@@ -675,7 +719,9 @@ class ABModel:
         is representative of the real `strength' of a layer.
 
         :param layer: The index of the layer of interest.
+        :type layer: int
         :return: The layer interdependence measure for the layer of interest.
+        :rtype: float
         """
         # Update the base graph's edge weights before performing any calculations (possibility for future features requiring this)
         self.update_base_graph()
@@ -718,9 +764,12 @@ class ABModel:
         the node indices from hierarchy graph indices to the respective index of the Agent objects in the model's
         AgentSet.
 
-        :param hierarchy_graph: The corresponding hierarchy Graph object that the GraphEdge belongs in.
-        :param edge: A GraphEdge object from one of the model's hierarchy graphs in the GraphSet.
+        :param hierarchy_graph: The corresponding hierarchy graph that the graph edge belongs in.
+        :type hierarchy_graph: Graph
+        :param edge: A graph edge from one of the model's hierarchy graphs in the GraphSet.
+        :type edge: GraphEdge
         :return: The index in the AgentSet of the parent and child nodes involved in the hierarchy graph's relationship.
+        :rtype: tuple[int, int]
         """
         # Actually GraphNode objects, but must be declared as "Any" for cases where a non-existent node index is passed to the function...
         from_node: Any = hierarchy_graph.get_node(edge.from_node)
@@ -735,7 +784,8 @@ class ABModel:
         """
         A function that takes a Graph object and adds all of its weighted edges to the model's base graph.
 
-        :param graph: The new Graph object that is being added to self.graphs.
+        :param graph: The new grpah that is being added to self.graphs.
+        :type graph: Graph
         """
         new_edges: dict[str, list[Any]] = {
             "from_node": [],
