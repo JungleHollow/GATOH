@@ -9,6 +9,11 @@ from typing import Any
 class LoggerVariables:
     """
     Dataclass that defines the simulation variables that are stored and tracked by the Logger.
+
+    :param max_iterations: The maximum number of iterations that the model will run its simulation for.
+    :type max_iterations: int
+    :param hierarchies: The names of all social hierarchies present in the model.
+    :type hierarchies: list[str]
     """
 
     # The maximum number of iterations that the simulation will run for
@@ -34,9 +39,6 @@ class LoggerVariables:
         """
         Store the number of max iterations and initialise all lists and dictionaries with the appropriate hierarchy names
         and sizes to match the number of iterations.
-
-        :param max_iterations: The maximum number of iterations that the model will run its simulation for.
-        :param hierarchies: A list containing the names of all social hierarchies present in the model.
         """
         self.max_iterations = max_iterations
         self.current_iteration = 0
@@ -61,7 +63,8 @@ class LoggerVariables:
         """
         A simple setter function that checks the input flag and updates the radicalisation count accordingly.
 
-        :param flag: A boolean flag indicating if radicalisation ocurred.
+        :param flag: A flag indicating if radicalisation ocurred.
+        :type flag: bool
         """
         if flag:
             self.radicalised_agents[self.current_iteration - 1] += 1
@@ -71,7 +74,8 @@ class LoggerVariables:
         """
         A simple setter function that checks the input flag and updates the opinion silencing events count accordingly.
 
-        :param flag: A boolean flag indicating if opinion silencing ocurred.
+        :param flag: A flag indicating if opinion silencing ocurred.
+        :type flag: bool
         """
         if flag:
             self.silenced_agents[self.current_iteration - 1] += 1
@@ -81,7 +85,8 @@ class LoggerVariables:
         """
         A simple setter function that checks the input flag and updates the opinion negation events count accordingly.
 
-        :param flag: A boolean flag indicating if opinion negation ocurred.
+        :param flag: A flag indicating if opinion negation ocurred.
+        :type flag: bool
         """
         if flag:
             self.negated_agents[self.current_iteration - 1] += 1
@@ -92,6 +97,7 @@ class LoggerVariables:
         A setter function that simplifies the storing of aggregate opinion values at each iteration.
 
         :param agg_opp: The aggregate opinion value to store for the current iteration.
+        :type agg_opp: float
         """
         self.aggregate_opinions[self.current_iteration - 1] = agg_opp
         return None
@@ -101,6 +107,7 @@ class LoggerVariables:
         A setter function that simplifies the storing of the model's radicalisation log odds at each iteration.
 
         :param r_logodds: The model's radicalisation log odds value to store for the current iteration.
+        :type r_logodds: float
         """
         self.radicalisation_logodds[self.current_iteration - 1] = r_logodds
         return None
@@ -109,7 +116,8 @@ class LoggerVariables:
         """
         A setter function that simplifies the storing of the model's layer interdependences at each iteration.
 
-        :param layer_interdeps: A <hierarchy : interdependence value> dictionary that tracks the layer interdependences to be stored for this iteration.
+        :param layer_interdeps: A <hierarchy : interdependence value> mapping that tracks the layer interdependences to be stored for this iteration.
+        :type layer_interdeps: dict[str, float]
         """
         for hierarchy, interdependence in layer_interdeps.items():
             self.layer_interdependences[hierarchy][self.current_iteration - 1] = (
@@ -121,7 +129,8 @@ class LoggerVariables:
         """
         A setter function that simplifies the storing of the model's layer polarisations at each iteration.
 
-        :param layer_polars: A <hierarchy : polarisation value> dictionary that tracks the layer polarisations to be stored for this iteration.
+        :param layer_polars: A <hierarchy : polarisation value> mapping that tracks the layer polarisations to be stored for this iteration.
+        :type layer_polars: dict[str, float]
         """
         for hierarchy, polarisation in layer_polars.items():
             self.layer_polarisations[hierarchy][self.current_iteration - 1] = (
@@ -133,7 +142,8 @@ class LoggerVariables:
         """
         Increment the current_iteration counter and then copy all the values from the previous iteration to their respective list indexes for the new iteration.
 
-        :param init: A boolean indicating if the call is being made during the first model iteration (no previous values to copy)
+        :param init: A flag indicating if the call is being made during the first model iteration (no previous values to copy)
+        :type init: bool, optional
         """
         self.current_iteration += 1
 
@@ -155,7 +165,8 @@ class LoggerVariables:
         """
         Extract all the per-hierarchy variables for the current iteration and format it into a substring to be appended to the main iteration output.
 
-        :return: A formatted substring containing all the per-hierarchy variables for the current model iteration.
+        :return: A formatted text representation containing all the per-hierarchy variables for the current model iteration.
+        :rtype: str
         """
         output_string: str = (
             "Hierarchy Name\tLayer Interdependence\tLayer Polarisation\n"
@@ -175,7 +186,8 @@ class LoggerVariables:
         """
         Extract all variable information for the current iteration and format it into a string to be printed to the terminal.
 
-        :return: A formatted string containing all the variables for the current model iteration.
+        :return: A formatted text representation containing all the variables for the current model iteration.
+        :rtype: str
         """
         formatted_string: str = (
             f"""\n\n==== GATOH model variables at iteration {self.current_iteration}/{self.max_iterations} ====\n\nAggregate community opinion: {self.aggregate_opinions[self.current_iteration - 1]}\nNumber of radicalised agents in the community: {self.radicalised_agents[self.current_iteration - 1]}\nLog odds of radicalisation ocurring: {self.radicalisation_logodds[self.current_iteration - 1]}\nNumber of opinion silencing events: {self.silenced_agents[self.current_iteration - 1]}\nNumber of opinion negation events: {self.negated_agents[self.current_iteration - 1]}\n\n**** Layer statistics ****\n\n"""
@@ -188,7 +200,8 @@ class LoggerVariables:
         A helper function that provides a place to collect and return all of the dataclass' attribute names for use
         as CSV column names.
 
-        :return: A list containing the names of all the attributes in this dataclass.
+        :return: The names of all the attributes in this dataclass.
+        :rtype: list[str]
         """
         attribute_names: list[str] = [
             "iterations",
@@ -212,6 +225,21 @@ class GATOHLogger:
     """
     The logging module will contain all functions related to logging and/or printing model progress and information
     both during and after simulation.
+
+    :param model: The parent model that the logger is being attached to.
+    :type model: ABModel
+    :param max_iterations: The maximum number of iterations that the parent model is running its simulation for.
+    :type max_iterations: int
+    :param hierarchies: The names of the social hierarchies present in the parent model.
+    :type hierarchies: list[str]
+    :param verbose: A flag indicating if extended information should be printed during logging.
+    :type verbose: bool, optional
+    :param print_interval: The number of model iterations to run in between each printed logging output.
+    :type print_interval: int, optional
+    :param print_outside_interval: A flag indicating if a simple string indicating just the iteration number should be printed outside the print_interval.
+    :type print_outside_interval: bool, optional
+    :param write_file: A flag indicating if a log file should be written to disk at the end of logging.
+    :type write_file: bool, optional
     """
 
     # TODO: Expand on logging capabilities
@@ -226,15 +254,6 @@ class GATOHLogger:
         print_outside_interval: bool = True,
         write_file: bool = True,
     ) -> None:
-        """
-        :param model: The parent ABModel object that the GATOHLogger object is being attached to.
-        :param max_iterations: The maximum number of iterations that the parent model is running its simulation for.
-        :param hierarchies: A list containing the names of the social hierarchies present in the parent model.
-        :param verbose: A flag to indicate if extended information should be printed during logging.
-        :param print_interval: The number of model iterations to run in between each printed logging output.
-        :param print_outside_interval: A boolean flag indicating if a simple string indicating just the iteration number should be printed outside the print_interval.
-        :param write_file: A flag to indicate if a log file should be written to disk at the end of logging.
-        """
         self.parent_model: Any = model
         self.verbose: bool = verbose
         self.print_interval: int = print_interval
@@ -248,7 +267,8 @@ class GATOHLogger:
 
         Defined as its own function to allow for easy modification in the future.
 
-        :return: The formatted string to print outside of the print interval.
+        :return: The formatted text to print outside of the print interval.
+        :rtype: str
         """
         non_interval_string: str = f"\n\n========== Iteration {self.variables.current_iteration}/{self.variables.max_iterations} ==========\n\n"
         return non_interval_string
@@ -258,6 +278,7 @@ class GATOHLogger:
         A wrapper that calls LoggerVariables new_iteration().
 
         :param init: A flag indicating if this function is being called from the first iteration of the model.
+        :type init: bool, optional
         """
         self.variables.new_iteration(init=init)
         return None
@@ -273,9 +294,13 @@ class GATOHLogger:
         Store all relevant model variables and states based on the level of logging that has been specified.
 
         :param aggregate_opinion: The aggregate network opinion that has been observed in the model at the end of this iteration.
+        :type aggregate_opinion: float
         :param radicalisation_logodds: The log odds of an agent being radicalised in the model at the end of this iteration.
-        :param layer_interdependences: A <hierarchy : value> dictionary containing the calculated layer interdependency for each hierarchy in the model at the end of this iteration.
-        :param layers_polarisation: A <hierarchy : value> dictionary containing the calculated polarisation for each hierarchy in the model at the end of this iteration.
+        :type radicalisation_logodds: float
+        :param layer_interdependences: A <hierarchy : value> mapping containing the calculated layer interdependency for each hierarchy in the model at the end of this iteration.
+        :type layer_interdependences: dict[str, float]
+        :param layers_polarisation: A <hierarchy : value> mapping containing the calculated polarisation for each hierarchy in the model at the end of this iteration.
+        :type layers_polarisation: dict[str, float]
         """
         self.variables.store_aggregate_opinion(aggregate_opinion)
         self.variables.store_radicalisation_logodds(radicalisation_logodds)
@@ -287,7 +312,8 @@ class GATOHLogger:
         """
         A method which formats the model statistics at the appropriate print_interval.
 
-        :return: An appropriately formatted string to be printed out by the model for this iteration.
+        :return: An appropriately formatted textrual representation to be printed out by the model for this iteration.
+        :rtype: str
         """
         print_string: str
         if self.variables.current_iteration % self.print_interval == 0:
@@ -302,7 +328,9 @@ class GATOHLogger:
         Saves all logged data to the specified path.
 
         :param save_path: The path to save the logger's data to.
-        :return: A boolean indicating if data was successfully saved or not.
+        :type save_path: str
+        :return: A flag indicating if data was successfully saved or not.
+        :rtype: bool
         """
         # An empty string means that no explicit save path was given to the model, and it is assumed that no saving is desired.
         if save_path == "":
