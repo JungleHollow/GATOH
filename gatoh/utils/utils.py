@@ -19,11 +19,13 @@ from scipy.stats import beta, gamma, levy, norm, truncnorm, uniform
 
 def pygraph_to_pydigraph(input_graph: rx.PyGraph) -> rx.PyDiGraph:
     """
-    Transform an arbitrary rx.PyGraph to an rx.PyDiGraph object where each unidirectional edge in the PyGraph becomes two opposing monodirectional edges with weight equal to the original.
-    Mainly used exclusively to transform undirected watts_strogatz_graph() returns to directed ones for use in the model.
+    Transform an arbitrary :py:class:`rustworxk.PyGraph` to a :py:class:`rustworkx.PyDiGraph` object where each unidirectional edge in the :py:class:`PyGraph` becomes two opposing monodirectional edges with weight equal to the original.
+    Mainly used exclusively to transform undirected :py:func:`watts_strogatz_graph` returns to directed ones for use in the model.
 
     :param input_graph: The undirected input graph to be transformed into a directed version.
+    :type input_graph: :py:class:`rustworkx.PyGraph`
     :return: A directed version of the input graph where each edge has been transformed into two edges pointing in opposing directions.
+    :rtype: :py:class:`rustworkx.PyDiGraph`
     """
     new_graph: rx.PyDiGraph = rx.PyDiGraph()
     for node in input_graph.nodes():
@@ -40,13 +42,19 @@ def pygraph_to_pydigraph(input_graph: rx.PyGraph) -> rx.PyDiGraph:
 @multimethod
 def watts_strogatz_graph(n: int, k: int, p: float, seed: int) -> rx.PyGraph:
     """
-    Returns an undirected Watts-Strogatz small-world graph generated using rustworkx.
-    An adapted version of watts_strogatz_graph() from the NetworkX library.
+    Returns an undirected Watts-Strogatz small-world graph generated using :py:mod:`rustworkx`.
+    An adapted version of :py:func:`~networkx.generators.random_graphs.watts_strogatz_graph` from the :py:mod:`NetworkX` library.
 
     :param n: The number of nodes in the graph.
+    :type n: int
     :param k: The number of nearest neighbours that each node is joined to initially.
+    :type k: int
     :param p: The probability of rewiring each edge of the original ring lattice.
+    :type p: float
     :param seed: The random seed to use for random generation.
+    :type seed: int
+    :return: An undirected Watts-Strogatz small-world graph that has been generated.
+    :rtype: :py:class:`rustworkx.PyGraph`
     """
     random_gen: random.Random = random.Random(seed)
     created_graph: rx.PyGraph = watts_strogatz_creator(n, k, p, random_gen)
@@ -58,13 +66,19 @@ def watts_strogatz_graph(
     n: int, k: int, p: float, seed: np.random.RandomState
 ) -> rx.PyGraph:
     """
-    Returns an undirected Watts-Strogatz small-world graph generated using rustworkx.
-    An adapted version of watts_strogatz_graph() from the NetworkX library.
+    Returns an undirected Watts-Strogatz small-world graph generated using :py:mod:`rustworkx`.
+    An adapted version of :py:func:`~networkx.generators.random_graphs.watts_strogatz_graph` from the :py:mod:`NetworkX` library.
 
     :param n: The number of nodes in the graph.
+    :type n: int
     :param k: The number of nearest neighbours that each node is joined to initially.
+    :type k: int
     :param p: The probability of rewiring each edge of the original ring lattice.
+    :type p: float
     :param seed: The random seed to use for random generation.
+    :type seed: :py:class:`~numpy.random.RandomState`
+    :return: The created graph.
+    :rtype: :py:class:`rustworkx.PyGraph`
     """
     random_gen: np.random.RandomState = seed
     created_graph: rx.PyGraph = watts_strogatz_creator(n, k, p, random_gen)
@@ -74,13 +88,17 @@ def watts_strogatz_graph(
 @multimethod
 def watts_strogatz_graph(n: int, k: int, p: float) -> rx.PyGraph:
     """
-    Returns an undirected Watts-Strogatz small-world graph generated using rustworkx.
-    An adapted version of watts_strogatz_graph() from the NetworkX library.
+    Returns an undirected Watts-Strogatz small-world graph generated using :py:mod:`rustworkx`.
+    An adapted version of :py:func:`~networkx.generators.random_graphs.watts_strogatz_graph` from the :py:mod:`NetworkX` library.
 
     :param n: The number of nodes in the graph.
+    :type n: int
     :param k: The number of nearest neighbours that each node is joined to initially.
+    :type k: int
     :param p: The probability of rewiring each edge of the original ring lattice.
-    :return: The created Graph object.
+    :type p: float
+    :return: The created graph.
+    :rtype: :py:class:`rustworkx.PyGraph`
     """
     random_gen: random.Random = random.Random()
     created_graph: rx.PyGraph = watts_strogatz_creator(n, k, p, random_gen)
@@ -97,10 +115,16 @@ def watts_strogatz_creator(
     A helper function that performs the actual Graph object creation for the multidispatched functions above.
 
     :param n: The number of nodes in the graph.
+    :type n: int
     :param k: The number of nearest neighbours that each node is joined to initially.
+    :type k: int
     :param p: The probability of rewiring each edge of the original ring lattice.
+    :type p: float
     :param random_gen: The random generator to use for Graph creation.
-    :return: The created Graph object.
+    :type random_gen: :py:class:`random.Random` | :py:class:`numpy.random.RandomState`
+    :raises ValueError: If k is equal to or greater than n.
+    :return: The created graph.
+    :rtype: :py:class:`rustworkx.PyGraph`
     """
     if k >= n:
         # >= instead of == as this utility function does not care about accounting for complete graphs...
@@ -157,13 +181,21 @@ def connected_watts_strogatz_graph(
 ) -> rx.PyDiGraph:
     """
     Returns a connected, directed Watts-Strogatz small-world graph.
-    An adapted version of connected_watts_strogatz_graph() from the NetworkX library.
+    An adapted version of :py:func:`~networkx.generators.random_graph.connected_watts_strogatz_graph` from the :py:mod:`NetworkX` library.
 
     :param n: The number of nodes in the graph.
+    :type n: int
     :param k: The number of nearest neighbours that each node is joined to initially.
+    :type k: int
     :param p: The probability of rewiring each edge of the original ring lattice.
+    :type p: float
     :param tries: The number of times to try producing a connected graph after rewiring, before raising an exception.
+    :type tries: int, optional
     :param seed: The random seed to use for random generation.
+    :type seed: int | :py:class:`numpy.random.RandomState`, optional
+    :raises RuntimeError: If the function reaches the maximum number of attempts without producing a connected graph.
+    :return: The created graph, which is assured to be connected.
+    :rtype: :py:class:`rustworkx.PyDiGraph`
     """
     for _ in range(tries):
         graph: rx.PyGraph
@@ -195,10 +227,14 @@ def beta_value_attenuation(input_value: float, a: float = 0.9, b: float = 0.9) -
     with this distribution meaning that agents will place much higher importance on extreme observed opinions and less importance
     on moderate opinions.
 
-    :param input_value: The value to be attenuated. Should always be in the range [-1, 1]
+    :param input_value: The value to be attenuated. Should always be in the range [-1, 1].
+    :type input_value: float
     :param a: The alpha parameter for the beta distribution.
+    :type a: float, optional
     :param b: The beta parameter for the beta distribution.
+    :type b: float, optional
     :return: The attenuated input value.
+    :rtype: float
     """
     original_opinion: float = input_value
 
@@ -249,8 +285,12 @@ def draw_random_value(
     when calling with parameters to prevent dictionary key errors.
 
     :param distribution: The name of the distribution to draw from.
-    :param parameters: A dictionary that contains any relevant parameters to be specified for a given distribution.
-    :return: A float value drawn from the random distribution.
+    :type distribution: str
+    :param parameters: A <parameter, value> mapping that contains any relevant parameters to be specified for a given distribution.
+    :type parameters: dict[str, float]
+    :raises ValueError: If the input distribution is not valid or unsupported.
+    :return: A value drawn from the random distribution.
+    :rtype: float
     """
     drawn_value: float = 0.0
 
@@ -312,7 +352,9 @@ def random_coinflip(return_type: str) -> Any:
         - "string"
 
     :param return_type: The data type of the returned coinflip result.
+    :type return_type: str
     :return: The outcome of the random coinflip.
+    :rtype: bool | int | float | str
     """
     coinflip_result: bool = random.choices([True, False], k=1)[0]
 
@@ -344,9 +386,13 @@ def value_rw_delta(input_value: float, mean: float, variance: float) -> float:
     to the input value before returning.
 
     :param input_value: The value from which the random walk begins.
+    :type input_value: float
     :param mean: The mean of the normal distribution from which the delta is drawn.
+    :type mean: float
     :param variance: The variance of the normal distribution from which the delta is drawn.
+    :type variance: float
     :return: The result of the random walk.
+    :rtype: float
     """
     rw_delta: float = norm.rvs(loc=mean, scale=variance)
     rw_result: float = input_value + rw_delta
@@ -374,7 +420,9 @@ def create_config_file(save_path: str, config_data: dict[str, Any]) -> None:
     Creates a structured config file from the input config data, and then saves it to the specified path.
 
     :param save_path: The path in which to save the config file.
-    :param config_data: A <name : value> dictionary specifying the values of specific parameters to be stored in the config file.
+    :type save_path: str
+    :param config_data: A <name : value> mapping specifying the values of specific parameters to be stored in the config file.
+    :type config_data: dict
     """
     with open(save_path, "w") as config_file:
         yaml.dump(config_data, config_file)
@@ -403,17 +451,30 @@ def plot_graph(
     A helper function that handles 2D plotting of data point, with possible separation by categories.
 
     :param x_vals: A <category : values> mapping that defines the values for the x-axis.
+    :type x_vals: dict[str, list]
     :param y_vals: A <category : values> mapping that defines the values for the y-axis.
+    :type y_vals: dict[str, list]
     :param plot_type: The type of graph to plot.
+    :type plot_type: str, optional
     :param show_fig: A flag indicating if the graph should be displayed in the script output.
-    :param x_label: An optional label to give to the x-axis.
-    :param y_label: An optional label to give to the y-axis.
-    :param title: An optional title to give to the graph.
+    :type show_fig: bool, optional
+    :param x_label: The label to give to the x-axis.
+    :type x_label: str, optional
+    :param y_label: The label to give to the y-axis.
+    :type y_label: str, optional
+    :param title: The title to give to the graph.
+    :type title: str, optional
     :param save_path: The path to save the graph image to.
-    :param vertical_x: An optional X-axis value specifying where a vertical line should be added to the graph.
-    :param vertical_name: An optional string to label the graph's vertical line.
-    :param horizontal_y: An optional Y-axis value specifying where a horizontal line should be added to the graph.
-    :param horizontal_name: An optional string to label the graph's horizontal line.
+    :type save_path: str, optional
+    :param vertical_x: An X-axis value specifying where a vertical line should be added to the graph.
+    :type vertical_x: int, optional
+    :param vertical_name: A label for the graph's vertical line.
+    :type vertical_name: str, optional
+    :param horizontal_y: A Y-axis value specifying where a horizontal line should be added to the graph.
+    :type horizontal_y: int, optional
+    :param horizontal_name: A label for the graph's horizontal line.
+    :type horizontal_name: str, optional
+    :raises NotImplementedError: If the input plot_type is invalid or not currently supported.
     """
     fig, ax = plt.subplots()
 
