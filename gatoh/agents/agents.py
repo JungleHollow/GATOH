@@ -840,7 +840,12 @@ class AgentSet:
         Searches the AgentSet for an Agent with the given id and returns its object if it exists.
 
         :param id: The id that was assigned to the Agent object at creation.
+        :type id: str
+        ...
+        :raises KeyError: If the input id does not exist in the AgentSet.
+        ...
         :return: The Agent object with the specified id.
+        :rtype: Agent
         """
         for agent in self.agents:
             if agent.id == id:
@@ -854,8 +859,13 @@ class AgentSet:
         """
         Returns the index within the AgentSet of the input Agent object.
 
-        :param agent: The Agent object whose index is being searched for.
-        :return: The index of the Agent object within the AgentSet.
+        :param agent: The agent whose index is being searched for.
+        :type agent: Agent
+        ...
+        :raises KeyError: If the input Agent does not exist in the AgentSet.
+        ...
+        :return: The index of the agent within the AgentSet.
+        :rtype: int
         """
         for idx, agt in enumerate(self.agents):
             if agent.id == agt.id:
@@ -868,8 +878,12 @@ class AgentSet:
     def discard_index(self, index: int) -> bool:
         """
         Removes the Agent at the specified index in the AgentSet; does not return an error if the index is out of bounds.
-        :param index: The index in the AgentSet which is to be removed
-        :return: A boolean to flag if the Agent was removed successfully or not
+
+        :param index: The index in the AgentSet which is to be removed.
+        :type index: int
+        ...
+        :return: A flag indicating if the Agent was removed successfully or not.
+        :rtype: bool
         """
         if 0 < index < len(self.agents):
             left_half: list[Agent] = deepcopy(self.agents[:index])
@@ -884,9 +898,15 @@ class AgentSet:
 
     def remove(self, agent: Agent) -> bool:
         """
-        Removes an Agent from the AgentSet which matches the input Agent; returning an error if such an Agent does not exist.
-        :param agent: The Agent object that should be removed from the set
-        :return: A boolean to flag that the Agent was removed successfully
+        Removes an agent from the AgentSet which matches the input agent; returning an error if such an Agent does not exist.
+
+        :param agent: The agent that should be removed from the set.
+        :type agent: Agent
+        ...
+        :raises KeyError: If the input Agent does not exist in the AgentSet.
+        ...
+        :return: A flag indicating that the Agent was removed successfully.
+        :rtype: bool
         """
         for idx, agnt in enumerate(self.agents):
             if agent == agnt:
@@ -905,8 +925,14 @@ class AgentSet:
     def remove_index(self, index: int) -> bool:
         """
         Removes the Agent at the specified index in the AgentSet; returning an error if the index is out of bounds.
-        :param index: The index in the AgentSet which is to be removed
-        :return: A boolean to flag that the Agent was removed successfully
+
+        :param index: The index in the AgentSet which is to be removed.
+        :type index: int
+        ...
+        :raises IndexError: If the input index is out of bounds for the AgentSet.
+        ...
+        :return: A flag indicating that the Agent was removed successfully.
+        :rtype: bool
         """
         if 0 < index < len(self.agents):
             left_half: list[Agent] = deepcopy(self.agents[:index])
@@ -923,9 +949,13 @@ class AgentSet:
 
     def sample(self, n: int) -> list[Agent]:
         """
-        Randomly draw n Agents from the AgentSet without replacement
-        :param n: The number of agents to sample
-        :return: A list of the agents sampled from the AgentSet
+        Randomly draw n Agents from the AgentSet without replacement.
+
+        :param n: The number of agents to sample.
+        :type n: int
+        ...
+        :return: The agents sampled from the AgentSet.
+        :rtype: list[Agent]
         """
         sampled_agents: list[Agent] = self.random.sample(self.agents, n)
         return deepcopy(sampled_agents)
@@ -934,6 +964,8 @@ class AgentSet:
     def __getstate__(self) -> dict[str, Any]:
         """
         Retrive the current state of the AgentSet for serialization.
-        :return: a dictionary representing the current state of the AgentSet
+
+        :return: A representation of the current state of the AgentSet.
+        :rtype: dict
         """
         return {"agents": self.agents, "random": self.random}
