@@ -48,6 +48,29 @@ class Agent:
 
     If both a positional argument and a corresponding keyword argument are passed for the same attribute,
     the value given to the keyword argument will override whatever was passed as the positional value.
+
+    :param id: Positional argument -- provides a unique identifier for an agent.
+    :type id: str, optional
+    :param social_weightings: Positional argument -- <hierarchy : weighting> mapping indicating the personal value that the agent assigns to each social hierarchy.
+    :type social_weightings: dict[str, float], optional
+    :param opinion: Positional argument -- the current opinion value that the agent is being initialised with.
+    :type opinion: float, optional
+    :param personal_benefit: Positional argument -- a flag indicating if the socially contagious belief is of personal benefit to the agent.
+    :type personal_benefit: bool, optional
+    :param behaviour_tuple: Positional_argument -- a pair of variables detailing the agent's defined personality and social susceptibility (range [0, 1]), respectively.
+    :type behaviour_tuple: tuple[str, float], optional
+    :param index: Keyword argument -- the agent's index within an AgentSet.
+    :type index: int, optional
+    :param is_silenced: Keyword argument -- <hierarchy : flag> mapping indicating in which social hierarchies the agent is silenced.
+    :type is_silenced: dict[str, bool], optional
+    :param previous_opinion: Keyword argument -- the opinion value held by the agent at the previous model iteration.
+    :type previous_opinion: float, optional
+    :param radicalised: Keyword argument -- a flag indicating if the agent is radicalised.
+    :type radicalised: bool, optional
+    :param rw_distributions: Keyword argument -- <hierarchy : random walk params> mapping for agent-specific dynamic hierarchy weightings.
+    :type rw_distributions: dict[str, tuple[float, float]], optional
+    :param opinion_rw: Keyword argument -- (mean, variance) parameters for agent-specific stochastic opinion shifts.
+    :type opinion_rw: tuple[float, float], optional
     """
 
     def __init__(self, *args, **kwargs) -> None:
@@ -130,7 +153,6 @@ class Agent:
         :type parameters: dict, optional
         :param personal_benefit: A boolean indicating if the Agent would be personally benefitted by the adoption of the 'social virus' being spread.
         :type personal_benefit: bool, optional
-        ...
         :return: The generated Agent object.
         :rtype: Agent
         """
@@ -194,13 +216,18 @@ class Agent:
     ) -> None:
         """
         Dynamically add an attribute to this Agent object. If "value" is passed, an explicit initial value is given;
-        if "mean" and "sdev" are passed, a value is generated from a random distribution.
+        if "mean" and "var" are passed, a value is generated from a random distribution.
         Supported random distributions are:
             - "gaussian"
             - "beta"
             - "gamma"
             - "uniform"
             - "levy"
+
+        Either "value", or parameters with "mean" and "var" included should be passed to this function, not both.
+
+        If both an explicit value and distribution parameters are input to this function, the explicit value
+        will always override the distribution parameters when setting the attribute.
 
         :param name: The name of the attribute to be added.
         :type name: str
@@ -212,7 +239,6 @@ class Agent:
         :type distribution: str, optional
         :param overwrite: A flag indicating if the added attribute should override any existing attributes of the same name.
         :type overwrite: bool, optional
-        ...
         :raises ValueError: If no valid value or distribution parameters are input, the attribute cannot be added.
         :raises UserWarning: If overwrite is explicitly False but the attribute is existing, a warning is raised without completing the operation.
         """
@@ -243,7 +269,6 @@ class Agent:
 
         :param name: The name of the parameter to get.
         :type name: str
-        ...
         :return: The value stored for the parameter.
         :rtype: Any
         """
@@ -369,7 +394,6 @@ class Agent:
         :type estimated_opinion_climate: float
         :param silencing_threshold: A hierarchy or global silencing threshold that must be surpassed for silencing to occur.
         :type silencing_threshold: float, optional
-        ...
         :return: A pair of values indicating if silencing occurs, and the absolute difference between the perceived opinion climate and the Agent's own opinion, respectively.
         :rtype: tuple[bool, float]
         """
@@ -407,7 +431,6 @@ class Agent:
         :type absolute_difference: float
         :param threshold: A global model threshold that has been specified for this effect to occur.
         :type threshold: float
-        ...
         :return: A flag indicating if the Agent's opinion experienced a total negation.
         :rtype: bool
         """
@@ -450,7 +473,6 @@ class Agent:
         :type hierarchy_names: list[str]
         :param threshold: The radicalisation threshold that has been defined at the global level in the model.
         :type threshold: float
-        ...
         :return: A flag indicating if the Agent has become radicalised or not.
         :rtype: bool
         """
@@ -600,7 +622,6 @@ class Agent:
 
         :param iterable: The Agent objects in which membership is being determined.
         :type iterable: Iterable[Agent]
-        ...
         :return: A flag indicating if this Agent is contained within the iterable.
         :rtype: bool
         """
@@ -740,7 +761,6 @@ class AgentSet:
 
         :param agent: The specific Agent object to check for.
         :type agent: Agent
-        ...
         :return: A flag indicating if the Agent object is in the AgentSet.
         :rtype: bool
         """
@@ -752,7 +772,6 @@ class AgentSet:
 
         :param agent: The specific Agent object to check for.
         :type agent: Agent
-        ...
         :return: A flag indicating if the specified Agent object is in the AgentSet.
         :rtype: bool
         """
@@ -764,7 +783,6 @@ class AgentSet:
 
         :param item: The parameter for selecting the agents.
         :type item: int | slice
-        ...
         :return: The selected agent or slice of agents based on the specified item.
         :rtype: Agent | list[Agent]
         """
@@ -776,7 +794,6 @@ class AgentSet:
 
         :param agent: The Agent object to be added.
         :type agent: Agent
-        ...
         :return: The index of the newly added Agent.
         :rtype: int
         """
@@ -798,7 +815,6 @@ class AgentSet:
 
         :param agent: The Agent object that should be removed from the set.
         :type agent: Agent
-        ...
         :return: A flag indicating if the Agent was removed successfully or not.
         :rtype: bool
         """
@@ -820,9 +836,7 @@ class AgentSet:
 
         :param index: The index within the AgentSet to inspect.
         :type index: int
-        ...
         :raises UserWarning: If the input index is out of bounds, raise a warning and return None.
-        ...
         :return: The Agent object at the specified index.
         :rtype: Agent
         """
@@ -841,9 +855,7 @@ class AgentSet:
 
         :param id: The id that was assigned to the Agent object at creation.
         :type id: str
-        ...
         :raises KeyError: If the input id does not exist in the AgentSet.
-        ...
         :return: The Agent object with the specified id.
         :rtype: Agent
         """
@@ -861,9 +873,7 @@ class AgentSet:
 
         :param agent: The agent whose index is being searched for.
         :type agent: Agent
-        ...
         :raises KeyError: If the input Agent does not exist in the AgentSet.
-        ...
         :return: The index of the agent within the AgentSet.
         :rtype: int
         """
@@ -881,7 +891,6 @@ class AgentSet:
 
         :param index: The index in the AgentSet which is to be removed.
         :type index: int
-        ...
         :return: A flag indicating if the Agent was removed successfully or not.
         :rtype: bool
         """
@@ -902,9 +911,7 @@ class AgentSet:
 
         :param agent: The agent that should be removed from the set.
         :type agent: Agent
-        ...
         :raises KeyError: If the input Agent does not exist in the AgentSet.
-        ...
         :return: A flag indicating that the Agent was removed successfully.
         :rtype: bool
         """
@@ -928,9 +935,7 @@ class AgentSet:
 
         :param index: The index in the AgentSet which is to be removed.
         :type index: int
-        ...
         :raises IndexError: If the input index is out of bounds for the AgentSet.
-        ...
         :return: A flag indicating that the Agent was removed successfully.
         :rtype: bool
         """
@@ -953,7 +958,6 @@ class AgentSet:
 
         :param n: The number of agents to sample.
         :type n: int
-        ...
         :return: The agents sampled from the AgentSet.
         :rtype: list[Agent]
         """
