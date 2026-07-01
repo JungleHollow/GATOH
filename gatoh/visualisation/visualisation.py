@@ -21,6 +21,15 @@ class ABVisualiser:
         - Post-runtime summarisation graphs
         - Per-agent lifetime information
         - Per-graph lifetime information
+
+    :param model: The model that this visualiser is being attached to.
+    :type model: :py:class:`gatoh.model.model.ABModel`
+    :param visualisation_dir: A path to a subdirectory to which all relevant visualisation outputs should be saved to.
+    :type visualisation_dir: str
+    :param aggregation_method: The method to use for aggregating parameters (i.e. ``mean'', ``median'', etc.).
+    :type aggregation_method: str, optional
+    :param save_visualisations: A flag indicating if the visualisation outputs should be saved.
+    :type save_visualisations: bool, optional
     """
 
     def __init__(
@@ -30,11 +39,6 @@ class ABVisualiser:
         aggregation_method: str = "median",
         save_visualisations: bool = True,
     ) -> None:
-        """
-        :param model: The ABModel object that this visualiser is being attached to.
-        :param visualisation_dir: A path to a subdirectory to which all relevant visualisation outputs should be saved to.
-        :param aggregation_method: The method to use for aggregating parameters (i.e. ``mean'', ``median'', etc.).
-        """
         self.parent_model: Any = model
         self.visualisation_dir: str = visualisation_dir
         self.save_visualisations: bool
@@ -54,8 +58,10 @@ class ABVisualiser:
         A helper function that takes in a GraphNode object (node payloads in the Graphs),
         and reports the string conversion of the agent's opinion in the GraphNode.
 
-        :param graph_node: The GraphNode for which the agent opinion is being reported.
-        :return: A string representation of the node's agent opinion.
+        :param graph_node: The graph node for which the agent opinion is being reported.
+        :type graph_node: :py:class:`gatoh.graph.graph.GraphNode`
+        :return: A text representation of the node's agent opinion.
+        :rtype: str
         """
         agent_opinion: str = str(graph_node.agent.opinion)
         return agent_opinion
@@ -66,9 +72,12 @@ class ABVisualiser:
         """
         A standalone function to visualise the graph for a specific social hierarchy within the ABModel.
 
-        :param hierarchy_name: A string of the name that has been assigned to the specified hierarchy.
-        :param save_graph: A boolean flag indicating if the hierarchy visualisation should be saved.
-        :param show_graph: A boolean flag indicating if the hierarchy visualisation should be shown in the output terminal.
+        :param hierarchy_name: The name that has been assigned to the specified hierarchy.
+        :type hierarchy_name: str
+        :param save_graph: A flag indicating if the hierarchy visualisation should be saved.
+        :type save_graph: bool, optional
+        :param show_graph: A flag indicating if the hierarchy visualisation should be shown in the output terminal.
+        :type show_graph: bool, optional
         """
         # Get the relevant Graph object from the GraphSet
         hierarchy_graph = self.parent_model.graphs.get_hierarchy(hierarchy_name)
