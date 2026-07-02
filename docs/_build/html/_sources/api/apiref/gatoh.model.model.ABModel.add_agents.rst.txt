@@ -1,0 +1,6 @@
+﻿gatoh.model.model.ABModel.add\_agents
+=====================================
+
+.. currentmodule:: gatoh.model.model
+
+.. automethod:: ABModel.add_agents

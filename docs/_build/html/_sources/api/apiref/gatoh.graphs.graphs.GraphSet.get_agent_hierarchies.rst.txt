@@ -1,0 +1,6 @@
+﻿gatoh.graphs.graphs.GraphSet.get\_agent\_hierarchies
+====================================================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. automethod:: GraphSet.get_agent_hierarchies

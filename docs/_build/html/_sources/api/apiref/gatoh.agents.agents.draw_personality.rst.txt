@@ -1,0 +1,6 @@
+﻿gatoh.agents.agents.draw\_personality
+=====================================
+
+.. currentmodule:: gatoh.agents.agents
+
+.. autofunction:: draw_personality

@@ -1,0 +1,6 @@
+﻿gatoh.graphs.graphs.Graph.agent\_in\_graph
+==========================================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. automethod:: Graph.agent_in_graph

@@ -1,0 +1,6 @@
+gatoh.graphs.graphs.GraphSet.add\_graph
+=======================================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. automethod:: GraphSet.add_graph

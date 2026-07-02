@@ -1,0 +1,6 @@
+gatoh.agents.agents.Agent.stochastic\_opinion
+=============================================
+
+.. currentmodule:: gatoh.agents.agents
+
+.. automethod:: Agent.stochastic_opinion

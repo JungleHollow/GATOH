@@ -1,0 +1,47 @@
+﻿gatoh.logging.logging.LoggerVariables
+=====================================
+
+.. currentmodule:: gatoh.logging.logging
+
+.. autoclass:: LoggerVariables
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LoggerVariables.__init__
+      ~LoggerVariables.current_iteration_repr
+      ~LoggerVariables.current_layers_repr
+      ~LoggerVariables.get_fieldnames
+      ~LoggerVariables.increment_negated
+      ~LoggerVariables.increment_radicalised
+      ~LoggerVariables.increment_silenced
+      ~LoggerVariables.new_iteration
+      ~LoggerVariables.store_aggregate_opinion
+      ~LoggerVariables.store_layer_interdepences
+      ~LoggerVariables.store_layer_polarisations
+      ~LoggerVariables.store_radicalisation_logodds
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LoggerVariables.current_iteration
+      ~LoggerVariables.max_iterations
+      ~LoggerVariables.aggregate_opinions
+      ~LoggerVariables.radicalised_agents
+      ~LoggerVariables.silenced_agents
+      ~LoggerVariables.negated_agents
+      ~LoggerVariables.layer_interdependences
+      ~LoggerVariables.layer_polarisations
+      ~LoggerVariables.radicalisation_logodds
+   
+   

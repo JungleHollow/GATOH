@@ -1,0 +1,6 @@
+gatoh.logging.logging.LoggerVariables.increment\_negated
+========================================================
+
+.. currentmodule:: gatoh.logging.logging
+
+.. automethod:: LoggerVariables.increment_negated

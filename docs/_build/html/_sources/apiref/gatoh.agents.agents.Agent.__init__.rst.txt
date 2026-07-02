@@ -1,0 +1,6 @@
+﻿gatoh.agents.agents.Agent.\_\_init\_\_
+======================================
+
+.. currentmodule:: gatoh.agents.agents
+
+.. automethod:: Agent.__init__

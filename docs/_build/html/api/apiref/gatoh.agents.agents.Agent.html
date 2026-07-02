@@ -1,0 +1,214 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gatoh.agents.agents.Agent &mdash; gatoh 0.1.0</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/thebelab.css" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/thebelab-helper.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            gatoh
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">gatoh.agents.agents.Agent</a><ul>
+<li><a class="reference internal" href="#gatoh.agents.agents.Agent"><code class="docutils literal notranslate"><span class="pre">Agent</span></code></a><ul>
+<li><a class="reference internal" href="#gatoh.agents.agents.Agent.__init__"><code class="docutils literal notranslate"><span class="pre">Agent.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gatoh</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">gatoh.agents.agents.Agent</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/apiref/gatoh.agents.agents.Agent.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gatoh-agents-agents-agent">
+<h1>gatoh.agents.agents.Agent<a class="headerlink" href="#gatoh-agents-agents-agent" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="gatoh.agents.agents.Agent">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/gatoh/agents/agents.html#Agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.agents.agents.Agent" title="Link to this definition"></a></dt>
+<dd><p>A class to define the Agent objects that will interact with each other in an agent-based model.</p>
+<dl class="simple">
+<dt>Supported positional arguments:</dt><dd><ul class="simple">
+<li><p>&lt;string&gt; to set the Agent’s id.</p></li>
+<li><p>&lt;dict&gt; of {hierarchy_name : weight} for the personal value that this Agent assigns to each social hierarchy</p></li>
+<li><p>&lt;float&gt; in the range [-1, 1] to set the Agent’s initial opinion on the topic of interest</p></li>
+<li><p>&lt;bool&gt; to define if the socially contagious belief will be of personal benefit to this Agent</p></li>
+<li><p>&lt;(string, float)&gt; for the Agent’s defined personality and their social susceptibility (range [0, 1])</p></li>
+</ul>
+</dd>
+</dl>
+<p>Any arbitrary keyword arguments that are passed to initialise this object will create a new attribute for
+the Agent object, and store the value of that attribute as the input data type.</p>
+<p>If any pre-existing attributes are passed as keyword arguments, this simply sets the attributes to the input value.</p>
+<p>If both a positional argument and a corresponding keyword argument are passed for the same attribute,
+the value given to the keyword argument will override whatever was passed as the positional value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>str</em><em>, </em><em>optional</em>) – Positional argument – provides a unique identifier for an agent.</p></li>
+<li><p><strong>social_weightings</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Positional argument – &lt;hierarchy : weighting&gt; mapping indicating the personal value that the agent assigns to each social hierarchy.</p></li>
+<li><p><strong>opinion</strong> (<em>float</em><em>, </em><em>optional</em>) – Positional argument – the current opinion value that the agent is being initialised with.</p></li>
+<li><p><strong>personal_benefit</strong> (<em>bool</em><em>, </em><em>optional</em>) – Positional argument – a flag indicating if the socially contagious belief is of personal benefit to the agent.</p></li>
+<li><p><strong>behaviour_tuple</strong> (<em>tuple</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Positional_argument – a pair of variables detailing the agent’s defined personality and social susceptibility (range [0, 1]), respectively.</p></li>
+<li><p><strong>index</strong> (<em>int</em><em>, </em><em>optional</em>) – Keyword argument – the agent’s index within an AgentSet.</p></li>
+<li><p><strong>is_silenced</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>bool</em><em>]</em><em>, </em><em>optional</em>) – Keyword argument – &lt;hierarchy : flag&gt; mapping indicating in which social hierarchies the agent is silenced.</p></li>
+<li><p><strong>previous_opinion</strong> (<em>float</em><em>, </em><em>optional</em>) – Keyword argument – the opinion value held by the agent at the previous model iteration.</p></li>
+<li><p><strong>radicalised</strong> (<em>bool</em><em>, </em><em>optional</em>) – Keyword argument – a flag indicating if the agent is radicalised.</p></li>
+<li><p><strong>rw_distributions</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Keyword argument – &lt;hierarchy : random walk params&gt; mapping for agent-specific dynamic hierarchy weightings.</p></li>
+<li><p><strong>opinion_rw</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Keyword argument – (mean, variance) parameters for agent-specific stochastic opinion shifts.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gatoh.agents.agents.Agent.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/gatoh/agents/agents.html#Agent.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.agents.agents.Agent.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gatoh.agents.agents.Agent.__init__" title="gatoh.agents.agents.Agent.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(*args, **kwargs)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_attribute</span></code>(name[, value, parameters, ...])</p></td>
+<td><p>Dynamically add an attribute to this Agent object. If &quot;value&quot; is passed, an explicit initial value is given; if &quot;mean&quot; and &quot;var&quot; are passed, a value is generated from a random distribution. Supported random distributions are:     - &quot;gaussian&quot;     - &quot;beta&quot;     - &quot;gamma&quot;     - &quot;uniform&quot;     - &quot;levy&quot;.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_opinion</span></code>(opinion_delta)</p></td>
+<td><p>A setter method that changes the Agent's current opinion by a given delta value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_opinion_rw</span></code>(rw_params)</p></td>
+<td><p>A setter method that changes the Agent's explicit opinion random walk parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_radicalisation</span></code>(radicalisation)</p></td>
+<td><p>A setter method that changes the Agent's radicalisation value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_rw_distribution</span></code>(hierarchy, parameters)</p></td>
+<td><p>A setter method that changes the Agent's explicit random walk parameters for a specific social hierarchy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">evolve_hierarchies</span></code>(rw_distributions)</p></td>
+<td><p>Experimental function that aims to model the constantly evolving 'intrinsic value' that Agents place on the social hierarchies that they belong in over time.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_agent</span></code>(id, index, hierarchies[, ...])</p></td>
+<td><p>Randomly generate an Agent object based on the input parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_attribute</span></code>(name)</p></td>
+<td><p>Return any existing or dynamically added attribute held by the Agent object.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">life_events</span></code>()</p></td>
+<td><p>Experimental function that aims to model the ways in which Agent behaviours change according to major random life events over time</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">opinion_negation</span></code>(hierarchy, ...)</p></td>
+<td><p>Checks if the Agent has experienced sufficiently 'overwhelming' social pressure in a hierarchy leading to a complete reversal of their opinion.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">opinion_silencing</span></code>(hierarchy, ...[, ...])</p></td>
+<td><p>Determines if an agent will become silenced in a given social hierarchy based on their attributes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">radicalisation</span></code>(hierarchy_changes, ...)</p></td>
+<td><p>Uses the agent's own opinion as well as the neighbours' opinions to determine if the agent has become radicalised in their actions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code>(rw_distributions, opinion_rw)</p></td>
+<td><p>Step the individual agent object:</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_opinion</span></code>(opinion_rw)</p></td>
+<td><p>Determine the stochastic direction and magnitude of a shift in the Agent's opinion and apply it.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_previous_opinion</span></code>()</p></td>
+<td><p>A setter method that stores the Agent's current opinion into the previous opinion.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(opinion_silenced, negation_ocurred)</p></td>
+<td><p>Updates the internal state of the agent after the model has stepped:</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Manuel Munizaga Sepúlveda.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

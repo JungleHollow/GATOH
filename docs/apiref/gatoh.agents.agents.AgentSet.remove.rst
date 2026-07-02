@@ -1,0 +1,6 @@
+gatoh.agents.agents.AgentSet.remove
+===================================
+
+.. currentmodule:: gatoh.agents.agents
+
+.. automethod:: AgentSet.remove

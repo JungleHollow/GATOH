@@ -1,0 +1,6 @@
+﻿gatoh.graphs.graphs.Graph.get\_relationships
+============================================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. automethod:: Graph.get_relationships

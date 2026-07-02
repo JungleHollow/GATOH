@@ -1,0 +1,28 @@
+﻿gatoh.graphs.graphs.GraphEdge
+=============================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. autoclass:: GraphEdge
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GraphEdge.__init__
+      ~GraphEdge.has_rw_params
+      ~GraphEdge.set_index
+      ~GraphEdge.set_rw_params
+      ~GraphEdge.set_weighting
+      ~GraphEdge.update_from_node
+      ~GraphEdge.update_to_node
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+﻿gatoh.agents.agents.\_\_str\_\_
+===============================
+
+.. currentmodule:: gatoh.agents.agents
+
+.. autofunction:: __str__

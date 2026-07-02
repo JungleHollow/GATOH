@@ -1,0 +1,6 @@
+gatoh.graphs.graphs.GraphEdge.has\_rw\_params
+=============================================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. automethod:: GraphEdge.has_rw_params

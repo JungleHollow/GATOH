@@ -1,0 +1,33 @@
+﻿Agent
+=====
+
+.. currentmodule:: gatoh.agents.agents
+
+.. autoclass:: Agent
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~Agent.add_attribute
+      ~Agent.change_opinion
+      ~Agent.change_opinion_rw
+      ~Agent.change_radicalisation
+      ~Agent.change_rw_distribution
+      ~Agent.evolve_hierarchies
+      ~Agent.generate_agent
+      ~Agent.get_attribute
+      ~Agent.life_events
+      ~Agent.opinion_negation
+      ~Agent.opinion_silencing
+      ~Agent.radicalisation
+      ~Agent.step
+      ~Agent.stochastic_opinion
+      ~Agent.store_previous_opinion
+      ~Agent.update
+
+

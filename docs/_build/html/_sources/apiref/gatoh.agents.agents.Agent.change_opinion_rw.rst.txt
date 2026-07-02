@@ -1,0 +1,6 @@
+gatoh.agents.agents.Agent.change\_opinion\_rw
+=============================================
+
+.. currentmodule:: gatoh.agents.agents
+
+.. automethod:: Agent.change_opinion_rw

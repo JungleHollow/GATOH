@@ -1,0 +1,6 @@
+﻿gatoh.visualisation.visualisation.ABVisualiser.\_\_init\_\_
+===========================================================
+
+.. currentmodule:: gatoh.visualisation.visualisation
+
+.. automethod:: ABVisualiser.__init__

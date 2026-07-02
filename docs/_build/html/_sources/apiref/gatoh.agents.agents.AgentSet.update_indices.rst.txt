@@ -1,0 +1,6 @@
+gatoh.agents.agents.AgentSet.update\_indices
+============================================
+
+.. currentmodule:: gatoh.agents.agents
+
+.. automethod:: AgentSet.update_indices

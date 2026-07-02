@@ -1,0 +1,6 @@
+gatoh.graphs.graphs.Graph.estimate\_neighbour\_opinions
+=======================================================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. automethod:: Graph.estimate_neighbour_opinions

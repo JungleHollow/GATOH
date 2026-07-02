@@ -1,0 +1,6 @@
+﻿gatoh.agents.agents.AgentSet.\_\_in\_\_
+=======================================
+
+.. currentmodule:: gatoh.agents.agents
+
+.. automethod:: AgentSet.__in__

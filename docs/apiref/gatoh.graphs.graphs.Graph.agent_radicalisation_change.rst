@@ -1,0 +1,6 @@
+gatoh.graphs.graphs.Graph.agent\_radicalisation\_change
+=======================================================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. automethod:: Graph.agent_radicalisation_change

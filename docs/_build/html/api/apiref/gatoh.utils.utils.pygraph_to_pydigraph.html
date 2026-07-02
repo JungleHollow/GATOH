@@ -1,0 +1,130 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gatoh.utils.utils.pygraph_to_pydigraph &mdash; gatoh 0.1.0</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/thebelab.css" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/thebelab-helper.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            gatoh
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">gatoh.utils.utils.pygraph_to_pydigraph</a><ul>
+<li><a class="reference internal" href="#gatoh.utils.utils.pygraph_to_pydigraph"><code class="docutils literal notranslate"><span class="pre">pygraph_to_pydigraph()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gatoh</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">gatoh.utils.utils.pygraph_to_pydigraph</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/apiref/gatoh.utils.utils.pygraph_to_pydigraph.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gatoh-utils-utils-pygraph-to-pydigraph">
+<h1>gatoh.utils.utils.pygraph_to_pydigraph<a class="headerlink" href="#gatoh-utils-utils-pygraph-to-pydigraph" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="gatoh.utils.utils.pygraph_to_pydigraph">
+<span class="sig-name descname"><span class="pre">pygraph_to_pydigraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PyGraph</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PyDiGraph</span></span></span><a class="reference internal" href="../../_modules/gatoh/utils/utils.html#pygraph_to_pydigraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.utils.utils.pygraph_to_pydigraph" title="Link to this definition"></a></dt>
+<dd><p>Transform an arbitrary <code class="xref py py-class docutils literal notranslate"><span class="pre">rustworxk.PyGraph</span></code> to a <code class="xref py py-class docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph</span></code> object where each unidirectional edge in the <code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code> becomes two opposing monodirectional edges with weight equal to the original.
+Mainly used exclusively to transform undirected <a class="reference internal" href="gatoh.utils.utils.watts_strogatz_graph.html#gatoh.utils.utils.watts_strogatz_graph" title="gatoh.utils.utils.watts_strogatz_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">watts_strogatz_graph()</span></code></a> returns to directed ones for use in the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">rustworkx.PyGraph</span></code>) – The undirected input graph to be transformed into a directed version.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A directed version of the input graph where each edge has been transformed into two edges pointing in opposing directions.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Manuel Munizaga Sepúlveda.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

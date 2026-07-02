@@ -1,0 +1,6 @@
+﻿gatoh.model.model.ABModel.\_\_init\_\_
+======================================
+
+.. currentmodule:: gatoh.model.model
+
+.. automethod:: ABModel.__init__

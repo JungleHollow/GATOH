@@ -1,0 +1,6 @@
+﻿gatoh.visualisation.visualisation.ABVisualiser.visualise\_hierarchy
+===================================================================
+
+.. currentmodule:: gatoh.visualisation.visualisation
+
+.. automethod:: ABVisualiser.visualise_hierarchy

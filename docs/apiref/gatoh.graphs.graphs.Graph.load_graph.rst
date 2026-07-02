@@ -1,0 +1,6 @@
+gatoh.graphs.graphs.Graph.load\_graph
+=====================================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. automethod:: Graph.load_graph

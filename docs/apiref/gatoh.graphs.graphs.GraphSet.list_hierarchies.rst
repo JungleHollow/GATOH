@@ -1,0 +1,6 @@
+gatoh.graphs.graphs.GraphSet.list\_hierarchies
+==============================================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. automethod:: GraphSet.list_hierarchies

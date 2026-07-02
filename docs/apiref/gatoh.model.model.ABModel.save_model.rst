@@ -1,0 +1,6 @@
+gatoh.model.model.ABModel.save\_model
+=====================================
+
+.. currentmodule:: gatoh.model.model
+
+.. automethod:: ABModel.save_model

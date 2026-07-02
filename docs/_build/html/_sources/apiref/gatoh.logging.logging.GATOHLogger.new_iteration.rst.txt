@@ -1,0 +1,6 @@
+gatoh.logging.logging.GATOHLogger.new\_iteration
+================================================
+
+.. currentmodule:: gatoh.logging.logging
+
+.. automethod:: GATOHLogger.new_iteration

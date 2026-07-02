@@ -1,0 +1,6 @@
+﻿gatoh.logging.logging.LoggerVariables.new\_iteration
+====================================================
+
+.. currentmodule:: gatoh.logging.logging
+
+.. automethod:: LoggerVariables.new_iteration

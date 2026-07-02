@@ -1,0 +1,6 @@
+﻿gatoh.logging.logging.GATOHLogger.\_\_init\_\_
+==============================================
+
+.. currentmodule:: gatoh.logging.logging
+
+.. automethod:: GATOHLogger.__init__

@@ -1,0 +1,6 @@
+.. autosummary::
+    :toctree: ../apiref
+
+    gatoh.agents.agents.Agent
+    gatoh.agents.agents.AgentSet
+    gatoh.agents.agents.draw_personality

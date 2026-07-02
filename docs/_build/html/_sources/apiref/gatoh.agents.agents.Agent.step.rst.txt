@@ -1,0 +1,6 @@
+gatoh.agents.agents.Agent.step
+==============================
+
+.. currentmodule:: gatoh.agents.agents
+
+.. automethod:: Agent.step

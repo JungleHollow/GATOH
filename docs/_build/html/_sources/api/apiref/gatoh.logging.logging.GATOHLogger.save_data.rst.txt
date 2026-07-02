@@ -1,0 +1,6 @@
+﻿gatoh.logging.logging.GATOHLogger.save\_data
+============================================
+
+.. currentmodule:: gatoh.logging.logging
+
+.. automethod:: GATOHLogger.save_data

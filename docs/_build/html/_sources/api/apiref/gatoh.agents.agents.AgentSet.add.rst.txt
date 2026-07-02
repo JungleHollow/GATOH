@@ -1,0 +1,6 @@
+﻿gatoh.agents.agents.AgentSet.add
+================================
+
+.. currentmodule:: gatoh.agents.agents
+
+.. automethod:: AgentSet.add

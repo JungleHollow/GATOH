@@ -1,0 +1,6 @@
+gatoh.graphs.graphs.GraphEdge.set\_weighting
+============================================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. automethod:: GraphEdge.set_weighting

@@ -1,0 +1,6 @@
+gatoh.model.model.ABModel.add\_base\_graph\_edges
+=================================================
+
+.. currentmodule:: gatoh.model.model
+
+.. automethod:: ABModel.add_base_graph_edges

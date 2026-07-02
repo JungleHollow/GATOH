@@ -1,0 +1,6 @@
+﻿gatoh.graphs.graphs.GraphNode.\_\_init\_\_
+==========================================
+
+.. currentmodule:: gatoh.graphs.graphs
+
+.. automethod:: GraphNode.__init__

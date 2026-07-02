@@ -1,0 +1,6 @@
+﻿gatoh.agents.agents.AgentSet.\_\_iter\_\_
+=========================================
+
+.. currentmodule:: gatoh.agents.agents
+
+.. automethod:: AgentSet.__iter__
