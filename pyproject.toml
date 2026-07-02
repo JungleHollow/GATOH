@@ -20,7 +20,8 @@ dependencies = [
     "pyyaml",
     "multimethod",
     "pycairo",
-    "PyGObject"
+    "PyGObject",
+    "sphinx",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
