@@ -13,8 +13,8 @@ import sys
 project = "gatoh"
 copyright = "2026, Manuel Munizaga Sepúlveda"
 author = "Manuel Munizaga Sepúlveda"
-version = "0.3"
-release = "0.3.1"
+version = "0.1"
+release = "0.1.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -107,7 +107,7 @@ with open("sources.txt", "r") as fd:
 def _get_versions(app, config):
     context = config.html_context
     start_version = (0, 12, 0)
-    proc = subprocess.run(['git', 'describe', '--abbrev=0'], capture_output=True)
+    proc = subprocess.run(["git", "describe", "--abbrev=0"], capture_output=True)
     proc.check_returncode()
     current_version = proc.stdout.decode("utf8")
     current_version_info = current_version.split(".")
