@@ -112,7 +112,7 @@ class LoggerVariables:
         self.radicalisation_logodds[self.current_iteration - 1] = r_logodds
         return None
 
-    def store_layer_interdepences(self, layer_interdeps: dict[str, float]) -> None:
+    def store_layer_interdependences(self, layer_interdeps: dict[str, float]) -> None:
         """
         A setter function that simplifies the storing of the model's layer interdependences at each iteration.
 
@@ -304,7 +304,7 @@ class GATOHLogger:
         """
         self.variables.store_aggregate_opinion(aggregate_opinion)
         self.variables.store_radicalisation_logodds(radicalisation_logodds)
-        self.variables.store_layer_interdepences(layer_interdependences)
+        self.variables.store_layer_interdependences(layer_interdependences)
         self.variables.store_layer_polarisations(layer_polarisations)
         return None
 

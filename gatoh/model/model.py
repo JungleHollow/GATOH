@@ -703,7 +703,7 @@ class ABModel:
 
         .. math::
 
-            \lambda^{a} = \frac{\sum_{i}\sum_{j \neq j\i}\Psi^{a}_{ij}}{\sum_{i}\sum_{j \neq i}\Psi_{ij}}
+            \lambda^{a} = \frac{\sum_{i}\sum_{j \neq i}\Psi^{a}_{ij}}{\sum_{i}\sum_{j \neq i}\Psi_{ij}}
 
         where :math:`\Psi^{a}_{ij}` describes the number of shortest paths between nodes :math:`i` and :math:`j`
         using two or more layers, where at least one of the layers passed through is :math:`a`.

@@ -1,5 +1,7 @@
+.. _graph_utils_api:
+
 .. autosummary::
-    :toctree: ../apiref
+    :toctree: ../../apiref
 
     gatoh.utils.utils.pygraph_to_pydigraph
     gatoh.utils.utils.watts_strogatz_graph

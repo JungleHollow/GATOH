@@ -1,5 +1,7 @@
+.. _rand_utils_api:
+
 .. autosummary::
-    :toctree: ../apiref
+    :toctree: ../../apiref
 
     gatoh.utils.utils.draw_random_value
     gatoh.utils.utils.random_coinflip

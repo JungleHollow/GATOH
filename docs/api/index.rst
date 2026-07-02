@@ -4,19 +4,19 @@ GATOH API Reference
 ===================
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
-    agents
-    graphs
-    logging
-    model
-    visualisation
+    Agents <agents/index>
+    Graphs <graphs/index>
+    Logging <logging/index>
+    Model <model/ABModel>
+    Visualisation <visualisation/ABVisualiser>
 
 .. toctree::
     :maxdepth: 1
 
-    graph_utils
-    math_utils
-    persistence_utils
-    rand_utils
-    visualisation_utils
+    Graph Utils <utils/graph_utils>
+    Math Utils <utils/math_utils>
+    Persistence Utils <utils/persistence_utils>
+    Stochastic Utils <utils/rand_utils>
+    Visualisation Utils <utils/visualisation_utils>

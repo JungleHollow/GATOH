@@ -3,16 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-gatoh documentation
-===================
-
-.. toctree::
-   :maxdepth: 2
-   User Guide <user/index>
-   API Reference <api/index>
-   Development <dev/index>
-   license
-   release
+###################
+gatoh Documentation
+###################
 
 **Version**: |version|
 
@@ -22,3 +15,20 @@ gatoh documentation
 
 GATOH is a Python package that provides a framework for creating complex, multilayer
 agent-based models.
+
+It is licensed under the `MIT <license.html>`__ license, and the source code is hosted on
+GitHub at:
+
+https://github.com/JungleHollow/GATOH
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   About GATOH <self>
+   User Guide <user/index>
+   API Reference <api/index>
+   Development <dev/index>
+   license
+   release

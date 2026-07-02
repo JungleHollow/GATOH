@@ -57,7 +57,7 @@ class Agent:
     :type opinion: float, optional
     :param personal_benefit: Positional argument -- a flag indicating if the socially contagious belief is of personal benefit to the agent.
     :type personal_benefit: bool, optional
-    :param behaviour_tuple: Positional_argument -- a pair of variables detailing the agent's defined personality and social susceptibility (range [0, 1]), respectively.
+    :param behaviour_tuple: Positional argument -- a pair of variables detailing the agent's defined personality and social susceptibility (range [0, 1]), respectively.
     :type behaviour_tuple: tuple[str, float], optional
     :param index: Keyword argument -- the agent's index within an AgentSet.
     :type index: int, optional
