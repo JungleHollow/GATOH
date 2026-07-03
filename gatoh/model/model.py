@@ -753,7 +753,10 @@ class ABModel:
                     interdep_denominator += abs(oc_val)
 
         # Calculate the interdependence value for the layer
-        layer_interdependence: float = interdep_numerator / interdep_denominator
+        if interdep_denominator != 0:
+            layer_interdependence: float = interdep_numerator / interdep_denominator
+        else:
+            layer_interdependence = 0.0
         return layer_interdependence
 
     def get_base_indices_from_edge(
