@@ -1,3 +1,6 @@
+.venv
+Cargo.lock
+target
 gatoh/experiments/Base/GraphAlgorithms/GraphAlgorithms_AggOps.png
 gatoh/experiments/Base/GraphAlgorithms/GraphAlgorithms_Polarisations.png
 gatoh/experiments/Base/GraphAlgorithms/GraphAlgorithms_RadicalAgents.png
