@@ -436,6 +436,9 @@ class ResponseParser:
                 os.mkdir(graphs_dir)
 
             for idx, hierarchy in enumerate(self.graphs[community]["hierarchies"]):
+                if hierarchy in ["Age", "Gender"]:
+                    continue
+
                 hierarchy_subdir: str = f"{graphs_dir}/{hierarchy}"
 
                 if not os.path.exists(hierarchy_subdir):

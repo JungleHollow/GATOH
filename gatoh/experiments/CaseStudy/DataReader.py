@@ -305,6 +305,210 @@ class DataReader:
                     )
         return None
 
+    def custom_iterate(self, model_to_iterate: ABModel) -> ABModel:
+        """
+        Custom iteration loop used for this experiment -- accounts for "Age" and "Gender" as Agent attributes.
+
+        :param model_to_iterate: The model that is being run.
+        :type model_to_iterate: ABModel
+        :return: The model that has been run.
+        :rtype: ABModel
+        """
+        while model_to_iterate.current_iteration < model_to_iterate.max_iterations:
+            # Initialise the logger state for the current iteration
+            if model_to_iterate.current_iteration == 0:
+                model_to_iterate.logger.new_iteration(init=True)
+            else:
+                model_to_iterate.logger.new_iteration()
+
+            # Initialise a dictionary to keep track of agent opinion changes
+            # (this is done to prevent recursive updating of opinions during the evolution of opinions)
+            new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
+
+            # First each agent looks at its neighbours to see how their opinion will evolve this iterations
+            for agent in model_to_iterate.agents:
+                agent.previous_opinion = agent.opinion
+                for hierarchy in model_to_iterate.graphs:
+                    # Update the previous opinion across all hierarchies
+                    hierarchy.agent_previous_opinion(agent)
+
+                collective_changes: list[float] = []
+                for hierarchy in model_to_iterate.graphs:
+                    # Custom neighbour_influences that accounts for "Age" and "Gender" attributes when determining influences
+                    neighbour_influences: float | None = (
+                        self.custom_neighbour_influences(agent, hierarchy)
+                    )
+
+                    if neighbour_influences is not None:
+                        collective_changes.append(neighbour_influences)
+                total_change: float = sum(collective_changes)
+
+                # Check for the existence of personal benefit across all of the agent's neighbours
+                all_neighbour_indices: list[int] = list(
+                    model_to_iterate.base_graph.graph.neighbors(agent.index)
+                )
+                all_neighbour_benefits: list[bool] = []
+                for neighbour_index in all_neighbour_indices:
+                    neighbour_object: Agent = model_to_iterate.base_graph.graph[
+                        neighbour_index
+                    ]
+                    all_neighbour_benefits.append(neighbour_object.personal_benefit)
+
+                # Constrain to [-1, 1]
+                # 100.0 and -100.0 are used as key delta values indicating that the opinion needs to be constrained
+                if agent.opinion + total_change < -1.0:
+                    new_agent_opinions[agent.id] = (
+                        -100.0,
+                        deepcopy(collective_changes),
+                        deepcopy(all_neighbour_benefits),
+                    )
+                elif agent.opinion + total_change > 1.0:
+                    new_agent_opinions[agent.id] = (
+                        100.0,
+                        deepcopy(collective_changes),
+                        deepcopy(all_neighbour_benefits),
+                    )
+                else:
+                    new_agent_opinions[agent.id] = (
+                        total_change,
+                        deepcopy(collective_changes),
+                        deepcopy(all_neighbour_benefits),
+                    )
+            model_to_iterate.iteration_opinion_changes(new_agent_opinions)
+            model_to_iterate.step()
+            model_to_iterate.update()
+
+            model_to_iterate.logger_iteration()  # Handle the logger's iteration() calculations and call its method
+
+            # Get this iteration's print string (will be formatted appropriately based on the print interval)
+            iteration_print_string: str = model_to_iterate.logger.iteration_print()
+            print(iteration_print_string)
+
+            if model_to_iterate.visualise:
+                model_to_iterate.visualiser.visualiser_iteration()
+            if model_to_iterate.checkpointing:
+                model_to_iterate.save_model()
+
+            model_to_iterate.current_iteration += 1
+        # Call the logger's save_data function which handles data persistence appropriately
+        data_saved: bool = model_to_iterate.logger.save_data(model_to_iterate.data_file)
+        if data_saved:
+            print(
+                f"\n\nGATOH logger data was successfully written to the file at path: {model_to_iterate.data_file}\n\n"
+            )
+        if model_to_iterate.visualise:
+            # Make sure that the pyplot figure is closed after iterations to prevent excess memory usage
+            import matplotlib.pyplot as plt  # Just using pyplot for this single code block
+
+            plt.close(model_to_iterate.fig)
+            del model_to_iterate.fig, model_to_iterate.ax
+        return model_to_iterate
+
+    def custom_neighbour_influences(
+        self, agent: Agent, hierarchy_graph: Graph
+    ) -> float | None:
+        """
+        A custom version of neighbour_influences() that also accounts for "Age" and "Gender" as universally
+        modifying attributes that affect neighbour influences across all hierarchies.
+
+        :param agent: The agent for which the neighbour influences are being determined.
+        :type agent: Agent
+        :param hierarchy_graph: The hierarchy in which the neighbour influences are being determined.
+        :type hierarchy_graph: Graph
+        :return: The total value of the neighbour influences on the agent in this specific hierarchy, or None if the agent has no neighbours.
+        :rtype: float | None
+        """
+        # Only using warnings for this function
+        import warnings
+
+        from rustworkx import NodeIndices  # For typing
+
+        agent_hierarchy_weighting: float = agent.social_weightings[hierarchy_graph.name]
+        agent_index: int | None = hierarchy_graph.get_agent_index(agent)
+        if agent_index is None:
+            if not hierarchy_graph.suppress_warnings:
+                warnings.warn(
+                    f"Input Agent {agent.id} does not exist in this hierarchy ({hierarchy_graph.name})",
+                    category=UserWarning,
+                )
+            return None
+        neighbour_indices: NodeIndices = hierarchy_graph.graph.neighbors(agent_index)
+
+        weighted_deltas: list[float] = []
+        delta_weightings: list[float] = []
+        for neighbour_index in neighbour_indices:
+            neighbour_node: GraphNode | None = hierarchy_graph.get_node(neighbour_index)
+            if neighbour_node is None:
+                # This should never be reached and is only included for type checking purposes
+                continue
+
+            relationship_strength: float = hierarchy_graph.get_relationship(
+                agent, neighbour_node.agent
+            )
+
+            average_opinion: float = (
+                agent.opinion + neighbour_node.agent.opinion
+            ) / 2.0  # Simple average of own and neighbour opinions
+            distance_from_avg: float = (
+                average_opinion - agent.opinion
+            )  # The delta that must be applied to own opinion to reach the average
+            weighted_delta: float = (
+                distance_from_avg * agent_hierarchy_weighting * relationship_strength
+            )  # The final opinion change
+
+            # Account for neighbour radicalisation
+            # (neutral personality means that the existence or lack of neighbour radicalisation will have no effect)
+            relative_weighting: float = 1.0
+            if (
+                neighbour_node.agent.radicalised
+                and agent.personality != "neutral"
+                and not agent.radicalised
+            ):
+                if agent.personality in ["rational", "social"]:
+                    # "rational" or "social" agents that are not radicalised will have a generally lesser view of radicalised opinions
+                    relative_weighting = 0.5
+                elif agent.personality == "impulsive":
+                    # "impulsive" agents will always view radicalised opinions more favourably
+                    relative_weighting = 2.0
+                else:  # Agent personality is "erratic"
+                    # "erratic" agents act randomly...
+                    from gatoh.utils.utils import random_coinflip
+
+                    erratic_coinflip: bool = random_coinflip("bool")
+                    if erratic_coinflip:
+                        relative_weighting = 2.0
+                    else:
+                        relative_weighting = 0.5
+            elif neighbour_node.agent.radicalised and agent.radicalised:
+                if distance_from_avg <= 0.25:
+                    # Both agents are radicalised towards the same opinion
+                    relative_weighting = 4.0
+                else:
+                    # Both agent are radicalised in opposing opinions
+                    relative_weighting = 0.25
+
+            # Account for "Age" and "Gender" as further modifiers to the relative weighting
+            if neighbour_node.agent.get_attribute("age") == agent.get_attribute("age"):
+                relative_weighting *= AGENT_PARAMETERS["age_weighting"]
+            else:
+                relative_weighting *= 1.0 / AGENT_PARAMETERS["age_weighting"]
+
+            if neighbour_node.agent.get_attribute("gender") == agent.get_attribute(
+                "gender"
+            ):
+                relative_weighting *= AGENT_PARAMETERS["gender_weighting"]
+            else:
+                relative_weighting *= 1.0 / AGENT_PARAMETERS["gender_weighting"]
+
+            weighted_deltas.append(weighted_delta)
+            delta_weightings.append(relative_weighting)
+        # Calculate the final change
+        final_change: float = 0.0
+        total_weightings: float = sum(delta_weightings)
+        for idx, weighted_delta in enumerate(weighted_deltas):
+            final_change += weighted_delta * (delta_weightings[idx] / total_weightings)
+        return final_change
+
     def run_models(self, missing_saves: list[str] | None = None) -> None:
         """
         Runs each model instance in the experiment.
@@ -315,13 +519,13 @@ class DataReader:
         if missing_saves:
             for missing_save in missing_saves:
                 model_to_run: ABModel = self.models[missing_save]
-                model_to_run.iterate()
+                _ = self.custom_iterate(model_to_run)
             # Only save the models which were missing
             self.save_models(missing_saves=missing_saves)
             return None
 
         for model in self.models.values():
-            model.iterate()
+            _ = self.custom_iterate(model)
         self.save_models()
         return None
 
@@ -350,8 +554,9 @@ if __name__ == "__main__":
     }
 
     BASE_HIERARCHIES: list[str] = [
-        "Age",
-        "Gender",
+        # Removing Age and Gender as graphs for now, as these are much too densely connected for reasonable runtimes
+        # "Age",
+        # "Gender",
         "Friends",
         "Family",
         "Cultural",
@@ -361,8 +566,8 @@ if __name__ == "__main__":
     ]
 
     HIERARCHY_RW: dict[str, tuple[float, float]] = {
-        "Age": (0.0, 0.04),
-        "Gender": (0.0, 0.02),
+        # "Age": (0.0, 0.04),
+        # "Gender": (0.0, 0.02),
         "Friends": (0.0, 0.05),
         "Family": (0.0, 0.01),
         "Religious": (0.0, 0.1),
@@ -395,6 +600,12 @@ if __name__ == "__main__":
             "radicalisation_threshold": 0.99,
             "suppress_warnings": True,
         },
+    }
+
+    # Used to assign changeable weightings to different agent attributes throughout the models
+    AGENT_PARAMETERS: dict[str, float] = {
+        "age_weighting": 1.1,
+        "gender_weighting": 1.25,
     }
 
     # Specify the dependant variable CSV paths here:
