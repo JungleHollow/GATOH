@@ -14,6 +14,9 @@ authors:
 repository-code: 'https://github.com/JungleHollow/GATOH'
 abstract: "An open source agent-based modelling framework for Python"
 identifiers:
+  - description: "This is the collection of snapshots for GATOH"
+    type: doi
+    value: 10.5281/zenodo.21156968
   - description: "This is the archived snapshot of v0.1.1-alpha for GATOH"
     type: doi
     value: 10.5281/zenodo.21156969
