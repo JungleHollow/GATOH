@@ -137,7 +137,7 @@ class ABVisualiser:
             labels=self.graph_node_opinion,
         )
 
-        self.parent_model.fig.draw()
+        self.parent_model.fig.canvas.draw()
 
         if self.save_visualisations:
             # Ensure that the model_runtime subdirectory exists
