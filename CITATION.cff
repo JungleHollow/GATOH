@@ -3,9 +3,7 @@
 
 cff-version: 1.2.0
 title: GATOH
-message: >-
-  If you use this software, please cite it using the
-  metadata from this file.
+message: "If you use this software, please cite it using the metadata from this file."
 type: software
 authors:
   - given-names: Manuel Ernesto Amaru
@@ -14,10 +12,11 @@ authors:
     affiliation: Curtin University
     orcid: 'https://orcid.org/0009-0002-4324-6548'
 repository-code: 'https://github.com/JungleHollow/GATOH'
-abstract: An open source agent-based modelling framework for Python
+abstract: "An open source agent-based modelling framework for Python"
 identifiers:
-    - type: doi
-      value: 10.5281/zenodo.21156969
+  - description: "This is the archived snapshot of v0.1.1-alpha for GATOH"
+    type: doi
+    value: 10.5281/zenodo.21156969
 keywords:
   - Agent-Based Modeling
   - Multi-layer
@@ -25,3 +24,5 @@ keywords:
   - Social Networks
   - Social Simulation
 license: MIT
+date-released: 2026-07-03
+version: "0.1.1-alpha"
