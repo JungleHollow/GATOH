@@ -611,6 +611,9 @@ if __name__ == "__main__":
     # Specify the dependant variable CSV paths here:
     OPINION_PATHS: dict[str, str] = {}
 
+    if not os.path.exists(SAVEDIR_ROOT):
+        os.mkdir(SAVEDIR_ROOT)
+
     # Check for existing saved models and store the relevant information
     save_dirs: list[str] = list(os.walk(SAVEDIR_ROOT))[0][1]
 

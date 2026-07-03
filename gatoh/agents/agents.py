@@ -488,7 +488,11 @@ class Agent:
         for neighbour_benefit in neighbour_benefits:
             if neighbour_benefit:
                 aggregate_benefit_count += 1.0
-        aggregate_benefit: float = aggregate_benefit_count / len(neighbour_benefits)
+
+        if len(neighbour_benefits) != 0:
+            aggregate_benefit: float = aggregate_benefit_count / len(neighbour_benefits)
+        else:
+            aggregate_benefit = aggregate_benefit_count
 
         match self.personality:
             case "neutral":
