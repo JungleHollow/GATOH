@@ -15,6 +15,9 @@ authors:
     orcid: 'https://orcid.org/0009-0002-4324-6548'
 repository-code: 'https://github.com/JungleHollow/GATOH'
 abstract: An open source agent-based modelling framework for Python
+identifiers:
+    - type: doi
+      value: 10.5281/zenodo.21156969
 keywords:
   - Agent-Based Modeling
   - Multi-layer

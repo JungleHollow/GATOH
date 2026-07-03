@@ -9,6 +9,9 @@ gatoh Documentation
 
 **Version**: |version|
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.21156969.svg
+  :target: https://doi.org/10.5281/zenodo.21156969
+
 **Useful links**:
 `Source Repository <https://github.com/JungleHollow/GATOH>`_ |
 `Issue Tracker <https://github.com/JungleHollow/GATOH/issues>`_ |
