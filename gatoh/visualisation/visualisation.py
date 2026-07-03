@@ -94,7 +94,7 @@ class ABVisualiser:
 
         # Draw the hierarchy Graph
         _ = mpl_draw(
-            hierarchy_graph,
+            hierarchy_graph.graph,
             ax=ax,
             with_labels=True,
             node_color=node_colours,
@@ -130,7 +130,7 @@ class ABVisualiser:
                 node_colours.append("blue")
 
         _ = mpl_draw(
-            base_graph,
+            base_graph.graph,
             ax=self.parent_model.ax,
             with_labels=True,
             node_color=node_colours,
