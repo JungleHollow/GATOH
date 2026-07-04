@@ -1,6 +1,7 @@
 .venv
 Cargo.lock
 target
+gatoh.egg-info
 gatoh/experiments/Base/GraphAlgorithms/GraphAlgorithms_AggOps.png
 gatoh/experiments/Base/GraphAlgorithms/GraphAlgorithms_Polarisations.png
 gatoh/experiments/Base/GraphAlgorithms/GraphAlgorithms_RadicalAgents.png
@@ -22,3 +23,5 @@ gatoh/experiments/StochasticAnalysis/ResultsVariance/PolarisationStatistics.png
 gatoh/experiments/StochasticAnalysis/ResultsVariance/RadicalisedStatistics.png
 gatoh/experiments/StochasticAnalysis/ResultsVariance/VarianceOverModels.png
 gatoh/experiments/Base/OpinionChanges/plots/
+gatoh/experiments/CaseStudy/Agents
+gatoh/experiments/CaseStudy/Graphs

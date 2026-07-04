@@ -4,6 +4,7 @@ import json
 import os
 import pickle
 import random as rd
+import zipfile
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
@@ -257,7 +258,7 @@ class ResponseParser:
                     agent_values["sociability"],
                 )
 
-                self.agents[community].append(agent_attributes)
+                self.agents[community].append(deepcopy(agent_attributes))
         return None
 
     def create_base_hierarchies(self) -> None:
@@ -303,14 +304,14 @@ class ResponseParser:
 
             # After both matrices are populated, add them to self.graphs
             self.graphs[community]["hierarchies"].append("Age")
-            self.graphs[community]["adj_matrices"].append(age_matrix)
+            self.graphs[community]["adj_matrices"].append(deepcopy(age_matrix))
             self.graphs[community]["rw_params"].append(HIERARCHY_RW["Age"])
-            self.graphs[community]["agents"].append(agent_ids)
+            self.graphs[community]["agents"].append(deepcopy(agent_ids))
 
             self.graphs[community]["hierarchies"].append("Gender")
-            self.graphs[community]["adj_matrices"].append(gender_matrix)
+            self.graphs[community]["adj_matrices"].append(deepcopy(gender_matrix))
             self.graphs[community]["rw_params"].append(HIERARCHY_RW["Gender"])
-            self.graphs[community]["agents"].append(agent_ids)
+            self.graphs[community]["agents"].append(deepcopy(agent_ids))
         return None
 
     def generate_relationship_strengths(
@@ -324,23 +325,25 @@ class ResponseParser:
         :param hierarchy: An optional string indicating that explicit conversion values are used for this hierarchy.
         :return: The modified adjacency matrix.
         """
+        new_adj_matrix = adj_matrix.copy()
         if hierarchy:
             for i in range(adj_matrix.shape[0]):
                 for j in range(adj_matrix.shape[1]):
                     if i == j:
                         # Ensure that the diagonal is always zero
-                        adj_matrix[i, j] = 0
+                        new_adj_matrix[i, j] = 0.0
 
                     matrix_value = self.adjacency_matrix_values[hierarchy][
-                        f"{adj_matrix[i, j]}"
+                        f"{int(adj_matrix[i, j])}"
                     ]
 
                     # The value is "false"
                     if not matrix_value:
-                        adj_matrix[i, j] = 0
+                        new_adj_matrix[i, j] = 0.0
                     # The value is a [min, max] generation range
                     else:
-                        adj_matrix[i, j] = rd.uniform(matrix_value[0], matrix_value[1])
+                        new_value = rd.uniform(matrix_value[0], matrix_value[1])
+                        new_adj_matrix[i, j] = new_value
         else:
             min_value = np.min(adj_matrix)
             max_value = np.max(adj_matrix)
@@ -352,10 +355,12 @@ class ResponseParser:
                         continue
                     cell_value = adj_matrix[i, j]
                     if cell_value < mid_value:
-                        adj_matrix[i, j] = -1.0 * ((mid_value - cell_value) / mid_value)
+                        new_adj_matrix[i, j] = -1.0 * (
+                            (mid_value - cell_value) / mid_value
+                        )
                     else:
-                        adj_matrix[i, j] = (cell_value - mid_value) / mid_value
-        return adj_matrix
+                        new_adj_matrix[i, j] = (cell_value - mid_value) / mid_value
+        return new_adj_matrix
 
     def generate_hierarchies(self) -> None:
         """
@@ -369,7 +374,7 @@ class ResponseParser:
 
                 # Remove the ID column, leaving only the codified adjacency matrix
                 adj_matrix = adj_matrix.drop("Persona")
-                adj_matrix = adj_matrix.to_numpy()
+                adj_matrix = adj_matrix.to_numpy(writable=True).astype(np.float32)
 
                 # Convert the adjacency matrix from coded values to float strengths
                 adj_matrix = self.generate_relationship_strengths(
@@ -383,9 +388,9 @@ class ResponseParser:
                     agent_ids.append(agent.id)
 
                 self.graphs[community]["hierarchies"].append(hierarchy)
-                self.graphs[community]["adj_matrices"].append(adj_matrix)
+                self.graphs[community]["adj_matrices"].append(deepcopy(adj_matrix))
                 self.graphs[community]["rw_params"].append(HIERARCHY_RW[hierarchy])
-                self.graphs[community]["agents"].append(agent_ids)
+                self.graphs[community]["agents"].append(deepcopy(agent_ids))
         return None
 
     def write_agents(self) -> None:
@@ -395,12 +400,11 @@ class ResponseParser:
 
         One subdirectory is created per community.
         """
-        # Create the Agents subdirectory if needed
         if not os.path.exists("./gatoh/experiments/CaseStudy/Agents"):
             os.mkdir("./gatoh/experiments/CaseStudy/Agents")
 
         for community, agents_dir in AGENT_PATHS.items():
-            # Create the community agents subdirectory if needed
+            # Create the agents subdirectory if needed
             if not os.path.exists(agents_dir):
                 os.mkdir(agents_dir)
 
@@ -434,12 +438,11 @@ class ResponseParser:
 
         One subdirectory is created per hierarchy, per community.
         """
-        # Create the Graphs subdirectory if needed
         if not os.path.exists("./gatoh/experiments/CaseStudy/Graphs"):
             os.mkdir("./gatoh/experiments/CaseStudy/Graphs")
 
         for community, graphs_dir in GRAPH_PATHS.items():
-            # Create the community graphs subdirectory if needed
+            # Create the Graphs subdirectory if needed
             if not os.path.exists(graphs_dir):
                 os.mkdir(graphs_dir)
 
@@ -467,10 +470,11 @@ class ResponseParser:
                 # Add the relevant Agent object as GraphNodes
                 new_graph.add_nodes(included_agents)
 
-                edges_dict: dict[str, list[int | float]] = {}
-                edges_dict["to_node"] = []
-                edges_dict["from_node"] = []
-                edges_dict["weighting"] = []
+                edges_dict: dict[str, list[int | float]] = {
+                    "from_node": [],
+                    "to_node": [],
+                    "weighting": [],
+                }
 
                 for i in range(len(included_agents)):
                     for j in range(len(included_agents)):
@@ -481,10 +485,10 @@ class ResponseParser:
                         # No valid relationship exists from i to j
                         if adj_matrix_value == 0.0:
                             continue
-
-                        edges_dict["from_node"].append(i)
-                        edges_dict["to_node"].append(j)
-                        edges_dict["weighting"].append(adj_matrix_value)
+                        else:
+                            edges_dict["from_node"].append(i)
+                            edges_dict["to_node"].append(j)
+                            edges_dict["weighting"].append(adj_matrix_value)
 
                 # Create the GraphEdge relationships using the information from the adjacency matrix
                 new_graph.add_edges(edges_dict)
@@ -492,7 +496,7 @@ class ResponseParser:
                 # Serialise and save the graph object
                 self.save_graph(new_graph, hierarchy_subdir)
 
-                self.graph_objects[community].append(new_graph)
+                self.graph_objects[community].append(deepcopy(new_graph))
 
                 # Manual garbage collection
                 del new_graph
@@ -536,7 +540,6 @@ class ResponseParser:
             with open(edge_save_path, "wb") as edge_file:
                 pickle.dump(edge, edge_file)
             edge_save_paths.append(edge_save_path)
-
         return None
 
 
