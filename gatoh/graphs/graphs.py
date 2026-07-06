@@ -17,6 +17,8 @@ import rustworkx as rx
 
 from gatoh.agents.agents import Agent
 from gatoh.utils.utils import (
+    EdgeChanges,
+    NodeChanges,
     beta_value_attenuation,
     connected_watts_strogatz_graph,
     random_coinflip,
@@ -206,6 +208,7 @@ class Graph:
             "m": 3,
             "sbm_sizes": 10,
         }
+        self.pending_edge_changes: dict[str, EdgeChanges] = {}
 
     def change_generation_params(self, **params) -> None:
         """
@@ -684,8 +687,47 @@ class Graph:
             self.graph.update_edge_by_index(edge_index, updated_edge)
         else:
             _ = self.graph.add_edges_from(updated_edge)
+
         self.update_edge_indices()
+        self.register_edge_change(node_1, node_2, value)
         return None
+
+    def register_edge_change(
+        self, from_node: int, to_node: int, weighting: float
+    ) -> None:
+        """
+        A helper function that records a pending edge change for this graph.
+
+        :param from_node: The index of the origin node.
+        :type from_node: int
+        :param to_node: The index of the destination node.
+        :type to_node: int
+        :param weighting: The new weighting that is being assigned to the edge.
+        :type weighting: float
+        """
+        from_agent = self.get_node(from_node)
+        to_agent = self.get_node(to_node)
+        # Included for type checking
+        if from_agent is not None and to_agent is not None:
+            edge_change: EdgeChanges = EdgeChanges(self.name, weighting)
+            self.pending_edge_changes[f"{from_agent.agent.id},{to_agent.agent.id}"] = (
+                edge_change
+            )
+
+    def get_edge_changes(self) -> dict[str, EdgeChanges]:
+        """
+        A getter function that returns the current register of pending edge changes for this graph,
+        and then resets the attribute to an empty entry.
+
+        :return: A <"ID1,ID2" : edge change> mapping that outlines the edge changes being made between two agents in the graph.
+        :rtype: dict[str, EdgeChanges]
+        """
+        changes_register: dict[str, EdgeChanges] = deepcopy(self.pending_edge_changes)
+
+        del self.pending_edge_changes
+        self.pending_edge_changes = {}
+
+        return changes_register
 
     def remove_node(self, node: int) -> None:
         """

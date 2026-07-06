@@ -5,6 +5,7 @@ This utils file should cover any miscellaneous functions that facilitate running
 from __future__ import annotations
 
 import random
+from dataclasses import dataclass
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -15,6 +16,58 @@ from multimethod import multimethod
 from scipy.stats import beta, gamma, levy, norm, truncnorm, uniform
 
 # ========== Graph utils ========== #
+
+
+@dataclass
+class NodeChanges:
+    """
+    Dataclass that stores all the relevant information needed to update GraphNodes in the model's base graph.
+
+    :param opinion: The newest opinion value that the agent in the node should have.
+    :type opinion: float
+    :param previous_opinion: The newest previous_opinion value that the agent in the node should have.
+    :type previous_opinion: float
+    :param radicalised: The newest radicalisation status that the agent in the node should have.
+    :type radicalised: bool
+    :param social_weightings: The newest social weightings that the agent in the node should have.
+    :type social_weightings: dict[str, float]
+    """
+
+    opinion: float
+    previous_opinion: float
+    radicalised: bool
+    social_weightings: dict[str, float]
+
+    def __init__(
+        self,
+        opinion: float,
+        previous_opinion: float,
+        radicalised: bool,
+        social_weightings: dict[str, float],
+    ) -> None:
+        self.opinion = opinion
+        self.previous_opinion = previous_opinion
+        self.radicalised = radicalised
+        self.social_weightings = social_weightings
+
+
+@dataclass
+class EdgeChanges:
+    """
+    Dataclass that stores all the relevant information needed to update GraphEdges in the model's base graph.
+
+    :param hierarchy: The name of the hierarchy to which the relationships belongs.
+    :type hierarchy: str
+    :param weighting: The newest weighting value that the relationship should have.
+    :type weighting: float
+    """
+
+    hierarchy: str
+    weighting: float
+
+    def __init__(self, hierarchy: str, weighting: float) -> None:
+        self.hierarchy = hierarchy
+        self.weighting = weighting
 
 
 def pygraph_to_pydigraph(input_graph: rx.PyGraph) -> rx.PyDiGraph:

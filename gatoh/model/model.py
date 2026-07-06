@@ -19,7 +19,12 @@ from rustworkx.rustworkx import NoEdgeBetweenNodes
 from gatoh.agents.agents import Agent, AgentSet
 from gatoh.graphs.graphs import Graph, GraphEdge, GraphSet
 from gatoh.logging.logging import GATOHLogger
-from gatoh.utils.utils import YamlLoader, create_config_file
+from gatoh.utils.utils import (
+    EdgeChanges,
+    NodeChanges,
+    YamlLoader,
+    create_config_file,
+)
 from gatoh.visualisation.visualisation import ABVisualiser
 
 
@@ -254,7 +259,10 @@ class ABModel:
         return self.graphs
 
     def add_graphs(
-        self, graphs: list[Any], names: list[str], rw_params: list[tuple[float, float]]
+        self,
+        graphs: list[Graph | str],
+        names: list[str],
+        rw_params: list[tuple[float, float]],
     ) -> GraphSet:
         """
         Add new Graphs to the Model's GraphSet.
@@ -268,15 +276,14 @@ class ABModel:
         :return: The model's newly updated graph set.
         :rtype: GraphSet
         """
-        if type(graphs[0]) is Graph:
-            for graph in graphs:
+        for idx, graph in enumerate(graphs):
+            if type(graph) is Graph:
                 self.graphs.add_graph(graph)
-        else:
-            for idx, graph_path in enumerate(graphs):
+            elif type(graph) is str:
                 new_graph: Graph = Graph(names[idx], rw_params[idx])
-                new_graph.load_graph(graph_path, names[idx])
+                new_graph.load_graph(graph, names[idx])
                 self.graphs.add_graph(new_graph)
-        self.update_base_graph()
+        self.init_base_graph()
         return self.graphs
 
     def generate_graphs(
@@ -531,6 +538,14 @@ class ABModel:
                     # Update the radicalisation status of the agent across all hierarchies
                     hierarchy.agent_radicalisation_change(agent_object, was_radicalised)
 
+                # Update the nodes in the base graph
+                self.base_graph.agent_opinion_change(
+                    agent_object, opinion_change_info[0]
+                )
+                self.base_graph.agent_radicalisation_change(
+                    agent_object, was_radicalised
+                )
+
                 # Update the radicalisation count in the logger as needed
                 self.logger.variables.increment_radicalised(was_radicalised)
         return None
@@ -759,6 +774,44 @@ class ABModel:
             layer_interdependence = 0.0
         return layer_interdependence
 
+    def init_base_graph(self) -> None:
+        """
+        Iterates over all the relationships in the existing social hierarchies and creates corresponding
+        edges within the model's base graph.
+        """
+        for hierarchy in self.graphs:
+            for idx, edge in hierarchy.graph.edge_index_map().items():
+                graph_edge: GraphEdge = deepcopy(edge[2])
+
+                # Get the index of the Agent objects within the model's AgentSet (not the graph's node set)
+                base_from_idx, base_to_idx = self.get_base_indices_from_edge(
+                    hierarchy, graph_edge
+                )
+
+                # Update the weigting in base graph if an edge exists and the weighting is different from the hierarchy's
+                # The try, except is included for cases where the base graph may already contain explicitly initialised relationships
+                try:
+                    base_edge: GraphEdge = self.base_graph.graph.get_edge_data(
+                        base_from_idx, base_to_idx
+                    )
+                    if graph_edge.weighting != base_edge.weighting:
+                        self.base_graph.change_weights(
+                            base_from_idx, base_to_idx, graph_edge.weighting
+                        )
+                # If the edge does not exist in the base graph, create it and add it to the base graph
+                except NoEdgeBetweenNodes:
+                    new_edge: dict[str, list[Any]] = {
+                        "from_node": [base_from_idx],
+                        "to_node": [base_to_idx],
+                        "weighting": [graph_edge.weighting],
+                        "name": [hierarchy.name],
+                    }
+                    self.base_graph.add_edges(deepcopy(new_edge))
+
+                    # Manual garbage collection
+                    del new_edge
+        return None
+
     def get_base_indices_from_edge(
         self, hierarchy_graph: Graph, edge: GraphEdge
     ) -> tuple[int, int]:
@@ -787,7 +840,7 @@ class ABModel:
         """
         A function that takes a Graph object and adds all of its weighted edges to the model's base graph.
 
-        :param graph: The new grpah that is being added to self.graphs.
+        :param graph: The new graph that is being added to self.graphs.
         :type graph: Graph
         """
         new_edges: dict[str, list[Any]] = {
@@ -810,6 +863,9 @@ class ABModel:
             new_edges["to_node"].append(base_to_idx)
             new_edges["weighting"].append(graph_edge.weighting)
 
+            # Manual garbage collection
+            del graph_edge, base_from_idx, base_to_idx
+
         self.base_graph.add_edges(deepcopy(new_edges))
 
         # Manual garbage collection
@@ -819,37 +875,41 @@ class ABModel:
 
     def update_base_graph(self) -> None:
         """
-        Iterates over all relationships in the base graph and checks the respective relationship within the relevant hierarchy,
-        updating the relationship weight if needed.
+        Iterates over all the social hierarchy graphs and checks for pending edge changes.
+
+        If pending changes exist, use all of the given information to apply the changes appropriately
+        to the relationships present in the model's base graph.
         """
         for hierarchy in self.graphs:
-            for idx, edge in hierarchy.graph.edge_index_map().items():
-                graph_edge: GraphEdge = deepcopy(edge[2])
+            pending_changes: dict[str, EdgeChanges] = hierarchy.get_edge_changes()
 
-                # Get the index of the Agent objects within the model's AgentSet (not the graph's node set)
-                base_from_idx, base_to_idx = self.get_base_indices_from_edge(
-                    hierarchy, graph_edge
-                )
+            if len(pending_changes.keys()) == 0:
+                continue
 
-                # Update the weigting in base graph if an edge exists and the weighting is different from the hierarchy's
-                try:
-                    base_edge: GraphEdge = self.base_graph.graph.get_edge_data(
-                        base_from_idx, base_to_idx
+            for agents, change in pending_changes.items():
+                from_id, to_id = agents.split(",")
+
+                from_agent = self.agents.get_agent_by_id(from_id)
+                to_agent = self.agents.get_agent_by_id(to_id)
+
+                # Included for type checking
+                if from_agent is not None and to_agent is not None:
+                    from_idx = from_agent.index
+                    to_idx = to_agent.index
+
+                    edge_indices = self.base_graph.graph.edge_indices_from_endpoints(
+                        from_idx, to_idx
                     )
-                    if graph_edge.weighting != base_edge.weighting:
-                        self.base_graph.change_weights(
-                            base_from_idx, base_to_idx, graph_edge.weighting
-                        )
-                # If the edge does not exist in the base graph, create it and add it to the base graph
-                except NoEdgeBetweenNodes:
-                    new_edge: dict[str, list[Any]] = {
-                        "from_node": [base_from_idx],
-                        "to_node": [base_to_idx],
-                        "weighting": [graph_edge.weighting],
-                        "name": [hierarchy.name],
-                    }
-                    self.base_graph.add_edges(deepcopy(new_edge))
 
-                    # Manual garbage collection
-                    del new_edge
+                    for edge_index in edge_indices:
+                        edge_data: GraphEdge = (
+                            self.base_graph.graph.get_edge_data_by_index(edge_index)
+                        )
+                        if edge_data.hierarchy != change.hierarchy:
+                            continue
+                        else:
+                            edge_data.set_weighting(change.weighting)
+                            self.base_graph.graph.update_edge_by_index(
+                                edge_index, deepcopy(edge_data)
+                            )
         return None
