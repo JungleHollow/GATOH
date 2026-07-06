@@ -342,8 +342,13 @@ class ResponseParser:
                         new_adj_matrix[i, j] = 0.0
                     # The value is a [min, max] generation range
                     else:
-                        new_value = rd.uniform(matrix_value[0], matrix_value[1])
-                        new_adj_matrix[i, j] = new_value
+                        # Somewhat restrict the relationship density to maintain reasonable model runtimes
+                        inclusion_threshold: float = rd.random()
+                        if inclusion_threshold <= 0.4:
+                            new_value = rd.uniform(matrix_value[0], matrix_value[1])
+                            new_adj_matrix[i, j] = new_value
+                        else:
+                            new_adj_matrix[i, j] = 0.0
         else:
             min_value = np.min(adj_matrix)
             max_value = np.max(adj_matrix)
