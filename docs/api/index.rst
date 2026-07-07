@@ -9,12 +9,8 @@ GATOH API Reference
     Agents <agents/index>
     Graphs <graphs/index>
     Logging <logging/index>
-    Model <model/ABModel>
-    Visualisation <visualisation/ABVisualiser>
-
-.. toctree::
-    :maxdepth: 1
-
+    Model <model/index>
+    Visualisation <visualisation/index>
     Graph Utils <utils/graph_utils>
     Math Utils <utils/math_utils>
     Persistence Utils <utils/persistence_utils>

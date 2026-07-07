@@ -15,6 +15,7 @@
 #}
    :no-members:
    :show-inheritance:
+
 {#
    Methods all get their own separate page, with their names and the first lines
    of their docstrings tabulated.  The documentation from `__init__` is

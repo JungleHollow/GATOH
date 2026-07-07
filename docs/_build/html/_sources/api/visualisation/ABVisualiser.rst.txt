@@ -1,5 +1,3 @@
-.. _visualiser_api:
-
 .. autosummary::
     :toctree: ../../apiref
 

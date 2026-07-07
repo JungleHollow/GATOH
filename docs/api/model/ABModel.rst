@@ -1,5 +1,3 @@
-.. _model_api:
-
 .. autosummary::
     :toctree: ../../apiref
 

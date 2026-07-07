@@ -1,0 +1,5 @@
+.. _installation:
+
+****************
+Installing GATOH
+****************

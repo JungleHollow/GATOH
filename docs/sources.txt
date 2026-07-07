@@ -150,4 +150,4 @@ gatoh.utils.utils.watts_strogatz_graph.html
 gatoh.visualisation.visualisation.ABVisualiser.__init__.html
 gatoh.visualisation.visualisation.ABVisualiser.graph_node_opinion.html
 gatoh.visualisation.visualisation.ABVisualiser.visualise_hierarchy.html
-gatih.visualisation.visualisation.ABVisualiser.visualiser_iteration.html
+gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration.html
