@@ -8,7 +8,7 @@
   <title>gatoh.visualisation.visualisation &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css?v=572af1d6" />
       <link rel="stylesheet" type="text/css" href="../../../_static/thebelab.css" />
 
   
@@ -44,8 +44,13 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Release Notes</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -87,7 +92,7 @@
 
 
 <div class="viewcode-block" id="ABVisualiser">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.visualisation.visualisation.ABVisualiser.html#gatoh.visualisation.visualisation.ABVisualiser">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.visualisation.visualisation.ABVisualiser.html#gatoh.visualisation.visualisation.ABVisualiser">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ABVisualiser</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The visualisations will include:</span>
@@ -107,8 +112,6 @@
 <span class="sd">    :type save_visualisations: bool, optional</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ABVisualiser.__init__">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.visualisation.visualisation.ABVisualiser.html#gatoh.visualisation.visualisation.ABVisualiser.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
@@ -128,9 +131,10 @@
 
             <span class="c1"># Ensure that the visualisations save directory exists</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="p">):</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="p">)</span></div>
+                <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="p">)</span>
 
-
+<div class="viewcode-block" id="ABVisualiser.graph_node_opinion">
+<a class="viewcode-back" href="../../../apiref/gatoh.visualisation.visualisation.ABVisualiser.graph_node_opinion.html#gatoh.visualisation.visualisation.ABVisualiser.graph_node_opinion">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">graph_node_opinion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_node</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A helper function that takes in a GraphNode object (node payloads in the Graphs),</span>
@@ -142,8 +146,11 @@
 <span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">agent_opinion</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">graph_node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">agent_opinion</span>
+        <span class="k">return</span> <span class="n">agent_opinion</span></div>
 
+
+<div class="viewcode-block" id="ABVisualiser.visualise_hierarchy">
+<a class="viewcode-back" href="../../../apiref/gatoh.visualisation.visualisation.ABVisualiser.visualise_hierarchy.html#gatoh.visualisation.visualisation.ABVisualiser.visualise_hierarchy">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">visualise_hierarchy</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">hierarchy_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">save_graph</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">show_graph</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -172,7 +179,7 @@
 
         <span class="c1"># Draw the hierarchy Graph</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">mpl_draw</span><span class="p">(</span>
-            <span class="n">hierarchy_graph</span><span class="p">,</span>
+            <span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span>
             <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
             <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">node_color</span><span class="o">=</span><span class="n">node_colours</span><span class="p">,</span>
@@ -190,8 +197,11 @@
             <span class="n">_</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">waitforbuttonpress</span><span class="p">()</span>
 
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="ABVisualiser.visualiser_iteration">
+<a class="viewcode-back" href="../../../apiref/gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration.html#gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">visualiser_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Visualise the radicalisation of agents across the entire agent population;</span>
@@ -208,14 +218,14 @@
                 <span class="n">node_colours</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
 
         <span class="n">_</span> <span class="o">=</span> <span class="n">mpl_draw</span><span class="p">(</span>
-            <span class="n">base_graph</span><span class="p">,</span>
+            <span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span>
             <span class="n">ax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parent_model</span><span class="o">.</span><span class="n">ax</span><span class="p">,</span>
             <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">node_color</span><span class="o">=</span><span class="n">node_colours</span><span class="p">,</span>
             <span class="n">labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_node_opinion</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">parent_model</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_model</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_visualisations</span><span class="p">:</span>
             <span class="c1"># Ensure that the model_runtime subdirectory exists</span>
@@ -227,6 +237,7 @@
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">None</span></div>
+</div>
 
 </pre></div>
 
@@ -237,7 +248,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2026, Manuel Munizaga Sepúlveda.</p>
+    <p>&#169; Copyright 2025, Manuel Munizaga Sepúlveda.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

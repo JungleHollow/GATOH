@@ -85,6 +85,8 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.visualisation.visualisation.ABVisualiser.html">ABVisualiser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.utils.NodeChanges.html">NodeChanges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.utils.EdgeChanges.html">EdgeChanges</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.utils.pygraph_to_pydigraph.html">gatoh.utils.utils.pygraph_to_pydigraph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.utils.watts_strogatz_graph.html">gatoh.utils.utils.watts_strogatz_graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.utils.watts_strogatz_creator.html">gatoh.utils.utils.watts_strogatz_creator</a></li>
@@ -97,7 +99,8 @@
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.utils.plot_graph.html">gatoh.utils.utils.plot_graph</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../license.html">GATOH license</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Release Notes</a></li>
 </ul>
 
         </div>
@@ -218,7 +221,7 @@
 <td><p>Updates the agents' internal states to match the model step.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.update_base_graph.html#gatoh.model.model.ABModel.update_base_graph" title="gatoh.model.model.ABModel.update_base_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_base_graph</span></code></a></p></td>
-<td><p>Iterates over all relationships in the base graph and checks the respective relationship within the relevant hierarchy, updating the relationship weight if needed.</p></td>
+<td><p>Iterates over all the social hierarchy graphs and checks for pending edge changes.</p></td>
 </tr>
 </tbody>
 </table>

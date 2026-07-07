@@ -47,7 +47,8 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../index.html">About GATOH</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../license.html">GATOH license</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Release Notes</a></li>
 </ul>
 
         </div>
@@ -605,7 +606,11 @@
         <span class="k">for</span> <span class="n">neighbour_benefit</span> <span class="ow">in</span> <span class="n">neighbour_benefits</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">neighbour_benefit</span><span class="p">:</span>
                 <span class="n">aggregate_benefit_count</span> <span class="o">+=</span> <span class="mf">1.0</span>
-        <span class="n">aggregate_benefit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">aggregate_benefit_count</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbour_benefits</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbour_benefits</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">aggregate_benefit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">aggregate_benefit_count</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbour_benefits</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">aggregate_benefit</span> <span class="o">=</span> <span class="n">aggregate_benefit_count</span>
 
         <span class="k">match</span> <span class="bp">self</span><span class="o">.</span><span class="n">personality</span><span class="p">:</span>
             <span class="k">case</span> <span class="s2">&quot;neutral&quot;</span><span class="p">:</span>

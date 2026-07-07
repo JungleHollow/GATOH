@@ -24,7 +24,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="gatoh.utils.utils.pygraph_to_pydigraph" href="../../apiref/gatoh.utils.utils.pygraph_to_pydigraph.html" />
+    <link rel="next" title="NodeChanges" href="../../apiref/gatoh.utils.utils.NodeChanges.html" />
     <link rel="prev" title="gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration" href="../../apiref/gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration.html" /> 
 </head>
 
@@ -50,7 +50,8 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../index.html">About GATOH</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../index.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../license.html">GATOH license</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Release Notes</a></li>
 </ul>
 
         </div>
@@ -80,6 +81,12 @@
              
   <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.utils.NodeChanges.html#gatoh.utils.utils.NodeChanges" title="gatoh.utils.utils.NodeChanges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.utils.NodeChanges</span></code></a>(opinion, ...)</p></td>
+<td><p>Dataclass that stores all the relevant information needed to update GraphNodes in the model's base graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.utils.EdgeChanges.html#gatoh.utils.utils.EdgeChanges" title="gatoh.utils.utils.EdgeChanges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.utils.EdgeChanges</span></code></a>(hierarchy, ...)</p></td>
+<td><p>Dataclass that stores all the relevant information needed to update GraphEdges in the model's base graph.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.utils.pygraph_to_pydigraph.html#gatoh.utils.utils.pygraph_to_pydigraph" title="gatoh.utils.utils.pygraph_to_pydigraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.utils.pygraph_to_pydigraph</span></code></a>(...)</p></td>
 <td><p>Transform an arbitrary <code class="xref py py-class docutils literal notranslate"><span class="pre">rustworxk.PyGraph</span></code> to a <code class="xref py py-class docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph</span></code> object where each unidirectional edge in the <code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code> becomes two opposing monodirectional edges with weight equal to the original.</p></td>
 </tr>
@@ -100,7 +107,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../../apiref/gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration.html" class="btn btn-neutral float-left" title="gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../apiref/gatoh.utils.utils.pygraph_to_pydigraph.html" class="btn btn-neutral float-right" title="gatoh.utils.utils.pygraph_to_pydigraph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../../apiref/gatoh.utils.utils.NodeChanges.html" class="btn btn-neutral float-right" title="NodeChanges" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

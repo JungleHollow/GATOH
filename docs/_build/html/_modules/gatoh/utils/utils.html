@@ -8,7 +8,7 @@
   <title>gatoh.utils.utils &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css?v=572af1d6" />
       <link rel="stylesheet" type="text/css" href="../../../_static/thebelab.css" />
 
   
@@ -44,8 +44,13 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Release Notes</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -78,6 +83,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
@@ -90,8 +96,60 @@
 <span class="c1"># ========== Graph utils ========== #</span>
 
 
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NodeChanges</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dataclass that stores all the relevant information needed to update GraphNodes in the model&#39;s base graph.</span>
+
+<span class="sd">    :param opinion: The newest opinion value that the agent in the node should have.</span>
+<span class="sd">    :type opinion: float</span>
+<span class="sd">    :param previous_opinion: The newest previous_opinion value that the agent in the node should have.</span>
+<span class="sd">    :type previous_opinion: float</span>
+<span class="sd">    :param radicalised: The newest radicalisation status that the agent in the node should have.</span>
+<span class="sd">    :type radicalised: bool</span>
+<span class="sd">    :param social_weightings: The newest social weightings that the agent in the node should have.</span>
+<span class="sd">    :type social_weightings: dict[str, float]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">opinion</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">previous_opinion</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">radicalised</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">social_weightings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">opinion</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">previous_opinion</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">radicalised</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">social_weightings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opinion</span> <span class="o">=</span> <span class="n">opinion</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_opinion</span> <span class="o">=</span> <span class="n">previous_opinion</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="n">radicalised</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span> <span class="o">=</span> <span class="n">social_weightings</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EdgeChanges</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dataclass that stores all the relevant information needed to update GraphEdges in the model&#39;s base graph.</span>
+
+<span class="sd">    :param hierarchy: The name of the hierarchy to which the relationships belongs.</span>
+<span class="sd">    :type hierarchy: str</span>
+<span class="sd">    :param weighting: The newest weighting value that the relationship should have.</span>
+<span class="sd">    :type weighting: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">weighting</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">weighting</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy</span> <span class="o">=</span> <span class="n">hierarchy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weighting</span> <span class="o">=</span> <span class="n">weighting</span>
+
+
 <div class="viewcode-block" id="pygraph_to_pydigraph">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.utils.utils.pygraph_to_pydigraph.html#gatoh.utils.utils.pygraph_to_pydigraph">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.pygraph_to_pydigraph.html#gatoh.utils.utils.pygraph_to_pydigraph">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pygraph_to_pydigraph</span><span class="p">(</span><span class="n">input_graph</span><span class="p">:</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyDiGraph</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Transform an arbitrary :py:class:`rustworxk.PyGraph` to a :py:class:`rustworkx.PyDiGraph` object where each unidirectional edge in the :py:class:`PyGraph` becomes two opposing monodirectional edges with weight equal to the original.</span>
@@ -162,7 +220,7 @@
 
 
 <div class="viewcode-block" id="watts_strogatz_graph">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.utils.utils.watts_strogatz_graph.html#gatoh.utils.utils.watts_strogatz_graph">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.watts_strogatz_graph.html#gatoh.utils.utils.watts_strogatz_graph">[docs]</a>
 <span class="nd">@multimethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">watts_strogatz_graph</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -185,7 +243,7 @@
 
 
 <div class="viewcode-block" id="watts_strogatz_creator">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.utils.utils.watts_strogatz_creator.html#gatoh.utils.utils.watts_strogatz_creator">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.watts_strogatz_creator.html#gatoh.utils.utils.watts_strogatz_creator">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">watts_strogatz_creator</span><span class="p">(</span>
     <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -255,7 +313,7 @@
 
 
 <div class="viewcode-block" id="connected_watts_strogatz_graph">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.utils.utils.connected_watts_strogatz_graph.html#gatoh.utils.utils.connected_watts_strogatz_graph">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.connected_watts_strogatz_graph.html#gatoh.utils.utils.connected_watts_strogatz_graph">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">connected_watts_strogatz_graph</span><span class="p">(</span>
     <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -300,7 +358,7 @@
 
 
 <div class="viewcode-block" id="beta_value_attenuation">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.utils.utils.beta_value_attenuation.html#gatoh.utils.utils.beta_value_attenuation">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.beta_value_attenuation.html#gatoh.utils.utils.beta_value_attenuation">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">beta_value_attenuation</span><span class="p">(</span><span class="n">input_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Takes an input value and rescales it using a beta distribution. This function is intended to be used exclusively</span>
@@ -361,7 +419,7 @@
 
 
 <div class="viewcode-block" id="draw_random_value">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.utils.utils.draw_random_value.html#gatoh.utils.utils.draw_random_value">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.draw_random_value.html#gatoh.utils.utils.draw_random_value">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">draw_random_value</span><span class="p">(</span>
     <span class="n">distribution</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -433,7 +491,7 @@
 
 
 <div class="viewcode-block" id="random_coinflip">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.utils.utils.random_coinflip.html#gatoh.utils.utils.random_coinflip">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.random_coinflip.html#gatoh.utils.utils.random_coinflip">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">random_coinflip</span><span class="p">(</span><span class="n">return_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Simulates a random coinflip, returning the result as either a boolean, an integer, a float, or a string.</span>
@@ -475,7 +533,7 @@
 
 
 <div class="viewcode-block" id="value_rw_delta">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.utils.utils.value_rw_delta.html#gatoh.utils.utils.value_rw_delta">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.value_rw_delta.html#gatoh.utils.utils.value_rw_delta">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">value_rw_delta</span><span class="p">(</span><span class="n">input_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">variance</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Draws a random walk delta from a normal distribution with the specified parameters, and then adds this delta</span>
@@ -513,7 +571,7 @@
 
 
 <div class="viewcode-block" id="create_config_file">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.utils.utils.create_config_file.html#gatoh.utils.utils.create_config_file">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.create_config_file.html#gatoh.utils.utils.create_config_file">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">create_config_file</span><span class="p">(</span><span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">config_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates a structured config file from the input config data, and then saves it to the specified path.</span>
@@ -534,7 +592,7 @@
 
 
 <div class="viewcode-block" id="plot_graph">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.utils.utils.plot_graph.html#gatoh.utils.utils.plot_graph">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.plot_graph.html#gatoh.utils.utils.plot_graph">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_graph</span><span class="p">(</span>
     <span class="n">x_vals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span>
     <span class="n">y_vals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span>
@@ -640,7 +698,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2026, Manuel Munizaga Sepúlveda.</p>
+    <p>&#169; Copyright 2025, Manuel Munizaga Sepúlveda.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

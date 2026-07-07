@@ -139,6 +139,8 @@ gatoh.utils.utils.beta_value_attenuation.html
 gatoh.utils.utils.connected_watts_strogatz_graph.html
 gatoh.utils.utils.create_config_file.html
 gatoh.utils.utils.draw_random_value.html
+gatoh.utils.utils.EdgeChanges.html
+gatoh.utils.utils.NodeChanges.html
 gatoh.utils.utils.plot_graph.html
 gatoh.utils.utils.pygraph_to_pydigraph.html
 gatoh.utils.utils.random_coinflip.html

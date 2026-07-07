@@ -1,0 +1,233 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Release Notes &mdash; gatoh 0.1.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=3ee1c6c6" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="_static/thebelab.css" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/thebelab-helper.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="GATOH license" href="license.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            gatoh
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#alpha">0.2.0-alpha</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#new-features">New Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fixes">Fixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">0.1.0-alpha</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">New Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Fixes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">gatoh</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Release Notes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/changelog.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="release-notes">
+<h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading"></a></h1>
+<section id="alpha">
+<h2>0.2.0-alpha<a class="headerlink" href="#alpha" title="Link to this heading"></a></h2>
+<p>This release involves the optimisation of core package functionality to reduce
+model runtimes and simplify the modelling process.</p>
+<section id="new-features">
+<h3>New Features<a class="headerlink" href="#new-features" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>A new way of tracking changes and updating model’s base graphs, composed of the following:</p>
+<ul>
+<li><p><a class="reference internal" href="apiref/gatoh.utils.utils.NodeChanges.html#gatoh.utils.utils.NodeChanges" title="gatoh.utils.utils.NodeChanges"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeChanges</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/gatoh.utils.utils.EdgeChanges.html#gatoh.utils.utils.EdgeChanges" title="gatoh.utils.utils.EdgeChanges"><code class="xref py py-class docutils literal notranslate"><span class="pre">EdgeChanges</span></code></a></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">register_edge_change()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_edge_changes()</span></code></p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">pending_edge_changes</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">init_base_graph()</span></code></p></li>
+<li><p><a class="reference internal" href="apiref/gatoh.model.model.ABModel.update_base_graph.html#gatoh.model.model.ABModel.update_base_graph" title="gatoh.model.model.ABModel.update_base_graph"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_base_graph()</span></code></a></p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="fixes">
+<h3>Fixes<a class="headerlink" href="#fixes" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Added edge case handling for division by zero errors in <a class="reference internal" href="apiref/gatoh.model.model.ABModel.html#gatoh.model.model.ABModel" title="gatoh.model.model.ABModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABModel</span></code></a></p></li>
+<li><p>Corrected the object that was being passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">rustworkx.visualization.mpl_draw()</span></code> in <a class="reference internal" href="apiref/gatoh.visualisation.visualisation.ABVisualiser.visualise_hierarchy.html#gatoh.visualisation.visualisation.ABVisualiser.visualise_hierarchy" title="gatoh.visualisation.visualisation.ABVisualiser.visualise_hierarchy"><code class="xref py py-meth docutils literal notranslate"><span class="pre">visualise_hierarchy()</span></code></a></p></li>
+<li><p>Fixed value setting error caused by mismatching <code class="xref py py-obj docutils literal notranslate"><span class="pre">NDArray</span></code> data types in <code class="xref py py-mod docutils literal notranslate"><span class="pre">ResponseParser.py</span></code>
+for the planned case study experiment</p></li>
+</ul>
+</section>
+</section>
+<section id="id1">
+<h2>0.1.0-alpha<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p>This is the first official release of GATOH.</p>
+<p>The main purpose of this release is to start preparing the code and its
+supplementary materials for publication as a proper package.</p>
+<section id="id2">
+<h3>New Features<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Start of the creation of documentation material. This includes:</p>
+<ul>
+<li><p>index.rst</p></li>
+<li><p>license.rst</p></li>
+<li><p>Full API reference</p></li>
+<li><p>Developer and user manuals</p></li>
+<li><p>Getting Started section</p></li>
+<li><p>CITATION.cff</p></li>
+</ul>
+</li>
+<li><p>Mostly working functionality across all main package modules</p></li>
+<li><p>Basic model visualisation functionality</p></li>
+<li><p>Support for four commonly used random graph generation algorithms:</p>
+<ul>
+<li><p>small-world</p></li>
+<li><p>scale-free</p></li>
+<li><p>random</p></li>
+<li><p>stochastic blockmodel</p></li>
+</ul>
+</li>
+<li><p>Support for random generation of <a class="reference internal" href="apiref/gatoh.agents.agents.Agent.html#gatoh.agents.agents.Agent" title="gatoh.agents.agents.Agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Agent</span></code></a> objects</p></li>
+<li><p>A working data persistence system that allows for loading and saving any models
+created with the framework</p></li>
+<li><p>Design and implementation of five framework validation experiments</p></li>
+<li><p>Initial prototype for a future case study experiment</p></li>
+<li><p>Implementation of unit tests for all core module functionalities</p></li>
+<li><p>Enforcing of consistent type checking across modules</p></li>
+<li><p>Full docstring coverage across the existing code</p></li>
+<li><p>Changed the way that default names were generated for model config files to
+ensure functionality across different operating systems</p></li>
+<li><p>Initial, basic conversion of some Python modules to Rust code. This will likely
+be expanded on in the future, with the package adopting a hybrid approach, and
+resource-intensive modules being ported to and optimised in Rust.</p></li>
+<li><p>Random-walk mechanisms used to simulate the dynamic nature of agent relationships
+in social networks, as well as the variable attitude of agents towards the different
+social networks.</p></li>
+<li><p>Publication of the package code to Zenodo</p></li>
+</ul>
+</section>
+<section id="id3">
+<h3>Fixes<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Fixed the way that <a class="reference internal" href="apiref/gatoh.agents.agents.Agent.radicalisation.html#gatoh.agents.agents.Agent.radicalisation" title="gatoh.agents.agents.Agent.radicalisation"><code class="xref py py-meth docutils literal notranslate"><span class="pre">radicalisation()</span></code></a> was determining agent
+radicalisation for “rational” personality types. Now, the function should properly use the
+“aggregate benefit” of neighbours rather than the agent’s personal benefit.</p></li>
+<li><p>Multiple restructurings of the ./gatoh file layout; clarifying the separation of package
+features each time.</p></li>
+<li><p>Creation of dedicated setter functions for <a class="reference internal" href="apiref/gatoh.agents.agents.Agent.html#gatoh.agents.agents.Agent" title="gatoh.agents.agents.Agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Agent</span></code></a> objects to fix the inability
+of setting <a class="reference internal" href="apiref/gatoh.agents.agents.Agent.html#gatoh.agents.agents.Agent" title="gatoh.agents.agents.Agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Agent</span></code></a> attributes from <a class="reference internal" href="apiref/gatoh.graphs.graphs.Graph.html#gatoh.graphs.graphs.Graph" title="gatoh.graphs.graphs.Graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Graph</span></code></a> objects which persist:</p>
+<ul>
+<li><p><a class="reference internal" href="apiref/gatoh.agents.agents.Agent.store_previous_opinion.html#gatoh.agents.agents.Agent.store_previous_opinion" title="gatoh.agents.agents.Agent.store_previous_opinion"><code class="xref py py-meth docutils literal notranslate"><span class="pre">store_previous_opinion()</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/gatoh.agents.agents.Agent.change_opinion.html#gatoh.agents.agents.Agent.change_opinion" title="gatoh.agents.agents.Agent.change_opinion"><code class="xref py py-meth docutils literal notranslate"><span class="pre">change_opinion()</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/gatoh.agents.agents.Agent.change_radicalisation.html#gatoh.agents.agents.Agent.change_radicalisation" title="gatoh.agents.agents.Agent.change_radicalisation"><code class="xref py py-meth docutils literal notranslate"><span class="pre">change_radicalisation()</span></code></a></p></li>
+</ul>
+</li>
+<li><p>Creation of dedicated setter functions for <a class="reference internal" href="apiref/gatoh.graphs.graphs.GraphNode.html#gatoh.graphs.graphs.GraphNode" title="gatoh.graphs.graphs.GraphNode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GraphNode</span></code></a> and <a class="reference internal" href="apiref/gatoh.graphs.graphs.GraphEdge.html#gatoh.graphs.graphs.GraphEdge" title="gatoh.graphs.graphs.GraphEdge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GraphEdge</span></code></a> objects
+to fix the inability of setting persistent attributes from within <a class="reference internal" href="apiref/gatoh.graphs.graphs.Graph.html#gatoh.graphs.graphs.Graph" title="gatoh.graphs.graphs.Graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Graph</span></code></a> objects:</p>
+<ul>
+<li><p><a class="reference internal" href="apiref/gatoh.graphs.graphs.GraphNode.set_index.html#gatoh.graphs.graphs.GraphNode.set_index" title="gatoh.graphs.graphs.GraphNode.set_index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_index()</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/gatoh.graphs.graphs.GraphEdge.set_index.html#gatoh.graphs.graphs.GraphEdge.set_index" title="gatoh.graphs.graphs.GraphEdge.set_index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_index()</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/gatoh.graphs.graphs.GraphEdge.set_weighting.html#gatoh.graphs.graphs.GraphEdge.set_weighting" title="gatoh.graphs.graphs.GraphEdge.set_weighting"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_weighting()</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/gatoh.graphs.graphs.GraphEdge.update_from_node.html#gatoh.graphs.graphs.GraphEdge.update_from_node" title="gatoh.graphs.graphs.GraphEdge.update_from_node"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_from_node()</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/gatoh.graphs.graphs.GraphEdge.update_to_node.html#gatoh.graphs.graphs.GraphEdge.update_to_node" title="gatoh.graphs.graphs.GraphEdge.update_to_node"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_to_node()</span></code></a></p></li>
+</ul>
+</li>
+<li><p>Use of <code class="xref py py-func docutils literal notranslate"><span class="pre">deepcopy()</span></code> across multiple functions to fix data inheritance bugs</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="license.html" class="btn btn-neutral float-left" title="GATOH license" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Manuel Munizaga Sepúlveda.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -47,7 +47,8 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../index.html">About GATOH</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../license.html">GATOH license</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Release Notes</a></li>
 </ul>
 
         </div>
@@ -96,7 +97,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.agents.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">AgentSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.graphs.graphs</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">GraphEdge</span><span class="p">,</span> <span class="n">GraphSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.logging.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">GATOHLogger</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">YamlLoader</span><span class="p">,</span> <span class="n">create_config_file</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">EdgeChanges</span><span class="p">,</span>
+    <span class="n">NodeChanges</span><span class="p">,</span>
+    <span class="n">YamlLoader</span><span class="p">,</span>
+    <span class="n">create_config_file</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.visualisation.visualisation</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABVisualiser</span>
 
 
@@ -344,7 +350,10 @@
 <div class="viewcode-block" id="ABModel.add_graphs">
 <a class="viewcode-back" href="../../../apiref/gatoh.model.model.ABModel.add_graphs.html#gatoh.model.model.ABModel.add_graphs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_graphs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">graphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">rw_params</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">graphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Graph</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">rw_params</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GraphSet</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add new Graphs to the Model&#39;s GraphSet.</span>
@@ -358,15 +367,14 @@
 <span class="sd">        :return: The model&#39;s newly updated graph set.</span>
 <span class="sd">        :rtype: GraphSet</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">graphs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="n">Graph</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">graph</span> <span class="ow">in</span> <span class="n">graphs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">graph</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graphs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Graph</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">add_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">graph_path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graphs</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
                 <span class="n">new_graph</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">rw_params</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
-                <span class="n">new_graph</span><span class="o">.</span><span class="n">load_graph</span><span class="p">(</span><span class="n">graph_path</span><span class="p">,</span> <span class="n">names</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+                <span class="n">new_graph</span><span class="o">.</span><span class="n">load_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">names</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">add_graph</span><span class="p">(</span><span class="n">new_graph</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">update_base_graph</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_base_graph</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span></div>
 
 
@@ -639,6 +647,14 @@
                     <span class="c1"># Update the radicalisation status of the agent across all hierarchies</span>
                     <span class="n">hierarchy</span><span class="o">.</span><span class="n">agent_radicalisation_change</span><span class="p">(</span><span class="n">agent_object</span><span class="p">,</span> <span class="n">was_radicalised</span><span class="p">)</span>
 
+                <span class="c1"># Update the nodes in the base graph</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">agent_opinion_change</span><span class="p">(</span>
+                    <span class="n">agent_object</span><span class="p">,</span> <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">agent_radicalisation_change</span><span class="p">(</span>
+                    <span class="n">agent_object</span><span class="p">,</span> <span class="n">was_radicalised</span>
+                <span class="p">)</span>
+
                 <span class="c1"># Update the radicalisation count in the logger as needed</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_radicalised</span><span class="p">(</span><span class="n">was_radicalised</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
@@ -885,9 +901,50 @@
                     <span class="n">interdep_denominator</span> <span class="o">+=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">oc_val</span><span class="p">)</span>
 
         <span class="c1"># Calculate the interdependence value for the layer</span>
-        <span class="n">layer_interdependence</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">interdep_numerator</span> <span class="o">/</span> <span class="n">interdep_denominator</span>
+        <span class="k">if</span> <span class="n">interdep_denominator</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">layer_interdependence</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">interdep_numerator</span> <span class="o">/</span> <span class="n">interdep_denominator</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">layer_interdependence</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">return</span> <span class="n">layer_interdependence</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_base_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iterates over all the relationships in the existing social hierarchies and creates corresponding</span>
+<span class="sd">        edges within the model&#39;s base graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_index_map</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">graph_edge</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                <span class="c1"># Get the index of the Agent objects within the model&#39;s AgentSet (not the graph&#39;s node set)</span>
+                <span class="n">base_from_idx</span><span class="p">,</span> <span class="n">base_to_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_base_indices_from_edge</span><span class="p">(</span>
+                    <span class="n">hierarchy</span><span class="p">,</span> <span class="n">graph_edge</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Update the weigting in base graph if an edge exists and the weighting is different from the hierarchy&#39;s</span>
+                <span class="c1"># The try, except is included for cases where the base graph may already contain explicitly initialised relationships</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">base_edge</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get_edge_data</span><span class="p">(</span>
+                        <span class="n">base_from_idx</span><span class="p">,</span> <span class="n">base_to_idx</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">graph_edge</span><span class="o">.</span><span class="n">weighting</span> <span class="o">!=</span> <span class="n">base_edge</span><span class="o">.</span><span class="n">weighting</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">change_weights</span><span class="p">(</span>
+                            <span class="n">base_from_idx</span><span class="p">,</span> <span class="n">base_to_idx</span><span class="p">,</span> <span class="n">graph_edge</span><span class="o">.</span><span class="n">weighting</span>
+                        <span class="p">)</span>
+                <span class="c1"># If the edge does not exist in the base graph, create it and add it to the base graph</span>
+                <span class="k">except</span> <span class="n">NoEdgeBetweenNodes</span><span class="p">:</span>
+                    <span class="n">new_edge</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">&quot;from_node&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">base_from_idx</span><span class="p">],</span>
+                        <span class="s2">&quot;to_node&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">base_to_idx</span><span class="p">],</span>
+                        <span class="s2">&quot;weighting&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">graph_edge</span><span class="o">.</span><span class="n">weighting</span><span class="p">],</span>
+                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">name</span><span class="p">],</span>
+                    <span class="p">}</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">new_edge</span><span class="p">))</span>
+
+                    <span class="c1"># Manual garbage collection</span>
+                    <span class="k">del</span> <span class="n">new_edge</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="ABModel.get_base_indices_from_edge">
 <a class="viewcode-back" href="../../../apiref/gatoh.model.model.ABModel.get_base_indices_from_edge.html#gatoh.model.model.ABModel.get_base_indices_from_edge">[docs]</a>
@@ -922,7 +979,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A function that takes a Graph object and adds all of its weighted edges to the model&#39;s base graph.</span>
 
-<span class="sd">        :param graph: The new grpah that is being added to self.graphs.</span>
+<span class="sd">        :param graph: The new graph that is being added to self.graphs.</span>
 <span class="sd">        :type graph: Graph</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_edges</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -945,6 +1002,9 @@
             <span class="n">new_edges</span><span class="p">[</span><span class="s2">&quot;to_node&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_to_idx</span><span class="p">)</span>
             <span class="n">new_edges</span><span class="p">[</span><span class="s2">&quot;weighting&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph_edge</span><span class="o">.</span><span class="n">weighting</span><span class="p">)</span>
 
+            <span class="c1"># Manual garbage collection</span>
+            <span class="k">del</span> <span class="n">graph_edge</span><span class="p">,</span> <span class="n">base_from_idx</span><span class="p">,</span> <span class="n">base_to_idx</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">new_edges</span><span class="p">))</span>
 
         <span class="c1"># Manual garbage collection</span>
@@ -957,39 +1017,43 @@
 <a class="viewcode-back" href="../../../apiref/gatoh.model.model.ABModel.update_base_graph.html#gatoh.model.model.ABModel.update_base_graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_base_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Iterates over all relationships in the base graph and checks the respective relationship within the relevant hierarchy,</span>
-<span class="sd">        updating the relationship weight if needed.</span>
+<span class="sd">        Iterates over all the social hierarchy graphs and checks for pending edge changes.</span>
+
+<span class="sd">        If pending changes exist, use all of the given information to apply the changes appropriately</span>
+<span class="sd">        to the relationships present in the model&#39;s base graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_index_map</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">graph_edge</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">pending_changes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EdgeChanges</span><span class="p">]</span> <span class="o">=</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">get_edge_changes</span><span class="p">()</span>
 
-                <span class="c1"># Get the index of the Agent objects within the model&#39;s AgentSet (not the graph&#39;s node set)</span>
-                <span class="n">base_from_idx</span><span class="p">,</span> <span class="n">base_to_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_base_indices_from_edge</span><span class="p">(</span>
-                    <span class="n">hierarchy</span><span class="p">,</span> <span class="n">graph_edge</span>
-                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending_changes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
 
-                <span class="c1"># Update the weigting in base graph if an edge exists and the weighting is different from the hierarchy&#39;s</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">base_edge</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get_edge_data</span><span class="p">(</span>
-                        <span class="n">base_from_idx</span><span class="p">,</span> <span class="n">base_to_idx</span>
+            <span class="k">for</span> <span class="n">agents</span><span class="p">,</span> <span class="n">change</span> <span class="ow">in</span> <span class="n">pending_changes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">from_id</span><span class="p">,</span> <span class="n">to_id</span> <span class="o">=</span> <span class="n">agents</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+
+                <span class="n">from_agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">get_agent_by_id</span><span class="p">(</span><span class="n">from_id</span><span class="p">)</span>
+                <span class="n">to_agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">get_agent_by_id</span><span class="p">(</span><span class="n">to_id</span><span class="p">)</span>
+
+                <span class="c1"># Included for type checking</span>
+                <span class="k">if</span> <span class="n">from_agent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">to_agent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">from_idx</span> <span class="o">=</span> <span class="n">from_agent</span><span class="o">.</span><span class="n">index</span>
+                    <span class="n">to_idx</span> <span class="o">=</span> <span class="n">to_agent</span><span class="o">.</span><span class="n">index</span>
+
+                    <span class="n">edge_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_indices_from_endpoints</span><span class="p">(</span>
+                        <span class="n">from_idx</span><span class="p">,</span> <span class="n">to_idx</span>
                     <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">graph_edge</span><span class="o">.</span><span class="n">weighting</span> <span class="o">!=</span> <span class="n">base_edge</span><span class="o">.</span><span class="n">weighting</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">change_weights</span><span class="p">(</span>
-                            <span class="n">base_from_idx</span><span class="p">,</span> <span class="n">base_to_idx</span><span class="p">,</span> <span class="n">graph_edge</span><span class="o">.</span><span class="n">weighting</span>
-                        <span class="p">)</span>
-                <span class="c1"># If the edge does not exist in the base graph, create it and add it to the base graph</span>
-                <span class="k">except</span> <span class="n">NoEdgeBetweenNodes</span><span class="p">:</span>
-                    <span class="n">new_edge</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="s2">&quot;from_node&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">base_from_idx</span><span class="p">],</span>
-                        <span class="s2">&quot;to_node&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">base_to_idx</span><span class="p">],</span>
-                        <span class="s2">&quot;weighting&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">graph_edge</span><span class="o">.</span><span class="n">weighting</span><span class="p">],</span>
-                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">name</span><span class="p">],</span>
-                    <span class="p">}</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">new_edge</span><span class="p">))</span>
 
-                    <span class="c1"># Manual garbage collection</span>
-                    <span class="k">del</span> <span class="n">new_edge</span>
+                    <span class="k">for</span> <span class="n">edge_index</span> <span class="ow">in</span> <span class="n">edge_indices</span><span class="p">:</span>
+                        <span class="n">edge_data</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get_edge_data_by_index</span><span class="p">(</span><span class="n">edge_index</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="k">if</span> <span class="n">edge_data</span><span class="o">.</span><span class="n">hierarchy</span> <span class="o">!=</span> <span class="n">change</span><span class="o">.</span><span class="n">hierarchy</span><span class="p">:</span>
+                            <span class="k">continue</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">edge_data</span><span class="o">.</span><span class="n">set_weighting</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">weighting</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update_edge_by_index</span><span class="p">(</span>
+                                <span class="n">edge_index</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge_data</span><span class="p">)</span>
+                            <span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 </div>
 

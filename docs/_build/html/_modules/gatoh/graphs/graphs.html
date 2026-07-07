@@ -8,7 +8,7 @@
   <title>gatoh.graphs.graphs &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css?v=572af1d6" />
       <link rel="stylesheet" type="text/css" href="../../../_static/thebelab.css" />
 
   
@@ -44,8 +44,13 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Release Notes</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -90,6 +95,8 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.agents.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">EdgeChanges</span><span class="p">,</span>
+    <span class="n">NodeChanges</span><span class="p">,</span>
     <span class="n">beta_value_attenuation</span><span class="p">,</span>
     <span class="n">connected_watts_strogatz_graph</span><span class="p">,</span>
     <span class="n">random_coinflip</span><span class="p">,</span>
@@ -99,7 +106,7 @@
 
 
 <div class="viewcode-block" id="GraphNode">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.graphs.graphs.GraphNode.html#gatoh.graphs.graphs.GraphNode">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphNode.html#gatoh.graphs.graphs.GraphNode">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GraphNode</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A helper class that allows rustworx to more efficiently store information about Agents in the graph nodes.</span>
@@ -108,13 +115,12 @@
 <span class="sd">    :type agent: Agent</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="GraphNode.__init__">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.graphs.graphs.GraphNode.html#gatoh.graphs.graphs.GraphNode.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span> <span class="o">=</span> <span class="n">agent</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span> <span class="o">=</span> <span class="n">agent</span>
 
-
+<div class="viewcode-block" id="GraphNode.set_index">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphNode.set_index.html#gatoh.graphs.graphs.GraphNode.set_index">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter method to set the GraphNode&#39;s index value.</span>
@@ -123,7 +129,8 @@
 <span class="sd">        :type idx: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">idx</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
 
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -138,7 +145,7 @@
 
 
 <div class="viewcode-block" id="GraphEdge">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.graphs.graphs.GraphEdge.html#gatoh.graphs.graphs.GraphEdge">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphEdge.html#gatoh.graphs.graphs.GraphEdge">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GraphEdge</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A helper class that allows rustworx to more efficiently store information about Agent relationships in the graph edges.</span>
@@ -157,8 +164,6 @@
 <span class="sd">    :type rw_params: tuple[float, float], optional</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="GraphEdge.__init__">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.graphs.graphs.GraphEdge.html#gatoh.graphs.graphs.GraphEdge.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -172,9 +177,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">from_node</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">from_node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">to_node</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">to_node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">hierarchy</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rw_params</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">rw_params</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rw_params</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">rw_params</span>
 
-
+<div class="viewcode-block" id="GraphEdge.set_index">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphEdge.set_index.html#gatoh.graphs.graphs.GraphEdge.set_index">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter function that changes this GraphEdge&#39;s index value.</span>
@@ -183,8 +189,11 @@
 <span class="sd">        :type idx: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">idx</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GraphEdge.set_weighting">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphEdge.set_weighting.html#gatoh.graphs.graphs.GraphEdge.set_weighting">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter function that changes this GraphEdge&#39;s weighting value.</span>
@@ -193,8 +202,11 @@
 <span class="sd">        :type value: float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weighting</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GraphEdge.set_rw_params">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphEdge.set_rw_params.html#gatoh.graphs.graphs.GraphEdge.set_rw_params">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_rw_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rw_params</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter function that changes this GraphEdge&#39;s rw_params value.</span>
@@ -203,8 +215,11 @@
 <span class="sd">        :type rw_params: tuple[float, float]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rw_params</span> <span class="o">=</span> <span class="n">rw_params</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GraphEdge.update_from_node">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphEdge.update_from_node.html#gatoh.graphs.graphs.GraphEdge.update_from_node">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_from_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter function that updates the from_node&#39;s index for this GraphEdge.</span>
@@ -213,8 +228,11 @@
 <span class="sd">        :type idx: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">from_node</span> <span class="o">=</span> <span class="n">idx</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GraphEdge.update_to_node">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphEdge.update_to_node.html#gatoh.graphs.graphs.GraphEdge.update_to_node">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_to_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter function that updates the to_node&#39;s index for this GraphEdge.</span>
@@ -223,8 +241,11 @@
 <span class="sd">        :type idx: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">to_node</span> <span class="o">=</span> <span class="n">idx</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GraphEdge.has_rw_params">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphEdge.has_rw_params.html#gatoh.graphs.graphs.GraphEdge.has_rw_params">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">has_rw_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A function that checks if this relationship has explicit random walk parameters.</span>
@@ -234,7 +255,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rw_params</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
 
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -249,7 +271,7 @@
 
 
 <div class="viewcode-block" id="Graph">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.graphs.graphs.Graph.html#gatoh.graphs.graphs.Graph">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.html#gatoh.graphs.graphs.Graph">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Graph</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A graph class that defines a single agent-based model layer.</span>
@@ -269,8 +291,6 @@
 <span class="sd">    :type dynamic_rels: bool, optional</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Graph.__init__">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.graphs.graphs.Graph.html#gatoh.graphs.graphs.Graph.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -294,9 +314,11 @@
             <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
             <span class="s2">&quot;m&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
             <span class="s2">&quot;sbm_sizes&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-        <span class="p">}</span></div>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pending_edge_changes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EdgeChanges</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
-
+<div class="viewcode-block" id="Graph.change_generation_params">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.change_generation_params.html#gatoh.graphs.graphs.Graph.change_generation_params">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">change_generation_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Setter function which outlines the existing generation parameters used in generate_graph()</span>
@@ -328,8 +350,11 @@
                 <span class="p">)</span>
                 <span class="k">continue</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">generation_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.load_graph">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.load_graph.html#gatoh.graphs.graphs.Graph.load_graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_graph</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rw_params</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -353,8 +378,11 @@
         <span class="k">if</span> <span class="n">rw_params</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">rw_params</span> <span class="o">=</span> <span class="n">rw_params</span>
 
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.save_graph">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.save_graph.html#gatoh.graphs.graphs.Graph.save_graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Saves the existing Graph object in the GraphML format to the given path.</span>
@@ -367,8 +395,11 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">EnvironmentError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write graph </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to path: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.get_node">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.get_node.html#gatoh.graphs.graphs.Graph.get_node">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GraphNode</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A getter function to access GraphNode objects.</span>
@@ -386,8 +417,11 @@
                 <span class="sa">f</span><span class="s2">&quot;WARNING: Node with index </span><span class="si">{</span><span class="n">node_index</span><span class="si">}</span><span class="s2"> is out of bounds for graph </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">node_count</span><span class="si">}</span><span class="s2"> total nodes.&quot;</span><span class="p">,</span>
                 <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.get_edge">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.get_edge.html#gatoh.graphs.graphs.Graph.get_edge">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GraphEdge</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A getter function to access GraphEdge objects.</span>
@@ -405,8 +439,11 @@
                 <span class="sa">f</span><span class="s2">&quot;WARNING: Edge with index </span><span class="si">{</span><span class="n">edge_index</span><span class="si">}</span><span class="s2"> is out of bounds for graph </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_count</span><span class="si">}</span><span class="s2"> total edges.&quot;</span><span class="p">,</span>
                 <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.update_node_indices">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.update_node_indices.html#gatoh.graphs.graphs.Graph.update_node_indices">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_node_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Iterates over all the existing nodes in the graph and updates their stored indices to reflect the current graph state.</span>
@@ -417,8 +454,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_edge_indices</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.add_nodes">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.add_nodes.html#gatoh.graphs.graphs.Graph.add_nodes">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Agent</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Creates appropriate GraphNodes from the given Agents, and then adds these to the graph.</span>
@@ -433,8 +473,11 @@
 
         <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_node_indices</span><span class="p">()</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.update_edge_indices">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.update_edge_indices.html#gatoh.graphs.graphs.Graph.update_edge_indices">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_edge_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Iterates over all the existing edges in the graph and updates their stored indices to reflect the current graph state.</span>
@@ -450,8 +493,11 @@
             <span class="n">graph_edge</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update_edge_by_index</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">graph_edge</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">edge_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">())</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.add_edges">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.add_edges.html#gatoh.graphs.graphs.Graph.add_edges">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Creates appropriate GraphEdges from the given dictionary and then adds these to the graph.</span>
@@ -544,8 +590,11 @@
 
         <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">graph_edges</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_edge_indices</span><span class="p">()</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.generate_graph">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.generate_graph.html#gatoh.graphs.graphs.Graph.generate_graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_graph</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">],</span>
@@ -682,8 +731,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">node_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">edge_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">())</span>
 
-        <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
+
+<div class="viewcode-block" id="Graph.relationship_exists">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.relationship_exists.html#gatoh.graphs.graphs.Graph.relationship_exists">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">relationship_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_node</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">to_node</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks for the existence of a relationship (weighted edge) between two Agents (nodes).</span>
@@ -698,8 +750,11 @@
         <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">edge</span><span class="o">.</span><span class="n">from_node</span> <span class="o">==</span> <span class="n">from_node</span> <span class="ow">and</span> <span class="n">edge</span><span class="o">.</span><span class="n">to_node</span> <span class="o">==</span> <span class="n">to_node</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">edge</span><span class="o">.</span><span class="n">index</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.get_relationships">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.get_relationships.html#gatoh.graphs.graphs.Graph.get_relationships">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_relationships</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">node_1</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">node_2</span><span class="p">:</span> <span class="nb">int</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -728,8 +783,11 @@
                 <span class="n">node_1</span><span class="p">,</span> <span class="kc">False</span>
             <span class="p">)[</span><span class="n">node_2</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">relationships_dict</span>
+        <span class="k">return</span> <span class="n">relationships_dict</span></div>
 
+
+<div class="viewcode-block" id="Graph.get_relationship">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.get_relationship.html#gatoh.graphs.graphs.Graph.get_relationship">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_relationship</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_node</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">to_node</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a directed relationship from one node to another.</span>
@@ -753,8 +811,11 @@
             <span class="k">return</span> <span class="mf">0.0</span>
 
         <span class="n">graph_edge</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="n">relationship_dict</span><span class="p">[</span><span class="n">to_index</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">graph_edge</span><span class="o">.</span><span class="n">weighting</span>
+        <span class="k">return</span> <span class="n">graph_edge</span><span class="o">.</span><span class="n">weighting</span></div>
 
+
+<div class="viewcode-block" id="Graph.change_weights">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.change_weights.html#gatoh.graphs.graphs.Graph.change_weights">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">change_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_1</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">node_2</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Updates the weight of the relationship between two agents in the graph.</span>
@@ -774,9 +835,51 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update_edge_by_index</span><span class="p">(</span><span class="n">edge_index</span><span class="p">,</span> <span class="n">updated_edge</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">updated_edge</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">update_edge_indices</span><span class="p">()</span>
-        <span class="k">return</span> <span class="kc">None</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_edge_indices</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_edge_change</span><span class="p">(</span><span class="n">node_1</span><span class="p">,</span> <span class="n">node_2</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">register_edge_change</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">from_node</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">to_node</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">weighting</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that records a pending edge change for this graph.</span>
+
+<span class="sd">        :param from_node: The index of the origin node.</span>
+<span class="sd">        :type from_node: int</span>
+<span class="sd">        :param to_node: The index of the destination node.</span>
+<span class="sd">        :type to_node: int</span>
+<span class="sd">        :param weighting: The new weighting that is being assigned to the edge.</span>
+<span class="sd">        :type weighting: float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">from_agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">from_node</span><span class="p">)</span>
+        <span class="n">to_agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">to_node</span><span class="p">)</span>
+        <span class="c1"># Included for type checking</span>
+        <span class="k">if</span> <span class="n">from_agent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">to_agent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">edge_change</span><span class="p">:</span> <span class="n">EdgeChanges</span> <span class="o">=</span> <span class="n">EdgeChanges</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">weighting</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pending_edge_changes</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">from_agent</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">to_agent</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">edge_change</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_edge_changes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EdgeChanges</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A getter function that returns the current register of pending edge changes for this graph,</span>
+<span class="sd">        and then resets the attribute to an empty entry.</span>
+
+<span class="sd">        :return: A &lt;&quot;ID1,ID2&quot; : edge change&gt; mapping that outlines the edge changes being made between two agents in the graph.</span>
+<span class="sd">        :rtype: dict[str, EdgeChanges]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">changes_register</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EdgeChanges</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pending_edge_changes</span><span class="p">)</span>
+
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">pending_edge_changes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pending_edge_changes</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">return</span> <span class="n">changes_register</span>
+
+<div class="viewcode-block" id="Graph.remove_node">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.remove_node.html#gatoh.graphs.graphs.Graph.remove_node">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Removes a node from the graph, along with any relationships involving it.</span>
@@ -794,8 +897,11 @@
         <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">edges_to_remove</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="c1"># No need to update indices, as rustworkx will automatically add new nodes/edges into the largest empty index</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.remove_edge">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.remove_edge.html#gatoh.graphs.graphs.Graph.remove_edge">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">remove_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_node</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">to_node</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Removes a single edge from the graph.</span>
@@ -816,8 +922,11 @@
                 <span class="sa">f</span><span class="s2">&quot;WARNING: Attempted to remove edge (</span><span class="si">{</span><span class="n">from_node</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">to_node</span><span class="si">}</span><span class="s2">) which does not exist in the graph.&quot;</span><span class="p">,</span>
                 <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.agent_in_graph">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.agent_in_graph.html#gatoh.graphs.graphs.Graph.agent_in_graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">agent_in_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A simple function that checks wether an Agent exists within a Graph.</span>
@@ -830,8 +939,11 @@
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
 
+
+<div class="viewcode-block" id="Graph.agent_previous_opinion">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.agent_previous_opinion.html#gatoh.graphs.graphs.Graph.agent_previous_opinion">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">agent_previous_opinion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the specified Agent&#39;s previous opinion to be equal to the current opinion (before the current opinion changes in the current iteration).</span>
@@ -842,8 +954,11 @@
         <span class="n">agent_node</span><span class="p">:</span> <span class="n">GraphNode</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_from_agent</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">agent_node</span><span class="p">:</span>
             <span class="n">agent_node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">store_previous_opinion</span><span class="p">()</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.agent_opinion_change">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.agent_opinion_change.html#gatoh.graphs.graphs.Graph.agent_opinion_change">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">agent_opinion_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">change_delta</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Changes the specified Agent&#39;s current opinion by the given delta.</span>
@@ -856,8 +971,11 @@
         <span class="n">agent_node</span><span class="p">:</span> <span class="n">GraphNode</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_from_agent</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">agent_node</span><span class="p">:</span>
             <span class="n">agent_node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">change_opinion</span><span class="p">(</span><span class="n">change_delta</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.agent_radicalisation_change">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.agent_radicalisation_change.html#gatoh.graphs.graphs.Graph.agent_radicalisation_change">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">agent_radicalisation_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">radicalisation</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Change the specified Agent&#39;s radicalisation status.</span>
@@ -870,8 +988,11 @@
         <span class="n">agent_node</span><span class="p">:</span> <span class="n">GraphNode</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_from_agent</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">agent_node</span><span class="p">:</span>
             <span class="n">agent_node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">change_radicalisation</span><span class="p">(</span><span class="n">radicalisation</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.node_from_agent">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.node_from_agent.html#gatoh.graphs.graphs.Graph.node_from_agent">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">node_from_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GraphNode</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the GraphNode object corresponding to the given Agent object.</span>
@@ -885,8 +1006,11 @@
         <span class="k">if</span> <span class="n">agent_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">agent_node</span><span class="p">:</span> <span class="n">GraphNode</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">agent_index</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">agent_node</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.get_agent_index">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.get_agent_index.html#gatoh.graphs.graphs.Graph.get_agent_index">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_agent_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Searches for the node index in the Graph which corresponds to the input Agent object.</span>
@@ -899,8 +1023,11 @@
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
             <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">idx</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.get_neighbours">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.get_neighbours.html#gatoh.graphs.graphs.Graph.get_neighbours">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_neighbours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">GraphNode</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Finds all the nodes in the graph with direct relationships to the specified Agent.</span>
@@ -927,16 +1054,22 @@
                 <span class="c1"># Should never be reached and is just included for type checking purposes</span>
                 <span class="k">continue</span>
             <span class="n">neighbour_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neighbour_node</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">neighbour_nodes</span>
+        <span class="k">return</span> <span class="n">neighbour_nodes</span></div>
 
+
+<div class="viewcode-block" id="Graph.step">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.step.html#gatoh.graphs.graphs.Graph.step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Step the individual Graph object:</span>
 <span class="sd">            1. Handle dynamic relationships within the graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dynamic_relationships</span><span class="p">()</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.neighbour_influences">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.neighbour_influences.html#gatoh.graphs.graphs.Graph.neighbour_influences">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">neighbour_influences</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Looks at all the neighbours for an Agent and uses the neighbours&#39; own opinions plus the</span>
@@ -1021,8 +1154,11 @@
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">weighted_delta</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">weighted_deltas</span><span class="p">):</span>
             <span class="n">final_change</span> <span class="o">+=</span> <span class="n">weighted_delta</span> <span class="o">*</span> <span class="p">(</span><span class="n">delta_weightings</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">/</span> <span class="n">total_weightings</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">final_change</span>
+        <span class="k">return</span> <span class="n">final_change</span></div>
 
+
+<div class="viewcode-block" id="Graph.dynamic_relationships">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.dynamic_relationships.html#gatoh.graphs.graphs.Graph.dynamic_relationships">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">dynamic_relationships</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Uses the (mean, variance) passed at initialisation to draw random walk values by which each edge (relationship)</span>
@@ -1051,8 +1187,11 @@
                 <span class="n">new_weighting</span> <span class="o">=</span> <span class="mf">1.0</span>
 
             <span class="n">edge</span><span class="o">.</span><span class="n">set_weighting</span><span class="p">(</span><span class="n">new_weighting</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Graph.estimate_neighbour_opinions">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.estimate_neighbour_opinions.html#gatoh.graphs.graphs.Graph.estimate_neighbour_opinions">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">estimate_neighbour_opinions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the individual opinion climate values perceived by the Agent for each other Agent within this social hierarchy.</span>
@@ -1084,8 +1223,11 @@
             <span class="k">if</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">&gt;</span> <span class="n">attenuated_opinion</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
                 <span class="n">observed_opinions</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_observed_opinion</span>
 
-        <span class="k">return</span> <span class="n">observed_opinions</span>
+        <span class="k">return</span> <span class="n">observed_opinions</span></div>
 
+
+<div class="viewcode-block" id="Graph.estimate_opinion_climate">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.estimate_opinion_climate.html#gatoh.graphs.graphs.Graph.estimate_opinion_climate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">estimate_opinion_climate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the unique opinion climate perceived by the Agent within this social hierarchy.</span>
@@ -1133,8 +1275,11 @@
             <span class="p">)</span>  <span class="c1"># Find the average of the aggregated, relevant opinions</span>
             <span class="k">return</span> <span class="n">opinion_climate</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="mf">0.0</span>
+            <span class="k">return</span> <span class="mf">0.0</span></div>
 
+
+<div class="viewcode-block" id="Graph.calculate_polarisation">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.calculate_polarisation.html#gatoh.graphs.graphs.Graph.calculate_polarisation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">calculate_polarisation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates the level of opinion polarisation in this :class:`Graph` based on the equation:</span>
@@ -1168,7 +1313,8 @@
             <span class="n">summation</span> <span class="o">+=</span> <span class="n">square_distance</span>
 
         <span class="n">radicalisation_measure</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">summation</span> <span class="o">/</span> <span class="p">(</span><span class="n">K</span> <span class="o">*</span> <span class="p">(</span><span class="n">K</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">radicalisation_measure</span>
+        <span class="k">return</span> <span class="n">radicalisation_measure</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__in__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterable</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Graph</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1197,7 +1343,7 @@
 
 
 <div class="viewcode-block" id="GraphSet">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.graphs.graphs.GraphSet.html#gatoh.graphs.graphs.GraphSet">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.html#gatoh.graphs.graphs.GraphSet">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GraphSet</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class that will collect all of the different social hierarchy graphs in the same structure</span>
@@ -1209,15 +1355,14 @@
 <span class="sd">    :type graphs: list[Graph], optional</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="GraphSet.__init__">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.graphs.graphs.GraphSet.html#gatoh.graphs.graphs.GraphSet.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">graphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Graph</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parent_model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Graph</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">graphs</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span> <span class="o">=</span> <span class="n">graphs</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span> <span class="o">=</span> <span class="n">graphs</span>
 
-
+<div class="viewcode-block" id="GraphSet.save_graphset">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.save_graphset.html#gatoh.graphs.graphs.GraphSet.save_graphset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save_graphset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save all of the graphs contained within this graphset into a compressed subdirectory representing</span>
@@ -1304,8 +1449,11 @@
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">zip_path</span><span class="p">):</span>
             <span class="n">rmtree</span><span class="p">(</span><span class="n">subdirectory_path</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GraphSet.load_graphset">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.load_graphset.html#gatoh.graphs.graphs.GraphSet.load_graphset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_graphset</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">load_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rw_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1378,8 +1526,11 @@
 
             <span class="c1"># Add the Graph object to the GraphSet</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_graph</span><span class="p">(</span><span class="n">graph_object</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GraphSet.add_graph">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.add_graph.html#gatoh.graphs.graphs.GraphSet.add_graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter function to add a new Graph object to the GraphSet.</span>
@@ -1388,8 +1539,11 @@
 <span class="sd">        :type graph: Graph</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GraphSet.graph_at_index">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.graph_at_index.html#gatoh.graphs.graphs.GraphSet.graph_at_index">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">graph_at_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A getter function to return a Graph object stored at the given index in the GraphSet.</span>
@@ -1405,8 +1559,11 @@
             <span class="nb">print</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Index </span><span class="si">{</span><span class="n">graph_index</span><span class="si">}</span><span class="s2"> is out of bounds for the GraphSet. Only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">)</span><span class="si">}</span><span class="s2"> social hierarchies have been created.&quot;</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GraphSet.get_hierarchy">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.get_hierarchy.html#gatoh.graphs.graphs.GraphSet.get_hierarchy">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_hierarchy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A getter function to return a Graph object with the given hierarchy name.</span>
@@ -1421,8 +1578,11 @@
                 <span class="k">return</span> <span class="n">graph</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No graph representing the social hierarchy &#39;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&#39; was found...&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GraphSet.get_index">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.get_index.html#gatoh.graphs.graphs.GraphSet.get_index">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A getter function that returns the index of a given hierarchy within the GraphSet.</span>
@@ -1439,8 +1599,11 @@
 
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;The social hierarchy &#39;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&#39; does not exist in the GraphSet -- cannot return an index.&quot;</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="GraphSet.list_hierarchies">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.list_hierarchies.html#gatoh.graphs.graphs.GraphSet.list_hierarchies">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">list_hierarchies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_out</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A utility function that iterates over the GraphSet and prints out the names of all the social hierarchies that are present.</span>
@@ -1459,8 +1622,11 @@
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Social hierarchies present in the GraphSet:</span><span class="se">\n\t</span><span class="si">{</span><span class="n">social_hierarchies</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">social_hierarchies</span>
+        <span class="k">return</span> <span class="n">social_hierarchies</span></div>
 
+
+<div class="viewcode-block" id="GraphSet.get_agent_hierarchies">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.get_agent_hierarchies.html#gatoh.graphs.graphs.GraphSet.get_agent_hierarchies">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_agent_hierarchies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A helper function that determines which social hierarchies an Agent is contained in.</span>
@@ -1474,8 +1640,11 @@
         <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">agent_in_graph</span><span class="p">(</span><span class="n">agent</span><span class="p">):</span>
                 <span class="n">member_of</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">member_of</span>
+        <span class="k">return</span> <span class="n">member_of</span></div>
 
+
+<div class="viewcode-block" id="GraphSet.calculate_polarisation">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.calculate_polarisation.html#gatoh.graphs.graphs.GraphSet.calculate_polarisation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">calculate_polarisation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A wrapper that calls a specific hierarchy graph&#39;s calculate_polarisation function and returns its value.</span>
@@ -1486,8 +1655,11 @@
 <span class="sd">        :rtype: float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">hierarchy_graph</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_hierarchy</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">calculate_polarisation</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">calculate_polarisation</span><span class="p">()</span></div>
 
+
+<div class="viewcode-block" id="GraphSet.agent_opinion_threshold">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.agent_opinion_threshold.html#gatoh.graphs.graphs.GraphSet.agent_opinion_threshold">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">agent_opinion_threshold</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -1508,7 +1680,8 @@
                 <span class="n">social_weighting</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
                 <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">social_weighting</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">:</span>
                     <span class="n">significant_hierarchies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">significant_hierarchies</span>
+        <span class="k">return</span> <span class="n">significant_hierarchies</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__in__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1569,7 +1742,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2026, Manuel Munizaga Sepúlveda.</p>
+    <p>&#169; Copyright 2025, Manuel Munizaga Sepúlveda.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

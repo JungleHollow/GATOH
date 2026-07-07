@@ -33,5 +33,5 @@ Contents:
    User Guide <user/index>
    API Reference <api/index>
    Development <dev/index>
-   license
-   release
+   License <license>
+   Release Notes <changelog>
