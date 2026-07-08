@@ -139,11 +139,10 @@ class ResponseParser:
                 for hierarchy in HIERARCHIES:
                     agent_weightings[hierarchy] = 0.0
 
-                agent_values: dict[str, Any] = {
-                    "dependant_sum": 0.0,
-                    "religious_sum": 0.0,
-                    "cultural_sum": 0.0,
-                }
+                agent_values: dict[str, Any] = {}
+                agent_values["dependant_sum"] = 0.0
+                agent_values["religious_sum"] = 0.0
+                agent_values["cultural_sum"] = 0.0
 
                 for column, value in agent_row.items():
                     if column == "AgentId":
