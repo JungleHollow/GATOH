@@ -23,6 +23,8 @@ New Features
   - :meth:`~gatoh.model.model.ABModel.init_base_graph`
   - :meth:`~gatoh.model.model.ABModel.update_base_graph`
 
+- Multiprocessing added to :meth:`~gatoh.model.model.ABModel.iterate`
+
 Fixes
 -----
 
