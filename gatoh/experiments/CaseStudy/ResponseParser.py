@@ -315,7 +315,10 @@ class ResponseParser:
         return None
 
     def generate_relationship_strengths(
-        self, adj_matrix: np.ndarray, hierarchy: str | None = None
+        self,
+        adj_matrix: np.ndarray,
+        hierarchy: str | None = None,
+        community: str | None = None,
     ) -> np.ndarray:
         """
         A helper function that transforms the codified values of an adjacency matrix to float values representing
@@ -323,6 +326,7 @@ class ResponseParser:
 
         :param adj_matrix: The codified social hierarchy adjacency matrix.
         :param hierarchy: An optional string indicating that explicit conversion values are used for this hierarchy.
+        :param community: An optional string indicating the community that these strengths are being generated for.
         :return: The modified adjacency matrix.
         """
         new_adj_matrix = adj_matrix.copy()
@@ -344,7 +348,16 @@ class ResponseParser:
                     else:
                         # Somewhat restrict the relationship density to maintain reasonable model runtimes
                         inclusion_threshold: float = rd.random()
-                        if inclusion_threshold <= 0.4:
+                        if community == "NONMN" and inclusion_threshold <= 0.1:
+                            new_value = rd.uniform(matrix_value[0], matrix_value[1])
+                            new_adj_matrix[i, j] = new_value
+                        elif community == "MINNG" and inclusion_threshold <= 0.01:
+                            new_value = rd.uniform(matrix_value[0], matrix_value[1])
+                            new_adj_matrix[i, j] = new_value
+                        elif (
+                            community not in ["NONMN", "MINNG"]
+                            and inclusion_threshold <= 0.2
+                        ):
                             new_value = rd.uniform(matrix_value[0], matrix_value[1])
                             new_adj_matrix[i, j] = new_value
                         else:
@@ -383,7 +396,7 @@ class ResponseParser:
 
                 # Convert the adjacency matrix from coded values to float strengths
                 adj_matrix = self.generate_relationship_strengths(
-                    adj_matrix, hierarchy=hierarchy
+                    adj_matrix, hierarchy=hierarchy, community=community
                 )
 
                 # In this case study, some matrices are sparse, but it is rare for any individual to not have

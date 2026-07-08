@@ -349,10 +349,12 @@ class DataReader:
                 )
                 all_neighbour_benefits: list[bool] = []
                 for neighbour_index in all_neighbour_indices:
-                    neighbour_object: Agent = model_to_iterate.base_graph.graph[
+                    neighbour_object: GraphNode = model_to_iterate.base_graph.graph[
                         neighbour_index
                     ]
-                    all_neighbour_benefits.append(neighbour_object.personal_benefit)
+                    all_neighbour_benefits.append(
+                        neighbour_object.agent.personal_benefit
+                    )
 
                 # Constrain to [-1, 1]
                 # 100.0 and -100.0 are used as key delta values indicating that the opinion needs to be constrained

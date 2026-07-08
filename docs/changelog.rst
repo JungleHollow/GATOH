@@ -30,6 +30,8 @@ Fixes
 - Corrected the object that was being passed to :func:`rustworkx.visualization.mpl_draw` in :meth:`~gatoh.visualisation.visualisation.ABVisualiser.visualise_hierarchy`
 - Fixed value setting error caused by mismatching :obj:`NDArray` data types in :mod:`ResponseParser.py`
   for the planned case study experiment
+- Fixed the accessing of Agent :attr:`~gatoh.agents.agents.Agent.personal_benefit` attributes in :meth:`ResponseParser.custom_iterate`
+  for the planned case study experiment
 
 0.1.0-alpha
 ===========
