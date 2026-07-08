@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from copy import deepcopy
 from datetime import datetime
+from multiprocessing import Pool
 from random import choices, randint
 from shutil import rmtree
 from typing import Any
@@ -436,51 +437,13 @@ class ABModel:
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
             # First each agent looks at its neighbours to see how their opinion will evolve this iterations
-            for agent in self.agents:
-                agent.previous_opinion = agent.opinion
-                for hierarchy in self.graphs:
-                    # Update the previous opinion across all hierarchies
-                    hierarchy.agent_previous_opinion(agent)
-
-                # TODO: Implement a check and handling for if the current agent is radicalised
-                collective_changes: list[float] = []
-                for hierarchy in self.graphs:
-                    neighbour_influences: float | None = hierarchy.neighbour_influences(
-                        agent
-                    )
-                    if neighbour_influences is not None:
-                        collective_changes.append(neighbour_influences)
-                total_change: float = sum(collective_changes)
-
-                # Check for the existence of personal benefit across all of the agent's neighbours
-                all_neighbour_indices: list[int] = list(
-                    self.base_graph.graph.neighbors(agent.index)
+            with Pool(processes=8) as pool:
+                opinion_results = pool.map(
+                    self.iteration_opinion_calculation, self.agents
                 )
-                all_neighbour_benefits: list[bool] = []
-                for neighbour_index in all_neighbour_indices:
-                    neighbour_object: Agent = self.base_graph.graph[neighbour_index]
-                    all_neighbour_benefits.append(neighbour_object.personal_benefit)
+                for opinion_result in opinion_results:
+                    new_agent_opinions[opinion_result[0]] = opinion_result[1]
 
-                # Constrain to [-1, 1]
-                # 100.0 and -100.0 are used as key delta values indicating that the opinion needs to be constrained
-                if agent.opinion + total_change < -1.0:
-                    new_agent_opinions[agent.id] = (
-                        -100.0,
-                        deepcopy(collective_changes),
-                        deepcopy(all_neighbour_benefits),
-                    )
-                elif agent.opinion + total_change > 1.0:
-                    new_agent_opinions[agent.id] = (
-                        100.0,
-                        deepcopy(collective_changes),
-                        deepcopy(all_neighbour_benefits),
-                    )
-                else:
-                    new_agent_opinions[agent.id] = (
-                        total_change,
-                        deepcopy(collective_changes),
-                        deepcopy(all_neighbour_benefits),
-                    )
             self.iteration_opinion_changes(new_agent_opinions)
             self.step()
             self.update()
@@ -508,6 +471,74 @@ class ABModel:
             plt.close(self.fig)
             del self.fig, self.ax
         return None
+
+    def iteration_opinion_calculation(
+        self,
+        agent: Agent,
+    ) -> tuple[str, tuple[float, list[float], list[bool]]]:
+        """
+        A helper function that calculates the per-agent, per-hierarchy changes to opinions for the
+        iteration, returning all necessary information for :meth:`~self.iteration_opinion_changes`
+        to apply the opinion changes.
+
+        This function was primarily created to allow for multiprocessing in the main :meth:`~self.iterate`
+        function.
+
+        :param agent: The agent for which the opinion changes are being calculated.
+        :type agent: Agent
+        :return: An <Agent ID : Changes info> mapping that provides all necessary information to apply the opinion changes for a specific agent.
+        :rtype: tuple[str, tuple[float, list[float], list[bool]]]
+        """
+        agent.previous_opinion = agent.opinion
+        for hierarchy in self.graphs:
+            # Update the previous opinion across all hierarchies
+            hierarchy.agent_previous_opinion(agent)
+
+        collective_changes: list[float] = []
+        for hierarchy in self.graphs:
+            neighbour_influences: float | None = hierarchy.neighbour_influences(agent)
+            if neighbour_influences is not None:
+                collective_changes.append(neighbour_influences)
+        total_change: float = sum(collective_changes)
+
+        # Check for the existence of personal benefit across all of the agent's neighbours
+        all_neighbour_indices: list[int] = list(
+            self.base_graph.graph.neighbors(agent.index)
+        )
+        all_neighbour_benefits: list[bool] = []
+        for neighbour_index in all_neighbour_indices:
+            neighbour_object: Agent = self.base_graph.graph[neighbour_index]
+            all_neighbour_benefits.append(neighbour_object.personal_benefit)
+
+        # Define the type of the return
+        opinion_result: tuple[str, tuple[float, list[float], list[bool]]]
+
+        # Constrain to [-1, 1]
+        # 100.0 and -100.0 are used as key delta values indicating that the opinion needs to be constrained
+        if agent.opinion + total_change < -1.0:
+            opinion_result = (
+                agent.id,
+                (
+                    -100.0,
+                    deepcopy(collective_changes),
+                    deepcopy(all_neighbour_benefits),
+                ),
+            )
+        elif agent.opinion + total_change > 1.0:
+            opinion_result = (
+                agent.id,
+                (100.0, deepcopy(collective_changes), deepcopy(all_neighbour_benefits)),
+            )
+        else:
+            opinion_result = (
+                agent.id,
+                (
+                    total_change,
+                    deepcopy(collective_changes),
+                    deepcopy(all_neighbour_benefits),
+                ),
+            )
+        return opinion_result
 
     def iteration_opinion_changes(
         self, changes_dict: dict[str, tuple[float, list[float], list[bool]]]
