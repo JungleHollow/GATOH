@@ -557,6 +557,9 @@ class ABModel:
                     # Update the current opinion across all hierarchies
                     hierarchy.agent_opinion_change(agent_object, opinion_change_info[0])
 
+                # Flag if the Agent was already radicalised
+                existing_radicalisation: bool = agent_object.radicalised
+
                 # After the opinion change, determine if the agent has become radicalised
                 was_radicalised: bool = agent_object.radicalisation(
                     opinion_change_info[1],
@@ -565,19 +568,27 @@ class ABModel:
                     self.radicalisation_threshold,
                 )
 
-                for hierarchy in self.graphs:
-                    # Update the radicalisation status of the agent across all hierarchies
-                    hierarchy.agent_radicalisation_change(agent_object, was_radicalised)
+                # Only update the status if the Agent was not already radicalised
+                if not existing_radicalisation:
+                    for hierarchy in self.graphs:
+                        # Update the radicalisation status of the agent across all hierarchies
+                        hierarchy.agent_radicalisation_change(
+                            agent_object, was_radicalised
+                        )
 
                 # Update the nodes in the base graph
                 self.base_graph.agent_opinion_change(
                     agent_object, opinion_change_info[0]
                 )
-                self.base_graph.agent_radicalisation_change(
-                    agent_object, was_radicalised
-                )
+
+                # Only update the status if the Agent was not already radicalised
+                if not existing_radicalisation:
+                    self.base_graph.agent_radicalisation_change(
+                        agent_object, was_radicalised
+                    )
 
                 # Update the radicalisation count in the logger as needed
+                # (was_radicalised will always be False if the agent was already radicalised)
                 self.logger.variables.increment_radicalised(was_radicalised)
         return None
 

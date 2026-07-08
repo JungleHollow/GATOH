@@ -34,6 +34,7 @@ Fixes
   for the planned case study experiment
 - Fixed the accessing of Agent :attr:`~gatoh.agents.agents.Agent.personal_benefit` attributes in :meth:`ResponseParser.custom_iterate`
   for the planned case study experiment
+- Fixed the radicalisation checks in :meth:`~gatoh.model.model.ABModel.iteration_opinion_changes` to stop repeated deradicalisation of agents
 
 0.1.0-alpha
 ===========
