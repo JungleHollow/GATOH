@@ -444,14 +444,16 @@ class Agent:
         # Multiplication by (susceptibility * hierarchy weighting) will always decrease negation strength, whilst division will always increase it
         if self.personality in ["neutral", "rational"]:
             # Cases where opinion negation is less likely to occur
-            negation_strength *= (
-                self.social_susceptibility * self.social_weightings[hierarchy]
-            )
+            if self.social_susceptibility * self.social_weightings[hierarchy] != 0:
+                negation_strength *= (
+                    self.social_susceptibility * self.social_weightings[hierarchy]
+                )
         elif self.personality in ["erratic", "impulsive", "social"]:
             # Cases where opinion negation is more likely to occur
-            negation_strength /= (
-                self.social_susceptibility * self.social_weightings[hierarchy]
-            )
+            if self.social_susceptibility * self.social_weightings[hierarchy] != 0:
+                negation_strength /= (
+                    self.social_susceptibility * self.social_weightings[hierarchy]
+                )
 
         return negation_strength > threshold
 
