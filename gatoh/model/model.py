@@ -436,8 +436,8 @@ class ABModel:
             # (this is done to prevent recursive updating of opinions during the evolution of opinions)
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
-            # First each agent looks at its neighbours to see how their opinion will evolve this iterations
-            with Pool(processes=8) as pool:
+            # First each agent looks at its neighbours to see how their opinion will evolve this iteration
+            with Pool() as pool:
                 opinion_results = pool.map(
                     self.iteration_opinion_calculation, self.agents
                 )
@@ -614,36 +614,48 @@ class ABModel:
         perceived opinion climates within their hierarchies, and the simulation of opinion silencing behaviours depending
         on these climates.
         """
-        for agent in self.agents:
-            silenced: dict[str, bool] = {}
-            was_silenced: bool = False
-            negation: bool = False
-            for graph in self.graphs:
-                if not graph.agent_in_graph(agent):
-                    # The Agent does not have membership in a specific hierarchy
-                    continue
-                else:
-                    est_opinion_climate: float = graph.estimate_opinion_climate(agent)
-                    is_silenced: tuple[bool, float] = agent.opinion_silencing(
-                        graph.name, est_opinion_climate
-                    )
-                    silenced[graph.name] = is_silenced[0]
-
-                    if is_silenced[0]:
-                        was_silenced = True
-
-                    if not negation:
-                        negation = agent.opinion_negation(
-                            graph.name, is_silenced[1], self.negation_threshold
-                        )
+        with Pool() as pool:
+            agent_updates = pool.map(self.update_multi, self.agents)
 
             # Update the logger variables as needed
-            self.logger.variables.increment_silenced(was_silenced)
-            self.logger.variables.increment_negated(negation)
-
-            # Update the Agent object
-            agent.update(silenced, negation)
+            for agent_update in agent_updates:
+                self.logger.variables.increment_silenced(agent_update[0])
+                self.logger.variables.increment_negated(agent_update[1])
         return None
+
+    def update_multi(self, agent: Agent) -> tuple[bool, bool]:
+        """
+        A helper function that allows for multiprocessing of the :meth:`~self.update` function.
+
+        :param agent: The agent being updated.
+        :type agent: Agent
+        :return: A pair of flags indicating if opinion silencing and opinion negation ocurred.
+        :rtype: tuple[bool, bool]
+        """
+        silenced: dict[str, bool] = {}
+        was_silenced: bool = False
+        negation: bool = False
+        for graph in self.graphs:
+            if not graph.agent_in_graph(agent):
+                # The Agent does not have membership in a specific hierarchy
+                continue
+            else:
+                est_opinion_climate: float = graph.estimate_opinion_climate(agent)
+                is_silenced: tuple[bool, float] = agent.opinion_silencing(
+                    graph.name, est_opinion_climate
+                )
+                silenced[graph.name] = is_silenced[0]
+
+                if is_silenced[0]:
+                    was_silenced = True
+
+                if not negation:
+                    negation = agent.opinion_negation(
+                        graph.name, is_silenced[1], self.negation_threshold
+                    )
+        agent.update(silenced, negation)
+
+        return (was_silenced, negation)
 
     def logger_iteration(self) -> None:
         """

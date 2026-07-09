@@ -7,6 +7,7 @@ import warnings
 import zipfile
 from collections.abc import Iterable
 from copy import deepcopy
+from multiprocessing import Pool
 from shutil import rmtree
 from typing import Any, Iterator, override
 
