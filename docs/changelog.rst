@@ -24,6 +24,8 @@ New Features
   - :meth:`~gatoh.model.model.ABModel.update_base_graph`
 
 - Multiprocessing added to :meth:`~gatoh.model.model.ABModel.iterate`
+- Multiprocessing added to :meth:`~gatoh.model.model.ABModel.update`
+- Multiprocessing added to the custom iteration function in the :mod:`CaseStudy` experiment
 
 Fixes
 -----
