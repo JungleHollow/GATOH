@@ -475,6 +475,7 @@ class ResponseParser:
                 new_graph: gr.Graph = gr.Graph(
                     hierarchy,
                     self.graphs[community]["rw_params"][idx],
+                    suppress_warnings=True,
                 )
 
                 included_agents: list[agt.Agent] = []
