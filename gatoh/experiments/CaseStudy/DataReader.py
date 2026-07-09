@@ -424,7 +424,7 @@ class DataReader:
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
             # First each agent looks at its neighbours to see how their opinion will evolve this iteration
-            with Pool() as pool:
+            with Pool(processes=os.cpu_count() - 2) as pool:
                 opinion_results = pool.starmap(
                     self.custom_iter_opinion_calc,
                     zip(model_to_iterate.agents, repeat(model_to_iterate)),
