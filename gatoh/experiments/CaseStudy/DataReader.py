@@ -427,7 +427,7 @@ class DataReader:
             with Pool(processes=os.cpu_count() - 2) as pool:
                 opinion_results = pool.starmap(
                     self.custom_iter_opinion_calc,
-                    zip(model_to_iterate.agents, repeat(model_to_iterate)),
+                    zip(model_to_iterate.agents, repeat(model_to_iterate.model_id)),
                 )
                 for opinion_result in opinion_results:
                     new_agent_opinions[opinion_result[0]] = opinion_result[1]
@@ -465,7 +465,7 @@ class DataReader:
     def custom_iter_opinion_calc(
         self,
         agent: Agent,
-        model_to_iterate: ABModel,
+        model_name: str,
     ) -> tuple[str, tuple[float, list[float], list[bool]]]:
         """
         A helper function that calculates the per-agent, per-hierarchy changes to opinions for the iteration,
@@ -477,11 +477,13 @@ class DataReader:
 
         :param agent: The agent for which the opinion changes are being calculated.
         :type agent: Agent
-        :param model_to_iterate: The model which is iterating.
-        :type model_to_iterate: ABModel
+        :param model_name: The model which is iterating.
+        :type model_name: str
         :return: An <Agent ID : Changes info> mapping that provides all necessary information to apply the opinion changes for a specific agent.
         :rtype: tuple[str, tuple[float, list[float], list[bool]]]
         """
+        model_to_iterate: ABModel = self.models[model_name]
+
         agent.previous_opinion = agent.opinion
         for hierarchy in model_to_iterate.graphs:
             # Update the previous opinion across all hierarchies
