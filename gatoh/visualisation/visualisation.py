@@ -7,7 +7,7 @@ import matplotlib
 import numpy as np
 import rustworkx as rx
 
-matplotlib.use("gtk4agg")
+matplotlib.use("agg")
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from rustworkx.visualization import mpl_draw
