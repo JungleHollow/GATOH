@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import pickle
+import warnings
+from contextlib import closing
 from copy import deepcopy
 from dataclasses import dataclass
 from itertools import repeat
@@ -9,12 +11,14 @@ from multiprocessing import Pool
 from typing import Any
 
 import polars as pl
+from rustworkx import NodeIndices
 
 from gatoh.agents.agents import Agent
 from gatoh.graphs.graphs import Graph, GraphEdge, GraphNode
 from gatoh.model.model import ABModel
 
 # Declare all relevant global variables here
+DEBUG: bool = True
 
 SAVEDIR_ROOT: str = "./gatoh/experiments/CaseStudy/Results"
 
@@ -424,7 +428,7 @@ class DataReader:
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
             # First each agent looks at its neighbours to see how their opinion will evolve this iteration
-            with Pool(processes=os.cpu_count() - 2) as pool:
+            with closing(Pool()) as pool:
                 opinion_results = pool.starmap(
                     self.custom_iter_opinion_calc,
                     zip(model_to_iterate.agents, repeat(model_to_iterate.model_id)),
@@ -486,6 +490,8 @@ class DataReader:
 
         agent.previous_opinion = agent.opinion
         for hierarchy in model_to_iterate.graphs:
+            if not hierarchy.agent_in_graph(agent):
+                continue
             # Update the previous opinion across all hierarchies
             hierarchy.agent_previous_opinion(agent)
 
@@ -555,11 +561,6 @@ class DataReader:
         :return: The total value of the neighbour influences on the agent in this specific hierarchy, or None if the agent has no neighbours.
         :rtype: float | None
         """
-        # Only using warnings for this function
-        import warnings
-
-        from rustworkx import NodeIndices  # For typing
-
         agent_hierarchy_weighting: float = agent.social_weightings[hierarchy_graph.name]
         agent_index: int | None = hierarchy_graph.get_agent_index(agent)
         if agent_index is None:
@@ -643,7 +644,12 @@ class DataReader:
         final_change: float = 0.0
         total_weightings: float = sum(delta_weightings)
         for idx, weighted_delta in enumerate(weighted_deltas):
-            final_change += weighted_delta * (delta_weightings[idx] / total_weightings)
+            if total_weightings == 0.0:
+                final_change += 0.0
+            else:
+                final_change += weighted_delta * (
+                    delta_weightings[idx] / total_weightings
+                )
         return final_change
 
     def run_models(self, missing_saves: list[str] | None = None) -> None:

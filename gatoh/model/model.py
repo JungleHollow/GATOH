@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from contextlib import closing
 from copy import deepcopy
 from datetime import datetime
 from multiprocessing import Pool
@@ -437,7 +438,7 @@ class ABModel:
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
             # First each agent looks at its neighbours to see how their opinion will evolve this iteration
-            with Pool(processes=os.cpu_count() - 2) as pool:
+            with closing(Pool()) as pool:
                 opinion_results = pool.map(
                     self.iteration_opinion_calculation, self.agents
                 )
@@ -614,7 +615,7 @@ class ABModel:
         perceived opinion climates within their hierarchies, and the simulation of opinion silencing behaviours depending
         on these climates.
         """
-        with Pool(processes=os.cpu_count() - 2) as pool:
+        with closing(Pool()) as pool:
             agent_updates = pool.map(self.update_multi, self.agents)
 
             # Update the logger variables as needed
