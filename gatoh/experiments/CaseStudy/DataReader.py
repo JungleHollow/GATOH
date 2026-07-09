@@ -14,6 +14,95 @@ from gatoh.agents.agents import Agent
 from gatoh.graphs.graphs import Graph, GraphEdge, GraphNode
 from gatoh.model.model import ABModel
 
+# Declare all relevant global variables here
+
+SAVEDIR_ROOT: str = "./gatoh/experiments/CaseStudy/Results"
+
+VISUALISATION_ROOT: str = f"{SAVEDIR_ROOT}/Visualisations"
+
+SAVEDIRS: dict[str, str] = {
+    "NONMN": f"{SAVEDIR_ROOT}/NONMN",
+    "MINNG": f"{SAVEDIR_ROOT}/MINNG",
+}
+
+SAVEFILES: dict[str, str] = {
+    "NONMN": f"{SAVEDIRS['NONMN']}/NONMN_model_variables.csv",
+    "MINNG": f"{SAVEDIRS['MINNG']}/MINNG_model_variables.csv",
+}
+
+VISDIRS: dict[str, str] = {
+    "NONMN": f"{VISUALISATION_ROOT}/NONMN",
+    "MINNG": f"{VISUALISATION_ROOT}/MINNG",
+}
+
+AGENT_PATHS: dict[str, str] = {
+    "NONMN": "./gatoh/experiments/CaseStudy/Agents/NONMN_Agents",
+    "MINNG": "./gatoh/experiments/CaseStudy/Agents/MINNG_Agents",
+}
+
+GRAPH_PATHS: dict[str, str] = {
+    "NONMN": "./gatoh/experiments/CaseStudy/Graphs/NONMN_Graphs",
+    "MINNG": "./gatoh/experiments/CaseStudy/Graphs/MINNG_Graphs",
+}
+
+BASE_HIERARCHIES: list[str] = [
+    # Removing Age and Gender as graphs for now, as these are much too densely connected for reasonable runtimes
+    # "Age",
+    # "Gender",
+    "Friends",
+    "Family",
+    "Cultural",
+    "Religious",
+    "Geographical",
+    "Social",
+]
+
+HIERARCHY_RW: dict[str, tuple[float, float]] = {
+    # "Age": (0.0, 0.04),
+    # "Gender": (0.0, 0.02),
+    "Friends": (0.0, 0.05),
+    "Family": (0.0, 0.01),
+    "Religious": (0.0, 0.1),
+    "Cultural": (0.0, 0.15),
+    "Geographical": (0.0, 0.0),
+    "Social": (0.0, 0.1),
+}
+
+# The relevant parameters that are defined for the model instances
+TEST_PARAMETERS: dict[str, dict[str, Any]] = {
+    "NONMN": {
+        "model_id": "NONMN",
+        "iterations": 100,
+        "hierarchies": deepcopy(BASE_HIERARCHIES),
+        "hierarchy_rw": deepcopy(HIERARCHY_RW),
+    },
+    "MINNG": {
+        "model_id": "MINNG",
+        "iterations": 100,
+        "hierarchies": deepcopy(BASE_HIERARCHIES),
+        "hierarchy_rw": deepcopy(HIERARCHY_RW),
+    },
+    "DEFAULT": {
+        "iterations": 100,
+        "hierarchies": deepcopy(BASE_HIERARCHIES),
+        "hierarchy_rw": deepcopy(HIERARCHY_RW),
+        "agent_opinion_rw": (0.0, 0.05),
+        "silencing_threshold": 0.95,
+        "negation_threshold": 0.999,
+        "radicalisation_threshold": 0.99,
+        "suppress_warnings": True,
+    },
+}
+
+# Used to assign changeable weightings to different agent attributes throughout the models
+AGENT_PARAMETERS: dict[str, float] = {
+    "age_weighting": 1.1,
+    "gender_weighting": 1.25,
+}
+
+# Specify the dependant variable CSV paths here:
+OPINION_PATHS: dict[str, str] = {}
+
 
 @dataclass
 class ModelParameters:
@@ -577,93 +666,6 @@ class DataReader:
 
 
 if __name__ == "__main__":
-    SAVEDIR_ROOT: str = "./gatoh/experiments/CaseStudy/Results"
-
-    VISUALISATION_ROOT: str = f"{SAVEDIR_ROOT}/Visualisations"
-
-    SAVEDIRS: dict[str, str] = {
-        "NONMN": f"{SAVEDIR_ROOT}/NONMN",
-        "MINNG": f"{SAVEDIR_ROOT}/MINNG",
-    }
-
-    SAVEFILES: dict[str, str] = {
-        "NONMN": f"{SAVEDIRS['NONMN']}/NONMN_model_variables.csv",
-        "MINNG": f"{SAVEDIRS['MINNG']}/MINNG_model_variables.csv",
-    }
-
-    VISDIRS: dict[str, str] = {
-        "NONMN": f"{VISUALISATION_ROOT}/NONMN",
-        "MINNG": f"{VISUALISATION_ROOT}/MINNG",
-    }
-
-    AGENT_PATHS: dict[str, str] = {
-        "NONMN": "./gatoh/experiments/CaseStudy/Agents/NONMN_Agents",
-        "MINNG": "./gatoh/experiments/CaseStudy/Agents/MINNG_Agents",
-    }
-
-    GRAPH_PATHS: dict[str, str] = {
-        "NONMN": "./gatoh/experiments/CaseStudy/Graphs/NONMN_Graphs",
-        "MINNG": "./gatoh/experiments/CaseStudy/Graphs/MINNG_Graphs",
-    }
-
-    BASE_HIERARCHIES: list[str] = [
-        # Removing Age and Gender as graphs for now, as these are much too densely connected for reasonable runtimes
-        # "Age",
-        # "Gender",
-        "Friends",
-        "Family",
-        "Cultural",
-        "Religious",
-        "Geographical",
-        "Social",
-    ]
-
-    HIERARCHY_RW: dict[str, tuple[float, float]] = {
-        # "Age": (0.0, 0.04),
-        # "Gender": (0.0, 0.02),
-        "Friends": (0.0, 0.05),
-        "Family": (0.0, 0.01),
-        "Religious": (0.0, 0.1),
-        "Cultural": (0.0, 0.15),
-        "Geographical": (0.0, 0.0),
-        "Social": (0.0, 0.1),
-    }
-
-    # The relevant parameters that are defined for the model instances
-    TEST_PARAMETERS: dict[str, dict[str, Any]] = {
-        "NONMN": {
-            "model_id": "NONMN",
-            "iterations": 100,
-            "hierarchies": deepcopy(BASE_HIERARCHIES),
-            "hierarchy_rw": deepcopy(HIERARCHY_RW),
-        },
-        "MINNG": {
-            "model_id": "MINNG",
-            "iterations": 100,
-            "hierarchies": deepcopy(BASE_HIERARCHIES),
-            "hierarchy_rw": deepcopy(HIERARCHY_RW),
-        },
-        "DEFAULT": {
-            "iterations": 100,
-            "hierarchies": deepcopy(BASE_HIERARCHIES),
-            "hierarchy_rw": deepcopy(HIERARCHY_RW),
-            "agent_opinion_rw": (0.0, 0.05),
-            "silencing_threshold": 0.95,
-            "negation_threshold": 0.999,
-            "radicalisation_threshold": 0.99,
-            "suppress_warnings": True,
-        },
-    }
-
-    # Used to assign changeable weightings to different agent attributes throughout the models
-    AGENT_PARAMETERS: dict[str, float] = {
-        "age_weighting": 1.1,
-        "gender_weighting": 1.25,
-    }
-
-    # Specify the dependant variable CSV paths here:
-    OPINION_PATHS: dict[str, str] = {}
-
     if not os.path.exists(SAVEDIR_ROOT):
         os.mkdir(SAVEDIR_ROOT)
 
