@@ -4,6 +4,8 @@ import os
 import pickle
 from copy import deepcopy
 from dataclasses import dataclass
+from itertools import repeat
+from multiprocessing import Pool
 from typing import Any
 
 import polars as pl
@@ -332,57 +334,15 @@ class DataReader:
             # (this is done to prevent recursive updating of opinions during the evolution of opinions)
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
-            # First each agent looks at its neighbours to see how their opinion will evolve this iterations
-            for agent in model_to_iterate.agents:
-                agent.previous_opinion = agent.opinion
-                for hierarchy in model_to_iterate.graphs:
-                    # Update the previous opinion across all hierarchies
-                    hierarchy.agent_previous_opinion(agent)
-
-                collective_changes: list[float] = []
-                for hierarchy in model_to_iterate.graphs:
-                    # Custom neighbour_influences that accounts for "Age" and "Gender" attributes when determining influences
-                    neighbour_influences: float | None = (
-                        self.custom_neighbour_influences(agent, hierarchy)
-                    )
-
-                    if neighbour_influences is not None:
-                        collective_changes.append(neighbour_influences)
-                total_change: float = sum(collective_changes)
-
-                # Check for the existence of personal benefit across all of the agent's neighbours
-                all_neighbour_indices: list[int] = list(
-                    model_to_iterate.base_graph.graph.neighbors(agent.index)
+            # First each agent looks at its neighbours to see how their opinion will evolve this iteration
+            with Pool() as pool:
+                opinion_results = pool.starmap(
+                    self.custom_iter_opinion_calc,
+                    zip(model_to_iterate.agents, repeat(model_to_iterate)),
                 )
-                all_neighbour_benefits: list[bool] = []
-                for neighbour_index in all_neighbour_indices:
-                    neighbour_object: GraphNode = model_to_iterate.base_graph.graph[
-                        neighbour_index
-                    ]
-                    all_neighbour_benefits.append(
-                        neighbour_object.agent.personal_benefit
-                    )
+                for opinion_result in opinion_results:
+                    new_agent_opinions[opinion_result[0]] = opinion_result[1]
 
-                # Constrain to [-1, 1]
-                # 100.0 and -100.0 are used as key delta values indicating that the opinion needs to be constrained
-                if agent.opinion + total_change < -1.0:
-                    new_agent_opinions[agent.id] = (
-                        -100.0,
-                        deepcopy(collective_changes),
-                        deepcopy(all_neighbour_benefits),
-                    )
-                elif agent.opinion + total_change > 1.0:
-                    new_agent_opinions[agent.id] = (
-                        100.0,
-                        deepcopy(collective_changes),
-                        deepcopy(all_neighbour_benefits),
-                    )
-                else:
-                    new_agent_opinions[agent.id] = (
-                        total_change,
-                        deepcopy(collective_changes),
-                        deepcopy(all_neighbour_benefits),
-                    )
             model_to_iterate.iteration_opinion_changes(new_agent_opinions)
             model_to_iterate.step()
             model_to_iterate.update()
@@ -412,6 +372,83 @@ class DataReader:
             plt.close(model_to_iterate.fig)
             del model_to_iterate.fig, model_to_iterate.ax
         return model_to_iterate
+
+    def custom_iter_opinion_calc(
+        self,
+        agent: Agent,
+        model_to_iterate: ABModel,
+    ) -> tuple[str, tuple[float, list[float], list[bool]]]:
+        """
+        A helper function that calculates the per-agent, per-hierarchy changes to opinions for the iteration,
+        returning all necessary information for :meth:`~gatoh.model.model.ABModel.iteration_opinion_changes`
+        to apply the opinion changes.
+
+        This function was primarily created to allow for multiprocessing in the main :meth:`~self.custom_iterate`
+        function.
+
+        :param agent: The agent for which the opinion changes are being calculated.
+        :type agent: Agent
+        :param model_to_iterate: The model which is iterating.
+        :type model_to_iterate: ABModel
+        :return: An <Agent ID : Changes info> mapping that provides all necessary information to apply the opinion changes for a specific agent.
+        :rtype: tuple[str, tuple[float, list[float], list[bool]]]
+        """
+        agent.previous_opinion = agent.opinion
+        for hierarchy in model_to_iterate.graphs:
+            # Update the previous opinion across all hierarchies
+            hierarchy.agent_previous_opinion(agent)
+
+        collective_changes: list[float] = []
+        for hierarchy in model_to_iterate.graphs:
+            # Custom neighbour_influences that accounts for "Age" and "Gender" attributes when determining influences
+            neighbour_influences: float | None = self.custom_neighbour_influences(
+                agent, hierarchy
+            )
+
+            if neighbour_influences is not None:
+                collective_changes.append(neighbour_influences)
+        total_change: float = sum(collective_changes)
+
+        # Check for the existence of personal benefit across all of the agent's neighbours
+        all_neighbour_indices: list[int] = list(
+            model_to_iterate.base_graph.graph.neighbors(agent.index)
+        )
+        all_neighbour_benefits: list[bool] = []
+        for neighbour_index in all_neighbour_indices:
+            neighbour_object: GraphNode = model_to_iterate.base_graph.graph[
+                neighbour_index
+            ]
+            all_neighbour_benefits.append(neighbour_object.agent.personal_benefit)
+
+        # Define the type of the return
+        opinion_result: tuple[str, tuple[float, list[float], list[bool]]]
+
+        # Constrain to [-1, 1]
+        # 100.0 and -100.0 are used as key delta values indicating that the opinion needs to be constrained
+        if agent.opinion + total_change < -1.0:
+            opinion_result = (
+                agent.id,
+                (
+                    -100.0,
+                    deepcopy(collective_changes),
+                    deepcopy(all_neighbour_benefits),
+                ),
+            )
+        elif agent.opinion + total_change > 1.0:
+            opinion_result = (
+                agent.id,
+                (100.0, deepcopy(collective_changes), deepcopy(all_neighbour_benefits)),
+            )
+        else:
+            opinion_result = (
+                agent.id,
+                (
+                    total_change,
+                    deepcopy(collective_changes),
+                    deepcopy(all_neighbour_benefits),
+                ),
+            )
+        return opinion_result
 
     def custom_neighbour_influences(
         self, agent: Agent, hierarchy_graph: Graph
