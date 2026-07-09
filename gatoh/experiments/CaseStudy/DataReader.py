@@ -667,6 +667,9 @@ if __name__ == "__main__":
     if not os.path.exists(SAVEDIR_ROOT):
         os.mkdir(SAVEDIR_ROOT)
 
+    if not os.path.exists(VISUALISATION_ROOT):
+        os.mkdir(VISUALISATION_ROOT)
+
     # Check for existing saved models and store the relevant information
     save_dirs: list[str] = list(os.walk(SAVEDIR_ROOT))[0][1]
 
