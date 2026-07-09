@@ -28,6 +28,7 @@ class ModelParameters:
     silencing_threshold: float
     negation_threshold: float
     radicalisation_threshold: float
+    visualisation_dir: str
     suppress_warnings: bool
     save_dir: str
     data_file: str
@@ -59,6 +60,11 @@ class ModelParameters:
             self.radicalisation_threshold = TEST_PARAMETERS["DEFAULT"][
                 "radicalisation_threshold"
             ]
+
+        if "visualisation_dir" in parameters_dict.keys():
+            self.visualisation_dir = parameters_dict["visualisation_dir"]
+        else:
+            self.visualisation_dir = VISDIRS[self.model_id]
 
         if "suppress_warnings" in parameters_dict.keys():
             self.suppress_warnings = parameters_dict["suppress_warnings"]
@@ -252,6 +258,7 @@ class DataReader:
                 silencing_threshold=model_parameters.silencing_threshold,
                 negation_threshold=model_parameters.negation_threshold,
                 radicalisation_threshold=model_parameters.radicalisation_threshold,
+                visualisation_dir=model_parameters.visualisation_dir,
                 suppress_warnings=model_parameters.suppress_warnings,
                 save_dir=model_parameters.save_dir,
                 data_file=model_parameters.data_file,
@@ -535,6 +542,8 @@ class DataReader:
 if __name__ == "__main__":
     SAVEDIR_ROOT: str = "./gatoh/experiments/CaseStudy/Results"
 
+    VISUALISATION_ROOT: str = f"{SAVEDIR_ROOT}/Visualisations"
+
     SAVEDIRS: dict[str, str] = {
         "NONMN": f"{SAVEDIR_ROOT}/NONMN",
         "MINNG": f"{SAVEDIR_ROOT}/MINNG",
@@ -543,6 +552,11 @@ if __name__ == "__main__":
     SAVEFILES: dict[str, str] = {
         "NONMN": f"{SAVEDIRS['NONMN']}/NONMN_model_variables.csv",
         "MINNG": f"{SAVEDIRS['MINNG']}/MINNG_model_variables.csv",
+    }
+
+    VISDIRS: dict[str, str] = {
+        "NONMN": f"{VISUALISATION_ROOT}/NONMN",
+        "MINNG": f"{VISUALISATION_ROOT}/MINNG",
     }
 
     AGENT_PATHS: dict[str, str] = {
