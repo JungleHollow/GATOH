@@ -8,6 +8,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from itertools import repeat
 from multiprocessing import Pool
+from operator import mul
 from typing import Any
 
 import polars as pl
@@ -193,6 +194,7 @@ class DataReader:
         graph_paths: dict[str, str],
         initial_hierarchies: list[str],
         test_parameters: dict[str, dict[str, Any]],
+        multiprocessing: Any | None = None,
         opinion_paths: dict[str, str] | None = None,
         existing: bool = False,
     ) -> None:
@@ -201,9 +203,13 @@ class DataReader:
         :param graph_paths: A <model name: path> mapping pointing to the subdirectories at which each model's Graph objects are saved.
         :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
         :param test_parameters: A <model: parameters> mapping specifying explicit initialisation and runtime parameters for each model.
+        :param multiprocessing: A pool of workers that can distribute the processing of model iteration functions.
         :param opinion_paths: An optional <model name: path> mapping pointing to csv files containing dependant variable data (for model validation after running).
         :param existing: A flag indicating if the DataReader is loading an existing experiment.
         """
+        # Is of type multiprocessing.Pool, but the interpretter does not allow this...
+        self.worker_pool: Any | None = multiprocessing
+
         self.existing: bool = existing
 
         self.agent_paths: dict[str, str] = agent_paths
@@ -323,15 +329,12 @@ class DataReader:
             self.models[model_name] = new_model
         return None
 
-    def create_models(
-        self, missing_saves: list[str] | None = None, multiprocessing: Any | None = None
-    ) -> None:
+    def create_models(self, missing_saves: list[str] | None = None) -> None:
         """
         Use the loaded Agent and Graph objects plus the defined ModelParameters to create the appropriate model
         instances to use in this experiment.
 
         :param missing_saves: An optional partial list of model names representing models that should be initialised.
-        :param multiprocessing: An optional pool of workers that can share the processing of model iteration functions.
         """
         for model_name, model_parameters in self.model_params.items():
             # Only models in missing saves need to be initialised
@@ -350,7 +353,6 @@ class DataReader:
                 radicalisation_threshold=model_parameters.radicalisation_threshold,
                 visualisation_dir=model_parameters.visualisation_dir,
                 suppress_warnings=model_parameters.suppress_warnings,
-                multiprocessing=multiprocessing,
                 save_dir=model_parameters.save_dir,
                 data_file=model_parameters.data_file,
                 model_id=model_parameters.model_id,
@@ -421,8 +423,8 @@ class DataReader:
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
             # First each agent looks at its neighbours to see how their opinion will evolve this iteration
-            if model_to_iterate.pool is not None:
-                opinion_results = model_to_iterate.pool.starmap(
+            if self.worker_pool is not None:
+                opinion_results = self.worker_pool.starmap(
                     self.custom_iter_opinion_calc,
                     zip(model_to_iterate.agents, repeat(model_to_iterate.model_id)),
                 )
@@ -443,7 +445,7 @@ class DataReader:
 
             model_to_iterate.iteration_opinion_changes(new_agent_opinions)
             model_to_iterate.step()
-            model_to_iterate.update()
+            model_to_iterate.update(worker_pool=self.worker_pool)
 
             model_to_iterate.logger_iteration()  # Handle the logger's iteration() calculations and call its method
 
@@ -713,17 +715,16 @@ if __name__ == "__main__":
             GRAPH_PATHS,
             BASE_HIERARCHIES,
             TEST_PARAMETERS,
+            multiprocessing=worker_pool,
             opinion_paths=None,
         )
 
         if len(existing_savedirs) > 0:  # At least one model exists
             data_reader.load_models(existing_saves=existing_savedirs)
-            data_reader.create_models(
-                missing_saves=missing_savedirs, multiprocessing=worker_pool
-            )
+            data_reader.create_models(missing_saves=missing_savedirs)
             data_reader.run_models(missing_saves=missing_savedirs)
         else:
-            data_reader.create_models(multiprocessing=worker_pool)
+            data_reader.create_models()
             data_reader.run_models()
     else:
         # Create the tester in "existing" mode, and examine the results
@@ -732,9 +733,14 @@ if __name__ == "__main__":
             GRAPH_PATHS,
             BASE_HIERARCHIES,
             TEST_PARAMETERS,
+            multiprocessing=worker_pool,
             opinion_paths=OPINION_PATHS,
             existing=True,
         )
         data_reader.load_models()
+
+    # Ensure that the Pool is closed after all processing has finished
+    if worker_pool is not None:
+        worker_pool.terminate()
 
     # TODO: Add the graph visualisation functions here once those features are implemented...

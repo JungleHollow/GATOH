@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import os
-from contextlib import closing
 from copy import deepcopy
 from datetime import datetime
-from multiprocessing import Pool
 from random import choices, randint
 from shutil import rmtree
 from typing import Any
@@ -58,8 +56,6 @@ class ABModel:
     :type vis_aggregation_method: str, optional
     :param checkpointing: A flag indicating if the model's progress should be saved at the end of each iteration (useful in case of interrupted runtimes).
     :type checkpointing: bool, optional
-    :param multiprocessing: A pool of workers that can spread the load of operations in the model iterations.
-    :type multiprocessing: :class:`~multiprocessing.Pool`, optional
     :param save_dir: The path to a directory in which all of this model's non-logger data should be saved to.
     :type save_dir: str, optional
     :param data_file: The path to which the logger's data should be saved to after iterations are run.
@@ -82,14 +78,10 @@ class ABModel:
         visualisation_dir: str = "",
         vis_aggregation_method: str = "median",
         checkpointing: bool = True,
-        multiprocessing: Any | None = None,
         save_dir: str = "",
         data_file: str = "",
         model_id: str = "",
     ) -> None:
-        # Is of type multiprocessing.Pool, but this is not allowed by the interpreter...
-        self.pool: Any | None = multiprocessing
-
         self.hierarchy_information: dict[str, tuple[float, float]] = {}
         for idx, hierarchy in enumerate(hierarchy_names):
             self.hierarchy_information[hierarchy] = hierarchy_rw_distributions[idx]
@@ -430,9 +422,12 @@ class ABModel:
             )
         return None
 
-    def iterate(self) -> None:
+    def iterate(self, worker_pool: Any | None = None) -> None:
         """
-        Handles the main model iteration loop
+        Handles the main model iteration loop.
+
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.Pool`, optional
         """
         while self.current_iteration < self.max_iterations:
             # Initialise the logger state for the current iteration
@@ -446,8 +441,8 @@ class ABModel:
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
             # First each agent looks at its neighbours to see how their opinion will evolve this iteration
-            if self.pool is not None:
-                opinion_results = self.pool.imap(
+            if worker_pool is not None:
+                opinion_results = worker_pool.imap(
                     self.iteration_opinion_calculation,
                     self.agents,
                     chunksize=10,
@@ -629,14 +624,17 @@ class ABModel:
             )
         return None
 
-    def update(self) -> None:
+    def update(self, worker_pool: Any | None = None) -> None:
         """
         Updates the agents' internal states to match the model step. This mainly handles the construction of agents'
         perceived opinion climates within their hierarchies, and the simulation of opinion silencing behaviours depending
         on these climates.
+
+        :param worker_pool: A pool of workers that can distribute the processing of the update function amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.Pool`, optional
         """
-        if self.pool is not None:
-            agent_updates = self.pool.map(self.update_multi, self.agents)
+        if worker_pool is not None:
+            agent_updates = worker_pool.map(self.update_multi, self.agents)
 
             # Update the agent object, and the logger variables as needed
             for idx, agent_update in enumerate(agent_updates):
