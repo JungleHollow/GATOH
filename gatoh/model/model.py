@@ -58,6 +58,8 @@ class ABModel:
     :type vis_aggregation_method: str, optional
     :param checkpointing: A flag indicating if the model's progress should be saved at the end of each iteration (useful in case of interrupted runtimes).
     :type checkpointing: bool, optional
+    :param multiprocessing: A pool of workers that can spread the load of operations in the model iterations.
+    :type multiprocessing: :class:`~multiprocessing.Pool`, optional
     :param save_dir: The path to a directory in which all of this model's non-logger data should be saved to.
     :type save_dir: str, optional
     :param data_file: The path to which the logger's data should be saved to after iterations are run.
@@ -80,10 +82,14 @@ class ABModel:
         visualisation_dir: str = "",
         vis_aggregation_method: str = "median",
         checkpointing: bool = True,
+        multiprocessing: Any | None = None,
         save_dir: str = "",
         data_file: str = "",
         model_id: str = "",
     ) -> None:
+        # Is of type multiprocessing.Pool, but this is not allowed by the interpreter...
+        self.pool: Any | None = multiprocessing
+
         self.hierarchy_information: dict[str, tuple[float, float]] = {}
         for idx, hierarchy in enumerate(hierarchy_names):
             self.hierarchy_information[hierarchy] = hierarchy_rw_distributions[idx]
@@ -95,7 +101,9 @@ class ABModel:
 
         # A model-handled 'base' Graph that keeps track of all relationships across the social hierarchies
         # (Used to greatly simplify network-level graph calculations)
-        self.base_graph: Graph = Graph("base", (0.0, 0.0))
+        self.base_graph: Graph = Graph(
+            "base", (0.0, 0.0), suppress_warnings=suppress_warnings
+        )
 
         self.logger: GATOHLogger = GATOHLogger(self, iterations, hierarchy_names)
 
@@ -438,12 +446,24 @@ class ABModel:
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
             # First each agent looks at its neighbours to see how their opinion will evolve this iteration
-            with closing(Pool(processes=4)) as pool:
-                opinion_results = pool.map(
-                    self.iteration_opinion_calculation, self.agents
+            if self.pool is not None:
+                opinion_results = self.pool.imap(
+                    self.iteration_opinion_calculation,
+                    self.agents,
+                    chunksize=10,
                 )
                 for opinion_result in opinion_results:
                     new_agent_opinions[opinion_result[0]] = opinion_result[1]
+
+                # Manual garbage collection
+                del opinion_results
+            else:
+                for agent in self.agents:
+                    opinion_result = self.iteration_opinion_calculation(agent)
+                    new_agent_opinions[opinion_result[0]] = opinion_result[1]
+
+                    # Manual garbage collection
+                    del opinion_result
 
             self.iteration_opinion_changes(new_agent_opinions)
             self.step()
@@ -615,23 +635,34 @@ class ABModel:
         perceived opinion climates within their hierarchies, and the simulation of opinion silencing behaviours depending
         on these climates.
         """
-        with closing(Pool(processes=4)) as pool:
-            agent_updates = pool.map(self.update_multi, self.agents)
+        if self.pool is not None:
+            agent_updates = self.pool.map(self.update_multi, self.agents)
 
-            # Update the logger variables as needed
-            for agent_update in agent_updates:
-                self.logger.variables.increment_silenced(agent_update[0])
-                self.logger.variables.increment_negated(agent_update[1])
+            # Update the agent object, and the logger variables as needed
+            for idx, agent_update in enumerate(agent_updates):
+                self.agents.agents[idx].update(agent_update[0], agent_update[2])
+
+                self.logger.variables.increment_silenced(agent_update[1])
+                self.logger.variables.increment_negated(agent_update[2])
+        else:
+            for agent in self.agents:
+                agent_update = self.update_multi(agent)
+
+                agent.update(agent_update[0], agent_update[2])
+
+                # Update the logger variables as needed
+                self.logger.variables.increment_silenced(agent_update[1])
+                self.logger.variables.increment_negated(agent_update[2])
         return None
 
-    def update_multi(self, agent: Agent) -> tuple[bool, bool]:
+    def update_multi(self, agent: Agent) -> tuple[dict[str, bool], bool, bool]:
         """
         A helper function that allows for multiprocessing of the :meth:`~self.update` function.
 
         :param agent: The agent being updated.
         :type agent: Agent
-        :return: A pair of flags indicating if opinion silencing and opinion negation ocurred.
-        :rtype: tuple[bool, bool]
+        :return: The new is_silenced flags for the agent, and flags indicating if opinion silencing and negation ocurred this iteration.
+        :rtype: tuple[dict[str, bool], bool, bool]
         """
         silenced: dict[str, bool] = {}
         was_silenced: bool = False
@@ -654,9 +685,7 @@ class ABModel:
                     negation = agent.opinion_negation(
                         graph.name, is_silenced[1], self.negation_threshold
                     )
-        agent.update(silenced, negation)
-
-        return (was_silenced, negation)
+        return (silenced, was_silenced, negation)
 
     def logger_iteration(self) -> None:
         """

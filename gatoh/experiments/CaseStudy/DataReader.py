@@ -19,6 +19,7 @@ from gatoh.model.model import ABModel
 
 # Declare all relevant global variables here
 DEBUG: bool = True
+MULTIPROCESSING: bool = True
 
 SAVEDIR_ROOT: str = "./gatoh/experiments/CaseStudy/Results"
 
@@ -331,12 +332,15 @@ class DataReader:
             del new_model
         return None
 
-    def create_models(self, missing_saves: list[str] | None = None) -> None:
+    def create_models(
+        self, missing_saves: list[str] | None = None, multiprocessing: Any | None = None
+    ) -> None:
         """
         Use the loaded Agent and Graph objects plus the defined ModelParameters to create the appropriate model
         instances to use in this experiment.
 
         :param missing_saves: An optional partial list of model names representing models that should be initialised.
+        :param multiprocessing: An optional pool of workers that can share the processing of model iteration functions.
         """
         for model_name, model_parameters in self.model_params.items():
             # Only models in missing saves need to be initialised
@@ -355,6 +359,7 @@ class DataReader:
                 radicalisation_threshold=model_parameters.radicalisation_threshold,
                 visualisation_dir=model_parameters.visualisation_dir,
                 suppress_warnings=model_parameters.suppress_warnings,
+                multiprocessing=multiprocessing,
                 save_dir=model_parameters.save_dir,
                 data_file=model_parameters.data_file,
                 model_id=model_parameters.model_id,
@@ -428,13 +433,25 @@ class DataReader:
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
             # First each agent looks at its neighbours to see how their opinion will evolve this iteration
-            with closing(Pool(processes=1)) as pool:
-                opinion_results = pool.starmap(
+            if model_to_iterate.pool is not None:
+                opinion_results = model_to_iterate.pool.starmap(
                     self.custom_iter_opinion_calc,
                     zip(model_to_iterate.agents, repeat(model_to_iterate.model_id)),
                 )
                 for opinion_result in opinion_results:
                     new_agent_opinions[opinion_result[0]] = opinion_result[1]
+
+                # Manual garbage collection
+                del opinion_results
+            else:
+                for agent in model_to_iterate.agents:
+                    opinion_result = self.custom_iter_opinion_calc(
+                        agent, model_to_iterate.model_id
+                    )
+                    new_agent_opinions[opinion_result[0]] = opinion_result[1]
+
+                    # Manual garbage collection
+                    del opinion_result
 
             model_to_iterate.iteration_opinion_changes(new_agent_opinions)
             model_to_iterate.step()
@@ -674,6 +691,11 @@ class DataReader:
 
 
 if __name__ == "__main__":
+    if MULTIPROCESSING:
+        worker_pool = Pool()
+    else:
+        worker_pool = None
+
     if not os.path.exists(SAVEDIR_ROOT):
         os.mkdir(SAVEDIR_ROOT)
 
@@ -708,10 +730,12 @@ if __name__ == "__main__":
 
         if len(existing_savedirs) > 0:  # At least one model exists
             data_reader.load_models(existing_saves=existing_savedirs)
-            data_reader.create_models(missing_saves=missing_savedirs)
+            data_reader.create_models(
+                missing_saves=missing_savedirs, multiprocessing=worker_pool
+            )
             data_reader.run_models(missing_saves=missing_savedirs)
         else:
-            data_reader.create_models()
+            data_reader.create_models(multiprocessing=worker_pool)
             data_reader.run_models()
     else:
         # Create the tester in "existing" mode, and examine the results
