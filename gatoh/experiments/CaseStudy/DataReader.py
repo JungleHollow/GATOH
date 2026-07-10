@@ -255,10 +255,7 @@ class DataReader:
                     agent_obj = pickle.load(pickle_file)
 
                 model_agents = self.agent_objects.setdefault(model_name, [])
-                model_agents.append(deepcopy(agent_obj))
-
-                # Manual garbage collection
-                del agent_obj
+                model_agents.append(agent_obj)
 
         # Next, load the unpopulated Graph objects
         for model_name, graph_path in self.graph_paths.items():
@@ -292,10 +289,10 @@ class DataReader:
                         new_graph.graph.update_edge_by_index(edge_index, edge_object)
 
                 graph_objects = self.graph_objects.setdefault(model_name, [])
-                graph_objects.append(deepcopy(new_graph))
+                graph_objects.append(new_graph)
 
                 # Manual garbage collection
-                del new_graph, nodes_dir, node_names, edges_dir, edge_names
+                del nodes_dir, node_names, edges_dir, edge_names
         return None
 
     def load_models(self, existing_saves: list[str] | None = None) -> None:
@@ -313,10 +310,7 @@ class DataReader:
                 )
                 new_model.load_model(SAVEDIRS[existing_save])
 
-                self.models[existing_save] = deepcopy(new_model)
-
-                # Manual garbage collection
-                del new_model
+                self.models[existing_save] = new_model
             return None
 
         for model_name, model_savedir in SAVEDIRS.items():
@@ -326,10 +320,7 @@ class DataReader:
             )
             new_model.load_model(model_savedir)
 
-            self.models[model_name] = deepcopy(new_model)
-
-            # Manual garbage collection
-            del new_model
+            self.models[model_name] = new_model
         return None
 
     def create_models(
@@ -374,10 +365,7 @@ class DataReader:
             )
 
             # Store the model object
-            self.models[model_name] = deepcopy(new_model)
-
-            # Manual garbage collection
-            del new_model
+            self.models[model_name] = new_model
         return None
 
     def save_models(self, missing_saves: list[str] | None = None) -> None:
