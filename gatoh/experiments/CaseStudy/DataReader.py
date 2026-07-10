@@ -20,7 +20,7 @@ from gatoh.model.model import ABModel
 
 # Declare all relevant global variables here
 DEBUG: bool = True
-MULTIPROCESSING: bool = True
+MULTIPROCESSING: bool = False
 
 SAVEDIR_ROOT: str = "./gatoh/experiments/CaseStudy/Results"
 
