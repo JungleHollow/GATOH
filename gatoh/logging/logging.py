@@ -226,8 +226,6 @@ class GATOHLogger:
     The logging module will contain all functions related to logging and/or printing model progress and information
     both during and after simulation.
 
-    :param model: The parent model that the logger is being attached to.
-    :type model: ABModel
     :param max_iterations: The maximum number of iterations that the parent model is running its simulation for.
     :type max_iterations: int
     :param hierarchies: The names of the social hierarchies present in the parent model.
@@ -246,7 +244,6 @@ class GATOHLogger:
 
     def __init__(
         self,
-        model: Any,
         max_iterations: int,
         hierarchies: list[str],
         verbose: bool = False,
@@ -254,7 +251,6 @@ class GATOHLogger:
         print_outside_interval: bool = True,
         write_file: bool = True,
     ) -> None:
-        self.parent_model: Any = model
         self.verbose: bool = verbose
         self.print_interval: int = print_interval
         self.print_outside_interval: bool = print_outside_interval

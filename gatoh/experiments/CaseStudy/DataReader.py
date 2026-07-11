@@ -248,8 +248,8 @@ class DataReader:
 
             # Create the ABModel for this instance
             new_model: ABModel = ABModel(
-                deepcopy(model_parameters.hierarchy_names),
-                deepcopy(list(model_parameters.hierarchy_rw_distributions.values())),
+                model_parameters.hierarchy_names,
+                list(model_parameters.hierarchy_rw_distributions.values()),
                 agent_opinion_rw=model_parameters.agent_opinion_rw,
                 iterations=model_parameters.max_iterations,
                 silencing_threshold=model_parameters.silencing_threshold,

@@ -88,8 +88,8 @@ class ABModel:
 
         self.agent_opinion_rw: tuple[float, float] = agent_opinion_rw
 
-        self.agents: AgentSet = AgentSet(self)
-        self.graphs: GraphSet = GraphSet(self)
+        self.agents: AgentSet = AgentSet()
+        self.graphs: GraphSet = GraphSet()
 
         # A model-handled 'base' Graph that keeps track of all relationships across the social hierarchies
         # (Used to greatly simplify network-level graph calculations)
@@ -97,7 +97,7 @@ class ABModel:
             "base", (0.0, 0.0), suppress_warnings=suppress_warnings
         )
 
-        self.logger: GATOHLogger = GATOHLogger(self, iterations, hierarchy_names)
+        self.logger: GATOHLogger = GATOHLogger(iterations, hierarchy_names)
 
         self.visualise: bool = visualise
         self.visualisation_dir: str = visualisation_dir
