@@ -15,6 +15,7 @@ from rustworkx import NodeIndices
 from gatoh.agents.agents import Agent
 from gatoh.graphs.graphs import Graph, GraphEdge, GraphNode
 from gatoh.model.model import ABModel
+from gatoh.utils.utils import random_coinflip
 
 # Declare all relevant global variables here
 DEBUG: bool = True
@@ -130,12 +131,12 @@ class ModelParameters:
 
     def __init__(self, parameters_dict: dict[str, Any]) -> None:
         self.model_id = parameters_dict["model_id"]
-        self.hierarchy_names = deepcopy(parameters_dict["hierarchies"])
-        self.hierarchy_rw_distributions = deepcopy(parameters_dict["hierarchy_rw"])
+        self.hierarchy_names = parameters_dict["hierarchies"]
+        self.hierarchy_rw_distributions = parameters_dict["hierarchy_rw"]
         self.max_iterations = parameters_dict["iterations"]
 
         if "agent_opinion_rw" in parameters_dict.keys():
-            self.agent_opinion_rw = deepcopy(parameters_dict["agent_opinion_rw"])
+            self.agent_opinion_rw = parameters_dict["agent_opinion_rw"]
         else:
             self.agent_opinion_rw = TEST_PARAMETERS["DEFAULT"]["agent_opinion_rw"]
 
@@ -229,7 +230,7 @@ class DataReader:
                     continue
                 else:
                     param_struct: ModelParameters = ModelParameters(value)
-                    self.model_params[key] = deepcopy(param_struct)
+                    self.model_params[key] = param_struct
 
                     # Also initialise the appropriate object lists
                     self.agent_objects[key] = []
@@ -354,9 +355,9 @@ class DataReader:
             # Add the Agents and Graphs to the new model
             _ = new_model.add_agents(deepcopy(self.agent_objects[model_name]))
             _ = new_model.add_graphs(
-                deepcopy(self.graph_objects[model_name]),
-                deepcopy(model_parameters.hierarchy_names),
-                deepcopy(list(model_parameters.hierarchy_rw_distributions.values())),
+                self.graph_objects[model_name],
+                model_parameters.hierarchy_names,
+                list(model_parameters.hierarchy_rw_distributions.values()),
             )
 
             # Store the model object
@@ -447,7 +448,9 @@ class DataReader:
             print(iteration_print_string)
 
             if model_to_iterate.visualise:
-                model_to_iterate.visualiser.visualiser_iteration()
+                model_to_iterate.visualiser.visualiser_iteration(
+                    model_to_iterate.base_graph, model_to_iterate.current_iteration
+                )
             if model_to_iterate.checkpointing:
                 model_to_iterate.save_model()
 
@@ -527,22 +530,22 @@ class DataReader:
                 agent.id,
                 (
                     -100.0,
-                    deepcopy(collective_changes),
-                    deepcopy(all_neighbour_benefits),
+                    collective_changes,
+                    all_neighbour_benefits,
                 ),
             )
         elif agent.opinion + total_change > 1.0:
             opinion_result = (
                 agent.id,
-                (100.0, deepcopy(collective_changes), deepcopy(all_neighbour_benefits)),
+                (100.0, collective_changes, all_neighbour_benefits),
             )
         else:
             opinion_result = (
                 agent.id,
                 (
                     total_change,
-                    deepcopy(collective_changes),
-                    deepcopy(all_neighbour_benefits),
+                    collective_changes,
+                    all_neighbour_benefits,
                 ),
             )
         return opinion_result
@@ -610,8 +613,6 @@ class DataReader:
                     relative_weighting = 2.0
                 else:  # Agent personality is "erratic"
                     # "erratic" agents act randomly...
-                    from gatoh.utils.utils import random_coinflip
-
                     erratic_coinflip: bool = random_coinflip("bool")
                     if erratic_coinflip:
                         relative_weighting = 2.0
