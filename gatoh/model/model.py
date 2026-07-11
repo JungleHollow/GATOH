@@ -579,7 +579,6 @@ class ABModel:
                 was_radicalised: bool = agent_object.radicalisation(
                     opinion_change_info[1],
                     opinion_change_info[2],
-                    list(self.hierarchy_information.keys()),
                     self.radicalisation_threshold,
                 )
 
@@ -671,7 +670,7 @@ class ABModel:
             else:
                 est_opinion_climate: float = graph.estimate_opinion_climate(agent)
                 is_silenced: tuple[bool, float] = agent.opinion_silencing(
-                    graph.name, est_opinion_climate
+                    est_opinion_climate
                 )
                 silenced[graph.name] = is_silenced[0]
 
