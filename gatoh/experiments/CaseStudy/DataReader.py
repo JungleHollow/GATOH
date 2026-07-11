@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import os
 import pickle
+import tracemalloc
 import warnings
 from copy import deepcopy
 from dataclasses import dataclass
 from itertools import repeat
-from multiprocessing import Pool
+from multiprocessing import Pool, set_start_method
 from typing import Any
 
 import polars as pl
@@ -16,97 +17,6 @@ from gatoh.agents.agents import Agent
 from gatoh.graphs.graphs import Graph, GraphEdge, GraphNode
 from gatoh.model.model import ABModel
 from gatoh.utils.utils import random_coinflip
-
-# Declare all relevant global variables here
-DEBUG: bool = True
-MULTIPROCESSING: bool = False
-
-SAVEDIR_ROOT: str = "./gatoh/experiments/CaseStudy/Results"
-
-VISUALISATION_ROOT: str = f"{SAVEDIR_ROOT}/Visualisations"
-
-SAVEDIRS: dict[str, str] = {
-    "NONMN": f"{SAVEDIR_ROOT}/NONMN",
-    "MINNG": f"{SAVEDIR_ROOT}/MINNG",
-}
-
-SAVEFILES: dict[str, str] = {
-    "NONMN": f"{SAVEDIRS['NONMN']}/NONMN_model_variables.csv",
-    "MINNG": f"{SAVEDIRS['MINNG']}/MINNG_model_variables.csv",
-}
-
-VISDIRS: dict[str, str] = {
-    "NONMN": f"{VISUALISATION_ROOT}/NONMN",
-    "MINNG": f"{VISUALISATION_ROOT}/MINNG",
-}
-
-AGENT_PATHS: dict[str, str] = {
-    "NONMN": "./gatoh/experiments/CaseStudy/Agents/NONMN_Agents",
-    "MINNG": "./gatoh/experiments/CaseStudy/Agents/MINNG_Agents",
-}
-
-GRAPH_PATHS: dict[str, str] = {
-    "NONMN": "./gatoh/experiments/CaseStudy/Graphs/NONMN_Graphs",
-    "MINNG": "./gatoh/experiments/CaseStudy/Graphs/MINNG_Graphs",
-}
-
-BASE_HIERARCHIES: list[str] = [
-    # Removing Age and Gender as graphs for now, as these are much too densely connected for reasonable runtimes
-    # "Age",
-    # "Gender",
-    "Friends",
-    "Family",
-    "Cultural",
-    "Religious",
-    "Geographical",
-    "Social",
-]
-
-HIERARCHY_RW: dict[str, tuple[float, float]] = {
-    # "Age": (0.0, 0.04),
-    # "Gender": (0.0, 0.02),
-    "Friends": (0.0, 0.05),
-    "Family": (0.0, 0.01),
-    "Religious": (0.0, 0.1),
-    "Cultural": (0.0, 0.15),
-    "Geographical": (0.0, 0.0),
-    "Social": (0.0, 0.1),
-}
-
-# The relevant parameters that are defined for the model instances
-TEST_PARAMETERS: dict[str, dict[str, Any]] = {
-    "NONMN": {
-        "model_id": "NONMN",
-        "iterations": 100,
-        "hierarchies": deepcopy(BASE_HIERARCHIES),
-        "hierarchy_rw": deepcopy(HIERARCHY_RW),
-    },
-    "MINNG": {
-        "model_id": "MINNG",
-        "iterations": 100,
-        "hierarchies": deepcopy(BASE_HIERARCHIES),
-        "hierarchy_rw": deepcopy(HIERARCHY_RW),
-    },
-    "DEFAULT": {
-        "iterations": 100,
-        "hierarchies": deepcopy(BASE_HIERARCHIES),
-        "hierarchy_rw": deepcopy(HIERARCHY_RW),
-        "agent_opinion_rw": (0.0, 0.05),
-        "silencing_threshold": 0.95,
-        "negation_threshold": 0.999,
-        "radicalisation_threshold": 0.99,
-        "suppress_warnings": True,
-    },
-}
-
-# Used to assign changeable weightings to different agent attributes throughout the models
-AGENT_PARAMETERS: dict[str, float] = {
-    "age_weighting": 1.1,
-    "gender_weighting": 1.25,
-}
-
-# Specify the dependant variable CSV paths here:
-OPINION_PATHS: dict[str, str] = {}
 
 
 @dataclass
@@ -406,6 +316,10 @@ class DataReader:
         :rtype: ABModel
         """
         while model_to_iterate.current_iteration < model_to_iterate.max_iterations:
+            if DEBUG:
+                # Start tracing memory usage
+                tracemalloc.start()
+
             # Initialise the logger state for the current iteration
             if model_to_iterate.current_iteration == 0:
                 model_to_iterate.logger.new_iteration(init=True)
@@ -437,11 +351,48 @@ class DataReader:
                     # Manual garbage collection
                     del opinion_result
 
+            if DEBUG:
+                # Print memory stats after the main multiprocessed iteration loop
+                current, peak = tracemalloc.get_traced_memory()
+                print(
+                    f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after multiprocessed opinion calc: {current}\n\tPeak memory usage: {peak}"
+                )
+
             model_to_iterate.iteration_opinion_changes(new_agent_opinions)
+
+            if DEBUG:
+                # Print memory stats after the opinion changes are applied
+                current, peak = tracemalloc.get_traced_memory()
+                print(
+                    f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after opinion changes: {current}\n\tPeak memory usage: {peak}"
+                )
+
             model_to_iterate.step()
+
+            if DEBUG:
+                # Print memory stats after the model steps
+                current, peak = tracemalloc.get_traced_memory()
+                print(
+                    f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after stepping: {current}\n\tPeak memory usage: {peak}"
+                )
+
             model_to_iterate.update(worker_pool=WORKER_POOL)
 
+            if DEBUG:
+                # Print memory stats after the multiprocessed update
+                current, peak = tracemalloc.get_traced_memory()
+                print(
+                    f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after updating: {current}\n\tPeak memory usage: {peak}"
+                )
+
             model_to_iterate.logger_iteration()  # Handle the logger's iteration() calculations and call its method
+
+            if DEBUG:
+                # Print memory stats after the logger iteration
+                current, peak = tracemalloc.get_traced_memory()
+                print(
+                    f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after logger iteration: {current}\n\tPeak memory usage: {peak}"
+                )
 
             # Get this iteration's print string (will be formatted appropriately based on the print interval)
             iteration_print_string: str = model_to_iterate.logger.iteration_print()
@@ -451,8 +402,23 @@ class DataReader:
                 model_to_iterate.visualiser.visualiser_iteration(
                     model_to_iterate.base_graph, model_to_iterate.current_iteration
                 )
+
+                if DEBUG:
+                    # Print memory stats after visualiser iteration
+                    current, peak = tracemalloc.get_traced_memory()
+                    print(
+                        f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after visualiser iteration: {current}\n\tPeak memory usage: {peak}"
+                    )
+
             if model_to_iterate.checkpointing:
                 model_to_iterate.save_model()
+
+                if DEBUG:
+                    # Print memory stats after checkpointing
+                    current, peak = tracemalloc.get_traced_memory()
+                    print(
+                        f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after model checkpointing: {current}\n\tPeak memory usage: {peak}"
+                    )
 
             model_to_iterate.current_iteration += 1
         # Call the logger's save_data function which handles data persistence appropriately
@@ -461,12 +427,6 @@ class DataReader:
             print(
                 f"\n\nGATOH logger data was successfully written to the file at path: {model_to_iterate.data_file}\n\n"
             )
-        if model_to_iterate.visualise:
-            # Make sure that the pyplot figure is closed after iterations to prevent excess memory usage
-            import matplotlib.pyplot as plt  # Just using pyplot for this single code block
-
-            plt.close(model_to_iterate.fig)
-            del model_to_iterate.fig, model_to_iterate.ax
         return model_to_iterate
 
     def custom_iter_opinion_calc(
@@ -675,10 +635,100 @@ class DataReader:
 
 
 if __name__ == "__main__":
-    if MULTIPROCESSING:
-        WORKER_POOL = Pool()
-    else:
-        WORKER_POOL = None
+    # Declare all relevant global variables here
+    DEBUG: bool = True
+    MULTIPROCESSING: bool = True
+
+    SAVEDIR_ROOT: str = "./gatoh/experiments/CaseStudy/Results"
+
+    VISUALISATION_ROOT: str = f"{SAVEDIR_ROOT}/Visualisations"
+
+    SAVEDIRS: dict[str, str] = {
+        "NONMN": f"{SAVEDIR_ROOT}/NONMN",
+        "MINNG": f"{SAVEDIR_ROOT}/MINNG",
+    }
+
+    SAVEFILES: dict[str, str] = {
+        "NONMN": f"{SAVEDIRS['NONMN']}/NONMN_model_variables.csv",
+        "MINNG": f"{SAVEDIRS['MINNG']}/MINNG_model_variables.csv",
+    }
+
+    VISDIRS: dict[str, str] = {
+        "NONMN": f"{VISUALISATION_ROOT}/NONMN",
+        "MINNG": f"{VISUALISATION_ROOT}/MINNG",
+    }
+
+    AGENT_PATHS: dict[str, str] = {
+        "NONMN": "./gatoh/experiments/CaseStudy/Agents/NONMN_Agents",
+        "MINNG": "./gatoh/experiments/CaseStudy/Agents/MINNG_Agents",
+    }
+
+    GRAPH_PATHS: dict[str, str] = {
+        "NONMN": "./gatoh/experiments/CaseStudy/Graphs/NONMN_Graphs",
+        "MINNG": "./gatoh/experiments/CaseStudy/Graphs/MINNG_Graphs",
+    }
+
+    BASE_HIERARCHIES: list[str] = [
+        # Removing Age and Gender as graphs for now, as these are much too densely connected for reasonable runtimes
+        # "Age",
+        # "Gender",
+        "Friends",
+        "Family",
+        "Cultural",
+        "Religious",
+        "Geographical",
+        "Social",
+    ]
+
+    HIERARCHY_RW: dict[str, tuple[float, float]] = {
+        # "Age": (0.0, 0.04),
+        # "Gender": (0.0, 0.02),
+        "Friends": (0.0, 0.05),
+        "Family": (0.0, 0.01),
+        "Religious": (0.0, 0.1),
+        "Cultural": (0.0, 0.15),
+        "Geographical": (0.0, 0.0),
+        "Social": (0.0, 0.1),
+    }
+
+    # The relevant parameters that are defined for the model instances
+    TEST_PARAMETERS: dict[str, dict[str, Any]] = {
+        "NONMN": {
+            "model_id": "NONMN",
+            "iterations": 100,
+            "hierarchies": deepcopy(BASE_HIERARCHIES),
+            "hierarchy_rw": deepcopy(HIERARCHY_RW),
+        },
+        "MINNG": {
+            "model_id": "MINNG",
+            "iterations": 100,
+            "hierarchies": deepcopy(BASE_HIERARCHIES),
+            "hierarchy_rw": deepcopy(HIERARCHY_RW),
+        },
+        "DEFAULT": {
+            "iterations": 100,
+            "hierarchies": deepcopy(BASE_HIERARCHIES),
+            "hierarchy_rw": deepcopy(HIERARCHY_RW),
+            "agent_opinion_rw": (0.0, 0.05),
+            "silencing_threshold": 0.95,
+            "negation_threshold": 0.999,
+            "radicalisation_threshold": 0.99,
+            "suppress_warnings": True,
+        },
+    }
+
+    # Used to assign changeable weightings to different agent attributes throughout the models
+    AGENT_PARAMETERS: dict[str, float] = {
+        "age_weighting": 1.1,
+        "gender_weighting": 1.25,
+    }
+
+    # Specify the dependant variable CSV paths here:
+    OPINION_PATHS: dict[str, str] = {}
+
+    # Use "spawn" as the default to optimise memory usage and cross-platform compatibility
+    set_start_method("spawn", force=True)
+    WORKER_POOL = Pool() if MULTIPROCESSING else None
 
     if not os.path.exists(SAVEDIR_ROOT):
         os.mkdir(SAVEDIR_ROOT)

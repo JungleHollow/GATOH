@@ -263,7 +263,7 @@ class ABModel:
 
     def add_graphs(
         self,
-        graphs: list[Graph | str],
+        graphs: list[Graph] | list[str],
         names: list[str],
         rw_params: list[tuple[float, float]],
     ) -> GraphSet:
@@ -271,7 +271,7 @@ class ABModel:
         Add new Graphs to the Model's GraphSet.
 
         :param graphs: Graph objects or filepaths to stored GraphML objects.
-        :type graphs: list[Graph | str]
+        :type graphs: list[Graph] | list[str]
         :param names: The corresponding social hierarchy names to give to the Graphs.
         :type names: list[str]
         :param rw_params: The (mean, variance) to assign to the hierarchy when determining normal distributions for random walk dynamic relationships.
