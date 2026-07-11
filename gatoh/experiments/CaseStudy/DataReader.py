@@ -102,6 +102,7 @@ class DataReader:
         agent_paths: dict[str, str],
         graph_paths: dict[str, str],
         initial_hierarchies: list[str],
+        agent_parameters: dict[str, float],
         test_parameters: dict[str, dict[str, Any]],
         opinion_paths: dict[str, str] | None = None,
         existing: bool = False,
@@ -110,7 +111,8 @@ class DataReader:
         :param agent_paths: A <model name : path> mapping pointing to the subdirectories at which each model's Agent objects are saved.
         :param graph_paths: A <model name: path> mapping pointing to the subdirectories at which each model's Graph objects are saved.
         :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
-        :param test_parameters: A <model: parameters> mapping specifying explicit initialisation and runtime parameters for each model.
+        :param agent_parameters: A <parameter : value> mapping specifying any additional, relevant parameters for agents in this experiment.
+        :param test_parameters: A <model : parameters> mapping specifying explicit initialisation and runtime parameters for each model.
         :param opinion_paths: An optional <model name: path> mapping pointing to csv files containing dependant variable data (for model validation after running).
         :param existing: A flag indicating if the DataReader is loading an existing experiment.
         """
@@ -120,6 +122,8 @@ class DataReader:
         self.graph_paths: dict[str, str] = graph_paths
 
         self.initial_hierarchies: list[str] = initial_hierarchies
+
+        self.agent_parameters: dict[str, float] = agent_parameters
 
         self.opinion_paths: dict[str, str] | None = opinion_paths
         self.opinion_dfs: dict[str, pl.DataFrame] = {}
@@ -588,16 +592,16 @@ class DataReader:
 
             # Account for "Age" and "Gender" as further modifiers to the relative weighting
             if neighbour_node.agent.get_attribute("age") == agent.get_attribute("age"):
-                relative_weighting *= AGENT_PARAMETERS["age_weighting"]
+                relative_weighting *= self.agent_parameters["age_weighting"]
             else:
-                relative_weighting *= 1.0 / AGENT_PARAMETERS["age_weighting"]
+                relative_weighting *= 1.0 / self.agent_parameters["age_weighting"]
 
             if neighbour_node.agent.get_attribute("gender") == agent.get_attribute(
                 "gender"
             ):
-                relative_weighting *= AGENT_PARAMETERS["gender_weighting"]
+                relative_weighting *= self.agent_parameters["gender_weighting"]
             else:
-                relative_weighting *= 1.0 / AGENT_PARAMETERS["gender_weighting"]
+                relative_weighting *= 1.0 / self.agent_parameters["gender_weighting"]
 
             weighted_deltas.append(weighted_delta)
             delta_weightings.append(relative_weighting)
@@ -758,6 +762,7 @@ if __name__ == "__main__":
             AGENT_PATHS,
             GRAPH_PATHS,
             BASE_HIERARCHIES,
+            AGENT_PARAMETERS,
             TEST_PARAMETERS,
             opinion_paths=None,
         )
@@ -775,6 +780,7 @@ if __name__ == "__main__":
             AGENT_PATHS,
             GRAPH_PATHS,
             BASE_HIERARCHIES,
+            AGENT_PARAMETERS,
             TEST_PARAMETERS,
             opinion_paths=OPINION_PATHS,
             existing=True,
