@@ -37,6 +37,7 @@ Fixes
 - Fixed the accessing of Agent :attr:`~gatoh.agents.agents.Agent.personal_benefit` attributes in :meth:`ResponseParser.custom_iterate`
   for the planned case study experiment
 - Fixed the radicalisation checks in :meth:`~gatoh.model.model.ABModel.iteration_opinion_changes` to stop repeated deradicalisation of agents
+- MAJOR: Fixed numerous variable declarations and added manual garbage collection throughout various functions to prevent memory leaks during model runtimes
 
 0.1.0-alpha
 ===========
