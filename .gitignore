@@ -28,3 +28,16 @@ gatoh/experiments/CaseStudy/Graphs/
 build/
 dist/
 gatoh/experiments/CaseStudy/Results
+gatoh/experiments/CaseStudy/__pycache__/
+gatoh/experiments/Base/__pycache__/
+gatoh/experiments/Base/GraphAlgorithms/__pycache__/
+gatoh/experiments/Base/InfluentialAgents/__pycache__/
+gatoh/experiments/Base/RandomWalk/__pycache__/
+gatoh/experiments/Base/SocialSusceptibility/__pycache__/
+gatoh/agents/__pycache__/
+gatoh/__pycache__/
+gatoh/logging/__pycache__/
+gatoh/model/__pycache__/
+gatoh/tests/__pycache__/
+gatoh/utils/__pycache__/
+gatoh/visualisation/__pycache__/
