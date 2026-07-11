@@ -3,12 +3,10 @@ from __future__ import annotations
 import os
 import pickle
 import warnings
-from contextlib import closing
 from copy import deepcopy
 from dataclasses import dataclass
 from itertools import repeat
 from multiprocessing import Pool
-from operator import mul
 from typing import Any
 
 import polars as pl

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import os
 from copy import deepcopy
 from datetime import datetime
@@ -21,7 +22,6 @@ from gatoh.graphs.graphs import Graph, GraphEdge, GraphSet
 from gatoh.logging.logging import GATOHLogger
 from gatoh.utils.utils import (
     EdgeChanges,
-    NodeChanges,
     YamlLoader,
     create_config_file,
 )
@@ -108,9 +108,10 @@ class ABModel:
         # Only create the visualisation objects if visualisation is required
         if self.visualise:
             self.visualiser = ABVisualiser(
-                self, self.visualisation_dir, aggregation_method=vis_aggregation_method
+                self.visualisation_dir,
+                aggregation_method=vis_aggregation_method,
+                save_visualisations=self.visualise,
             )
-            self.fig, self.ax = plt.subplots()
 
         self.current_iteration: int = 0
         self.max_iterations: int = iterations
@@ -471,7 +472,9 @@ class ABModel:
             print(iteration_print_string)
 
             if self.visualise:
-                self.visualiser.visualiser_iteration()
+                self.visualiser.visualiser_iteration(
+                    self.base_graph, self.current_iteration
+                )
             if self.checkpointing:
                 self.save_model()
 
@@ -482,10 +485,6 @@ class ABModel:
             print(
                 f"\n\nGATOH logger data was successfully written to the file at path: {self.data_file}\n\n"
             )
-        if self.visualise:
-            # Make sure that the pyplot figure is closed after iterations to prevent excess memory usage
-            plt.close(self.fig)
-            del self.fig, self.ax
         return None
 
     def iteration_opinion_calculation(
@@ -536,22 +535,22 @@ class ABModel:
                 agent.id,
                 (
                     -100.0,
-                    deepcopy(collective_changes),
-                    deepcopy(all_neighbour_benefits),
+                    collective_changes,
+                    all_neighbour_benefits,
                 ),
             )
         elif agent.opinion + total_change > 1.0:
             opinion_result = (
                 agent.id,
-                (100.0, deepcopy(collective_changes), deepcopy(all_neighbour_benefits)),
+                (100.0, collective_changes, all_neighbour_benefits),
             )
         else:
             opinion_result = (
                 agent.id,
                 (
                     total_change,
-                    deepcopy(collective_changes),
-                    deepcopy(all_neighbour_benefits),
+                    collective_changes,
+                    all_neighbour_benefits,
                 ),
             )
         return opinion_result
@@ -888,10 +887,11 @@ class ABModel:
                         "weighting": [graph_edge.weighting],
                         "name": [hierarchy.name],
                     }
-                    self.base_graph.add_edges(deepcopy(new_edge))
+                    self.base_graph.add_edges(new_edge)
 
                     # Manual garbage collection
                     del new_edge
+                    _ = gc.collect()
         return None
 
     def get_base_indices_from_edge(
@@ -947,11 +947,13 @@ class ABModel:
 
             # Manual garbage collection
             del graph_edge, base_from_idx, base_to_idx
+            _ = gc.collect()
 
-        self.base_graph.add_edges(deepcopy(new_edges))
+        self.base_graph.add_edges(new_edges)
 
         # Manual garbage collection
         del new_edges
+        _ = gc.collect()
 
         return None
 

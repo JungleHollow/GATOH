@@ -7,12 +7,8 @@ import warnings
 import zipfile
 from collections.abc import Iterable
 from copy import deepcopy
-from multiprocessing import Pool
 from shutil import rmtree
 from typing import Any, Iterator, override
-
-import numpy as np
-import polars as pl
 
 from gatoh.utils.utils import draw_random_value, random_coinflip, value_rw_delta
 
@@ -380,7 +376,6 @@ class Agent:
 
     def opinion_silencing(
         self,
-        hierarchy: str,
         estimated_opinion_climate: float,
         silencing_threshold: float | None = None,
     ) -> tuple[bool, float]:
@@ -389,8 +384,6 @@ class Agent:
 
         If no silencing threshold has been passed, each Agent's own social susceptibility is used as the threshold instead.
 
-        :param hierarchy: The name of the social hierarchy that opinion silencing is being checked in.
-        :type hierarchy: str
         :param estimated_opinion_climate: The opinion climate perceived by the Agent in this hierarchy (not necessarily objectively 'accurate').
         :type estimated_opinion_climate: float
         :param silencing_threshold: A hierarchy or global silencing threshold that must be surpassed for silencing to occur.
@@ -461,7 +454,6 @@ class Agent:
         self,
         hierarchy_changes: list[float],
         neighbour_benefits: list[bool],
-        hierarchies: list[str],
         threshold: float,
     ) -> bool:
         """
@@ -472,8 +464,6 @@ class Agent:
         :type hierarchy_changes: list[float]
         :param neighbour_benefits: Flags indicating the presence of personal benefit across an agent's neighbours.
         :type neighbour_benefits: list[bool]
-        :param hierarchy_names: Hierarchy names in an order corresponding to the passed hierarchy changes.
-        :type hierarchy_names: list[str]
         :param threshold: The radicalisation threshold that has been defined at the global level in the model.
         :type threshold: float
         :return: A flag indicating if the Agent has become radicalised or not.
@@ -656,8 +646,7 @@ class AgentSet:
     :type model: ABModel
     """
 
-    def __init__(self, model: Any) -> None:
-        self.parent_model: Any = model
+    def __init__(self) -> None:
         self.agents: list[Agent] = []
         self.random: rd.Random = rd.Random()
 

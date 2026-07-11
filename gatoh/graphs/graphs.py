@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import gc
 import os
 import pickle
 import warnings
@@ -12,13 +13,11 @@ from shutil import rmtree
 from typing import Any, Self, override
 
 import numpy as np
-import polars as pl
 import rustworkx as rx
 
 from gatoh.agents.agents import Agent
 from gatoh.utils.utils import (
     EdgeChanges,
-    NodeChanges,
     beta_value_attenuation,
     connected_watts_strogatz_graph,
     random_coinflip,
@@ -355,7 +354,7 @@ class Graph:
         Will also update the graph edge_count attribute.
         """
         for idx, data in self.graph.edge_index_map().items():
-            graph_edge: GraphEdge = deepcopy(data[2])
+            graph_edge: GraphEdge = data[2]
             if (
                 type(graph_edge) is list
             ):  # Workaround for unknown error where a list of a single GraphEdge is added to the base graph at some point
@@ -402,7 +401,7 @@ class Graph:
                             weighting=weightings[i],
                             rw_params=rw_params[i],
                         )
-                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                        graph_edges.append((from_nodes[i], to_nodes[i], edge))
                 else:
                     for i in range(len(from_nodes)):
                         edge = GraphEdge(
@@ -411,7 +410,7 @@ class Graph:
                             to_nodes[i],
                             weighting=weightings[i],
                         )
-                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                        graph_edges.append((from_nodes[i], to_nodes[i], edge))
             else:
                 if rw_params:
                     for i in range(len(from_nodes)):
@@ -427,7 +426,7 @@ class Graph:
                         edge = GraphEdge(
                             self.name, from_nodes[i], to_nodes[i], weightings[i]
                         )
-                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                        graph_edges.append((from_nodes[i], to_nodes[i], edge))
         else:
             if names:
                 if rw_params:
@@ -435,11 +434,11 @@ class Graph:
                         edge = GraphEdge(
                             names[i], from_nodes[i], to_nodes[i], rw_params=rw_params[i]
                         )
-                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                        graph_edges.append((from_nodes[i], to_nodes[i], edge))
                 else:
                     for i in range(len(from_nodes)):
                         edge = GraphEdge(names[i], from_nodes[i], to_nodes[i])
-                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                        graph_edges.append((from_nodes[i], to_nodes[i], edge))
             else:
                 if rw_params:
                     for i in range(len(from_nodes)):
@@ -449,11 +448,11 @@ class Graph:
                             to_nodes[i],
                             rw_params=rw_params[i],
                         )
-                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                        graph_edges.append((from_nodes[i], to_nodes[i], edge))
                 else:
                     for i in range(len(from_nodes)):
                         edge = GraphEdge(self.name, from_nodes[i], to_nodes[i])
-                        graph_edges.append((from_nodes[i], to_nodes[i], deepcopy(edge)))
+                        graph_edges.append((from_nodes[i], to_nodes[i], edge))
 
         _ = self.graph.add_edges_from(graph_edges)
         self.update_edge_indices()
@@ -560,6 +559,11 @@ class Graph:
                     sbm_sizes, sbm_probabilities, False
                 )  # "False" to disallow existence of self loops in the graph
                 self.generation_method = "blockmodel"
+
+                # Manual garbage collection
+                del sbm_sizes, sbm_probabilities
+                _ = gc.collect()
+
             case _:
                 self.generation_method = "INVALID"
                 raise ValueError(
@@ -567,8 +571,8 @@ class Graph:
                 )
 
         graph_nodes: list[GraphNode] = []
-        for index, node in enumerate(generated_graph.nodes()):
-            graph_node: GraphNode = GraphNode(deepcopy(agents[index]))
+        for index in range(len(generated_graph.nodes())):
+            graph_node: GraphNode = GraphNode(agents[index])
             graph_node.set_index(index)
             graph_nodes.append(graph_node)
         for idx, graph_node in enumerate(graph_nodes):
@@ -588,7 +592,7 @@ class Graph:
             )
 
             self.graph.update_edge_by_index(
-                index, deepcopy(graph_edge)
+                index, graph_edge
             )  # Update the edge with a GraphEdge object
 
         # Update the node and edge counts manually as no call to update_x_indices() have been made
@@ -724,7 +728,10 @@ class Graph:
         """
         changes_register: dict[str, EdgeChanges] = deepcopy(self.pending_edge_changes)
 
+        # Manual garbage collection
         del self.pending_edge_changes
+        _ = gc.collect()
+
         self.pending_edge_changes = {}
 
         return changes_register
@@ -738,7 +745,7 @@ class Graph:
         """
         self.graph.remove_node(node)
 
-        edges_to_remove = []
+        edges_to_remove: list[tuple[int, int]] = []
         for edge in self.graph.edges():
             if edge.from_node == node or edge.to_node == node:
                 edges_to_remove.append((edge.from_node, edge.to_node))
@@ -1019,7 +1026,7 @@ class Graph:
         direct_neighbours: list[GraphNode] | None = self.get_neighbours(agent)
         if direct_neighbours is not None:
             for direct_neighbour in direct_neighbours:
-                observed_opinion: float = deepcopy(direct_neighbour.agent.opinion)
+                observed_opinion: float = direct_neighbour.agent.opinion
                 observed_opinions[direct_neighbour.agent.id] = observed_opinion
         else:
             # Set it to an empty list to simplify the `node in direct_neighbours` check below
@@ -1030,7 +1037,7 @@ class Graph:
                 # Only look at indirect neighbours
                 continue
 
-            raw_observed_opinion: float = deepcopy(node.agent.opinion)
+            raw_observed_opinion: float = node.agent.opinion
             attenuated_opinion: float = beta_value_attenuation(raw_observed_opinion)
 
             if -0.5 > attenuated_opinion > 0.5:
@@ -1054,7 +1061,7 @@ class Graph:
         direct_neighbours: list[GraphNode] | None = self.get_neighbours(agent)
         if direct_neighbours is not None:
             for direct_neighbour in direct_neighbours:
-                observed_opinion: float = deepcopy(direct_neighbour.agent.opinion)
+                observed_opinion: float = direct_neighbour.agent.opinion
                 observed_opinions.append(observed_opinion)
         else:
             # Set it to an empty list to simplify the `node in direct_neighbours` check below
@@ -1065,7 +1072,7 @@ class Graph:
                 # Only look at indirect neighbours
                 continue
 
-            raw_observed_opinion: float = deepcopy(node.agent.opinion)
+            raw_observed_opinion: float = node.agent.opinion
             attenuated_opinion: float = beta_value_attenuation(raw_observed_opinion)
 
             if (
@@ -1152,14 +1159,11 @@ class GraphSet:
     A class that will collect all of the different social hierarchy graphs in the same structure
     and provide utilities using this collection.
 
-    :param model: The parent model that this GraphSet is being attached to.
-    :type model: ABModel
     :param graphs: Existing Graph objects that should be added to the GraphSet.
     :type graphs: list[Graph], optional
     """
 
-    def __init__(self, model: Any, graphs: list[Graph] | None = None) -> None:
-        self.parent_model: Any = model
+    def __init__(self, graphs: list[Graph] | None = None) -> None:
         self.graphs: list[Graph] = []
         if graphs:
             self.graphs = graphs
