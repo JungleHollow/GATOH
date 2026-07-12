@@ -389,7 +389,7 @@ class DataReader:
                     f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after updating: {current}\n\tPeak memory usage: {peak}"
                 )
 
-            model_to_iterate.logger_iteration()  # Handle the logger's iteration() calculations and call its method
+            model_to_iterate.logger_iteration(worker_pool=WORKER_POOL)  # Handle the logger's iteration() calculations and call its method
 
             if DEBUG:
                 # Print memory stats after the logger iteration

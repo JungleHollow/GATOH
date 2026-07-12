@@ -6,6 +6,7 @@ import random as rd
 import warnings
 import zipfile
 from collections.abc import Iterable
+import concurrent.futures
 from copy import deepcopy
 from shutil import rmtree
 from typing import Any, Iterator, override
@@ -668,12 +669,16 @@ class AgentSet:
 
         agent_save_paths: list[str] = []
 
-        for agent in self.agents:
-            agent_save_path: str = f"{subdirectory_path}/_agent_{agent.id}.pkl"
-            # Pickle the python Agent object
-            with open(agent_save_path, "wb") as agent_file:
-                pickle.dump(agent, agent_file)
-            agent_save_paths.append(agent_save_path)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            saved_agent_paths = {executor.submit(self.write_agent_pickle, agent, subdirectory_path): agent.id for agent in self.agents}
+            for future in concurrent.futures.as_completed(saved_agent_paths):
+                agent_id = saved_agent_paths[future]
+                try:
+                    save_path = future.result()
+                except Exception as exc:
+                    print(f"Failed to write a pickle for agent {agent_id} with exception: {exc}")
+                else:
+                    agent_save_paths.append(save_path)
 
         zip_path: str = f"{subdirectory_path}.zip"
 
@@ -685,13 +690,47 @@ class AgentSet:
         with zipfile.ZipFile(
             zip_path, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
         ) as subdir_zip:
-            for agent_path in agent_save_paths:
-                subdir_zip.write(agent_path, arcname=f"{os.path.basename(agent_path)}")
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                zipped_agents = {executor.submit(self.zip_agent_pickle, agent_path, subdir_zip): agent_path for agent_path in agent_save_paths}
+                for future in concurrent.futures.as_completed(zipped_agents):
+                    pickle_path = zipped_agents[future]
+                    try:
+                        _ = future.result()
+                    except Exception as exc:
+                        print(f"Failed to zip the agent pickle at path {pickle_path} with exception: {exc}")
 
         # Remove the uncompressed subdirectory if compression was successful
         if os.path.exists(zip_path):
             rmtree(subdirectory_path)
 
+        return None
+
+    def write_agent_pickle(self, agent: Agent, subdirectory_path: str) -> str:
+        """
+        A helper function that allows for multithreading of :meth:`~gatoh.agents.agents.AgentSet.save_agentset`.
+
+        :param agent: The agent that is being saved.
+        :type agent: Agent
+        :param subdirectory_path: The path to the subdirectory in which the agents are being saved.
+        :type subdirectory_path: str
+        :return: The path to which the agent pickle was saved.
+        :rtype: str
+        """
+        agent_save_path: str = f"{subdirectory_path}/_agent_{agent.id}.pkl"
+        with open(agent_save_path, "wb") as agent_pickle:
+            pickle.dump(agent, agent_pickle)
+        return agent_save_path
+
+    def zip_agent_pickle(self, agent_path: str, subdir_zip: zipfile.ZipFile) -> None:
+        """
+        A helper function that allows for multithreading of :meth:`~gatoh.agents.agents.AgentSet.save_agentset`.
+
+        :param agent_path: The path to which the agent was pickled.
+        :type agent_path: str
+        :param subdir_zip: The file handle to the subdirectory's zip file.
+        :type subdir_zip: :class:`~zipfile.ZipFile`
+        """
+        subdir_zip.write(agent_path, arcname=f"{os.path.basename(agent_path)}")
         return None
 
     def load_agentset(self, load_path: str) -> None:

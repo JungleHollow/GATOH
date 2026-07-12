@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import concurrent.futures
 import gc
 import os
 import pickle
@@ -1203,23 +1204,29 @@ class GraphSet:
 
             # Create a nodes subdirectory
             os.mkdir(f"{subdirectory_path}/{graph.name}/nodes")
-            for idx, node in enumerate(graph.graph.nodes()):
-                node_save_path: str = (
-                    f"{subdirectory_path}/{graph.name}/nodes/node_{idx}.pkl"
-                )
-                with open(node_save_path, "wb") as node_file:
-                    pickle.dump(node, node_file)
-                node_save_paths.append(node_save_path)
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                saved_node_paths = {executor.submit(self.write_node_pickle, node, subdirectory_path, graph.name, node.index): node.index for node in graph.graph.nodes()}
+                for future in concurrent.futures.as_completed(saved_node_paths):
+                    node_index = saved_node_paths[future]
+                    try:
+                        node_save_path = future.result()
+                    except Exception as exc:
+                        print(f"Failed to write a pickle for node {node_index} in graph {graph.name} with exception: {exc}")
+                    else:
+                        node_save_paths.append(node_save_path)
 
             # Create an edges subdirectory
             os.mkdir(f"{subdirectory_path}/{graph.name}/edges")
-            for idx, edge in enumerate(graph.graph.edges()):
-                edge_save_path: str = (
-                    f"{subdirectory_path}/{graph.name}/edges/edge_{idx}.pkl"
-                )
-                with open(edge_save_path, "wb") as edge_file:
-                    pickle.dump(edge, edge_file)
-                edge_save_paths.append(edge_save_path)
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                saved_edge_paths = {executor.submit(self.write_edge_pickle, edge, subdirectory_path, graph.name, edge.index): edge.index for edge in graph.graph.edges()}
+                for future in concurrent.futures.as_completed(saved_edge_paths):
+                    edge_index = saved_edge_paths[future]
+                    try:
+                        edge_save_path = future.result()
+                    except Exception as exc:
+                        print(f"Failed to write a pickle for edge {edge_index} in graph {graph.name} with exception: {exc}")
+                    else:
+                        edge_save_paths.append(edge_save_path)
 
         zip_path: str = f"{subdirectory_path}.zip"
 
@@ -1231,29 +1238,114 @@ class GraphSet:
         with zipfile.ZipFile(
             zip_path, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
         ) as subdir_zip:
-            for graph_path in graph_save_paths:
-                graph_path_components: list[str] = graph_path.split("/")
-                subdir_zip.write(
-                    graph_path,
-                    arcname=f"{graph_path_components[-2]}/{graph_path_components[-1]}",
-                )
-            for node_path in node_save_paths:
-                node_path_components: list[str] = node_path.split("/")
-                subdir_zip.write(
-                    node_path,
-                    arcname=f"{node_path_components[-3]}/{node_path_components[-2]}/{node_path_components[-1]}",
-                )
-            for edge_path in edge_save_paths:
-                edge_path_components: list[str] = edge_path.split("/")
-                subdir_zip.write(
-                    edge_path,
-                    arcname=f"{edge_path_components[-3]}/{edge_path_components[-2]}/{edge_path_components[-1]}",
-                )
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                zipped_graphs = {executor.submit(self.zip_graph, graph_path, subdir_zip): graph_path for graph_path in graph_save_paths}
+                for future in concurrent.futures.as_completed(zipped_graphs):
+                    graph_path = zipped_graphs[future]
+                    try:
+                        _ = future.result()
+                    except Exception as exc:
+                        print(f"Failed to zip the graph file at {graph_path} with exception: {exc}")
+
+                zipped_nodes = {executor.submit(self.zip_node, node_path, subdir_zip): node_path for node_path in node_save_paths}
+                for future in concurrent.futures.as_completed(zipped_nodes):
+                    node_path = zipped_nodes[future]
+                    try:
+                        _ = future.result()
+                    except Exception as exc:
+                        print(f"Failed to zip the node file at {node_path} with exception: {exc}")
+
+                zipped_edges = {executor.submit(self.zip_edge, edge_path, subdir_zip): edge_path for edge_path in edge_save_paths}
+                for future in concurrent.futures.as_completed(zipped_edges):
+                    edge_path = zipped_edges[future]
+                    try:
+                        _ = future.result()
+                    except Exception as exc:
+                        print(f"Failed to zip the edge file at {edge_path} with exception: {exc}")
 
         # Remove the uncompressed subdirectory if compression was successful
         if os.path.exists(zip_path):
             rmtree(subdirectory_path)
 
+        return None
+
+    def write_node_pickle(self, graph_node: GraphNode, subdirectory_path: str, graph_name: str, idx: int) -> str:
+        """
+        A helper function that allows for multithreading of :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`.
+
+        :param graph_node: The graph node which is being pickled.
+        :type graph_node: GraphNode
+        :param subdirectory_path: The subdirectory to which the pickled graph node is being written to.
+        :type subdirectory_path: str
+        :param graph_name: The name of the graph that the node belongs to.
+        :type graph_name: str
+        :param idx: The index of the node within its parent graph.
+        :type idx: int
+        :return: The path to which the node pickle was saved to.
+        :rtype: str
+        """
+        node_save_path: str = f"{subdirectory_path}/{graph_name}/nodes/node_{idx}.pkl"
+        with open(node_save_path, "wb") as node_pickle:
+            pickle.dump(graph_node, node_pickle)
+        return node_save_path
+
+    def write_edge_pickle(self, graph_edge: GraphEdge, subdirectory_path: str, graph_name: str, idx: int) -> str:
+        """
+        A helper function that allows for multithreading of :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`.
+
+        :param graph_edge: The graph edge which is being pickled.
+        :type graph_edge: GraphEdge
+        :param subdirectory_path: The subdirectory to which the pickled graph edge is being written to.
+        :type subdirectory_path: str
+        :param graph_name: The name of the graph that the edge belongs to.
+        :type graph_name: str
+        :param idx: The index of the edge within its parent graph.
+        :type idx: int
+        :return: The path to which the edge pickle was saved to.
+        :rtype: str
+        """
+        edge_save_path: str = f"{subdirectory_path}/{graph_name}/edges/edge_{idx}.pkl"
+        with open(edge_save_path, "wb") as edge_pickle:
+            pickle.dump(graph_edge, edge_pickle)
+        return edge_save_path
+
+    def zip_graph(self, graph_save_path: str, subdir_zip: zipfile.ZipFile) -> None:
+        """
+        A helper function that allows for multithreading of :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`.
+
+        :param graph_save_path: The path to which the graph was saved.
+        :type graph_save_path: str
+        :param subdir_zip: The handle of the subdirectory's zip file.
+        :type subdir_zip: :class:`~zipfile.ZipFile`
+        """
+        graph_path_components: list[str] = graph_save_path.split("/")
+        subdir_zip.write(graph_save_path, arcname=f"{graph_path_components[-2]}/{graph_path_components[-1]}")
+        return None
+
+    def zip_node(self, node_save_path: str, subdir_zip: zipfile.ZipFile) -> None:
+        """
+        A helper function that allows for multithreading of :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`.
+
+        :param node_save_path: The path to which the node was pickled.
+        :type node_save_path: str
+        :param subdir_zip: The handle of the subdirectory's zip file.
+        :type subdir_zip: :class:`~zipfile.ZipFile`
+        """
+        node_path_components: list[str] = node_save_path.split("/")
+        subdir_zip.write(node_save_path, arcname=f"{node_path_components[-3]}/{node_path_components[-2]}/{node_path_components[-1]}")
+        return None
+
+    def zip_edge(self, edge_save_path: str, subdir_zip: zipfile.ZipFile) -> None:
+        """
+        A helper function that allows for multithreading of :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`.
+
+        :param edge_save_path: The path to which the edge was pickled.
+        :type edge_save_path: str
+        :param subdir_zip: The handle of the subdirectory's zip file.
+        :type subdir_zip: :class:`~zipfile.ZipFile`
+        """
+        edge_path_components: list[str] = edge_save_path.split("/")
+        subdir_zip.write(edge_save_path, arcname=f"{edge_path_components[-3]}/{edge_path_components[-2]}/{edge_path_components[-1]}")
         return None
 
     def load_graphset(

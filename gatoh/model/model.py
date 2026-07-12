@@ -683,7 +683,7 @@ class ABModel:
                     )
         return (silenced, was_silenced, negation)
 
-    def logger_iteration(self) -> None:
+    def logger_iteration(self, worker_pool: Any | None = None) -> None:
         """
         Calculate any relevant aggregate statistics and then pass these to the logger's iteration() function to be stored.
 
@@ -692,16 +692,19 @@ class ABModel:
             2. Network radicalisation log odds
             3. Layer navigability for each hierarchy
             4. Layer interdependence for each hierarchy
+
+        :param worker_pool: A pool of workers that can distribute the processing of the logger iteration between them.
+        :type worker_pool: :class:`~multiprocessing.Pool`
         """
         aggregate_opinion: float = self.calculate_aggregate_opinion()
         radicalisation_logodds: float = self.calculate_radicalisation_logodds()
-        layer_interdependences: dict[str, float] = {}
-        for hierarchy in self.hierarchy_information.keys():
-            layer_interdependences[hierarchy] = self.calculate_interdependence(
-                self.graphs.get_index(hierarchy)
-            )
 
-        layers_polarisation: dict[str, float] = self.calculate_layers_polarisation()
+        layer_interdependences: dict[str, float] = {}
+        interdepencence_results: list[tuple[str, float]] = self.calculate_interdependences(worker_pool=worker_pool)
+        for interdependence_result in interdepencence_results:
+            layer_interdependences[interdependence_result[0]] = interdependence_result[1]
+
+        layers_polarisation: dict[str, float] = self.calculate_layers_polarisation(worker_pool=worker_pool)
 
         self.logger.iteration(
             aggregate_opinion,
@@ -718,12 +721,14 @@ class ABModel:
         :return: The aggregate network opinion value.
         :rtype: float
         """
-        all_opinions: list[float] = []
-        for agent in self.agents:
-            all_opinions.append(agent.opinion)
+        opinion_sum: float = 0.0
+        opinion_count: int = 0
 
-        opinion_sum: float = sum(all_opinions)
-        average_opinion: float = opinion_sum / len(all_opinions)
+        for agent in self.agents:
+            opinion_sum += agent.opinion
+            opinion_count += 1
+
+        average_opinion: float = opinion_sum / opinion_count
 
         return average_opinion
 
@@ -745,21 +750,41 @@ class ABModel:
             return log_odds
         return 0.0
 
-    def calculate_layers_polarisation(self) -> dict[str, float]:
+    def calculate_layers_polarisation(self, worker_pool: Any | None = None) -> dict[str, float]:
         r"""
         Calculate the polarisation of the opinion climate within each hierarchy by calling each graph's calculate_polarisation() method.
 
+        :param worker_pool: A pool of workers that can distribute the polarisation calculations amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.Pool`
         :return: A <hierarchy : value> mapping containing the polarisation value for each hierarchy.
         :rtype: dict[str, float]
         """
         layers_polarisation: dict[str, float] = {}
 
-        for hierarchy in self.hierarchy_information.keys():
-            layers_polarisation[hierarchy] = self.graphs.calculate_polarisation(
-                hierarchy
-            )
+        if worker_pool is None:
+            for hierarchy in self.hierarchy_information.keys():
+                layers_polarisation[hierarchy] = self.graphs.calculate_polarisation(
+                    hierarchy
+                )
+        else:
+            polarisation_results = worker_pool.map(self.layers_polarisation_multi, self.hierarchy_information.keys())
+            for polarisation_result in polarisation_results:
+                layers_polarisation[polarisation_result[0]] = polarisation_result[1]
 
         return layers_polarisation
+
+    def layers_polarisation_multi(self, hierarchy_name: str) -> tuple[str, float]:
+        """
+        A helper function that allows for multiprocessing of :meth:`~gatoh.model.model.ABModel.calculate_layers_polarisation`.
+
+        :param hierarchy_graph: The name of the hierarchy graph for which the polarisation is being calculated.
+        :type hierarchy_graph: str
+        :return: The name and polarisation value for the given hierarchy.
+        :rtype: tuple[str, float]
+        """
+        polarisation_value: float = self.graphs.calculate_polarisation(hierarchy_name)
+        return (hierarchy_name, polarisation_value)
+
 
     def calculate_navigability(
         self, from_node: tuple[int, int], to_node: tuple[int, int]
@@ -788,6 +813,28 @@ class ABModel:
             "Navigability measure calculation is not yet implemented..."
         )
         return 0.0
+
+    def calculate_interdependences(self, worker_pool: Any | None = None) -> list[tuple[str, float]]:
+        """
+        A helper function that allows for multiprocessing of :meth:`~gatoh.model.model.ABModel.calculate_interdependence`.
+
+        :param worker_pool: A pool of workers that can distribute the interdependence calculations amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.Pool`
+        :return: A list containing the necessary results.
+        :rtype: list[tuple[str, float]]
+        """
+        interdependence_results: list[tuple[str, float]] = []
+        if worker_pool is None:
+            for hierarchy in self.hierarchy_information.keys():
+                interdependence_result: float = self.calculate_interdependence(self.graphs.get_index(hierarchy))
+                interdependence_results.append((hierarchy, interdependence_result))
+        else:
+            result_values = worker_pool.map(self.calculate_interdependence, list(range(len(self.graphs))))
+            for idx, result_value in enumerate(result_values):
+                interdependence_results.append((self.graphs.graphs[idx].name, result_value))
+
+        return interdependence_results
+
 
     def calculate_interdependence(self, layer: int) -> float:
         r"""

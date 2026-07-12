@@ -26,6 +26,10 @@ New Features
 - Multiprocessing added to :meth:`~gatoh.model.model.ABModel.iterate`
 - Multiprocessing added to :meth:`~gatoh.model.model.ABModel.update`
 - Multiprocessing added to the custom iteration function in the :mod:`CaseStudy` experiment
+- Multiprocessing added to :meth:`~gatoh.model.model.calculate_layers_polarisation`
+- Multithreading added to :meth:`~gatoh.agents.agents.AgentSet.save_agentset`
+- Multithreading added to :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`
+- Multiprocessing added to :meth:`~gatoh.model.model.calculate_interdependence`
 
 Fixes
 -----
