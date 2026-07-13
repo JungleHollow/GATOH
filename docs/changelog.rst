@@ -13,7 +13,7 @@ model runtimes and simplify the modelling process.
 New Features
 ------------
 
-- A new way of tracking changes and updating model's base graphs, composed of the following:
+- A new way of tracking changes and updating models' base graphs, composed of the following:
 
   - :class:`~gatoh.utils.utils.NodeChanges`
   - :class:`~gatoh.utils.utils.EdgeChanges`
@@ -26,10 +26,10 @@ New Features
 - Multiprocessing added to :meth:`~gatoh.model.model.ABModel.iterate`
 - Multiprocessing added to :meth:`~gatoh.model.model.ABModel.update`
 - Multiprocessing added to the custom iteration function in the :mod:`CaseStudy` experiment
-- Multiprocessing added to :meth:`~gatoh.model.model.calculate_layers_polarisation`
+- Multiprocessing added to :meth:`~gatoh.model.model.ABModel.calculate_layers_polarisation`
 - Multithreading added to :meth:`~gatoh.agents.agents.AgentSet.save_agentset`
 - Multithreading added to :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`
-- Multiprocessing added to :meth:`~gatoh.model.model.calculate_interdependence`
+- Multiprocessing added to :meth:`~gatoh.model.model.ABModel.calculate_interdependence`
 
 Fixes
 -----
@@ -41,7 +41,7 @@ Fixes
 - Fixed the accessing of Agent :attr:`~gatoh.agents.agents.Agent.personal_benefit` attributes in :meth:`ResponseParser.custom_iterate`
   for the planned case study experiment
 - Fixed the radicalisation checks in :meth:`~gatoh.model.model.ABModel.iteration_opinion_changes` to stop repeated deradicalisation of agents
-- MAJOR: Fixed numerous variable declarations and added manual garbage collection throughout various functions to prevent memory leaks during model runtimes
+- **MAJOR:** Fixed numerous variable declarations and added manual garbage collection throughout various functions to prevent memory leaks during model runtimes
 
 0.1.0-alpha
 ===========

@@ -9,7 +9,7 @@
   <title>gatoh.model.model.ABModel.load_model &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
       <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
 
   
@@ -25,7 +25,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="gatoh.model.model.ABModel.logger_iteration" href="gatoh.model.model.ABModel.logger_iteration.html" />
-    <link rel="prev" title="gatoh.model.model.ABModel.iteration_opinion_changes" href="gatoh.model.model.ABModel.iteration_opinion_changes.html" /> 
+    <link rel="prev" title="gatoh.model.model.ABModel.layers_polarisation_multi" href="gatoh.model.model.ABModel.layers_polarisation_multi.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -68,14 +68,18 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.add_graphs.html">gatoh.model.model.ABModel.add_graphs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_aggregate_opinion.html">gatoh.model.model.ABModel.calculate_aggregate_opinion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_interdependence.html">gatoh.model.model.ABModel.calculate_interdependence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_interdependences.html">gatoh.model.model.ABModel.calculate_interdependences</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_layers_polarisation.html">gatoh.model.model.ABModel.calculate_layers_polarisation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_navigability.html">gatoh.model.model.ABModel.calculate_navigability</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_radicalisation_logodds.html">gatoh.model.model.ABModel.calculate_radicalisation_logodds</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.generate_agents.html">gatoh.model.model.ABModel.generate_agents</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.generate_graphs.html">gatoh.model.model.ABModel.generate_graphs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.get_base_indices_from_edge.html">gatoh.model.model.ABModel.get_base_indices_from_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.init_base_graph.html">gatoh.model.model.ABModel.init_base_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.iterate.html">gatoh.model.model.ABModel.iterate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.iteration_opinion_calculation.html">gatoh.model.model.ABModel.iteration_opinion_calculation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.iteration_opinion_changes.html">gatoh.model.model.ABModel.iteration_opinion_changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.layers_polarisation_multi.html">gatoh.model.model.ABModel.layers_polarisation_multi</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">gatoh.model.model.ABModel.load_model</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.model.model.ABModel.load_model"><code class="docutils literal notranslate"><span class="pre">ABModel.load_model()</span></code></a></li>
 </ul>
@@ -85,6 +89,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.step.html">gatoh.model.model.ABModel.step</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.update.html">gatoh.model.model.ABModel.update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.update_base_graph.html">gatoh.model.model.ABModel.update_base_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.update_multi.html">gatoh.model.model.ABModel.update_multi</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.visualisation.visualisation.ABVisualiser.html">ABVisualiser</a></li>
@@ -122,6 +127,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../api/index.html">GATOH API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../api/model/index.html">&lt;no title&gt;</a></li>
           <li class="breadcrumb-item"><a href="../api/model/ABModel.html">&lt;no title&gt;</a></li>
           <li class="breadcrumb-item"><a href="gatoh.model.model.ABModel.html">ABModel</a></li>
       <li class="breadcrumb-item active">gatoh.model.model.ABModel.load_model</li>
@@ -156,7 +162,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="gatoh.model.model.ABModel.iteration_opinion_changes.html" class="btn btn-neutral float-left" title="gatoh.model.model.ABModel.iteration_opinion_changes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gatoh.model.model.ABModel.layers_polarisation_multi.html" class="btn btn-neutral float-left" title="gatoh.model.model.ABModel.layers_polarisation_multi" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="gatoh.model.model.ABModel.logger_iteration.html" class="btn btn-neutral float-right" title="gatoh.model.model.ABModel.logger_iteration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

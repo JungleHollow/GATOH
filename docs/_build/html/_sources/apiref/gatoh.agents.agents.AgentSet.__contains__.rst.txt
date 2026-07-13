@@ -1,6 +1,0 @@
-﻿gatoh.agents.agents.AgentSet.\_\_contains\_\_
-=============================================
-
-.. currentmodule:: gatoh.agents.agents
-
-.. automethod:: AgentSet.__contains__

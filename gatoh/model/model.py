@@ -52,7 +52,7 @@ class ABModel:
     :type visualise: bool, optional
     :param visualisation_dir: The path to a directory in which all of this model's visualiser outputs should be saved to.
     :type visualisation_dir: str, optional
-    :param vis_aggregation_method: The aggregation method that should be used when relevant for visualisation (i.e. ``median'', ``mean'', etc.).
+    :param vis_aggregation_method: The aggregation method that should be used when relevant for visualisation (i.e. "median", "mean", etc.).
     :type vis_aggregation_method: str, optional
     :param checkpointing: A flag indicating if the model's progress should be saved at the end of each iteration (useful in case of interrupted runtimes).
     :type checkpointing: bool, optional
@@ -858,7 +858,7 @@ class ABModel:
 
         where :math:`|OC'_{i}(j)^{a}|` is Agent :math:`j`'s opinion climate value as perceived by Agent :math:`i`
         in the social hierarchy layer :math:`a`. Although, the absolute of this value should be taken, as this
-        is representative of the real `strength' of a layer.
+        is representative of the real "strength" of a layer.
 
         :param layer: The index of the layer of interest.
         :type layer: int

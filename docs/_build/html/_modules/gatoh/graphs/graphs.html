@@ -8,7 +8,7 @@
   <title>gatoh.graphs.graphs &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/thebelab.css" />
 
   
@@ -46,7 +46,9 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user/index.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/index.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Release Notes</a></li>
 </ul>
@@ -79,6 +81,8 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">concurrent.futures</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
@@ -90,13 +94,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">override</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">rustworkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">rx</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.agents.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">EdgeChanges</span><span class="p">,</span>
-    <span class="n">NodeChanges</span><span class="p">,</span>
     <span class="n">beta_value_attenuation</span><span class="p">,</span>
     <span class="n">connected_watts_strogatz_graph</span><span class="p">,</span>
     <span class="n">random_coinflip</span><span class="p">,</span>
@@ -485,7 +487,7 @@
 <span class="sd">        Will also update the graph edge_count attribute.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_index_map</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">graph_edge</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">graph_edge</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
             <span class="k">if</span> <span class="p">(</span>
                 <span class="nb">type</span><span class="p">(</span><span class="n">graph_edge</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span>
             <span class="p">):</span>  <span class="c1"># Workaround for unknown error where a list of a single GraphEdge is added to the base graph at some point</span>
@@ -535,7 +537,7 @@
                             <span class="n">weighting</span><span class="o">=</span><span class="n">weightings</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                             <span class="n">rw_params</span><span class="o">=</span><span class="n">rw_params</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                         <span class="p">)</span>
-                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge</span><span class="p">)))</span>
+                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">edge</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">from_nodes</span><span class="p">)):</span>
                         <span class="n">edge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span>
@@ -544,7 +546,7 @@
                             <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                             <span class="n">weighting</span><span class="o">=</span><span class="n">weightings</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                         <span class="p">)</span>
-                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge</span><span class="p">)))</span>
+                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">edge</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">rw_params</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">from_nodes</span><span class="p">)):</span>
@@ -560,7 +562,7 @@
                         <span class="n">edge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">weightings</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                         <span class="p">)</span>
-                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge</span><span class="p">)))</span>
+                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">edge</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">names</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">rw_params</span><span class="p">:</span>
@@ -568,11 +570,11 @@
                         <span class="n">edge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span>
                             <span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rw_params</span><span class="o">=</span><span class="n">rw_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                         <span class="p">)</span>
-                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge</span><span class="p">)))</span>
+                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">edge</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">from_nodes</span><span class="p">)):</span>
                         <span class="n">edge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge</span><span class="p">)))</span>
+                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">edge</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">rw_params</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">from_nodes</span><span class="p">)):</span>
@@ -582,11 +584,11 @@
                             <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                             <span class="n">rw_params</span><span class="o">=</span><span class="n">rw_params</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                         <span class="p">)</span>
-                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge</span><span class="p">)))</span>
+                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">edge</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">from_nodes</span><span class="p">)):</span>
                         <span class="n">edge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge</span><span class="p">)))</span>
+                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">edge</span><span class="p">))</span>
 
         <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">graph_edges</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_edge_indices</span><span class="p">()</span>
@@ -611,7 +613,7 @@
 <span class="sd">        :type method: str, optional</span>
 <span class="sd">        :param relationship_range: The valid range of generated relationship strengths (at most, constrained to [-1.0, 1.0]).</span>
 <span class="sd">        :type relationship_range: tuple[float, float], optional</span>
-<span class="sd">        :param ensure_complete: A flag indicating if the generated graph should be complete or not (in the case of `small-world&#39;).</span>
+<span class="sd">        :param ensure_complete: A flag indicating if the generated graph should be complete or not (in the case of &#39;small-world&#39;).</span>
 <span class="sd">        :type ensure_complete: bool, optional</span>
 <span class="sd">        :raises ValueError: If no agents are being passed to this function.</span>
 <span class="sd">        :raises ValueError: If an invalid random generation method is being passed to this function.</span>
@@ -696,6 +698,11 @@
                     <span class="n">sbm_sizes</span><span class="p">,</span> <span class="n">sbm_probabilities</span><span class="p">,</span> <span class="kc">False</span>
                 <span class="p">)</span>  <span class="c1"># &quot;False&quot; to disallow existence of self loops in the graph</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">generation_method</span> <span class="o">=</span> <span class="s2">&quot;blockmodel&quot;</span>
+
+                <span class="c1"># Manual garbage collection</span>
+                <span class="k">del</span> <span class="n">sbm_sizes</span><span class="p">,</span> <span class="n">sbm_probabilities</span>
+                <span class="n">_</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
             <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">generation_method</span> <span class="o">=</span> <span class="s2">&quot;INVALID&quot;</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -703,8 +710,8 @@
                 <span class="p">)</span>
 
         <span class="n">graph_nodes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GraphNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">generated_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
-            <span class="n">graph_node</span><span class="p">:</span> <span class="n">GraphNode</span> <span class="o">=</span> <span class="n">GraphNode</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">agents</span><span class="p">[</span><span class="n">index</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">generated_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">())):</span>
+            <span class="n">graph_node</span><span class="p">:</span> <span class="n">GraphNode</span> <span class="o">=</span> <span class="n">GraphNode</span><span class="p">(</span><span class="n">agents</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
             <span class="n">graph_node</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
             <span class="n">graph_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph_node</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">graph_node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graph_nodes</span><span class="p">):</span>
@@ -724,7 +731,7 @@
             <span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update_edge_by_index</span><span class="p">(</span>
-                <span class="n">index</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">graph_edge</span><span class="p">)</span>
+                <span class="n">index</span><span class="p">,</span> <span class="n">graph_edge</span>
             <span class="p">)</span>  <span class="c1"># Update the edge with a GraphEdge object</span>
 
         <span class="c1"># Update the node and edge counts manually as no call to update_x_indices() have been made</span>
@@ -841,6 +848,8 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+<div class="viewcode-block" id="Graph.register_edge_change">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.register_edge_change.html#gatoh.graphs.graphs.Graph.register_edge_change">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">register_edge_change</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">from_node</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">to_node</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">weighting</span><span class="p">:</span> <span class="nb">float</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -861,8 +870,11 @@
             <span class="n">edge_change</span><span class="p">:</span> <span class="n">EdgeChanges</span> <span class="o">=</span> <span class="n">EdgeChanges</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">weighting</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pending_edge_changes</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">from_agent</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">to_agent</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">edge_change</span>
-            <span class="p">)</span>
+            <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="Graph.get_edge_changes">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.get_edge_changes.html#gatoh.graphs.graphs.Graph.get_edge_changes">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_edge_changes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EdgeChanges</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A getter function that returns the current register of pending edge changes for this graph,</span>
@@ -873,10 +885,14 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">changes_register</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EdgeChanges</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pending_edge_changes</span><span class="p">)</span>
 
+        <span class="c1"># Manual garbage collection</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">pending_edge_changes</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">pending_edge_changes</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="k">return</span> <span class="n">changes_register</span>
+        <span class="k">return</span> <span class="n">changes_register</span></div>
+
 
 <div class="viewcode-block" id="Graph.remove_node">
 <a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.Graph.remove_node.html#gatoh.graphs.graphs.Graph.remove_node">[docs]</a>
@@ -889,7 +905,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
-        <span class="n">edges_to_remove</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">edges_to_remove</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">edge</span><span class="o">.</span><span class="n">from_node</span> <span class="o">==</span> <span class="n">node</span> <span class="ow">or</span> <span class="n">edge</span><span class="o">.</span><span class="n">to_node</span> <span class="o">==</span> <span class="n">node</span><span class="p">:</span>
                 <span class="n">edges_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">edge</span><span class="o">.</span><span class="n">from_node</span><span class="p">,</span> <span class="n">edge</span><span class="o">.</span><span class="n">to_node</span><span class="p">))</span>
@@ -1206,7 +1222,7 @@
         <span class="n">direct_neighbours</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GraphNode</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_neighbours</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">direct_neighbours</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">direct_neighbour</span> <span class="ow">in</span> <span class="n">direct_neighbours</span><span class="p">:</span>
-                <span class="n">observed_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">direct_neighbour</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span><span class="p">)</span>
+                <span class="n">observed_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">direct_neighbour</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span>
                 <span class="n">observed_opinions</span><span class="p">[</span><span class="n">direct_neighbour</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">observed_opinion</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Set it to an empty list to simplify the `node in direct_neighbours` check below</span>
@@ -1217,7 +1233,7 @@
                 <span class="c1"># Only look at indirect neighbours</span>
                 <span class="k">continue</span>
 
-            <span class="n">raw_observed_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span><span class="p">)</span>
+            <span class="n">raw_observed_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span>
             <span class="n">attenuated_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">beta_value_attenuation</span><span class="p">(</span><span class="n">raw_observed_opinion</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">&gt;</span> <span class="n">attenuated_opinion</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
@@ -1234,7 +1250,7 @@
 
 <span class="sd">        :param agent: The agent which is estimating the opinion climate.</span>
 <span class="sd">        :type agent: Agent</span>
-<span class="sd">        :return: The agent&#39;s perceived `aggregated opinion&#39; of this whole social hierarchy.</span>
+<span class="sd">        :return: The agent&#39;s perceived &#39;aggregated opinion&#39; of this whole social hierarchy.</span>
 <span class="sd">        :rtype: float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">observed_opinions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span>
@@ -1244,7 +1260,7 @@
         <span class="n">direct_neighbours</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GraphNode</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_neighbours</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">direct_neighbours</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">direct_neighbour</span> <span class="ow">in</span> <span class="n">direct_neighbours</span><span class="p">:</span>
-                <span class="n">observed_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">direct_neighbour</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span><span class="p">)</span>
+                <span class="n">observed_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">direct_neighbour</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span>
                 <span class="n">observed_opinions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">observed_opinion</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Set it to an empty list to simplify the `node in direct_neighbours` check below</span>
@@ -1255,7 +1271,7 @@
                 <span class="c1"># Only look at indirect neighbours</span>
                 <span class="k">continue</span>
 
-            <span class="n">raw_observed_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span><span class="p">)</span>
+            <span class="n">raw_observed_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span>
             <span class="n">attenuated_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">beta_value_attenuation</span><span class="p">(</span><span class="n">raw_observed_opinion</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="p">(</span>
@@ -1349,14 +1365,11 @@
 <span class="sd">    A class that will collect all of the different social hierarchy graphs in the same structure</span>
 <span class="sd">    and provide utilities using this collection.</span>
 
-<span class="sd">    :param model: The parent model that this GraphSet is being attached to.</span>
-<span class="sd">    :type model: ABModel</span>
 <span class="sd">    :param graphs: Existing Graph objects that should be added to the GraphSet.</span>
 <span class="sd">    :type graphs: list[Graph], optional</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">graphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Graph</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parent_model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">model</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Graph</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Graph</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">graphs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span> <span class="o">=</span> <span class="n">graphs</span>
@@ -1398,23 +1411,29 @@
 
             <span class="c1"># Create a nodes subdirectory</span>
             <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">graph</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">/nodes&quot;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
-                <span class="n">node_save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">graph</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">/nodes/node_</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">.pkl&quot;</span>
-                <span class="p">)</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">node_save_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">node_file</span><span class="p">:</span>
-                    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">node_file</span><span class="p">)</span>
-                <span class="n">node_save_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_save_path</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ThreadPoolExecutor</span><span class="p">()</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+                <span class="n">saved_node_paths</span> <span class="o">=</span> <span class="p">{</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">write_node_pickle</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">index</span><span class="p">):</span> <span class="n">node</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()}</span>
+                <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span><span class="n">saved_node_paths</span><span class="p">):</span>
+                    <span class="n">node_index</span> <span class="o">=</span> <span class="n">saved_node_paths</span><span class="p">[</span><span class="n">future</span><span class="p">]</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">node_save_path</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write a pickle for node </span><span class="si">{</span><span class="n">node_index</span><span class="si">}</span><span class="s2"> in graph </span><span class="si">{</span><span class="n">graph</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> with exception: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">node_save_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_save_path</span><span class="p">)</span>
 
             <span class="c1"># Create an edges subdirectory</span>
             <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">graph</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">/edges&quot;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">()):</span>
-                <span class="n">edge_save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">graph</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">/edges/edge_</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">.pkl&quot;</span>
-                <span class="p">)</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">edge_save_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">edge_file</span><span class="p">:</span>
-                    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">edge_file</span><span class="p">)</span>
-                <span class="n">edge_save_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_save_path</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ThreadPoolExecutor</span><span class="p">()</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+                <span class="n">saved_edge_paths</span> <span class="o">=</span> <span class="p">{</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">write_edge_pickle</span><span class="p">,</span> <span class="n">edge</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">edge</span><span class="o">.</span><span class="n">index</span><span class="p">):</span> <span class="n">edge</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">()}</span>
+                <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span><span class="n">saved_edge_paths</span><span class="p">):</span>
+                    <span class="n">edge_index</span> <span class="o">=</span> <span class="n">saved_edge_paths</span><span class="p">[</span><span class="n">future</span><span class="p">]</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">edge_save_path</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write a pickle for edge </span><span class="si">{</span><span class="n">edge_index</span><span class="si">}</span><span class="s2"> in graph </span><span class="si">{</span><span class="n">graph</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> with exception: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">edge_save_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_save_path</span><span class="p">)</span>
 
         <span class="n">zip_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">.zip&quot;</span>
 
@@ -1424,32 +1443,74 @@
 
         <span class="c1"># Compress the subdirectory to minimise storage, and encapsulate all graphs into a single object</span>
         <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span>
-            <span class="n">zip_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="mi">9</span>
+            <span class="n">zip_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="mi">4</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">subdir_zip</span><span class="p">:</span>
+            <span class="c1"># Zip the graphml files</span>
             <span class="k">for</span> <span class="n">graph_path</span> <span class="ow">in</span> <span class="n">graph_save_paths</span><span class="p">:</span>
                 <span class="n">graph_path_components</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">graph_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
-                <span class="n">subdir_zip</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-                    <span class="n">graph_path</span><span class="p">,</span>
-                    <span class="n">arcname</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">graph_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">graph_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
+                <span class="n">subdir_zip</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">graph_path</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">graph_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">graph_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Zip the node pickles</span>
             <span class="k">for</span> <span class="n">node_path</span> <span class="ow">in</span> <span class="n">node_save_paths</span><span class="p">:</span>
                 <span class="n">node_path_components</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
-                <span class="n">subdir_zip</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-                    <span class="n">node_path</span><span class="p">,</span>
-                    <span class="n">arcname</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">node_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">node_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
+                <span class="n">subdir_zip</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node_path</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">node_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">node_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Zip the edge pickles</span>
             <span class="k">for</span> <span class="n">edge_path</span> <span class="ow">in</span> <span class="n">edge_save_paths</span><span class="p">:</span>
                 <span class="n">edge_path_components</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
-                <span class="n">subdir_zip</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-                    <span class="n">edge_path</span><span class="p">,</span>
-                    <span class="n">arcname</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">edge_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">edge_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">edge_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
+                <span class="n">subdir_zip</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">edge_path</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">edge_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">edge_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">edge_path_components</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Remove the uncompressed subdirectory if compression was successful</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">zip_path</span><span class="p">):</span>
             <span class="n">rmtree</span><span class="p">(</span><span class="n">subdirectory_path</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="GraphSet.write_node_pickle">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.write_node_pickle.html#gatoh.graphs.graphs.GraphSet.write_node_pickle">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_node_pickle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_node</span><span class="p">:</span> <span class="n">GraphNode</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">graph_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that allows for multithreading of :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`.</span>
+
+<span class="sd">        :param graph_node: The graph node which is being pickled.</span>
+<span class="sd">        :type graph_node: GraphNode</span>
+<span class="sd">        :param subdirectory_path: The subdirectory to which the pickled graph node is being written to.</span>
+<span class="sd">        :type subdirectory_path: str</span>
+<span class="sd">        :param graph_name: The name of the graph that the node belongs to.</span>
+<span class="sd">        :type graph_name: str</span>
+<span class="sd">        :param idx: The index of the node within its parent graph.</span>
+<span class="sd">        :type idx: int</span>
+<span class="sd">        :return: The path to which the node pickle was saved to.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node_save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">graph_name</span><span class="si">}</span><span class="s2">/nodes/node_</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">.pkl&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">node_save_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">node_pickle</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">graph_node</span><span class="p">,</span> <span class="n">node_pickle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node_save_path</span></div>
+
+
+<div class="viewcode-block" id="GraphSet.write_edge_pickle">
+<a class="viewcode-back" href="../../../apiref/gatoh.graphs.graphs.GraphSet.write_edge_pickle.html#gatoh.graphs.graphs.GraphSet.write_edge_pickle">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_edge_pickle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_edge</span><span class="p">:</span> <span class="n">GraphEdge</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">graph_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that allows for multithreading of :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`.</span>
+
+<span class="sd">        :param graph_edge: The graph edge which is being pickled.</span>
+<span class="sd">        :type graph_edge: GraphEdge</span>
+<span class="sd">        :param subdirectory_path: The subdirectory to which the pickled graph edge is being written to.</span>
+<span class="sd">        :type subdirectory_path: str</span>
+<span class="sd">        :param graph_name: The name of the graph that the edge belongs to.</span>
+<span class="sd">        :type graph_name: str</span>
+<span class="sd">        :param idx: The index of the edge within its parent graph.</span>
+<span class="sd">        :type idx: int</span>
+<span class="sd">        :return: The path to which the edge pickle was saved to.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">edge_save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">graph_name</span><span class="si">}</span><span class="s2">/edges/edge_</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">.pkl&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">edge_save_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">edge_pickle</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">graph_edge</span><span class="p">,</span> <span class="n">edge_pickle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">edge_save_path</span></div>
 
 
 <div class="viewcode-block" id="GraphSet.load_graphset">

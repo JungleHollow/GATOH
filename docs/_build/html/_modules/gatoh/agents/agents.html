@@ -8,7 +8,7 @@
   <title>gatoh.agents.agents &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/thebelab.css" />
 
   
@@ -46,7 +46,9 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user/index.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/index.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Release Notes</a></li>
 </ul>
@@ -84,12 +86,10 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">concurrent.futures</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shutil</span><span class="w"> </span><span class="kn">import</span> <span class="n">rmtree</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">override</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">draw_random_value</span><span class="p">,</span> <span class="n">random_coinflip</span><span class="p">,</span> <span class="n">value_rw_delta</span>
 
@@ -303,6 +303,7 @@
 <span class="sd">        Dynamically add an attribute to this Agent object. If &quot;value&quot; is passed, an explicit initial value is given;</span>
 <span class="sd">        if &quot;mean&quot; and &quot;var&quot; are passed, a value is generated from a random distribution.</span>
 <span class="sd">        Supported random distributions are:</span>
+
 <span class="sd">            - &quot;gaussian&quot;</span>
 <span class="sd">            - &quot;beta&quot;</span>
 <span class="sd">            - &quot;gamma&quot;</span>
@@ -491,7 +492,6 @@
 <a class="viewcode-back" href="../../../apiref/gatoh.agents.agents.Agent.opinion_silencing.html#gatoh.agents.agents.Agent.opinion_silencing">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">opinion_silencing</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">estimated_opinion_climate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">silencing_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
@@ -500,8 +500,6 @@
 
 <span class="sd">        If no silencing threshold has been passed, each Agent&#39;s own social susceptibility is used as the threshold instead.</span>
 
-<span class="sd">        :param hierarchy: The name of the social hierarchy that opinion silencing is being checked in.</span>
-<span class="sd">        :type hierarchy: str</span>
 <span class="sd">        :param estimated_opinion_climate: The opinion climate perceived by the Agent in this hierarchy (not necessarily objectively &#39;accurate&#39;).</span>
 <span class="sd">        :type estimated_opinion_climate: float</span>
 <span class="sd">        :param silencing_threshold: A hierarchy or global silencing threshold that must be surpassed for silencing to occur.</span>
@@ -558,14 +556,16 @@
         <span class="c1"># Multiplication by (susceptibility * hierarchy weighting) will always decrease negation strength, whilst division will always increase it</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">personality</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;neutral&quot;</span><span class="p">,</span> <span class="s2">&quot;rational&quot;</span><span class="p">]:</span>
             <span class="c1"># Cases where opinion negation is less likely to occur</span>
-            <span class="n">negation_strength</span> <span class="o">*=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">negation_strength</span> <span class="o">*=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span>
+                <span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">personality</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;erratic&quot;</span><span class="p">,</span> <span class="s2">&quot;impulsive&quot;</span><span class="p">,</span> <span class="s2">&quot;social&quot;</span><span class="p">]:</span>
             <span class="c1"># Cases where opinion negation is more likely to occur</span>
-            <span class="n">negation_strength</span> <span class="o">/=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">negation_strength</span> <span class="o">/=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span>
+                <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">negation_strength</span> <span class="o">&gt;</span> <span class="n">threshold</span></div>
 
@@ -576,7 +576,6 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">hierarchy_changes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
         <span class="n">neighbour_benefits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span>
-        <span class="n">hierarchies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -587,8 +586,6 @@
 <span class="sd">        :type hierarchy_changes: list[float]</span>
 <span class="sd">        :param neighbour_benefits: Flags indicating the presence of personal benefit across an agent&#39;s neighbours.</span>
 <span class="sd">        :type neighbour_benefits: list[bool]</span>
-<span class="sd">        :param hierarchy_names: Hierarchy names in an order corresponding to the passed hierarchy changes.</span>
-<span class="sd">        :type hierarchy_names: list[str]</span>
 <span class="sd">        :param threshold: The radicalisation threshold that has been defined at the global level in the model.</span>
 <span class="sd">        :type threshold: float</span>
 <span class="sd">        :return: A flag indicating if the Agent has become radicalised or not.</span>
@@ -784,8 +781,7 @@
 <span class="sd">    :type model: ABModel</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parent_model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">model</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">:</span> <span class="n">rd</span><span class="o">.</span><span class="n">Random</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">Random</span><span class="p">()</span>
 
@@ -809,12 +805,16 @@
 
         <span class="n">agent_save_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
-            <span class="n">agent_save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">/_agent_</span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.pkl&quot;</span>
-            <span class="c1"># Pickle the python Agent object</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">agent_save_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">agent_file</span><span class="p">:</span>
-                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">agent_file</span><span class="p">)</span>
-            <span class="n">agent_save_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent_save_path</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ThreadPoolExecutor</span><span class="p">()</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+            <span class="n">saved_agent_paths</span> <span class="o">=</span> <span class="p">{</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">write_agent_pickle</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">):</span> <span class="n">agent</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span><span class="n">saved_agent_paths</span><span class="p">):</span>
+                <span class="n">agent_id</span> <span class="o">=</span> <span class="n">saved_agent_paths</span><span class="p">[</span><span class="n">future</span><span class="p">]</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">save_path</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write a pickle for agent </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2"> with exception: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">agent_save_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
 
         <span class="n">zip_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">.zip&quot;</span>
 
@@ -824,7 +824,7 @@
 
         <span class="c1"># Compress the subdirectory to minimise storage and encapsulate all the Agents into a single object</span>
         <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span>
-            <span class="n">zip_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="mi">9</span>
+            <span class="n">zip_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="mi">4</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">subdir_zip</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">agent_path</span> <span class="ow">in</span> <span class="n">agent_save_paths</span><span class="p">:</span>
                 <span class="n">subdir_zip</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">agent_path</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">agent_path</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -834,6 +834,25 @@
             <span class="n">rmtree</span><span class="p">(</span><span class="n">subdirectory_path</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="AgentSet.write_agent_pickle">
+<a class="viewcode-back" href="../../../apiref/gatoh.agents.agents.AgentSet.write_agent_pickle.html#gatoh.agents.agents.AgentSet.write_agent_pickle">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_agent_pickle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that allows for multithreading of :meth:`~gatoh.agents.agents.AgentSet.save_agentset`.</span>
+
+<span class="sd">        :param agent: The agent that is being saved.</span>
+<span class="sd">        :type agent: Agent</span>
+<span class="sd">        :param subdirectory_path: The path to the subdirectory in which the agents are being saved.</span>
+<span class="sd">        :type subdirectory_path: str</span>
+<span class="sd">        :return: The path to which the agent pickle was saved.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">agent_save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">/_agent_</span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.pkl&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">agent_save_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">agent_pickle</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">agent_pickle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">agent_save_path</span></div>
 
 
 <div class="viewcode-block" id="AgentSet.load_agentset">

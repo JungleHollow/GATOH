@@ -1,6 +1,0 @@
-﻿gatoh.graphs.graphs.Graph.\_\_str\_\_
-=====================================
-
-.. currentmodule:: gatoh.graphs.graphs
-
-.. automethod:: Graph.__str__

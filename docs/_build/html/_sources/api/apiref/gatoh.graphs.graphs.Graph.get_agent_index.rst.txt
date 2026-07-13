@@ -1,6 +1,0 @@
-﻿gatoh.graphs.graphs.Graph.get\_agent\_index
-===========================================
-
-.. currentmodule:: gatoh.graphs.graphs
-
-.. automethod:: Graph.get_agent_index

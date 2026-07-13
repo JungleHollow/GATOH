@@ -7,6 +7,7 @@
    :no-members:
    :show-inheritance:
 
+
    .. rubric:: Methods
 
    .. autosummary::
@@ -25,5 +26,6 @@
       ~AgentSet.sample
       ~AgentSet.save_agentset
       ~AgentSet.update_indices
+      ~AgentSet.write_agent_pickle
 
 

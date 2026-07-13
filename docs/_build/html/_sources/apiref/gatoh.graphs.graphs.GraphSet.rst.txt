@@ -7,6 +7,7 @@
    :no-members:
    :show-inheritance:
 
+
    .. rubric:: Methods
 
    .. autosummary::
@@ -23,5 +24,7 @@
       ~GraphSet.list_hierarchies
       ~GraphSet.load_graphset
       ~GraphSet.save_graphset
+      ~GraphSet.write_edge_pickle
+      ~GraphSet.write_node_pickle
 
 

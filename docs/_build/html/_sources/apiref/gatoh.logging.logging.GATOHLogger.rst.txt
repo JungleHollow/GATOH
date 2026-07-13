@@ -7,6 +7,7 @@
    :no-members:
    :show-inheritance:
 
+
    .. rubric:: Methods
 
    .. autosummary::

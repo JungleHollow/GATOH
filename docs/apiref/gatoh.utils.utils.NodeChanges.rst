@@ -9,6 +9,7 @@
 
 
 
+
    .. rubric:: Attributes
 
    .. autoattribute:: opinion

@@ -475,7 +475,7 @@ class Graph:
         :type method: str, optional
         :param relationship_range: The valid range of generated relationship strengths (at most, constrained to [-1.0, 1.0]).
         :type relationship_range: tuple[float, float], optional
-        :param ensure_complete: A flag indicating if the generated graph should be complete or not (in the case of `small-world').
+        :param ensure_complete: A flag indicating if the generated graph should be complete or not (in the case of 'small-world').
         :type ensure_complete: bool, optional
         :raises ValueError: If no agents are being passed to this function.
         :raises ValueError: If an invalid random generation method is being passed to this function.
@@ -1052,7 +1052,7 @@ class Graph:
 
         :param agent: The agent which is estimating the opinion climate.
         :type agent: Agent
-        :return: The agent's perceived `aggregated opinion' of this whole social hierarchy.
+        :return: The agent's perceived 'aggregated opinion' of this whole social hierarchy.
         :rtype: float
         """
         observed_opinions: list[

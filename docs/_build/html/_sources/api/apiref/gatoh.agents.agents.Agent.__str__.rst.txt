@@ -1,6 +1,0 @@
-﻿gatoh.agents.agents.Agent.\_\_str\_\_
-=====================================
-
-.. currentmodule:: gatoh.agents.agents
-
-.. automethod:: Agent.__str__

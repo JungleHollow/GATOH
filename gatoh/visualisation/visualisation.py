@@ -24,7 +24,7 @@ class ABVisualiser:
 
     :param visualisation_dir: A path to a subdirectory to which all relevant visualisation outputs should be saved to.
     :type visualisation_dir: str
-    :param aggregation_method: The method to use for aggregating parameters (i.e. ``mean'', ``median'', etc.).
+    :param aggregation_method: The method to use for aggregating parameters (i.e. "mean", "median", etc.).
     :type aggregation_method: str, optional
     :param save_visualisations: A flag indicating if the visualisation outputs should be saved.
     :type save_visualisations: bool, optional

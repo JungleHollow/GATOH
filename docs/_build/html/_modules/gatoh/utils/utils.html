@@ -8,7 +8,7 @@
   <title>gatoh.utils.utils &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/thebelab.css" />
 
   
@@ -46,7 +46,9 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user/index.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/index.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Release Notes</a></li>
 </ul>
@@ -96,6 +98,8 @@
 <span class="c1"># ========== Graph utils ========== #</span>
 
 
+<div class="viewcode-block" id="NodeChanges">
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.NodeChanges.html#gatoh.utils.utils.NodeChanges">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">NodeChanges</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -126,9 +130,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">opinion</span> <span class="o">=</span> <span class="n">opinion</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">previous_opinion</span> <span class="o">=</span> <span class="n">previous_opinion</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="n">radicalised</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span> <span class="o">=</span> <span class="n">social_weightings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span> <span class="o">=</span> <span class="n">social_weightings</span></div>
 
 
+
+<div class="viewcode-block" id="EdgeChanges">
+<a class="viewcode-back" href="../../../apiref/gatoh.utils.utils.EdgeChanges.html#gatoh.utils.utils.EdgeChanges">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">EdgeChanges</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -145,7 +152,8 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">weighting</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy</span> <span class="o">=</span> <span class="n">hierarchy</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">weighting</span> <span class="o">=</span> <span class="n">weighting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weighting</span> <span class="o">=</span> <span class="n">weighting</span></div>
+
 
 
 <div class="viewcode-block" id="pygraph_to_pydigraph">

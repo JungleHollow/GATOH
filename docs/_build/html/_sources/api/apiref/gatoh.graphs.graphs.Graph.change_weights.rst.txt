@@ -1,6 +1,0 @@
-﻿gatoh.graphs.graphs.Graph.change\_weights
-=========================================
-
-.. currentmodule:: gatoh.graphs.graphs
-
-.. automethod:: Graph.change_weights

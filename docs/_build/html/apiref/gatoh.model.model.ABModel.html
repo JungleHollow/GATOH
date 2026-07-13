@@ -9,7 +9,7 @@
   <title>ABModel &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
       <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
 
   
@@ -69,20 +69,25 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.add_graphs.html">gatoh.model.model.ABModel.add_graphs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_aggregate_opinion.html">gatoh.model.model.ABModel.calculate_aggregate_opinion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_interdependence.html">gatoh.model.model.ABModel.calculate_interdependence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_interdependences.html">gatoh.model.model.ABModel.calculate_interdependences</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_layers_polarisation.html">gatoh.model.model.ABModel.calculate_layers_polarisation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_navigability.html">gatoh.model.model.ABModel.calculate_navigability</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_radicalisation_logodds.html">gatoh.model.model.ABModel.calculate_radicalisation_logodds</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.generate_agents.html">gatoh.model.model.ABModel.generate_agents</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.generate_graphs.html">gatoh.model.model.ABModel.generate_graphs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.get_base_indices_from_edge.html">gatoh.model.model.ABModel.get_base_indices_from_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.init_base_graph.html">gatoh.model.model.ABModel.init_base_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.iterate.html">gatoh.model.model.ABModel.iterate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.iteration_opinion_calculation.html">gatoh.model.model.ABModel.iteration_opinion_calculation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.iteration_opinion_changes.html">gatoh.model.model.ABModel.iteration_opinion_changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.layers_polarisation_multi.html">gatoh.model.model.ABModel.layers_polarisation_multi</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.load_model.html">gatoh.model.model.ABModel.load_model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.logger_iteration.html">gatoh.model.model.ABModel.logger_iteration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.save_model.html">gatoh.model.model.ABModel.save_model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.step.html">gatoh.model.model.ABModel.step</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.update.html">gatoh.model.model.ABModel.update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.update_base_graph.html">gatoh.model.model.ABModel.update_base_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.update_multi.html">gatoh.model.model.ABModel.update_multi</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.visualisation.visualisation.ABVisualiser.html">ABVisualiser</a></li>
@@ -120,6 +125,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../api/index.html">GATOH API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../api/model/index.html">&lt;no title&gt;</a></li>
           <li class="breadcrumb-item"><a href="../api/model/ABModel.html">&lt;no title&gt;</a></li>
       <li class="breadcrumb-item active">ABModel</li>
       <li class="wy-breadcrumbs-aside">
@@ -151,7 +157,7 @@
 <li><p><strong>suppress_warnings</strong> (<em>bool</em><em>, </em><em>optional</em>) – A flag indicating if non-critical runtime warnings should be suppressed.</p></li>
 <li><p><strong>visualise</strong> (<em>bool</em><em>, </em><em>optional</em>) – A flag indicating if the model should visualise emergent behaviour in real time.</p></li>
 <li><p><strong>visualisation_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to a directory in which all of this model’s visualiser outputs should be saved to.</p></li>
-<li><p><strong>vis_aggregation_method</strong> (<em>str</em><em>, </em><em>optional</em>) – The aggregation method that should be used when relevant for visualisation (i.e. <a href="#id1"><span class="problematic" id="id2">``</span></a>median’’, <a href="#id3"><span class="problematic" id="id4">``</span></a>mean’’, etc.).</p></li>
+<li><p><strong>vis_aggregation_method</strong> (<em>str</em><em>, </em><em>optional</em>) – The aggregation method that should be used when relevant for visualisation (i.e. “median”, “mean”, etc.).</p></li>
 <li><p><strong>checkpointing</strong> (<em>bool</em><em>, </em><em>optional</em>) – A flag indicating if the model’s progress should be saved at the end of each iteration (useful in case of interrupted runtimes).</p></li>
 <li><p><strong>save_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to a directory in which all of this model’s non-logger data should be saved to.</p></li>
 <li><p><strong>data_file</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to which the logger’s data should be saved to after iterations are run.</p></li>
@@ -183,29 +189,41 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.calculate_interdependence.html#gatoh.model.model.ABModel.calculate_interdependence" title="gatoh.model.model.ABModel.calculate_interdependence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_interdependence</span></code></a></p></td>
 <td><p>Calculate the layer interdependence; a measure of how much impact a specific layer has in the overall social network.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.calculate_layers_polarisation.html#gatoh.model.model.ABModel.calculate_layers_polarisation" title="gatoh.model.model.ABModel.calculate_layers_polarisation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_layers_polarisation</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.calculate_interdependences.html#gatoh.model.model.ABModel.calculate_interdependences" title="gatoh.model.model.ABModel.calculate_interdependences"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_interdependences</span></code></a></p></td>
+<td><p>A helper function that allows for multiprocessing of <a class="reference internal" href="gatoh.model.model.ABModel.calculate_interdependence.html#gatoh.model.model.ABModel.calculate_interdependence" title="gatoh.model.model.ABModel.calculate_interdependence"><code class="xref py py-meth docutils literal notranslate"><span class="pre">calculate_interdependence()</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.calculate_layers_polarisation.html#gatoh.model.model.ABModel.calculate_layers_polarisation" title="gatoh.model.model.ABModel.calculate_layers_polarisation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_layers_polarisation</span></code></a></p></td>
 <td><p>Calculate the polarisation of the opinion climate within each hierarchy by calling each graph's calculate_polarisation() method.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.calculate_navigability.html#gatoh.model.model.ABModel.calculate_navigability" title="gatoh.model.model.ABModel.calculate_navigability"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_navigability</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.calculate_navigability.html#gatoh.model.model.ABModel.calculate_navigability" title="gatoh.model.model.ABModel.calculate_navigability"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_navigability</span></code></a></p></td>
 <td><p>Calculate the difficulty of navigating from an arbitrary node <span class="math notranslate nohighlight">\(s\)</span> in some layer <span class="math notranslate nohighlight">\(a\)</span> to another arbitrary node <span class="math notranslate nohighlight">\(t\)</span> in some layer <span class="math notranslate nohighlight">\(b\)</span>, where <span class="math notranslate nohighlight">\(a\)</span> and <span class="math notranslate nohighlight">\(b\)</span> may or may not be the same layer.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.calculate_radicalisation_logodds.html#gatoh.model.model.ABModel.calculate_radicalisation_logodds" title="gatoh.model.model.ABModel.calculate_radicalisation_logodds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_radicalisation_logodds</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.calculate_radicalisation_logodds.html#gatoh.model.model.ABModel.calculate_radicalisation_logodds" title="gatoh.model.model.ABModel.calculate_radicalisation_logodds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_radicalisation_logodds</span></code></a></p></td>
 <td><p>Calculates the log odds of an Agent being radicalised within the model.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.generate_agents.html#gatoh.model.model.ABModel.generate_agents" title="gatoh.model.model.ABModel.generate_agents"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_agents</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.generate_agents.html#gatoh.model.model.ABModel.generate_agents" title="gatoh.model.model.ABModel.generate_agents"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_agents</span></code></a></p></td>
 <td><p>Randomly generates a number of Agent objects.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.generate_graphs.html#gatoh.model.model.ABModel.generate_graphs" title="gatoh.model.model.ABModel.generate_graphs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_graphs</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.generate_graphs.html#gatoh.model.model.ABModel.generate_graphs" title="gatoh.model.model.ABModel.generate_graphs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_graphs</span></code></a></p></td>
 <td><p>Randomly generates graphs for the given social hierarchy names using the specified method.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.get_base_indices_from_edge.html#gatoh.model.model.ABModel.get_base_indices_from_edge" title="gatoh.model.model.ABModel.get_base_indices_from_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_base_indices_from_edge</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.get_base_indices_from_edge.html#gatoh.model.model.ABModel.get_base_indices_from_edge" title="gatoh.model.model.ABModel.get_base_indices_from_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_base_indices_from_edge</span></code></a></p></td>
 <td><p>A helper function for the base graph that takes in a GraphEdge object from a hierarchy graph and transforms the node indices from hierarchy graph indices to the respective index of the Agent objects in the model's AgentSet.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.iterate.html#gatoh.model.model.ABModel.iterate" title="gatoh.model.model.ABModel.iterate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iterate</span></code></a></p></td>
-<td><p>Handles the main model iteration loop</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.init_base_graph.html#gatoh.model.model.ABModel.init_base_graph" title="gatoh.model.model.ABModel.init_base_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_base_graph</span></code></a></p></td>
+<td><p>Iterates over all the relationships in the existing social hierarchies and creates corresponding edges within the model's base graph.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.iteration_opinion_changes.html#gatoh.model.model.ABModel.iteration_opinion_changes" title="gatoh.model.model.ABModel.iteration_opinion_changes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iteration_opinion_changes</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.iterate.html#gatoh.model.model.ABModel.iterate" title="gatoh.model.model.ABModel.iterate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iterate</span></code></a></p></td>
+<td><p>Handles the main model iteration loop.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.iteration_opinion_calculation.html#gatoh.model.model.ABModel.iteration_opinion_calculation" title="gatoh.model.model.ABModel.iteration_opinion_calculation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iteration_opinion_calculation</span></code></a></p></td>
+<td><p>A helper function that calculates the per-agent, per-hierarchy changes to opinions for the iteration, returning all necessary information for <code class="xref py py-meth docutils literal notranslate"><span class="pre">iteration_opinion_changes()</span></code> to apply the opinion changes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.iteration_opinion_changes.html#gatoh.model.model.ABModel.iteration_opinion_changes" title="gatoh.model.model.ABModel.iteration_opinion_changes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iteration_opinion_changes</span></code></a></p></td>
 <td><p>A helper function for iterate that simply applies all agent opinion changes and then checks for radicalisation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.layers_polarisation_multi.html#gatoh.model.model.ABModel.layers_polarisation_multi" title="gatoh.model.model.ABModel.layers_polarisation_multi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">layers_polarisation_multi</span></code></a></p></td>
+<td><p>A helper function that allows for multiprocessing of <a class="reference internal" href="gatoh.model.model.ABModel.calculate_layers_polarisation.html#gatoh.model.model.ABModel.calculate_layers_polarisation" title="gatoh.model.model.ABModel.calculate_layers_polarisation"><code class="xref py py-meth docutils literal notranslate"><span class="pre">calculate_layers_polarisation()</span></code></a>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.load_model.html#gatoh.model.model.ABModel.load_model" title="gatoh.model.model.ABModel.load_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_model</span></code></a></p></td>
 <td><p>Loads a model and all its components which have been saved following the processes in the save_model() function.</p></td>
@@ -224,6 +242,9 @@
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.update_base_graph.html#gatoh.model.model.ABModel.update_base_graph" title="gatoh.model.model.ABModel.update_base_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_base_graph</span></code></a></p></td>
 <td><p>Iterates over all the social hierarchy graphs and checks for pending edge changes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.model.model.ABModel.update_multi.html#gatoh.model.model.ABModel.update_multi" title="gatoh.model.model.ABModel.update_multi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_multi</span></code></a></p></td>
+<td><p>A helper function that allows for multiprocessing of the <code class="xref py py-meth docutils literal notranslate"><span class="pre">update()</span></code> function.</p></td>
 </tr>
 </tbody>
 </table>

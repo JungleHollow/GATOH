@@ -9,7 +9,7 @@
   <title>gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
       <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
 
   
@@ -104,6 +104,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../api/index.html">GATOH API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../api/visualisation/index.html">&lt;no title&gt;</a></li>
           <li class="breadcrumb-item"><a href="../api/visualisation/ABVisualiser.html">&lt;no title&gt;</a></li>
           <li class="breadcrumb-item"><a href="gatoh.visualisation.visualisation.ABVisualiser.html">ABVisualiser</a></li>
       <li class="breadcrumb-item active">gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration</li>
@@ -120,9 +121,17 @@
 <h1>gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration<a class="headerlink" href="#gatoh-visualisation-visualisation-abvisualiser-visualiser-iteration" title="Link to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration">
-<span class="sig-prename descclassname"><span class="pre">ABVisualiser.</span></span><span class="sig-name descname"><span class="pre">visualiser_iteration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/gatoh/visualisation/visualisation.html#ABVisualiser.visualiser_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">ABVisualiser.</span></span><span class="sig-name descname"><span class="pre">visualiser_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gatoh.graphs.graphs.Graph.html#gatoh.graphs.graphs.Graph" title="gatoh.graphs.graphs.Graph"><span class="pre">Graph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_iteration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/gatoh/visualisation/visualisation.html#ABVisualiser.visualiser_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration" title="Link to this definition"></a></dt>
 <dd><p>Visualise the radicalisation of agents across the entire agent population;
 called from the parent model’s iterate function at every model iteration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_graph</strong> (<a class="reference internal" href="gatoh.graphs.graphs.Graph.html#gatoh.graphs.graphs.Graph" title="gatoh.graphs.graphs.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a>) – The model’s base graph to visualise.</p></li>
+<li><p><strong>current_iteration</strong> (<em>int</em>) – The model’s current runtime iteration number.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

@@ -7,6 +7,7 @@
    :no-members:
    :show-inheritance:
 
+
    .. rubric:: Methods
 
    .. autosummary::
@@ -28,6 +29,7 @@
       ~Graph.generate_graph
       ~Graph.get_agent_index
       ~Graph.get_edge
+      ~Graph.get_edge_changes
       ~Graph.get_neighbours
       ~Graph.get_node
       ~Graph.get_relationship
@@ -35,6 +37,7 @@
       ~Graph.load_graph
       ~Graph.neighbour_influences
       ~Graph.node_from_agent
+      ~Graph.register_edge_change
       ~Graph.relationship_exists
       ~Graph.remove_edge
       ~Graph.remove_node

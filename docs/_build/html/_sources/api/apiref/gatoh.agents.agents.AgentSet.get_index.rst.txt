@@ -1,6 +1,0 @@
-﻿gatoh.agents.agents.AgentSet.get\_index
-=======================================
-
-.. currentmodule:: gatoh.agents.agents
-
-.. automethod:: AgentSet.get_index

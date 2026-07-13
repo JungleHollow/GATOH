@@ -216,6 +216,7 @@ class Agent:
         Dynamically add an attribute to this Agent object. If "value" is passed, an explicit initial value is given;
         if "mean" and "var" are passed, a value is generated from a random distribution.
         Supported random distributions are:
+
             - "gaussian"
             - "beta"
             - "gamma"

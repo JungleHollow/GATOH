@@ -9,7 +9,7 @@
   <title>gatoh.graphs.graphs.Graph.generate_graph &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
       <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
 
   
@@ -73,6 +73,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.get_agent_index.html">gatoh.graphs.graphs.Graph.get_agent_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.get_edge.html">gatoh.graphs.graphs.Graph.get_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.get_edge_changes.html">gatoh.graphs.graphs.Graph.get_edge_changes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.get_neighbours.html">gatoh.graphs.graphs.Graph.get_neighbours</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.get_node.html">gatoh.graphs.graphs.Graph.get_node</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.get_relationship.html">gatoh.graphs.graphs.Graph.get_relationship</a></li>
@@ -80,6 +81,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.load_graph.html">gatoh.graphs.graphs.Graph.load_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.neighbour_influences.html">gatoh.graphs.graphs.Graph.neighbour_influences</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.node_from_agent.html">gatoh.graphs.graphs.Graph.node_from_agent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.register_edge_change.html">gatoh.graphs.graphs.Graph.register_edge_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.relationship_exists.html">gatoh.graphs.graphs.Graph.relationship_exists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.remove_edge.html">gatoh.graphs.graphs.Graph.remove_edge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.graphs.Graph.remove_node.html">gatoh.graphs.graphs.Graph.remove_node</a></li>
@@ -155,7 +157,7 @@
 <li><p><strong>agents</strong> (<em>list</em><em>[</em><a class="reference internal" href="gatoh.agents.agents.Agent.html#gatoh.agents.agents.Agent" title="gatoh.agents.agents.Agent"><em>Agent</em></a><em>]</em>) – The subset of Agents in the base model that are being used as the nodes for this graph.</p></li>
 <li><p><strong>method</strong> (<em>str</em><em>, </em><em>optional</em>) – The random generation method to use. Possible choices include: ‘small-world’, ‘scale-free’, ‘random’, ‘blockmodel’; Defaults to ‘small-world’.</p></li>
 <li><p><strong>relationship_range</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – The valid range of generated relationship strengths (at most, constrained to [-1.0, 1.0]).</p></li>
-<li><p><strong>ensure_complete</strong> (<em>bool</em><em>, </em><em>optional</em>) – A flag indicating if the generated graph should be complete or not (in the case of <a href="#id1"><span class="problematic" id="id2">`</span></a>small-world’).</p></li>
+<li><p><strong>ensure_complete</strong> (<em>bool</em><em>, </em><em>optional</em>) – A flag indicating if the generated graph should be complete or not (in the case of ‘small-world’).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>

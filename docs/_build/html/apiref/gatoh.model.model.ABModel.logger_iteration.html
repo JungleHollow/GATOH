@@ -9,7 +9,7 @@
   <title>gatoh.model.model.ABModel.logger_iteration &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
       <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
 
   
@@ -68,14 +68,18 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.add_graphs.html">gatoh.model.model.ABModel.add_graphs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_aggregate_opinion.html">gatoh.model.model.ABModel.calculate_aggregate_opinion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_interdependence.html">gatoh.model.model.ABModel.calculate_interdependence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_interdependences.html">gatoh.model.model.ABModel.calculate_interdependences</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_layers_polarisation.html">gatoh.model.model.ABModel.calculate_layers_polarisation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_navigability.html">gatoh.model.model.ABModel.calculate_navigability</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.calculate_radicalisation_logodds.html">gatoh.model.model.ABModel.calculate_radicalisation_logodds</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.generate_agents.html">gatoh.model.model.ABModel.generate_agents</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.generate_graphs.html">gatoh.model.model.ABModel.generate_graphs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.get_base_indices_from_edge.html">gatoh.model.model.ABModel.get_base_indices_from_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.init_base_graph.html">gatoh.model.model.ABModel.init_base_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.iterate.html">gatoh.model.model.ABModel.iterate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.iteration_opinion_calculation.html">gatoh.model.model.ABModel.iteration_opinion_calculation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.iteration_opinion_changes.html">gatoh.model.model.ABModel.iteration_opinion_changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.layers_polarisation_multi.html">gatoh.model.model.ABModel.layers_polarisation_multi</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.load_model.html">gatoh.model.model.ABModel.load_model</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">gatoh.model.model.ABModel.logger_iteration</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.model.model.ABModel.logger_iteration"><code class="docutils literal notranslate"><span class="pre">ABModel.logger_iteration()</span></code></a></li>
@@ -85,6 +89,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.step.html">gatoh.model.model.ABModel.step</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.update.html">gatoh.model.model.ABModel.update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.update_base_graph.html">gatoh.model.model.ABModel.update_base_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.model.ABModel.update_multi.html">gatoh.model.model.ABModel.update_multi</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.visualisation.visualisation.ABVisualiser.html">ABVisualiser</a></li>
@@ -122,6 +127,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../api/index.html">GATOH API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../api/model/index.html">&lt;no title&gt;</a></li>
           <li class="breadcrumb-item"><a href="../api/model/ABModel.html">&lt;no title&gt;</a></li>
           <li class="breadcrumb-item"><a href="gatoh.model.model.ABModel.html">ABModel</a></li>
       <li class="breadcrumb-item active">gatoh.model.model.ABModel.logger_iteration</li>
@@ -138,7 +144,7 @@
 <h1>gatoh.model.model.ABModel.logger_iteration<a class="headerlink" href="#gatoh-model-model-abmodel-logger-iteration" title="Link to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="gatoh.model.model.ABModel.logger_iteration">
-<span class="sig-prename descclassname"><span class="pre">ABModel.</span></span><span class="sig-name descname"><span class="pre">logger_iteration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/gatoh/model/model.html#ABModel.logger_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.model.model.ABModel.logger_iteration" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">ABModel.</span></span><span class="sig-name descname"><span class="pre">logger_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">worker_pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/gatoh/model/model.html#ABModel.logger_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.model.model.ABModel.logger_iteration" title="Link to this definition"></a></dt>
 <dd><p>Calculate any relevant aggregate statistics and then pass these to the logger’s iteration() function to be stored.</p>
 <dl class="simple">
 <dt>Statistics calculated currently:</dt><dd><ol class="arabic simple">
@@ -147,6 +153,11 @@
 <li><p>Layer navigability for each hierarchy</p></li>
 <li><p>Layer interdependence for each hierarchy</p></li>
 </ol>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>worker_pool</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Pool</span></code>) – A pool of workers that can distribute the processing of the logger iteration between them.</p>
 </dd>
 </dl>
 </dd></dl>

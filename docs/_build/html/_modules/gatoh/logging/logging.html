@@ -8,7 +8,7 @@
   <title>gatoh.logging.logging &mdash; gatoh 0.1.0</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/jupyter-sphinx.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/thebelab.css" />
 
   
@@ -44,8 +44,15 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/index.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Release Notes</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -79,7 +86,7 @@
 
 
 <div class="viewcode-block" id="LoggerVariables">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.LoggerVariables.html#gatoh.logging.logging.LoggerVariables">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.html#gatoh.logging.logging.LoggerVariables">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">LoggerVariables</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -110,8 +117,6 @@
     <span class="c1"># The current iteration that the simulation is at</span>
     <span class="n">current_iteration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 
-<div class="viewcode-block" id="LoggerVariables.__init__">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.LoggerVariables.__init__.html#gatoh.logging.logging.LoggerVariables.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Store the number of max iterations and initialise all lists and dictionaries with the appropriate hierarchy names</span>
@@ -134,11 +139,10 @@
             <span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer_polarisations</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)</span>
-            <span class="p">]</span></div>
-
+            <span class="p">]</span>
 
 <div class="viewcode-block" id="LoggerVariables.increment_radicalised">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.LoggerVariables.increment_radicalised.html#gatoh.logging.logging.LoggerVariables.increment_radicalised">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.increment_radicalised.html#gatoh.logging.logging.LoggerVariables.increment_radicalised">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">increment_radicalised</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A simple setter function that checks the input flag and updates the radicalisation count accordingly.</span>
@@ -152,7 +156,7 @@
 
 
 <div class="viewcode-block" id="LoggerVariables.increment_silenced">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.LoggerVariables.increment_silenced.html#gatoh.logging.logging.LoggerVariables.increment_silenced">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.increment_silenced.html#gatoh.logging.logging.LoggerVariables.increment_silenced">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">increment_silenced</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A simple setter function that checks the input flag and updates the opinion silencing events count accordingly.</span>
@@ -166,7 +170,7 @@
 
 
 <div class="viewcode-block" id="LoggerVariables.increment_negated">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.LoggerVariables.increment_negated.html#gatoh.logging.logging.LoggerVariables.increment_negated">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.increment_negated.html#gatoh.logging.logging.LoggerVariables.increment_negated">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">increment_negated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A simple setter function that checks the input flag and updates the opinion negation events count accordingly.</span>
@@ -180,7 +184,7 @@
 
 
 <div class="viewcode-block" id="LoggerVariables.store_aggregate_opinion">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.LoggerVariables.store_aggregate_opinion.html#gatoh.logging.logging.LoggerVariables.store_aggregate_opinion">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.store_aggregate_opinion.html#gatoh.logging.logging.LoggerVariables.store_aggregate_opinion">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">store_aggregate_opinion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agg_opp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter function that simplifies the storing of aggregate opinion values at each iteration.</span>
@@ -193,7 +197,7 @@
 
 
 <div class="viewcode-block" id="LoggerVariables.store_radicalisation_logodds">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.LoggerVariables.store_radicalisation_logodds.html#gatoh.logging.logging.LoggerVariables.store_radicalisation_logodds">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.store_radicalisation_logodds.html#gatoh.logging.logging.LoggerVariables.store_radicalisation_logodds">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">store_radicalisation_logodds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r_logodds</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter function that simplifies the storing of the model&#39;s radicalisation log odds at each iteration.</span>
@@ -206,7 +210,7 @@
 
 
 <div class="viewcode-block" id="LoggerVariables.store_layer_interdependences">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.LoggerVariables.store_layer_interdependences.html#gatoh.logging.logging.LoggerVariables.store_layer_interdependences">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.store_layer_interdependences.html#gatoh.logging.logging.LoggerVariables.store_layer_interdependences">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">store_layer_interdependences</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_interdeps</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter function that simplifies the storing of the model&#39;s layer interdependences at each iteration.</span>
@@ -222,7 +226,7 @@
 
 
 <div class="viewcode-block" id="LoggerVariables.store_layer_polarisations">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.LoggerVariables.store_layer_polarisations.html#gatoh.logging.logging.LoggerVariables.store_layer_polarisations">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.store_layer_polarisations.html#gatoh.logging.logging.LoggerVariables.store_layer_polarisations">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">store_layer_polarisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_polars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter function that simplifies the storing of the model&#39;s layer polarisations at each iteration.</span>
@@ -238,7 +242,7 @@
 
 
 <div class="viewcode-block" id="LoggerVariables.new_iteration">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.LoggerVariables.new_iteration.html#gatoh.logging.logging.LoggerVariables.new_iteration">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.new_iteration.html#gatoh.logging.logging.LoggerVariables.new_iteration">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">new_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Increment the current_iteration counter and then copy all the values from the previous iteration to their respective list indexes for the new iteration.</span>
@@ -263,6 +267,8 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+<div class="viewcode-block" id="LoggerVariables.current_layers_repr">
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.current_layers_repr.html#gatoh.logging.logging.LoggerVariables.current_layers_repr">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">current_layers_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Extract all the per-hierarchy variables for the current iteration and format it into a substring to be appended to the main iteration output.</span>
@@ -282,8 +288,11 @@
             <span class="p">]</span>
             <span class="n">hierarchy_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">interdepence</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">polarisation</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="n">output_string</span> <span class="o">+=</span> <span class="n">hierarchy_string</span>
-        <span class="k">return</span> <span class="n">output_string</span>
+        <span class="k">return</span> <span class="n">output_string</span></div>
 
+
+<div class="viewcode-block" id="LoggerVariables.current_iteration_repr">
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.current_iteration_repr.html#gatoh.logging.logging.LoggerVariables.current_iteration_repr">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">current_iteration_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Extract all variable information for the current iteration and format it into a string to be printed to the terminal.</span>
@@ -295,8 +304,11 @@
             <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\n\n</span><span class="s2">==== GATOH model variables at iteration </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2"> ====</span><span class="se">\n\n</span><span class="s2">Aggregate community opinion: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Number of radicalised agents in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Log odds of radicalisation ocurring: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_logodds</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Number of opinion silencing events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Number of opinion negation events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">**** Layer statistics ****</span><span class="se">\n\n</span><span class="s2">&quot;&quot;&quot;</span>
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_layers_repr</span><span class="p">()</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">formatted_string</span>
+        <span class="k">return</span> <span class="n">formatted_string</span></div>
 
+
+<div class="viewcode-block" id="LoggerVariables.get_fieldnames">
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.LoggerVariables.get_fieldnames.html#gatoh.logging.logging.LoggerVariables.get_fieldnames">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_fieldnames</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A helper function that provides a place to collect and return all of the dataclass&#39; attribute names for use</span>
@@ -321,18 +333,17 @@
             <span class="n">attribute_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;layer_polarisations_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">attribute_names</span></div>
+</div>
 
 
 
 <div class="viewcode-block" id="GATOHLogger">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.GATOHLogger.html#gatoh.logging.logging.GATOHLogger">[docs]</a>
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.GATOHLogger.html#gatoh.logging.logging.GATOHLogger">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GATOHLogger</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The logging module will contain all functions related to logging and/or printing model progress and information</span>
 <span class="sd">    both during and after simulation.</span>
 
-<span class="sd">    :param model: The parent model that the logger is being attached to.</span>
-<span class="sd">    :type model: ABModel</span>
 <span class="sd">    :param max_iterations: The maximum number of iterations that the parent model is running its simulation for.</span>
 <span class="sd">    :type max_iterations: int</span>
 <span class="sd">    :param hierarchies: The names of the social hierarchies present in the parent model.</span>
@@ -349,11 +360,8 @@
 
     <span class="c1"># TODO: Expand on logging capabilities</span>
 
-<div class="viewcode-block" id="GATOHLogger.__init__">
-<a class="viewcode-back" href="../../../api/apiref/gatoh.logging.logging.GATOHLogger.html#gatoh.logging.logging.GATOHLogger.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">hierarchies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -361,14 +369,14 @@
         <span class="n">print_outside_interval</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">write_file</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parent_model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">verbose</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">print_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">print_interval</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">print_outside_interval</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">print_outside_interval</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">write_file</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">write_file</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span> <span class="n">LoggerVariables</span> <span class="o">=</span> <span class="n">LoggerVariables</span><span class="p">(</span><span class="n">max_iterations</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span> <span class="n">LoggerVariables</span> <span class="o">=</span> <span class="n">LoggerVariables</span><span class="p">(</span><span class="n">max_iterations</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">)</span>
 
-
+<div class="viewcode-block" id="GATOHLogger.format_non_interval_print">
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.GATOHLogger.format_non_interval_print.html#gatoh.logging.logging.GATOHLogger.format_non_interval_print">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">format_non_interval_print</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a formatted string to be printed out on iterations which fall outside the print interval (to still provide some feedback on iteration progress)</span>
@@ -379,8 +387,11 @@
 <span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">non_interval_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">========== Iteration </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2"> ==========</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-        <span class="k">return</span> <span class="n">non_interval_string</span>
+        <span class="k">return</span> <span class="n">non_interval_string</span></div>
 
+
+<div class="viewcode-block" id="GATOHLogger.new_iteration">
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.GATOHLogger.new_iteration.html#gatoh.logging.logging.GATOHLogger.new_iteration">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">new_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A wrapper that calls LoggerVariables new_iteration().</span>
@@ -389,8 +400,11 @@
 <span class="sd">        :type init: bool, optional</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">new_iteration</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="n">init</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GATOHLogger.iteration">
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.GATOHLogger.iteration.html#gatoh.logging.logging.GATOHLogger.iteration">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">iteration</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">aggregate_opinion</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -414,8 +428,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_radicalisation_logodds</span><span class="p">(</span><span class="n">radicalisation_logodds</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_interdependences</span><span class="p">(</span><span class="n">layer_interdependences</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_polarisations</span><span class="p">(</span><span class="n">layer_polarisations</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GATOHLogger.iteration_print">
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.GATOHLogger.iteration_print.html#gatoh.logging.logging.GATOHLogger.iteration_print">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">iteration_print</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A method which formats the model statistics at the appropriate print_interval.</span>
@@ -429,8 +446,11 @@
             <span class="k">return</span> <span class="n">print_string</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">print_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_non_interval_print</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">print_string</span>
+            <span class="k">return</span> <span class="n">print_string</span></div>
 
+
+<div class="viewcode-block" id="GATOHLogger.save_data">
+<a class="viewcode-back" href="../../../apiref/gatoh.logging.logging.GATOHLogger.save_data.html#gatoh.logging.logging.GATOHLogger.save_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Saves all logged data to the specified path.</span>
@@ -474,6 +494,7 @@
             <span class="k">return</span> <span class="kc">True</span>
 
         <span class="k">return</span> <span class="kc">False</span></div>
+</div>
 
 </pre></div>
 
@@ -484,7 +505,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2026, Manuel Munizaga Sepúlveda.</p>
+    <p>&#169; Copyright 2025, Manuel Munizaga Sepúlveda.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

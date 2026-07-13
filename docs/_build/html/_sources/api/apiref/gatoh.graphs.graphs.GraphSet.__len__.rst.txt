@@ -1,6 +1,0 @@
-﻿gatoh.graphs.graphs.GraphSet.\_\_len\_\_
-========================================
-
-.. currentmodule:: gatoh.graphs.graphs
-
-.. automethod:: GraphSet.__len__
