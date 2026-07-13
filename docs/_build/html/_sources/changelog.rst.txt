@@ -30,6 +30,7 @@ New Features
 - Multithreading added to :meth:`~gatoh.agents.agents.AgentSet.save_agentset`
 - Multithreading added to :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`
 - Multiprocessing added to :meth:`~gatoh.model.model.ABModel.calculate_interdependence`
+- Creation of a quickstart guide for the documentation
 
 Fixes
 -----

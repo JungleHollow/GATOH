@@ -36,6 +36,7 @@ gatoh.agents.agents.AgentSet.remove_index.html
 gatoh.agents.agents.AgentSet.sample.html
 gatoh.agents.agents.AgentSet.save_agentset.html
 gatoh.agents.agents.AgentSet.update_indices.html
+gatoh.agents.agents.AgentSet.write_agent_pickle.html
 gatoh.graphs.graphs.Graph.__in__.html
 gatoh.graphs.graphs.Graph.__init__.html
 gatoh.graphs.graphs.Graph.__str__.html
@@ -54,6 +55,7 @@ gatoh.graphs.graphs.Graph.estimate_opinion_climate.html
 gatoh.graphs.graphs.Graph.generate_graph.html
 gatoh.graphs.graphs.Graph.get_agent_index.html
 gatoh.graphs.graphs.Graph.get_edge.html
+gatoh.graphs.graphs.Graph.get_edge_changes.html
 gatoh.graphs.graphs.Graph.get_neighbours.html
 gatoh.graphs.graphs.Graph.get_node.html
 gatoh.graphs.graphs.Graph.get_relationship.html
@@ -61,6 +63,7 @@ gatoh.graphs.graphs.Graph.get_relationships.html
 gatoh.graphs.graphs.Graph.load_graph.html
 gatoh.graphs.graphs.Graph.neighbour_influences.html
 gatoh.graphs.graphs.Graph.node_from_agent.html
+gatoh.graphs.graphs.Graph.register_edge_change.html
 gatoh.graphs.graphs.Graph.relationship_exists.html
 gatoh.graphs.graphs.Graph.remove_edge.html
 gatoh.graphs.graphs.Graph.remove_node.html
@@ -95,6 +98,8 @@ gatoh.graphs.graphs.GraphSet.graph_at_index.html
 gatoh.graphs.graphs.GraphSet.list_hierarchies.html
 gatoh.graphs.graphs.GraphSet.load_graphset.html
 gatoh.graphs.graphs.GraphSet.save_graphset.html
+gatoh.graphs.graphs.GraphSet.write_edge_pickle.html
+gatoh.graphs.graphs.GraphSet.write_node_pickle.html
 gatoh.logging.logging.GATOHLogger.__init__.html
 gatoh.logging.logging.GATOHLogger.format_non_interval_print.html
 gatoh.logging.logging.GATOHLogger.iteration.html
@@ -120,6 +125,7 @@ gatoh.model.model.ABModel.add_base_graph_edges.html
 gatoh.model.model.ABModel.add_graph.html
 gatoh.model.model.ABModel.add_graphs.html
 gatoh.model.model.ABModel.calculate_aggregate_opinion.html
+gatoh.model.model.ABModel.calculate_interdependence.html
 gatoh.model.model.ABModel.calculate_interdependences.html
 gatoh.model.model.ABModel.calculate_layers_polarisation.html
 gatoh.model.model.ABModel.calculate_navigability.html
@@ -127,14 +133,18 @@ gatoh.model.model.ABModel.calculate_radicalisation_logodds.html
 gatoh.model.model.ABModel.generate_agents.html
 gatoh.model.model.ABModel.generate_graphs.html
 gatoh.model.model.ABModel.get_base_indices_from_edge.html
+gatoh.model.model.ABModel.init_base_graph.html
 gatoh.model.model.ABModel.iterate.html
+gatoh.model.model.ABModel.iteration_opinion_calculation.html
 gatoh.model.model.ABModel.iteration_opinion_changes.html
+gatoh.model.model.ABModel.layers_polarisation_multi.html
 gatoh.model.model.ABModel.load_model.html
 gatoh.model.model.ABModel.logger_iteration.html
 gatoh.model.model.ABModel.save_model.html
 gatoh.model.model.ABModel.step.html
 gatoh.model.model.ABModel.update.html
 gatoh.model.model.ABModel.update_base_graph.html
+gatoh.model.model.ABModel.update_multi.html
 gatoh.utils.utils.beta_value_attenuation.html
 gatoh.utils.utils.connected_watts_strogatz_graph.html
 gatoh.utils.utils.create_config_file.html
