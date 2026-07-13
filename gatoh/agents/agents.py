@@ -688,16 +688,10 @@ class AgentSet:
 
         # Compress the subdirectory to minimise storage and encapsulate all the Agents into a single object
         with zipfile.ZipFile(
-            zip_path, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+            zip_path, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=4
         ) as subdir_zip:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                zipped_agents = {executor.submit(self.zip_agent_pickle, agent_path, subdir_zip): agent_path for agent_path in agent_save_paths}
-                for future in concurrent.futures.as_completed(zipped_agents):
-                    pickle_path = zipped_agents[future]
-                    try:
-                        _ = future.result()
-                    except Exception as exc:
-                        print(f"Failed to zip the agent pickle at path {pickle_path} with exception: {exc}")
+            for agent_path in agent_save_paths:
+                subdir_zip.write(agent_path, arcname=f"{os.path.basename(agent_path)}")
 
         # Remove the uncompressed subdirectory if compression was successful
         if os.path.exists(zip_path):
@@ -720,18 +714,6 @@ class AgentSet:
         with open(agent_save_path, "wb") as agent_pickle:
             pickle.dump(agent, agent_pickle)
         return agent_save_path
-
-    def zip_agent_pickle(self, agent_path: str, subdir_zip: zipfile.ZipFile) -> None:
-        """
-        A helper function that allows for multithreading of :meth:`~gatoh.agents.agents.AgentSet.save_agentset`.
-
-        :param agent_path: The path to which the agent was pickled.
-        :type agent_path: str
-        :param subdir_zip: The file handle to the subdirectory's zip file.
-        :type subdir_zip: :class:`~zipfile.ZipFile`
-        """
-        subdir_zip.write(agent_path, arcname=f"{os.path.basename(agent_path)}")
-        return None
 
     def load_agentset(self, load_path: str) -> None:
         """
