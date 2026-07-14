@@ -837,7 +837,7 @@ class AgentSet:
         :rtype: int
         """
         self.agents.append(agent)
-        self.agents[-1].index = len(self.agents)
+        self.agents[-1].index = len(self.agents) - 1
         return self.agents[-1].index
 
     def update_indices(self) -> None:
