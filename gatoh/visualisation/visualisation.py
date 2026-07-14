@@ -39,6 +39,8 @@ class ABVisualiser:
         self.visualisation_dir: str = visualisation_dir
         self.save_visualisations: bool
 
+        self.aggregation_method: str = aggregation_method
+
         # If no visualisation save directory is provided, assume this always means no saving is desired
         if self.visualisation_dir == "":
             self.save_visualisations = False
