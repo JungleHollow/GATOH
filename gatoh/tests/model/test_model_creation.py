@@ -69,12 +69,20 @@ class TestModelCreation(ut.TestCase):
             self.model.visualise, "Visualisation flag not being stored correctly"
         )
         self.assertEqual(
-            self.model.model_id, "TEST_MODEL", "Model ID not being stored correctly"
+            self.model.visualiser.aggregation_method,
+            "median",
+            "Default value for vis_aggregation_method is not being applied correctly"
         )
         self.assertEqual(
+            self.model.model_id, "TEST_MODEL", "Model ID not being stored correctly"
+        )
+        self.assertFalse(
             self.model.suppress_warnings,
-            False,
             "Default value for suppress_warnings is not being applied correctly",
+        )
+        self.assertTrue(
+            self.model.checkpointing,
+            "Default value for checkpointing is not being applied correctly",
         )
 
     def test_add_agent(self) -> None:

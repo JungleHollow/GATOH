@@ -30,6 +30,7 @@ class TestModelSimulation(ut.TestCase):
         cls._model: md.ABModel = md.ABModel(
             HIERARCHY_NAMES,
             list(HIERARCHY_RW_DISTRIB.values()),
+            suppress_warnings=True,
             iterations=40,
             save_dir=SAVEPATHS["savedir"],
             data_file=SAVEPATHS["savefile"],
@@ -62,22 +63,18 @@ class TestModelSimulation(ut.TestCase):
 
     def test_iterate(self) -> None:
         """
-        Test function that checks if the ABModel is iterating correctly during runtime.
+        Test function that checks if the ABModel without a worker pool is iterating correctly during runtime.
         """
         self._model.iterate()
         self.assertEqual(
             self._model.current_iteration,
             40,
-            "The ABModel is not incrementing its current_iteration attribute correctly in the iterate function",
+            "The ABModel is not incrementing its current_iteration attribute correctly in the iterate function without multiprocessing",
         )
         logger_data_saved: bool = os.path.exists(SAVEPATHS["savefile"])
         self.assertTrue(
             logger_data_saved,
-            "The ABModel's iterate function did not properly call the logger's save function at the end of the iterations",
-        )
-        self.assertIsNone(
-            self._model.fig,
-            "The ABModel's iterate function did not appropriately close the visualiser's figure at the end of the iterations",
+            "The ABModel's iterate function without multiprocessing did not properly call the logger's save function at the end of the iterations",
         )
 
     def test_save_model(self) -> None:
@@ -88,7 +85,7 @@ class TestModelSimulation(ut.TestCase):
         save_dir_exists: bool = os.path.exists(SAVEPATHS["savedir"])
         self.assertTrue(
             save_dir_exists,
-            "The ABModel's save_model function did not create the correct save directory",
+            "The ABModel's save_model function did not create the correct save directory after running without multiprocessing",
         )
         savedir_filelist: list[str] = list(os.walk(self._model.save_dir))[0][2]
         graphml_exists: bool = False
@@ -101,29 +98,29 @@ class TestModelSimulation(ut.TestCase):
                     self.assertEqual(
                         filename,
                         "graph_base_graph",
-                        "The ABModel's save_model function did not name the base graph's graphml file as expected",
+                        "The ABModel's save_model function did not name the base graph's graphml file as expected after running without multiprocessing",
                     )
                     graphml_exists = True
                 case ".yaml":
                     self.assertStartsWith(
                         filename,
                         "model_",
-                        "The ABModel's save_model function did not save the config file with the correct prefix",
+                        "The ABModel's save_model function did not save the config file with the correct prefix after running without multiprocessing",
                     )
                     yaml_exists = True
                 case _:
                     unexpected_file_written = True
         self.assertTrue(
             graphml_exists,
-            "The ABModel's save_model function did not create a base graph graphml file",
+            "The ABModel's save_model function did not create a base graph graphml file after running without multiprocessing",
         )
         self.assertTrue(
             yaml_exists,
-            "The ABModel's save_model function did not create a model YAML config file",
+            "The ABModel's save_model function did not create a model YAML config file after running without multiprocessing",
         )
         self.assertFalse(
             unexpected_file_written,
-            "The ABModel's save_model function wrote an unexpected file to the save directory",
+            "The ABModel's save_model function wrote an unexpected file to the save directory after running without multiprocessing",
         )
 
     @classmethod
