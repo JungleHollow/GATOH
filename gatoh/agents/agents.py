@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import os
 import pickle
 import random as rd
@@ -859,11 +860,14 @@ class AgentSet:
         """
         for idx, agnt in enumerate(self.agents):
             if agent == agnt:
-                left_half: list[Agent] = deepcopy(self.agents[:idx])
-                right_half: list[Agent] = deepcopy(self.agents[idx + 1 :])
+                left_half: list[Agent] = self.agents[:idx]
+                right_half: list[Agent] = self.agents[idx + 1 :]
 
                 self.agents = deepcopy(left_half) + deepcopy(right_half)
+
+                # Manual garbage collection
                 del left_half, right_half
+                _ = gc.collect()
 
                 self.update_indices()
                 return True
