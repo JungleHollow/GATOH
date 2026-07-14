@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import concurrent.futures
+import gc
 import os
 import pickle
 import tracemalloc
@@ -105,16 +107,26 @@ class DataReader:
         agent_parameters: dict[str, float],
         test_parameters: dict[str, dict[str, Any]],
         opinion_paths: dict[str, str] | None = None,
+        worker_pool: Any | None = None,
         existing: bool = False,
     ) -> None:
         """
         :param agent_paths: A <model name : path> mapping pointing to the subdirectories at which each model's Agent objects are saved.
+        :type agent_paths: dict[str, str]
         :param graph_paths: A <model name: path> mapping pointing to the subdirectories at which each model's Graph objects are saved.
+        :type graph_paths: dict[str, str]
         :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
+        :type initial_hierarchies: list[str]
         :param agent_parameters: A <parameter : value> mapping specifying any additional, relevant parameters for agents in this experiment.
+        :type agent_parameters: dict[str, float]
         :param test_parameters: A <model : parameters> mapping specifying explicit initialisation and runtime parameters for each model.
-        :param opinion_paths: An optional <model name: path> mapping pointing to csv files containing dependant variable data (for model validation after running).
+        :type test_parameters: dict[str, dict[str, Any]]
+        :param opinion_paths: A <model name: path> mapping pointing to csv files containing dependant variable data (for model validation after running).
+        :type opinion_paths: dict[str, str], optional
+        :param worker_pool: A pool of workers that can distribute the processing of the object loading function amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.Pool`, optional
         :param existing: A flag indicating if the DataReader is loading an existing experiment.
+        :type existing: bool, optional
         """
         self.existing: bool = existing
 
@@ -152,11 +164,14 @@ class DataReader:
 
         self.models: dict[str, ABModel] = {}
 
-        self.load_objects()
+        self.load_objects(worker_pool=worker_pool)
 
-    def load_objects(self) -> None:
+    def load_objects(self, worker_pool: Any | None = None) -> None:
         """
         Loads the Agent and Graph objects for each model in the experiment.
+
+        :param worker_pool: A pool of workers that can distribute the processing of the object loading amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.Pool`
         """
         # First, load the Agent objects
         for model_name, agent_path in self.agent_paths.items():
@@ -171,43 +186,111 @@ class DataReader:
                 model_agents = self.agent_objects.setdefault(model_name, [])
                 model_agents.append(agent_obj)
 
-        # Next, load the unpopulated Graph objects
+        # Next, load the Graph objects
         for model_name, graph_path in self.graph_paths.items():
             graph_names: list[str] = list(os.walk(graph_path))[0][1]
-            for graph_name in graph_names:
-                graph_subdir: str = f"{graph_path}/{graph_name}"
 
-                new_graph: Graph = Graph("", (0.0, 0.0))
-                new_graph.load_graph(
-                    f"{graph_subdir}/graph_{graph_name}.graphml",
-                    graph_name,
-                    rw_params=self.model_params[model_name].hierarchy_rw_distributions[
-                        graph_name
-                    ],
-                )
-
-                nodes_dir: str = f"{graph_subdir}/nodes"
-                node_names: list[str] = list(os.walk(nodes_dir))[0][2]
-                for node_name in node_names:
-                    node_index: int = int(node_name.split("_")[-1].split(".")[0])
-                    with open(f"{nodes_dir}/{node_name}", "rb") as pickle_file:
-                        node_object: GraphNode = pickle.load(pickle_file)
-                        new_graph.graph[node_index] = node_object
-
-                edges_dir: str = f"{graph_subdir}/edges"
-                edge_names: list[str] = list(os.walk(edges_dir))[0][2]
-                for edge_name in edge_names:
-                    edge_index: int = int(edge_name.split("_")[-1].split(".")[0])
-                    with open(f"{edges_dir}/{edge_name}", "rb") as pickle_file:
-                        edge_object: GraphEdge = pickle.load(pickle_file)
-                        new_graph.graph.update_edge_by_index(edge_index, edge_object)
-
-                graph_objects = self.graph_objects.setdefault(model_name, [])
-                graph_objects.append(new_graph)
+            # Multiprocessing here
+            if worker_pool is not None:
+                loaded_graphs = worker_pool.starmap(self.load_graphs, [(graph_name, graph_path, self.model_params[model_name].hierarchy_rw_distributions[graph_name], model_name) for graph_name in graph_names])
+                for loaded_graph in loaded_graphs:
+                    graph_objects = self.graph_objects.setdefault(model_name, [])
+                    graph_objects.append(loaded_graph)
 
                 # Manual garbage collection
-                del nodes_dir, node_names, edges_dir, edge_names
+                del loaded_graphs
+                _ = gc.collect()
+            else:
+                for graph_name in graph_names:
+                    loaded_graph = self.load_graphs(graph_name, graph_path, self.model_params[model_name].hierarchy_rw_distributions[graph_name], model_name)
+
+                    graph_objects = self.graph_objects.setdefault(model_name, [])
+                    graph_objects.append(loaded_graph)
+
+                    # Manual garbage collection
+                    del loaded_graph
+                    _ = gc.collect()
         return None
+
+    def load_graphs(self, graph_name: str, subdirectory_path: str, rw_params: tuple[float, float], community: str) -> Graph:
+        """
+        A helper function that allows for parallel processing of Graph loading for :meth:`~DataReader.load_objects`.
+
+        :param graph_name: The name of the directory to which all of a graph's files have been saved to.
+        :type graph_name: str
+        :param subdirectory_path: The path to the subdirectory in which the graph's save directory is located.
+        :type subdirectory_path: str
+        :param rw_params: The (mean, variance) random-walk parameters for the graph that is being loaded.
+        :type rw_params: tuple[float, float]
+        :param community: The name of the community for which the graph is being loaded.
+        :type community: str
+        :return: A loaded graph with all included nodes and edges.
+        :rtype: Graph
+        """
+        graphml_path: str = f"{subdirectory_path}/{graph_name}/graph_{graph_name}.graphml"
+
+        new_graph: Graph = Graph("", (0.0, 0.0))
+        new_graph.load_graph(graphml_path, graph_name, rw_params)
+
+        node_dir: str = f"{subdirectory_path}/{graph_name}/nodes"
+        edge_dir: str = f"{subdirectory_path}/{graph_name}/edges"
+
+        node_files: list[str] = list(os.walk(node_dir))[0][2]
+        edge_files: list[str] = list(os.walk(edge_dir))[0][2]
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            loaded_nodes = {executor.submit(self.load_node, node_dir, node_file): node_file for node_file in node_files}
+            for future in concurrent.futures.as_completed(loaded_nodes):
+                node_file = loaded_nodes[future]
+                try:
+                    node_info = future.result()
+                except Exception as exc:
+                    print(f"Failed to extract the pickled node at file {node_file} for graph {graph_name} in community {community} with exception: {exc}")
+                else:
+                    new_graph.graph[node_info[1]] = node_info[0]
+
+            loaded_edges = {executor.submit(self.load_edge, edge_dir, edge_file): edge_file for edge_file in edge_files}
+            for future in concurrent.futures.as_completed(loaded_edges):
+                edge_file = loaded_edges[future]
+                try:
+                    edge_info = future.result()
+                except Exception as exc:
+                    print(f"Failed to extract the pickled edge at file {edge_file} for graph {graph_name} in community {community} with exception: {exc}")
+                else:
+                    new_graph.graph.update_edge_by_index(edge_info[1], edge_info[0])
+        return new_graph
+
+    def load_node(self, node_dir: str, node_file: str) -> tuple[GraphNode, int]:
+        """
+        A helper function that allows for multithreading in :meth:`~DataReader.load_graphs`.
+
+        :param node_dir: The root directory where all graph nodes have been saved.
+        :type node_dir: str
+        :param node_file: The name of the pickle file that is being loaded.
+        :type node_file: str
+        :return: The unpickled graph node object and its corresponding index in the graph.
+        :rtype: tuple[GraphNode, int]
+        """
+        node_index: int = int((os.path.basename(node_file).split("_")[-1]).split(".")[0])
+        with open(f"{node_dir}/{node_file}", "rb") as node_pickle:
+            node_object: GraphNode = pickle.load(node_pickle)
+        return (node_object, node_index)
+
+    def load_edge(self, edge_dir: str, edge_file: str) -> tuple[GraphEdge, int]:
+        """
+        A helper function that allows for multithreading in :meth:`~DataReader.load_graphs`.
+
+        :param edge_dir: The root directory where all graph edges have been saved.
+        :type edge_dir: str
+        :param edge_file: The name of the pickle file that is being loaded.
+        :type edge_file: str
+        :return: The unpickled graph edge object and its corresponding index in the graph.
+        :rtype: tuple[GraphEdge, int]
+        """
+        edge_index: int = int((os.path.basename(edge_file).split("_")[-1]).split(".")[0])
+        with open(f"{edge_dir}/{edge_file}", "rb") as edge_pickle:
+            edge_object: GraphEdge = pickle.load(edge_pickle)
+        return (edge_object, edge_index)
 
     def load_models(self, existing_saves: list[str] | None = None) -> None:
         """
@@ -640,7 +723,7 @@ class DataReader:
 
 if __name__ == "__main__":
     # Declare all relevant global variables here
-    DEBUG: bool = True
+    DEBUG: bool = False
     MULTIPROCESSING: bool = True
 
     SAVEDIR_ROOT: str = "./gatoh/experiments/CaseStudy/Results"
@@ -765,6 +848,7 @@ if __name__ == "__main__":
             AGENT_PARAMETERS,
             TEST_PARAMETERS,
             opinion_paths=None,
+            worker_pool=WORKER_POOL,
         )
 
         if len(existing_savedirs) > 0:  # At least one model exists
@@ -783,6 +867,7 @@ if __name__ == "__main__":
             AGENT_PARAMETERS,
             TEST_PARAMETERS,
             opinion_paths=OPINION_PATHS,
+            worker_pool=WORKER_POOL,
             existing=True,
         )
         data_reader.load_models()

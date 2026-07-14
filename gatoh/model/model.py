@@ -453,6 +453,7 @@ class ABModel:
 
                 # Manual garbage collection
                 del opinion_results
+                _ = gc.collect()
             else:
                 for agent in self.agents:
                     opinion_result = self.iteration_opinion_calculation(agent)
@@ -460,6 +461,7 @@ class ABModel:
 
                     # Manual garbage collection
                     del opinion_result
+                    _ = gc.collect()
 
             self.iteration_opinion_changes(new_agent_opinions)
             self.step()

@@ -742,18 +742,39 @@ class AgentSet:
 
         # Extract all the Agent pickles to the uncompressed directory
         with zipfile.ZipFile(
-            zip_load_path, mode="r", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+            zip_load_path, mode="r", compression=zipfile.ZIP_DEFLATED, compresslevel=4
         ) as subdir_zip:
             subdir_zip.extractall(path=subdirectory_path)
 
-        # Unpickle each Agent object and add it to the AgentSet.
-        for agent_pickle_name in os.listdir(subdirectory_path):
-            agent_pickle_path: str = f"{subdirectory_path}/{agent_pickle_name}"
-            with open(agent_pickle_path, "rb") as agent_pickle:
-                agent_object: Agent = pickle.load(agent_pickle)
-                _ = self.add(agent_object)
+        # Unpickle each Agent object and add it to the AgentSet using multithreading
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            agent_objects = {executor.submit(self.extract_agent_pickle, agent_pickle_name, subdirectory_path): agent_pickle_name for agent_pickle_name in os.listdir(subdirectory_path)}
+            for future in concurrent.futures.as_completed(agent_objects):
+                agent_pickle_path = agent_objects[future]
+                try:
+                    agent_object = future.result()
+                except Exception as exc:
+                    print(f"Failed to extract the pickled Agent object at path {agent_pickle_path} with exception: {exc}")
+                else:
+                    _ = self.add(agent_object)
 
         return None
+
+    def extract_agent_pickle(self, agent_pickle_name: str, subdirectory_path: str) -> Agent:
+        """
+        A helper function that allows for multithreading of :meth:`~gatoh.agents.agents.AgentSet.load_agentset`.
+
+        :param agent_pickle_path: The name of the pickled Agent object file.
+        :type agent_pickle_path: str
+        :param subdirectory_path: The root path to which the pickled agent object was written.
+        :type subdirectory_path: str
+        :return: The unpickled agent.
+        :rtype: Agent
+        """
+        agent_pickle_path: str = f"{subdirectory_path}/{agent_pickle_name}"
+        with open(agent_pickle_path, "rb") as agent_pickle:
+            agent_object: Agent = pickle.load(agent_pickle)
+        return agent_object
 
     def __len__(self) -> int:
         """

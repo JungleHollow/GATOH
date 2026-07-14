@@ -1300,7 +1300,7 @@ class GraphSet:
         return edge_save_path
 
     def load_graphset(
-        self, load_path: str, rw_params: dict[str, tuple[float, float]]
+        self, load_path: str, rw_params: dict[str, tuple[float, float]], worker_pool: Any | None = None,
     ) -> None:
         """
         Loads a GraphSet that has been saved following the same process as in the save_graphset() function.
@@ -1309,6 +1309,8 @@ class GraphSet:
         :type load_path: str
         :param rw_params: A <name : rw_params> mapping containing the relevant external information for each graph.
         :type rw_params: dict[str, tuple[float, float]]
+        :param worker_pool: A pool of workers that can distribute the processing of the graphset loading amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.Pool`, optional
         """
         zip_load_path: str = f"{load_path}/_graphset.zip"
 
@@ -1329,49 +1331,109 @@ class GraphSet:
 
         # Extract all the graphml files to the uncompressed subdirectory
         with zipfile.ZipFile(
-            zip_load_path, mode="r", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+            zip_load_path, mode="r", compression=zipfile.ZIP_DEFLATED, compresslevel=4
         ) as subdir_zip:
             subdir_zip.extractall(path=subdirectory_path)
 
         save_dirs: list[str] = list(os.walk(subdirectory_path))[0][1]
 
-        for save_dir in save_dirs:
-            # Extracts the name of the hierarchy
-            graph_name: str = os.path.basename(save_dir)
+        if worker_pool is not None:
+            loaded_graphs = worker_pool.starmap(self.load_graphset_multi, [(save_dir, subdirectory_path, rw_params[os.path.basename(save_dir)]) for save_dir in save_dirs])
+            for loaded_graph in loaded_graphs:
+                self.add_graph(loaded_graph)
 
-            graphml_path: str = (
-                f"{subdirectory_path}/{graph_name}/graph_{graph_name}.graphml"
-            )
+            # Manual garbage collection
+            del loaded_graphs
+            _ = gc.collect()
+        else:
+            for save_dir in save_dirs:
+                loaded_graph: Graph = self.load_graphset_multi(save_dir, subdirectory_path, rw_params[os.path.basename(save_dir)])
+                self.add_graph(loaded_graph)
 
-            graph_object: Graph = Graph("", (0.0, 0.0))
-            graph_object.load_graph(graphml_path, graph_name, rw_params[graph_name])
-
-            # Load and add the GraphNodes
-            node_dir: str = f"{subdirectory_path}/{graph_name}/nodes"
-            node_paths: list[str] = list(os.walk(node_dir))[0][2]
-
-            for node_path in node_paths:
-                node_index: int = int(
-                    (os.path.basename(node_path).split("_")[-1]).split(".")[0]
-                )
-                with open(f"{node_dir}/{node_path}", "rb") as node_pickle:
-                    node_object: GraphNode = pickle.load(node_pickle)
-                    graph_object.graph[node_index] = node_object
-
-            # Load and add the GraphEdges
-            edge_dir: str = f"{subdirectory_path}/{graph_name}/edges"
-            edge_paths: list[str] = list(os.walk(edge_dir))[0][2]
-            for edge_path in edge_paths:
-                edge_index: int = int(
-                    (os.path.basename(edge_path).split("_")[-1]).split(".")[0]
-                )
-                with open(f"{edge_dir}/{edge_path}", "rb") as edge_pickle:
-                    edge_object: GraphEdge = pickle.load(edge_pickle)
-                    graph_object.graph.update_edge_by_index(edge_index, edge_object)
-
-            # Add the Graph object to the GraphSet
-            self.add_graph(graph_object)
+                # Manual garbage collection
+                del loaded_graph
+                _ = gc.collect()
         return None
+
+    def load_graphset_multi(self, save_dir: str, subdirectory_path: str, rw_params: tuple[float, float]) -> Graph:
+        """
+        A helper function that allows for parallel processing of Graph loading for :meth:`~gatoh.graphs.graphs.GraphSet.load_graphset`.
+
+        :param save_dir: The path of the directory to which all of a graph's files have been saved to.
+        :type save_dir: str
+        :param subdirectory_path: The path to the subdirectory in which the graph's save directory is located.
+        :type subdirectory_path: str
+        :param rw_params: The (mean, variance) random-walk parameters for the graph that is being loaded.
+        :type rw_params: tuple[float, float]
+        :return: A loaded graph with all included nodes and edges.
+        :rtype: Graph
+        """
+        graph_name: str = os.path.basename(save_dir)
+
+        graphml_path: str = f"{subdirectory_path}/{graph_name}/graph_{graph_name}.graphml"
+
+        new_graph: Graph = Graph("", (0.0, 0.0))
+        new_graph.load_graph(graphml_path, graph_name, rw_params)
+
+        node_dir: str = f"{subdirectory_path}/{graph_name}/nodes"
+        edge_dir: str = f"{subdirectory_path}/{graph_name}/edges"
+
+        node_files: list[str] = list(os.walk(node_dir))[0][2]
+        edge_files: list[str] = list(os.walk(edge_dir))[0][2]
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            loaded_nodes = {executor.submit(self.load_node, node_dir, node_file): node_file for node_file in node_files}
+            for future in concurrent.futures.as_completed(loaded_nodes):
+                node_file = loaded_nodes[future]
+                try:
+                    node_info = future.result()
+                except Exception as exc:
+                    print(f"Failed to extract the pickled node at file {node_file} for graph {graph_name} with exception: {exc}")
+                else:
+                    new_graph.graph[node_info[1]] = node_info[0]
+
+            loaded_edges = {executor.submit(self.load_edge, edge_dir, edge_file): edge_file for edge_file in edge_files}
+            for future in concurrent.futures.as_completed(loaded_edges):
+                edge_file = loaded_edges[future]
+                try:
+                    edge_info = future.result()
+                except Exception as exc:
+                    print(f"Failed to extract the pickled edge at file {edge_file} for graph {graph_name} with exception: {exc}")
+                else:
+                    new_graph.graph.update_edge_by_index(edge_info[1], edge_info[0])
+        return new_graph
+
+    def load_node(self, node_dir: str, node_file: str) -> tuple[GraphNode, int]:
+        """
+        A helper function that allows for multithreading within :meth:`~gatoh.graphs.graphs.GraphSet.load_graphset_multi`.
+
+        :param node_dir: The root directory where all graph nodes have been saved.
+        :type node_dir: str
+        :param node_file: The name of the pickle file that is being loaded.
+        :type node_file: str
+        :return: The unpickled graph node object and its corresponding index in the graph.
+        :rtype: tuple[GraphNode, int]
+        """
+        node_index: int = int((os.path.basename(node_file).split("_")[-1]).split(".")[0])
+        with open(f"{node_dir}/{node_file}", "rb") as node_pickle:
+            node_object: GraphNode = pickle.load(node_pickle)
+        return (node_object, node_index)
+
+    def load_edge(self, edge_dir: str, edge_file: str) -> tuple[GraphEdge, int]:
+        """
+        A helper function that allows for multithreading within :meth:`~gatoh.graphs.graphs.GraphSet.load_graphset_multi`.
+
+        :param edge_dir: The root directory where all graph edges have been saved.
+        :type edge_dir: str
+        :param edge_file: The name of the pickle file that is being loaded.
+        :type edge_file: str
+        :return: The unpickled graph edge object and its corresponding index in the graph.
+        :rtype: tuple[GraphEdge, int]
+        """
+        edge_index: int = int((os.path.basename(edge_file).split("_")[-1]).split(".")[0])
+        with open(f"{edge_dir}/{edge_file}", "rb") as edge_pickle:
+            edge_object: GraphEdge = pickle.load(edge_pickle)
+        return (edge_object, edge_index)
 
     def add_graph(self, graph: Graph) -> None:
         """
