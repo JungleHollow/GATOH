@@ -452,3 +452,161 @@ class TestAgentSet(ut.TestCase):
             agentset,
             "AgentSet -- remove() with a valid Agent is not removing the correct Agent object",
         )
+        for idx, agent in enumerate(agentset):
+            self.assertEqual(
+                agent.index,
+                idx,
+                "AgentSet -- remove() with a valid Agent is not correctly calling update_indices()",
+            )
+
+    def test_remove_index_invalid(self) -> None:
+        """
+        Test that remove_index() with an invalid index raises the expected error.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        for i in range(4):
+            new_agent: agt.Agent = agt.Agent(f"{i}")
+            _ = agentset.add(new_agent)
+        with self.assertRaises(IndexError) as cm:
+            index_removed: bool = agentset.remove_index(4444)
+        self.assertEqual(
+            cm.exception,
+            IndexError,
+            "AgentSet -- remove_index() with an invalid index is not raising an IndexError",
+        )
+        self.assertEqual(
+            cm.msg,
+            "Tried to remove an Agent at out of bounds index 4444 from the AgentSet",
+            "AgentSet -- remove_index() with an invalid index is not producing the expected error message",
+        )
+        self.assertEqual(
+            len(agentset),
+            4,
+            "AgentSet -- remove_index() with an invalid index is removing one or more Agents despite raising an error",
+        )
+
+    def test_remove_index(self) -> None:
+        """
+        Test that remove_index() with a valid index is working correctly.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        external_agents: list[agt.Agent] = []
+        for i in range(4):
+            new_agent: agt.Agent = agt.Agent(f"{i}")
+            external_agents.append(new_agent)
+            _ = agentset.add(new_agent)
+        index_removed: bool = agentset.remove_index(2)
+        self.assertIsInstance(
+            index_removed,
+            bool,
+            "AgentSet -- remove_index() with a valid index is not returning a boolean",
+        )
+        self.assertTrue(
+            index_removed,
+            "AgentSet -- remove_index() with a valid index is not reporting that an Agent was removed",
+        )
+        self.assertEqual(
+            len(agentset),
+            3,
+            "AgentSet -- remove_index() with a valid index is not actually removing an Agent object",
+        )
+        self.assertNotIn(
+            external_agents[2],
+            agentset,
+            "AgentSet -- remove_index() with a valid index is not removing the correct Agent",
+        )
+        for idx, agent in enumerate(agentset):
+            self.assertEqual(
+                agent.index,
+                idx,
+                "AgentSet -- remove_index() with a valid index is not correctly calling update_indices()",
+            )
+
+    def test_sample_invalid(self) -> None:
+        """
+        Test that sample() with n larger than the agentset will raise the expected error.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        for i in range(4):
+            new_agent: agt.Agent = agt.Agent(f"{i}")
+            _ = agentset.add(new_agent)
+        with self.assertRaises(ValueError) as cm:
+            agent_sample: list[agt.Agent] = agentset.sample(40)
+        self.assertEqual(
+            cm.exception,
+            ValueError,
+            "AgentSet -- sample() with n > len(agentset) is not raising a ValueError",
+        )
+
+    def test_sample(self) -> None:
+        """
+        Test that sample() is working correctly.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        external_agents: list[agt.Agent] = []
+        for i in range(10):
+            new_agent: agt.Agent = agt.Agent(f"{i}")
+            external_agents.append(new_agent)
+            _ = agentset.add(new_agent)
+        agent_sample: list[agt.Agent] = agentset.sample(2)
+        self.assertIsInstance(
+            agent_sample,
+            list,
+            "AgentSet -- sample() is not returning a list object",
+        )
+        self.assertEqual(
+            len(agent_sample),
+            2,
+            "AgentSet -- sample() is not returning a sample of the appropriate size",
+        )
+        for agent in agent_sample:
+            self.assertIsInstance(
+                agent,
+                agt.Agent,
+                "AgentSet -- sample() is returning a sample containing a non-Agent object",
+            )
+            self.assertIn(
+                agent,
+                agentset,
+                "AgentSet -- sample() is somehow returning an Agent which is not contained in the AgentSet",
+            )
+
+    def test_getstate(self) -> None:
+        """
+        Test that the __getstate__ override is producing the expected result.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        for i in range(4):
+            new_agent: agt.Agent = agt.Agent(f"{i}")
+            _ = agentset.add(new_agent)
+        agentset_state = agentset.__getstate__()
+        self.assertIsInstance(
+            agentset_state,
+            dict,
+            "AgentSet -- __getstate__() is not returning a dictionary",
+        )
+        self.assertIn(
+            "agents",
+            agentset_state.keys(),
+            "AgentSet -- The __getstate__() dictionary does not contain an 'agents' key",
+        )
+        self.assertIn(
+            "random",
+            agentset_state.keys(),
+            "AgentSet -- The __getstate__() dictionary does not contain a 'random' key",
+        )
+        self.assertIsInstance(
+            agentset_state["agents"],
+            list[agt.Agent],
+            "AgentSet -- The 'agents' value from __getstate__() is not the same object type as agentset 'agents'",
+        )
+        self.assertEqual(
+            agentset.agents,
+            agentset_state["agents"],
+            "AgentSet -- The agents from __getstate__() are not identical to the agents in the agentset",
+        )
+        self.assertIsInstance(
+            agentset_state["random"],
+            rd.Random,
+            "AgentSet -- The 'random' value from __getstate__() is not the same object type as agentset 'random'",
+        )
