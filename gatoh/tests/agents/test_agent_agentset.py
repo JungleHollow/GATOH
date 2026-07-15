@@ -217,3 +217,238 @@ class TestAgentSet(ut.TestCase):
                 idx,
                 "AgentSet discard() did not correctly call update_indices() after removing the Agent",
             )
+
+    def test_agent_at_index_invalid(self) -> None:
+        """
+        Test that agent_at_index() with an invalid index raises the expected warning.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        with self.assertWarns(UserWarning) as cm:
+            agent_return: agt.Agent | None = agentset.agent_at_index(44)
+        self.assertEqual(
+            cm.warning,
+            UserWarning,
+            "AgentSet -- agent_at_index() with an invalid index is not raising a UserWarning",
+        )
+        self.assertEqual(
+            cm.msg,
+            "WARNING: Index 44 is out of bounds for the AgentSet. Only 0 Agents have been created.",
+            "AgentSet -- agent_at_index() with an invalid index is not producing the expected warning message",
+        )
+        self.assertIsNone(
+            agent_return,
+            "AgentSet -- agent_at_index() with an invalid index is not returning None",
+        )
+
+    def test_agent_at_index(self) -> None:
+        """
+        Test that agent_at_index() with a valid index is working correctly.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        new_agent: agt.Agent = agt.Agent()
+        _ = agentset.add(new_agent)
+        agent_return: agt.Agent | None = agentset.agent_at_index(0)
+        self.assertIsInstance(
+            agent_return,
+            agt.Agent,
+            "AgentSet -- agent_at_index() with a valid index is not returning an Agent object",
+        )
+        self.assertEqual(
+            new_agent,
+            agent_return,
+            "AgentSet -- agent_at_index() with a valid index is not returning the correct Agent object",
+        )
+
+    def test_get_agent_by_id_invalid(self) -> None:
+        """
+        Test that get_agent_by_id() with an invalid ID raises the expected error.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        with self.assertRaises(KeyError) as cm:
+            agent_return: agt.Agent | None = agentset.get_agent_by_id("foo")
+        self.assertEqual(
+            cm.exception,
+            KeyError,
+            "AgentSet -- get_agent_by_id() with an invalid ID is not raising a KeyError",
+        )
+        self.assertEqual(
+            cm.msg,
+            "The Agent with id 'foo' does not exist in the AgentSet -- unable to return an Agent object.",
+            "AgentSet -- get_agent_by_id() with an invalid ID is not producing the expected error message",
+        )
+
+    def test_get_agent_by_id(self) -> None:
+        """
+        Test that get_agent_by_id() with a valid ID is working correctly.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        new_agent: agt.Agent = agt.Agent("bar")
+        _ = agentset.add(new_agent)
+        agent_return: agt.Agent | None = agentset.get_agent_by_id("bar")
+        self.assertIsInstance(
+            agent_return,
+            agt.Agent,
+            "AgentSet -- get_agent_by_id() with a valid ID is not returning an Agent object",
+        )
+        self.assertEqual(
+            new_agent,
+            agent_return,
+            "AgentSet -- get_agent_by_id() with a valid ID is not returning the correct Agent",
+        )
+
+    def test_get_index_invalid(self) -> None:
+        """
+        Test that get_index() with an invalid Agent raises the expected error.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        new_agent: agt.Agent = agt.Agent("foo")
+        with self.assertRaises(KeyError) as cm:
+            index_return: int = agentset.get_index(new_agent)
+        self.assertEqual(
+            cm.exception,
+            KeyError,
+            "AgentSet -- get_index() with an invalid Agent is not raising a KeyError",
+        )
+        self.assertEqual(
+            cm.msg,
+            "The agent foo does not exist in the AgentSet -- unable to return an index.",
+            "AgentSet -- get_index() with an invalid Agent is not producing the expected error message",
+        )
+
+    def test_get_index(self) -> None:
+        """
+        Test that get_index() with a valid Agent returns the correct index.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        new_agent: agt.Agent = agt.Agent("foo")
+        _ = agentset.add(new_agent)
+        index_return: int = agentset.get_index(new_agent)
+        self.assertIsInstance(
+            index_return,
+            int,
+            "AgentSet -- get_index() with a valid Agent is not returning an integer index",
+        )
+        self.assertEqual(
+            index_return,
+            0,
+            "AgentSet -- get_index() with a valid Agent is not returning the correct agent index",
+        )
+
+    def test_discard_index_invalid(self) -> None:
+        """
+        Test that discard_index() with an invalid index is working correctly.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        for i in range(4):
+            new_agent: agt.Agent = agt.Agent(f"{i}")
+            _ = agentset.add(new_agent)
+        index_discarded: bool = agentset.discard_index(4444)
+        self.assertIsInstance(
+            index_discarded,
+            bool,
+            "AgentSet -- discard_index() with an invalid index is not returning a boolean",
+        )
+        self.assertFalse(
+            index_discarded,
+            "AgentSet -- discard_index() with an invalid index is reporting that an index was removed",
+        )
+        self.assertEqual(
+            len(agentset),
+            4,
+            "AgentSet -- discard_index() with an invalid index is removing one or more Agents from the AgentSet",
+        )
+
+    def test_discard_index(self) -> None:
+        """
+        Test that discard_index() with a valid index is working correctly.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        external_agents: list[agt.Agent] = []
+        for i in range(4):
+            new_agent: agt.Agent = agt.Agent(f"{i}")
+            external_agents.append(new_agent)
+            _ = agentset.add(new_agent)
+        index_discarded: bool = agentset.discard_index(2)
+        self.assertIsInstance(
+            index_discarded,
+            bool,
+            "AgentSet -- discard_index() with a valid index is not returning a boolean",
+        )
+        self.assertTrue(
+            index_discarded,
+            "AgentSet -- discard_index() with a valid index is not reporting that an index was removed",
+        )
+        self.assertEqual(
+            len(agentset),
+            3,
+            "AgentSet -- discard_index() with a valid index is not actually removing an Agent object",
+        )
+        self.assertNotIn(
+            external_agents[2],
+            agentset,
+            "AgentSet -- discard_index() with a valid index is not removing the correct Agent object",
+        )
+        for idx, agent in enumerate(agentset):
+            self.assertEqual(
+                agent.index,
+                idx,
+                "AgentSet -- discard_index() with a valid index is not correctly calling update_indices()",
+            )
+
+    def test_remove_invalid(self) -> None:
+        """
+        Test that remove() with an invalid Agent raises the expected error.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        for i in range(4):
+            new_agent: agt.Agent = agt.Agent(f"{i}")
+            _ = agentset.add(new_agent)
+        invalid_agent: agt.Agent = agt.Agent("foo")
+        with self.assertRaises(KeyError) as cm:
+            agent_removed: bool = agentset.remove(invalid_agent)
+        self.assertEqual(
+            cm.exception,
+            KeyError,
+            "AgentSet -- remove() with an invalid Agent is not raising a KeyError",
+        )
+        self.assertEqual(
+            cm.msg,
+            "Tried to remove an Agent with id foo that doesn't exist in the AgentSet",
+            "AgentSet -- remove() with an invalid Agent is not producing the expected error message",
+        )
+        self.assertEqual(
+            len(agentset),
+            4,
+            "AgentSet -- remove() with an invalid Agent is removing one or more Agents despite raising an error",
+        )
+
+    def test_remove(self) -> None:
+        """
+        Test that remove() with a valid Agent is working correctly.
+        """
+        agentset: agt.AgentSet = agt.AgentSet()
+        external_agents: list[agt.Agent] = []
+        for i in range(4):
+            new_agent: agt.Agent = agt.Agent(f"{i}")
+            external_agents.append(new_agent)
+            _ = agentset.add(new_agent)
+        agent_removed: bool = agentset.remove(external_agents[2])
+        self.assertIsInstance(
+            agent_removed,
+            bool,
+            "AgentSet -- remove() with a valid Agent is not returning a boolean",
+        )
+        self.assertTrue(
+            agent_removed,
+            "AgentSet -- remove() with a valid Agent is not reporting that an Agent was removed",
+        )
+        self.assertEqual(
+            len(agentset),
+            3,
+            "AgentSet -- remove() with a valid Agent is not actually removing an Agent object from the AgentSet",
+        )
+        self.assertNotIn(
+            external_agents[2],
+            agentset,
+            "AgentSet -- remove() with a valid Agent is not removing the correct Agent object",
+        )
