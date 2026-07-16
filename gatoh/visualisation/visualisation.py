@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import gc
 import os
-from multiprocessing import Pool
 from typing import Any
 from typing_extensions import deprecated
 
@@ -87,7 +86,7 @@ class ABVisualiser:
             raise ValueError("An Agent's radicalisation or opinion attributes are of an incorrect type to plot")
         return (agent_id, radicalised, opinion)
 
-    def visualise_hierarchy(self, hierarchy_graph: Graph, save_graph: bool = True, show_graph: bool = True, worker_pool: Any | None = None) -> None:
+    def visualise_hierarchy(self, hierarchy_graph: Graph, save_graph: bool = True, show_graph: bool = True) -> None:
         """
         A standalone function to visualise the graph for a specific social hierarchy within the ABModel.
 
@@ -97,29 +96,13 @@ class ABVisualiser:
         :type save_graph: bool, optional
         :param show_graph: A flag indicating if the hierarchy visualisation should be shown in the output terminal.
         :type show_graph: bool, optional
-        :param worker_pool: A pool of workers that can distribute the visualisation tasks amongst themselves.
-        :type worker_pool: :class:`~multiprocessing.Pool`
         """
         num_agents: int = hierarchy_graph.node_count
 
         # First, extract all necessary information for plotting the agents
         agents_info: dict[str, tuple[bool, float]] = {}
-        if worker_pool is not None:
-            agent_infos = worker_pool.imap(self.graph_node_values, hierarchy_graph.graph.nodes())
-            for agent_info in agent_infos:
-                agents_info[agent_info[0]] = (agent_info[1], agent_info[2])
-
-            # Manual garbage collection
-            del agent_infos
-            _ = gc.collect()
-        else:
-            for node in hierarchy_graph.graph.nodes():
-                agent_info: tuple[str, bool, float] = self.graph_node_values(node)
-                agents_info[agent_info[0]] = (agent_info[1], agent_info[2])
-
-                # Manual garbage collection
-                del agent_info
-                _ = gc.collect()
+        for node in hierarchy_graph.graph.nodes():
+            agents_info[node.agent.id] = (node.agent.radicalised, node.agent.opinion)
 
         # Determine the array size so that a (10, x) 2D array shape is always used
         array_size: int
@@ -230,7 +213,7 @@ class ABVisualiser:
         _ = gc.collect()
         return None
 
-    def visualiser_iteration(self, base_graph: Graph, current_iteration: int, worker_pool: Any | None = None, model_name: str | None = None) -> None:
+    def visualiser_iteration(self, base_graph: Graph, current_iteration: int, model_name: str | None = None) -> None:
         """
         Visualise the radicalisation of agents across the entire agent population;
         called from the parent model's iterate function at every model iteration.
@@ -239,8 +222,6 @@ class ABVisualiser:
         :type base_graph: :class:`~gatoh.graphs.graphs.Graph`
         :param current_iteration: The model's current runtime iteration number.
         :type current_iteration: int
-        :param worker_pool: A pool of workers that can distribute the visualisation processing amongst themselves.
-        :type worker_pool: :class:`~multiprocessing.Pool`
         :param model_name: The name or identification assigned to the model that is being visualised.
         :type model_name: str, optional
         """
@@ -248,22 +229,8 @@ class ABVisualiser:
 
         # First, extract all necessary information for plotting the agents
         agents_info: dict[str, tuple[bool, float]] = {}
-        if worker_pool is not None:
-            agent_infos = worker_pool.imap(self.graph_node_values, base_graph.graph.nodes())
-            for agent_info in agent_infos:
-                agents_info[agent_info[0]] = (agent_info[1], agent_info[2])
-
-            # Manual garbage collection
-            del agent_infos
-            _ = gc.collect()
-        else:
-            for node in base_graph.graph.nodes():
-                agent_info: tuple[str, bool, float] = self.graph_node_values(node)
-                agents_info[agent_info[0]] = (agent_info[1], agent_info[2])
-
-                # Manual garbage collection
-                del agent_info
-                _ = gc.collect()
+        for node in base_graph.graph.nodes():
+            agents_info[node.agent.id] = (node.agent.radicalised, node.agent.opinion)
 
         # Determine the array size so that a (10, x) 2D array shape is always used
         array_size: int
