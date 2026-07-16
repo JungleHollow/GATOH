@@ -475,7 +475,7 @@ class ABModel:
 
             if self.visualise:
                 self.visualiser.visualiser_iteration(
-                    self.base_graph, self.current_iteration
+                    self.base_graph, self.current_iteration, model_name=self.model_id
                 )
             if self.checkpointing:
                 self.save_model()

@@ -107,7 +107,7 @@ class ABVisualiser:
         # Determine the array size so that a (10, x) 2D array shape is always used
         array_size: int
         if num_agents % 10 != 0:
-            array_size = num_agents + (10 - num_agents // 10)
+            array_size = num_agents + (10 - num_agents % 10)
         else:
             array_size = num_agents
 
@@ -115,7 +115,7 @@ class ABVisualiser:
         agent_labels: np.ndarray = np.empty([array_size], dtype="S20")
         agent_data: np.ndarray = np.empty([array_size], dtype=np.int8)
         for idx, item in enumerate(agents_info.items()):
-            agent_label: str = f"{item[0]}\n{item[1][1]:.3f}"
+            agent_label: str = f"{item[1][1]:.2f}"
             agent_labels[idx] = agent_label
             agent_data[idx] = int(item[1][0])
 
@@ -235,7 +235,7 @@ class ABVisualiser:
         # Determine the array size so that a (10, x) 2D array shape is always used
         array_size: int
         if num_agents % 10 != 0:
-            array_size = num_agents + (10 - num_agents // 10)
+            array_size = num_agents + (10 - num_agents % 10)
         else:
             array_size = num_agents
 
@@ -243,7 +243,7 @@ class ABVisualiser:
         agent_labels: np.ndarray = np.empty([array_size], dtype="S20")
         agent_data: np.ndarray = np.empty([array_size], dtype=np.int8)
         for idx, item in enumerate(agents_info.items()):
-            agent_label: str = f"{item[0]}\n{item[1][1]:.3f}"
+            agent_label: str = f"{item[1][1]:.2f}"
             agent_labels[idx] = agent_label
             agent_data[idx] = int(item[1][0])
 

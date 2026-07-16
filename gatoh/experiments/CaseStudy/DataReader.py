@@ -487,7 +487,7 @@ class DataReader:
 
             if model_to_iterate.visualise:
                 model_to_iterate.visualiser.visualiser_iteration(
-                    model_to_iterate.base_graph, model_to_iterate.current_iteration
+                    model_to_iterate.base_graph, model_to_iterate.current_iteration, model_name=model_to_iterate.model_id
                 )
 
                 if DEBUG:
@@ -723,7 +723,7 @@ class DataReader:
 
 if __name__ == "__main__":
     # Declare all relevant global variables here
-    DEBUG: bool = False
+    DEBUG: bool = True
     MULTIPROCESSING: bool = True
 
     SAVEDIR_ROOT: str = "./gatoh/experiments/CaseStudy/Results"
