@@ -22,6 +22,7 @@ dependencies = [
     "pycairo",
     "PyGObject",
     "sphinx",
+    "seaborn",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

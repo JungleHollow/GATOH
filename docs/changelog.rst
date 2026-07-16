@@ -33,6 +33,8 @@ New Features
 - Creation of a quickstart guide for the documentation
 - Multiprocessing and multithreading added to :meth:`~gatoh.agents.agents.AgentSet.load_agentset`
 - Multiprocessing and multithreading added to :meth:`~gatoh.graphs.graphs.GraphSet.load_graphset`
+- Tests added for AgentSet objects
+- Implemented a custom visualisation system and started using this (previously the one provided by rustworkx was used)
 
 Fixes
 -----
