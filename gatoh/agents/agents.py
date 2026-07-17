@@ -128,7 +128,7 @@ class Agent:
         explicit_rw: bool = False,
         explicit_opinion_rw: bool = False,
         personality: str | None = None,
-        parameters: dict[str, Any] | None = None,
+        parameters: dict[str, float] | None = None,
         personal_benefit: bool | None = None,
     ) -> Agent:
         """
@@ -149,7 +149,7 @@ class Agent:
         :param personality: A string defining what type of personality the agent will have (defaults to 'neutral' on Agent __init__)
         :type personality: str, optional
         :param parameters: A dictionary containing the distribution parameters used to generate random values.
-        :type parameters: dict, optional
+        :type parameters: dict[str, float], optional
         :param personal_benefit: A boolean indicating if the Agent would be personally benefitted by the adoption of the 'social virus' being spread.
         :type personal_benefit: bool, optional
         :return: The generated Agent object.
@@ -209,7 +209,7 @@ class Agent:
         self,
         name: str,
         value: Any | None = None,
-        parameters: dict[str, Any] | None = None,
+        parameters: dict[str, float] | None = None,
         distribution: str | None = None,
         overwrite: bool = True,
     ) -> None:
@@ -234,7 +234,7 @@ class Agent:
         :param value: Initial value of the attribute.
         :type value: Any, optional
         :param parameters: The distribution parameters that will be used with the specified distribution for parameter generation.
-        :type parameters: dict, optional
+        :type parameters: dict[str, float], optional
         :param distribution: String to select which random distribution will be used to generate the value.
         :type distribution: str, optional
         :param overwrite: A flag indicating if the added attribute should override any existing attributes of the same name.
