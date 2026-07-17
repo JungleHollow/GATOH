@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import csv
 from dataclasses import dataclass, field
-from typing import Any
 
 
 @dataclass
@@ -335,7 +334,7 @@ class GATOHLogger:
         with open(save_path, "w", newline="") as csvfile:
             field_names: list[str] = self.variables.get_fieldnames()
 
-            csv_writer: csv.DictWriter = csv.DictWriter(csvfile, fieldnames=field_names)
+            csv_writer: csv.DictWriter[str] = csv.DictWriter(csvfile, fieldnames=field_names)
             csv_writer.writeheader()
 
             for i in range(self.variables.max_iterations):
@@ -358,7 +357,4 @@ class GATOHLogger:
                     )
 
                 csv_writer.writerow(row_dict)
-
-            return True
-
-        return False
+        return True

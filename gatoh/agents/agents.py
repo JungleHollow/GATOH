@@ -10,7 +10,7 @@ from collections.abc import Iterable, Iterator
 import concurrent.futures
 from copy import deepcopy
 from shutil import rmtree
-from typing import Any, TypeVar, override
+from typing import TypeVar, override
 
 from gatoh.utils.utils import draw_random_value, random_coinflip, value_rw_delta
 
@@ -19,7 +19,8 @@ PERSONALITIES: list[str] = ["neutral", "rational", "erratic", "impulsive", "soci
 
 # A generic to be used in cases where variables may be any type.
 T = TypeVar("T")
-
+# A generic to be used for the case where a fully generic dictionary may be passed (e.g dict[S, T])
+S = TypeVar("S")
 
 def draw_personality() -> str:
     """
@@ -103,22 +104,21 @@ class Agent:
         # If no args have been passed, it is assumed that self.generate_agent() will be subsequently called
         if args:
             for arg in args:
-                match arg:
-                    case dict():
-                        self.add_attribute("social_weightings", value=arg)
-                        for hierarchy in self.social_weightings.keys():
-                            self.is_silenced[hierarchy] = False
-                    case float():
-                        self.add_attribute("opinion", value=arg)
-                    case tuple():
-                        self.add_attribute("personality", value=arg[0])
-                        self.add_attribute("social_susceptibility", value=arg[1])
-                    case str():
-                        self.id = arg
-                    case bool():
-                        self.personal_benefit = arg
-                    case _:
-                        pass
+                if isinstance(arg, dict):
+                    self.add_attribute("social_weightings", value=arg)
+                    for hierarchy in self.social_weightings.keys():
+                        self.is_silenced[hierarchy] = False
+                elif isinstance(arg, float):
+                    self.add_attribute("opinion", value=arg)
+                elif isinstance(arg, tuple):
+                    self.add_attribute("personality", value=arg[0])
+                    self.add_attribute("social_susceptibility", value=arg[1])
+                elif isinstance(arg, str):
+                    self.add_attribute("id", value=arg)
+                elif isinstance(arg, bool):
+                    self.add_attribute("personal_benefit", value=arg)
+                else:
+                    pass
         if kwargs:
             for key, value in kwargs.items():
                 # No checking for duplicate keys; assume that explicitly added kwargs should override any args.
@@ -213,7 +213,7 @@ class Agent:
     def add_attribute(
         self,
         name: str,
-        value: object | None = None,
+        value: T | dict[S, T] | tuple[T, ...] | list[T] | None = None,
         parameters: dict[str, float] | None = None,
         distribution: str | None = None,
         overwrite: bool = True,

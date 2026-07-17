@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import gc
 import os
-from typing import Any
 from typing_extensions import deprecated
 
 import matplotlib
@@ -14,7 +13,9 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 from rustworkx.visualization import mpl_draw
 
-from gatoh.graphs.graphs import Graph
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from gatoh.graphs.graphs import Graph, GraphNode
 
 
 class ABVisualiser:
@@ -55,7 +56,7 @@ class ABVisualiser:
             if not os.path.exists(self.visualisation_dir):
                 os.mkdir(self.visualisation_dir)
 
-    def graph_node_opinion(self, graph_node: Any) -> str:
+    def graph_node_opinion(self, graph_node: GraphNode) -> str:
         """
         A helper function that takes in a GraphNode object (node payloads in the Graphs),
         and reports the string conversion of the agent's opinion in the GraphNode.
@@ -68,7 +69,7 @@ class ABVisualiser:
         agent_opinion: str = str(graph_node.agent.opinion)
         return agent_opinion
 
-    def graph_node_values(self, graph_node: Any) -> tuple[str, bool, float]:
+    def graph_node_values(self, graph_node: GraphNode) -> tuple[str, bool, float]:
         """
         A helper function that takes in a GraphNode object (node payloads in the Graphs),
         and reports the plotting information for the agent in the GraphNode.

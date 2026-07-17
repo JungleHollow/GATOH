@@ -9,14 +9,20 @@ import warnings
 import zipfile
 from collections.abc import Iterable, Iterator
 from copy import deepcopy
+from multiprocessing.pool import Pool
 from random import Random
 from shutil import rmtree
-from typing import Any, Self, override
+from typing import Any, Self
+from typing import TypedDict
+from typing import override
 
 import numpy as np
 import rustworkx as rx
 
-from gatoh.agents.agents import Agent
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from gatoh.agents.agents import Agent
+
 from gatoh.utils.utils import (
     EdgeChanges,
     beta_value_attenuation,
@@ -24,7 +30,17 @@ from gatoh.utils.utils import (
     random_coinflip,
     value_rw_delta,
     watts_strogatz_graph,
+    pygraph_to_pydigraph
 )
+
+
+class GenerationParam(TypedDict):
+    """
+    A data class used for typechecking the graph generation parameters.
+    """
+    m: int
+    p: float
+    sbm_sizes: int
 
 
 class GraphNode:
@@ -193,7 +209,7 @@ class Graph:
         dynamic_rels: bool = True,
     ) -> None:
         # Defined as DiGraph as it is common in social networks for relationships to be unidirectional or unbalanced
-        self.graph: rx.PyDiGraph = rx.PyDiGraph()
+        self.graph: rx.PyDiGraph[GraphNode, GraphEdge] = rx.PyDiGraph()
         self.node_count: int = 0
         self.edge_count: int = 0
         self.name: str = name
@@ -201,16 +217,14 @@ class Graph:
         self.dynamic_rels: bool = dynamic_rels
         self.suppress_warnings: bool = suppress_warnings
         self.rw_params: tuple[float, float] = rw_params
-        self.generation_params: dict[
-            str, Any
-        ] = {  # Used for random graph generation, can be manually set by the user if desired
+        self.generation_params: GenerationParam = {  # Used for random graph generation, can be manually set by the user if desired
             "p": 0.25,
             "m": 3,
             "sbm_sizes": 10,
         }
         self.pending_edge_changes: dict[str, EdgeChanges] = {}
 
-    def change_generation_params(self, **params) -> None:
+    def change_generation_params(self, **params: int | float) -> None:
         """
         Setter function which outlines the existing generation parameters used in generate_graph()
         and allows the user to alter them.
@@ -223,7 +237,7 @@ class Graph:
         :type sbm_sizes: int, optional
         :raises UserWarning: If invalid parameter keys or data types are input to the function.
         """
-        for key, value in params:
+        for key, value in params.items():
             if (
                 key not in self.generation_params.keys()
             ):  # Skip any invalid parameters which have been passed
@@ -232,9 +246,7 @@ class Graph:
                     category=UserWarning,
                 )
                 continue
-            elif (
-                type(self.generation_params[key]) is not type(value)
-            ):  # Skip altering any parameters which have been assigned invalid data types
+            elif not isinstance(self.generation_params[key], type(value)):  # Skip altering any parameters which have been assigned invalid data types
                 warnings.warn(
                     f"WARNING: Invalid data type detected for the value when modifying parameter {key}.",
                     category=UserWarning,
@@ -257,8 +269,12 @@ class Graph:
         :param rw_params: The mean and variance of the Graph's random walk distribution.
         :type rw_params: tuple[float, float], optional
         """
-        graph: list[Any] = rx.read_graphml(path)
-        self.graph = graph[0]
+        graph: list[rx.PyDiGraph | rx.PyGraph] = rx.read_graphml(path)
+        if isinstance(graph[0], rx.PyDiGraph):
+            self.graph = graph[0]
+        else:
+            converted_graph: rx.PyDiGraph = pygraph_to_pydigraph(graph[0])
+            self.graph = converted_graph
         self.node_count = len(self.graph.nodes())
         self.edge_count = len(self.graph.edges())
         self.name = name
@@ -355,13 +371,14 @@ class Graph:
         Will also update the graph edge_count attribute.
         """
         for idx, data in self.graph.edge_index_map().items():
-            graph_edge: GraphEdge = data[2]
-            if (
-                type(graph_edge) is list
-            ):  # Workaround for unknown error where a list of a single GraphEdge is added to the base graph at some point
-                graph_edge = graph_edge[0]
-            graph_edge.set_index(idx)
-            self.graph.update_edge_by_index(idx, graph_edge)
+            graph_edge: GraphEdge | list[GraphEdge] = data[2]
+            # Workaround for undetermined error where a list of a single GraphEdge is added to the base graph at some point
+            if isinstance(graph_edge, list):
+                edge_object: GraphEdge = graph_edge[0]
+                edge_object.set_index(idx)
+            else:
+                graph_edge.set_index(idx)
+                self.graph.update_edge_by_index(idx, graph_edge)
         self.edge_count = len(self.graph.edges())
         return None
 
@@ -369,8 +386,10 @@ class Graph:
         """
         Creates appropriate GraphEdges from the given dictionary and then adds these to the graph.
 
+        The parameter :attr:`edges` has been typed as :class:`~typing.Any` to simplify typechecking.
+
         :param edges: A mapping of <key : list> where each key corresponds to (from_node, to_node, [optional] weighting, [optional] name).
-        :type edges: dict[str, list]
+        :type edges: dict[str, list[int | float | tuple[float, float]]]
         """
         graph_edges: list[tuple[int, int, GraphEdge]] = []
         from_nodes: list[int] = edges["from_node"]
@@ -547,7 +566,7 @@ class Graph:
                     sbm_remainder  # If any agents are left over, add them all to the last block
                 )
 
-                sbm_probabilities: np.ndarray = np.zeros(
+                sbm_probabilities: np.ndarray[tuple[int, int], np.dtype[np.float64]] = np.zeros(
                     (sbm_n_blocks, sbm_n_blocks), dtype=np.float64
                 )  # Initialise a BxB array to hold the probabilities for inter-block connections
                 for i in range(sbm_probabilities.shape[0]):
@@ -639,12 +658,12 @@ class Graph:
         with contextlib.suppress(KeyError):
             relationships_dict[(node_2, node_1)] = self.graph.adj_direction(
                 node_1, True
-            )[node_2]
+            )[node_2].weighting
 
         with contextlib.suppress(KeyError):
             relationships_dict[(node_1, node_2)] = self.graph.adj_direction(
                 node_1, False
-            )[node_2]
+            )[node_2].weighting
 
         return relationships_dict
 
@@ -664,7 +683,7 @@ class Graph:
             # This should never be reached and is included for type checking purposes
             return 0.0
 
-        relationship_dict: dict[int, Any] = self.graph.adj_direction(from_index, False)
+        relationship_dict: dict[int, GraphEdge] = self.graph.adj_direction(from_index, False)
 
         to_index: int | None = self.get_agent_index(to_node)
         if to_index is None:
@@ -687,11 +706,11 @@ class Graph:
         :type value: float
         """
         edge_index: int | None = self.relationship_exists(node_1, node_2)
-        updated_edge: list[Any] = [GraphEdge(self.name, node_1, node_2, value)]
+        updated_edge: tuple[int, int, GraphEdge] = (node_1, node_2, GraphEdge(self.name, node_1, node_2, value))
         if edge_index is not None:
-            self.graph.update_edge_by_index(edge_index, updated_edge)
+            self.graph.update_edge_by_index(edge_index, updated_edge[-1])
         else:
-            _ = self.graph.add_edges_from(updated_edge)
+            _ = self.graph.add_edges_from([updated_edge])
 
         self.update_edge_indices()
         self.register_edge_change(node_1, node_2, value)
@@ -999,10 +1018,12 @@ class Graph:
                 new_weighting = value_rw_delta(
                     edge.weighting, self.rw_params[0], self.rw_params[1]
                 )
-            else:
+            elif edge.rw_params is not None:
                 new_weighting = value_rw_delta(
                     edge.weighting, edge.rw_params[0], edge.rw_params[1]
                 )
+            else:  # Default to not changing the weighting at all
+                new_weighting = edge.weighting
 
             # Constrain the weighting back to [-1.0, 1.0] as needed
             if new_weighting < -1.0:
@@ -1300,7 +1321,7 @@ class GraphSet:
         return edge_save_path
 
     def load_graphset(
-        self, load_path: str, rw_params: dict[str, tuple[float, float]], worker_pool: Any | None = None,
+        self, load_path: str, rw_params: dict[str, tuple[float, float]], worker_pool: Pool | None = None,
     ) -> None:
         """
         Loads a GraphSet that has been saved following the same process as in the save_graphset() function.
@@ -1310,7 +1331,7 @@ class GraphSet:
         :param rw_params: A <name : rw_params> mapping containing the relevant external information for each graph.
         :type rw_params: dict[str, tuple[float, float]]
         :param worker_pool: A pool of workers that can distribute the processing of the graphset loading amongst themselves.
-        :type worker_pool: :class:`~multiprocessing.Pool`, optional
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         """
         zip_load_path: str = f"{load_path}/_graphset.zip"
 
@@ -1537,11 +1558,15 @@ class GraphSet:
 
         :param hierarchy: The name of the hierarchy for which polarisation is being calculated.
         :type hierarchy: str
+        :raises ValueError: If the input hierarchy does not exist or otherwise cannot be retrieved.
         :return: The hierarchy polarisation value.
         :rtype: float
         """
-        hierarchy_graph: Any = self.get_hierarchy(hierarchy)
-        return hierarchy_graph.calculate_polarisation()
+        hierarchy_graph: Graph | None = self.get_hierarchy(hierarchy)
+        if hierarchy_graph is not None:
+            return hierarchy_graph.calculate_polarisation()
+        else:
+            raise ValueError(f"Tried to calculate polarisation for an invalid hierarchy: {hierarchy}")
 
     def agent_opinion_threshold(
         self, agent: Agent, threshold: float = 0.9

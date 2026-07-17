@@ -47,7 +47,8 @@ Fixes
   for the planned case study experiment
 - Fixed the radicalisation checks in :meth:`~gatoh.model.model.ABModel.iteration_opinion_changes` to stop repeated deradicalisation of agents
 - **MAJOR:** Fixed numerous variable declarations and added manual garbage collection throughout various functions to prevent memory leaks during model runtimes
-- Fixed modulo operations in new :class:`~gatoh.visualisation.visualisation.ABVisualiser` methods.
+- Fixed modulo operations in new :class:`~gatoh.visualisation.visualisation.ABVisualiser` methods
+- Removed all uses of "Any" in the code typing
 
 0.1.0-alpha
 ===========

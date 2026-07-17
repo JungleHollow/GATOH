@@ -4,13 +4,13 @@ import gc
 import os
 from copy import deepcopy
 from datetime import datetime
+from multiprocessing.pool import Pool
 from random import choices, randint
 from shutil import rmtree
-from typing import Any
+from typing import Any, TypedDict
 
 import numpy as np
 import yaml
-from matplotlib import pyplot as plt
 
 # Used for type declarations in ABModel __init__
 from matplotlib.axes import Axes
@@ -18,7 +18,7 @@ from matplotlib.figure import Figure
 from rustworkx.rustworkx import NoEdgeBetweenNodes
 
 from gatoh.agents.agents import Agent, AgentSet
-from gatoh.graphs.graphs import Graph, GraphEdge, GraphSet
+from gatoh.graphs.graphs import Graph, GraphNode, GraphEdge, GraphSet
 from gatoh.logging.logging import GATOHLogger
 from gatoh.utils.utils import (
     EdgeChanges,
@@ -26,6 +26,25 @@ from gatoh.utils.utils import (
     create_config_file,
 )
 from gatoh.visualisation.visualisation import ABVisualiser
+
+
+class ConfigData(TypedDict):
+    """
+    A helper class used to type check the config data for :class:`~gatoh.model.model.ABModel`.
+    """
+    hierarchy_information: dict[str, tuple[float, float]]
+    current_iteration: int
+    max_iterations: int
+    silencing_threshold: float
+    negation_threshold: float
+    radicalisation_threshold: float
+    visualise: bool
+    visualisation_dir: str
+    suppress_warnings: bool
+    checkpointing: bool
+    save_dir: str
+    data_file: str
+    model_id: str
 
 
 class ABModel:
@@ -157,7 +176,7 @@ class ABModel:
             config_path = f"{self.save_dir}/model_{self.model_id}.yaml"
         else:
             config_path = f"{self.save_dir}/model_{datetime.now().strftime('%y-%m-%d %H-%M')}.yaml"
-        config_data: dict[str, Any] = {
+        config_data: ConfigData = {
             "hierarchy_information": self.hierarchy_information,
             "current_iteration": self.current_iteration,
             "max_iterations": self.max_iterations,
@@ -208,7 +227,7 @@ class ABModel:
                     config_prefix: str = file_name.split("_")[0]
                     if config_prefix == "model":
                         with open(file_path, "r") as config_file:
-                            config_data: dict[str, Any] = yaml.load(
+                            config_data: ConfigData = yaml.load(
                                 config_file, Loader=YamlLoader
                             )
                             self.hierarchy_information = config_data[
@@ -382,7 +401,7 @@ class ABModel:
         id_base: str,
         personality_probs: dict[str, float],
         distribution: str = "gaussian",
-        parameters: dict[str, Any] | None = None,
+        parameters: dict[str, float] | None = None,
         number: int = 100,
     ) -> None:
         """
@@ -423,12 +442,12 @@ class ABModel:
             )
         return None
 
-    def iterate(self, worker_pool: Any | None = None) -> None:
+    def iterate(self, worker_pool: Pool | None = None) -> None:
         """
         Handles the main model iteration loop.
 
         :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
-        :type worker_pool: :class:`~multiprocessing.Pool`, optional
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         """
         while self.current_iteration < self.max_iterations:
             # Initialise the logger state for the current iteration
@@ -524,7 +543,7 @@ class ABModel:
         )
         all_neighbour_benefits: list[bool] = []
         for neighbour_index in all_neighbour_indices:
-            neighbour_object: Agent = self.base_graph.graph[neighbour_index]
+            neighbour_object: Agent = self.base_graph.graph[neighbour_index].agent
             all_neighbour_benefits.append(neighbour_object.personal_benefit)
 
         # Define the type of the return
@@ -624,14 +643,14 @@ class ABModel:
             )
         return None
 
-    def update(self, worker_pool: Any | None = None) -> None:
+    def update(self, worker_pool: Pool | None = None) -> None:
         """
         Updates the agents' internal states to match the model step. This mainly handles the construction of agents'
         perceived opinion climates within their hierarchies, and the simulation of opinion silencing behaviours depending
         on these climates.
 
         :param worker_pool: A pool of workers that can distribute the processing of the update function amongst themselves.
-        :type worker_pool: :class:`~multiprocessing.Pool`, optional
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         """
         if worker_pool is not None:
             agent_updates = worker_pool.map(self.update_multi, self.agents)
@@ -685,7 +704,7 @@ class ABModel:
                     )
         return (silenced, was_silenced, negation)
 
-    def logger_iteration(self, worker_pool: Any | None = None) -> None:
+    def logger_iteration(self, worker_pool: Pool | None = None) -> None:
         """
         Calculate any relevant aggregate statistics and then pass these to the logger's iteration() function to be stored.
 
@@ -696,7 +715,7 @@ class ABModel:
             4. Layer interdependence for each hierarchy
 
         :param worker_pool: A pool of workers that can distribute the processing of the logger iteration between them.
-        :type worker_pool: :class:`~multiprocessing.Pool`
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`
         """
         aggregate_opinion: float = self.calculate_aggregate_opinion()
         radicalisation_logodds: float = self.calculate_radicalisation_logodds()
@@ -752,12 +771,12 @@ class ABModel:
             return log_odds
         return 0.0
 
-    def calculate_layers_polarisation(self, worker_pool: Any | None = None) -> dict[str, float]:
+    def calculate_layers_polarisation(self, worker_pool: Pool | None = None) -> dict[str, float]:
         r"""
         Calculate the polarisation of the opinion climate within each hierarchy by calling each graph's calculate_polarisation() method.
 
         :param worker_pool: A pool of workers that can distribute the polarisation calculations amongst themselves.
-        :type worker_pool: :class:`~multiprocessing.Pool`
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`
         :return: A <hierarchy : value> mapping containing the polarisation value for each hierarchy.
         :rtype: dict[str, float]
         """
@@ -816,12 +835,12 @@ class ABModel:
         )
         return 0.0
 
-    def calculate_interdependences(self, worker_pool: Any | None = None) -> list[tuple[str, float]]:
+    def calculate_interdependences(self, worker_pool: Pool | None = None) -> list[tuple[str, float]]:
         """
         A helper function that allows for multiprocessing of :meth:`~gatoh.model.model.ABModel.calculate_interdependence`.
 
         :param worker_pool: A pool of workers that can distribute the interdependence calculations amongst themselves.
-        :type worker_pool: :class:`~multiprocessing.Pool`
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`
         :return: A list containing the necessary results.
         :rtype: list[tuple[str, float]]
         """
@@ -885,14 +904,14 @@ class ABModel:
         interdep_numerator: float = 0.0
         # Get the sum of all the estimated opinion values, only for the layer of interest (a)
         oc_a: dict[str, dict[str, float]] = observed_opinions_all[layer_of_interest]
-        for agent_a_i, oc_a_i in oc_a.items():
+        for _, oc_a_i in oc_a.items():
             for oc_val in oc_a_i.values():
                 interdep_numerator += abs(oc_val)
 
         interdep_denominator: float = 0.0
         # Get the sum of all the estimated opinion values for all layers (k)
-        for layer_k, oc_k in observed_opinions_all.items():
-            for agent_k_i, oc_k_i in oc_k.items():
+        for _, oc_k in observed_opinions_all.items():
+            for _, oc_k_i in oc_k.items():
                 for oc_val in oc_k_i.values():
                     interdep_denominator += abs(oc_val)
 
@@ -909,7 +928,7 @@ class ABModel:
         edges within the model's base graph.
         """
         for hierarchy in self.graphs:
-            for idx, edge in hierarchy.graph.edge_index_map().items():
+            for _, edge in hierarchy.graph.edge_index_map().items():
                 graph_edge: GraphEdge = deepcopy(edge[2])
 
                 # Get the index of the Agent objects within the model's AgentSet (not the graph's node set)
@@ -958,13 +977,16 @@ class ABModel:
         :rtype: tuple[int, int]
         """
         # Actually GraphNode objects, but must be declared as "Any" for cases where a non-existent node index is passed to the function...
-        from_node: Any = hierarchy_graph.get_node(edge.from_node)
-        to_node: Any = hierarchy_graph.get_node(edge.to_node)
+        from_node: GraphNode | None = hierarchy_graph.get_node(edge.from_node)
+        to_node: GraphNode | None = hierarchy_graph.get_node(edge.to_node)
 
-        from_index_base: int = self.agents.get_index(from_node.agent)
-        to_index_base: int = self.agents.get_index(to_node.agent)
+        if from_node is not None and to_node is not None:
+            from_index_base: int = self.agents.get_index(from_node.agent)
+            to_index_base: int = self.agents.get_index(to_node.agent)
+            return from_index_base, to_index_base
 
-        return from_index_base, to_index_base
+        # Including here for return checking
+        raise RuntimeError("This line should not have been reached...")
 
     def add_base_graph_edges(self, graph: Graph) -> None:
         """
@@ -980,7 +1002,7 @@ class ABModel:
             "name": [],
         }
 
-        for idx, edge in graph.graph.edge_index_map().items():
+        for _, edge in graph.graph.edge_index_map().items():
             graph_edge: GraphEdge = deepcopy(edge[2])
 
             # Get the index of the Agent objects within the model's AgentSet (not the graph's node set)

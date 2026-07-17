@@ -6,7 +6,12 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from typing import Any
+from typing import TypeVar, cast
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from gatoh.model.model import ConfigData
+    from yaml import SequenceNode
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,6 +19,9 @@ import rustworkx as rx
 import yaml
 from multimethod import multimethod
 from scipy.stats import beta, gamma, levy, norm, truncnorm, uniform
+
+
+T = TypeVar("T", bool, str, int, float)
 
 # ========== Graph utils ========== #
 
@@ -139,7 +147,7 @@ def watts_strogatz_graph(
 
 
 @multimethod
-def watts_strogatz_graph(n: int, k: int, p: float) -> rx.PyGraph:
+def watts_strogatz_graph(n: int, k: int, p: float, seed: None) -> rx.PyGraph:
     """
     Returns an undirected Watts-Strogatz small-world graph generated using :py:mod:`rustworkx`.
     An adapted version of :py:func:`~networkx.generators.random_graphs.watts_strogatz_graph` from the :py:mod:`NetworkX` library.
@@ -370,16 +378,16 @@ def draw_random_value(
                 drawn_value = beta.rvs(1.0, 1.0)
         case "levy":
             if parameters:
-                drawn_value = levy.rvs(loc=parameters["loc"], scale=parameters["scale"])
+                drawn_value = float(levy.rvs(loc=parameters["loc"], scale=parameters["scale"]))
             else:
-                drawn_value = levy.rvs()
+                drawn_value = float(levy.rvs())
         case "uniform":
             if parameters:
-                drawn_value = uniform.rvs(
+                drawn_value = float(uniform.rvs(
                     loc=parameters["loc"], scale=parameters["scale"]
-                )
+                ))
             else:
-                drawn_value = uniform.rvs()
+                drawn_value = float(uniform.rvs())
         case "gamma":
             if parameters:
                 drawn_value = gamma.rvs(
@@ -394,7 +402,7 @@ def draw_random_value(
     return drawn_value
 
 
-def random_coinflip(return_type: str) -> Any:
+def random_coinflip(return_type: str) -> T:
     """
     Simulates a random coinflip, returning the result as either a boolean, an integer, a float, or a string.
 
@@ -413,21 +421,21 @@ def random_coinflip(return_type: str) -> Any:
 
     match return_type:
         case "bool":
-            return coinflip_result
+            return cast(T, coinflip_result)
         case "int":
             if coinflip_result:
-                return 1
-            return 0
+                return cast(T, 1)
+            return cast(T, 0)
         case "float":
             if coinflip_result:
-                return 1.0
-            return 0
+                return cast(T, 1.0)
+            return cast(T, 0.0)
         case "string":
             if coinflip_result:
-                return "yes"
-            return "no"
+                return cast(T, "yes")
+            return cast(T, "no")
         case _:
-            return coinflip_result  # Defaults to boolean if no valid input type was passed.
+            return cast(T, coinflip_result)  # Defaults to boolean if no valid input type was passed.
 
 
 # ========== Random Walk Utils ==========
@@ -447,7 +455,7 @@ def value_rw_delta(input_value: float, mean: float, variance: float) -> float:
     :return: The result of the random walk.
     :rtype: float
     """
-    rw_delta: float = norm.rvs(loc=mean, scale=variance)
+    rw_delta: float = float(norm.rvs(loc=mean, scale=variance))
     rw_result: float = input_value + rw_delta
     return rw_result
 
@@ -456,7 +464,7 @@ def value_rw_delta(input_value: float, mean: float, variance: float) -> float:
 
 
 class YamlLoader(yaml.SafeLoader):
-    def construct_python_tuple(self, node):
+    def construct_python_tuple(self, node: SequenceNode):
         """
         Adds the ability to load Python tuples whilst maintaining safe_load functionality.
         """
@@ -468,7 +476,7 @@ YamlLoader.add_constructor(
 )
 
 
-def create_config_file(save_path: str, config_data: dict[str, Any]) -> None:
+def create_config_file(save_path: str, config_data: ConfigData) -> None:
     """
     Creates a structured config file from the input config data, and then saves it to the specified path.
 
@@ -487,8 +495,8 @@ def create_config_file(save_path: str, config_data: dict[str, Any]) -> None:
 
 
 def plot_graph(
-    x_vals: dict[str, list[Any]],
-    y_vals: dict[str, list[Any]],
+    x_vals: dict[str, list[int | float]],
+    y_vals: dict[str, list[int | float]],
     plot_type: str = "line",
     show_fig: bool = False,
     x_label: str | None = None,
@@ -532,8 +540,8 @@ def plot_graph(
     fig, ax = plt.subplots()
 
     for key in x_vals.keys():
-        current_x: list[Any] = x_vals[key]
-        current_y: list[Any] = y_vals[key]
+        current_x: list[int | float] = x_vals[key]
+        current_y: list[int | float] = y_vals[key]
 
         match plot_type:
             case "line":
