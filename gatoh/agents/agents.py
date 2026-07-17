@@ -6,16 +6,19 @@ import pickle
 import random as rd
 import warnings
 import zipfile
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 import concurrent.futures
 from copy import deepcopy
 from shutil import rmtree
-from typing import Any, Iterator, override
+from typing import Any, TypeVar, override
 
 from gatoh.utils.utils import draw_random_value, random_coinflip, value_rw_delta
 
 # Definition of all valid, existing Agent personality types
 PERSONALITIES: list[str] = ["neutral", "rational", "erratic", "impulsive", "social"]
+
+# A generic to be used in cases where variables may be any type.
+T = TypeVar("T")
 
 
 def draw_personality() -> str:
@@ -72,7 +75,7 @@ class Agent:
     :type opinion_rw: tuple[float, float], optional
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: T, **kwargs: T) -> None:
         # Attributes declared but without initialisation will be defined by self.generate_agent() in a subsequent call if no args are passed
         self.id: str  # Can be any arbitrary string, but likely will follow the form XXXX0000 allowing for up to 9999 agents per community
         self.index: int  # The Agent's index within the AgentSet it belongs in
@@ -114,6 +117,8 @@ class Agent:
                         self.id = arg
                     case bool():
                         self.personal_benefit = arg
+                    case _:
+                        pass
         if kwargs:
             for key, value in kwargs.items():
                 # No checking for duplicate keys; assume that explicitly added kwargs should override any args.
@@ -208,7 +213,7 @@ class Agent:
     def add_attribute(
         self,
         name: str,
-        value: Any | None = None,
+        value: object | None = None,
         parameters: dict[str, float] | None = None,
         distribution: str | None = None,
         overwrite: bool = True,
@@ -263,7 +268,7 @@ class Agent:
                 )
         return None
 
-    def get_attribute(self, name: str) -> Any:
+    def get_attribute(self, name: str) -> T | None:
         """
         Return any existing or dynamically added attribute held by the Agent object.
 
@@ -272,14 +277,7 @@ class Agent:
         :return: The value stored for the parameter.
         :rtype: Any
         """
-        try:
-            return self.__dict__[name]
-        except KeyError:
-            warnings.warn(
-                f"WARNING: Attempting to get an Agent attribute ({name}) which doesn't exist.",
-                category=UserWarning,
-            )
-            return None
+        return self.__dict__.get(name)
 
     def store_previous_opinion(self) -> None:
         """
@@ -1008,7 +1006,7 @@ class AgentSet:
         return deepcopy(sampled_agents)
 
     @override
-    def __getstate__(self) -> dict[str, Any]:
+    def __getstate__(self) -> dict[str, list[Agent] | rd.Random]:
         """
         Retrive the current state of the AgentSet for serialization.
 
