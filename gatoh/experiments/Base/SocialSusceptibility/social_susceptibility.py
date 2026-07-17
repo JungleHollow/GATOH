@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import random as rd
 from copy import deepcopy
-from typing import Any
+from typing import TypedDict
 
 import numpy as np
 
@@ -231,8 +231,8 @@ class SocialSusceptibilityTester:
                 )
                 _ = self.models[missing_save].add_graphs(
                     deepcopy(self.model_graphs[missing_save]),
-                    deepcopy(TEST_PARAMETERS["hierarchy_names"]),
-                    deepcopy(TEST_PARAMETERS["hierarchy_rw"]),
+                    TEST_PARAMETERS["hierarchy_names"],
+                    list(TEST_PARAMETERS["hierarchy_rw"].values()),
                 )
             return None
 
@@ -242,8 +242,8 @@ class SocialSusceptibilityTester:
             )
             _ = self.models[model_name].add_graphs(
                 deepcopy(self.model_graphs[model_name]),
-                deepcopy(TEST_PARAMETERS["hierarchy_names"]),
-                deepcopy(TEST_PARAMETERS["hierarchy_rw"]),
+                TEST_PARAMETERS["hierarchy_names"],
+                list(TEST_PARAMETERS["hierarchy_rw"].values()),
             )
         return None
 
@@ -268,8 +268,16 @@ class SocialSusceptibilityTester:
 
 
 if __name__ == "__main__":
+    class TestParameters(TypedDict):
+        iterations: int
+        model_names: list[str]
+        hierarchy_names: list[str]
+        hierarchy_rw: dict[str, tuple[float, float]]
+        relationship_rw: tuple[float, float]
+        graph_generation_alg: str
+
     # The relevant parameters that are being applied to this experiment
-    TEST_PARAMETERS: dict[str, Any] = {
+    TEST_PARAMETERS: TestParameters = {
         "iterations": 100,
         "model_names": [
             "ZERO",
@@ -290,8 +298,16 @@ if __name__ == "__main__":
         "graph_generation_alg": "small-world",
     }
 
+    class AgentParameters(TypedDict):
+        n_agents: int
+        opinions: tuple[float, float]
+        relationships: tuple[float, float]
+        hierarchy_weighting: tuple[float, float]
+        personal_benefit: dict[bool, float]
+        id_base: str
+
     # The parameters that will be used to create the Agent population that is shared across models
-    AGENT_PARAMETERS: dict[str, Any] = {
+    AGENT_PARAMETERS: AgentParameters = {
         "n_agents": 100,
         "opinions": (-0.8, 0.8),
         "relationships": (-0.8, 0.8),

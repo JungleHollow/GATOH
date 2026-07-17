@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import random as rd
 from copy import deepcopy
-from typing import Any
+from typing import TypedDict
 
 import numpy as np
 
@@ -420,14 +420,24 @@ class InfluentialTester:
 
 
 if __name__ == "__main__":
+    class TestParameters(TypedDict):
+        n_agents: int
+        n_negative: int
+
     # The parameters set for the tester class itself
-    TEST_PARAMETERS: dict[str, Any] = {
+    TEST_PARAMETERS: TestParameters = {
         "n_agents": 100,
         "n_negative": 10,
     }
 
+    class ModelParameters(TypedDict):
+        iterations: int
+        silencing_thresh: float
+        radical_thresh: float
+        negation_thresh: float
+
     # The model parameters used when creating the ABModel instances
-    MODEL_PARAMETERS: dict[str, Any] = {
+    MODEL_PARAMETERS: ModelParameters = {
         "iterations": 100,
         "silencing_thresh": 0.95,
         "radical_thresh": 0.99,
@@ -461,8 +471,19 @@ if __name__ == "__main__":
         "cultural": 0.25,
     }
 
+    class AgentCharacteristics(TypedDict):
+        non_negative_opinion: tuple[float, float]
+        negative_opinion: tuple[float, float]
+        non_influential_connectivity: int
+        relationship: tuple[float, float]
+        influential_connectivity: int
+        influential_relationship: tuple[float, float]
+        social_susceptibility: float
+        personality: str
+        personal_benefit: bool
+
     # Defining the distributions of the characteristics for Agents that will be used in the experiment
-    AGENT_CHARACTERISTICS: dict[str, Any] = {
+    AGENT_CHARACTERISTICS: AgentCharacteristics = {
         "non_negative_opinion": (0.0, 0.8),
         "negative_opinion": (-1.0, -0.5),
         "non_influential_connectivity": 3,

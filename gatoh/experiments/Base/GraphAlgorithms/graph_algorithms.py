@@ -3,9 +3,7 @@ from __future__ import annotations
 import os
 import random as rd
 from copy import deepcopy
-from typing import Any
-
-import numpy as np
+from typing import TypedDict
 
 import gatoh.agents.agents as agt
 import gatoh.graphs.graphs as gr
@@ -38,16 +36,13 @@ class GraphAlgTester:
         # Create the model objects no matter what
         for algorithm in self.algorithms:
             algorithm_model: md.ABModel = md.ABModel(
-                deepcopy(HIERARCHY_NAMES),
-                deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
+                HIERARCHY_NAMES,
+                HIERARCHY_RW_DISTRIBUTIONS,
                 save_dir=MODEL_SAVEDIRS[algorithm],
                 data_file=MODEL_DATAFILES[algorithm],
                 model_id=algorithm.upper(),
             )
-            self.models[algorithm] = deepcopy(algorithm_model)
-
-            # Manual garbage collection
-            del algorithm_model
+            self.models[algorithm] = algorithm_model
 
         # TODO: Optimise this statement to account for partial missing and existing saves
         if not self.existing:  # Objects are needed to define and run the models
@@ -57,9 +52,9 @@ class GraphAlgTester:
             for algorithm in self.algorithms:
                 algorithm_graphs: list[gr.Graph] = self.create_graphs(
                     algorithm,
-                    deepcopy(HIERARCHY_NAMES),
-                    deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
-                    deepcopy(self.model_agents),
+                    HIERARCHY_NAMES,
+                    HIERARCHY_RW_DISTRIBUTIONS,
+                    self.model_agents,
                 )
                 self.model_graphs[algorithm] = algorithm_graphs
 
@@ -95,18 +90,18 @@ class GraphAlgTester:
 
             agent = agt.Agent(
                 agent_id,
-                deepcopy(HIERARCHY_WEIGHTINGS),
+                HIERARCHY_WEIGHTINGS,
                 agent_opinion,
                 agent_behaviour,
                 personal_benefit,
             )
 
-            created_agents.append(deepcopy(agent))
+            created_agents.append(agent)
 
             # Manual garbage collection
             del agent
 
-        return deepcopy(created_agents)
+        return created_agents
 
     def create_graphs(
         self,
@@ -138,12 +133,9 @@ class GraphAlgTester:
                 deepcopy(agents), method=algorithm, relationship_range=rel_range
             )
 
-            created_graphs.append(deepcopy(graph))
+            created_graphs.append(graph)
 
-            # Manual garbage collection
-            del graph
-
-        return deepcopy(created_graphs)
+        return created_graphs
 
     def load_models(self, existing_saves: list[str] | None = None) -> None:
         """
@@ -170,18 +162,18 @@ class GraphAlgTester:
             for missing_save in missing_saves:
                 _ = self.models[missing_save].add_agents(deepcopy(self.model_agents))
                 _ = self.models[missing_save].add_graphs(
-                    deepcopy(self.model_graphs[missing_save]),
-                    deepcopy(HIERARCHY_NAMES),
-                    deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
+                    self.model_graphs[missing_save],
+                    HIERARCHY_NAMES,
+                    HIERARCHY_RW_DISTRIBUTIONS,
                 )
             return None
 
         for algorithm in self.algorithms:
             _ = self.models[algorithm].add_agents(deepcopy(self.model_agents))
             _ = self.models[algorithm].add_graphs(
-                deepcopy(self.model_graphs[algorithm]),
-                deepcopy(HIERARCHY_NAMES),
-                deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
+                self.model_graphs[algorithm],
+                HIERARCHY_NAMES,
+                HIERARCHY_RW_DISTRIBUTIONS,
             )
         return None
 
@@ -205,8 +197,12 @@ class GraphAlgTester:
 
 
 if __name__ == "__main__":
+    class TestParameters(TypedDict):
+        generation_algorithms: list[str]
+        num_agents: int
+
     # The parameters set for the tester class itself
-    TEST_PARAMETERS: dict[str, Any] = {
+    TEST_PARAMETERS: TestParameters = {
         "generation_algorithms": [
             "small-world",
             "scale-free",
@@ -245,8 +241,13 @@ if __name__ == "__main__":
         "cultural": 0.25,
     }
 
+    class AgentCharacteristics(TypedDict):
+        opinion: tuple[float, float]
+        connectivity: int
+        relationship: tuple[float, float]
+
     # Defining the distributions of the characteristics for Agents that will be used in the experiment
-    AGENT_CHARACTERISTICS: dict[str, Any] = {
+    AGENT_CHARACTERISTICS: AgentCharacteristics = {
         "opinion": (-0.8, 0.8),
         "connectivity": 6,
         "relationship": (-0.2, 0.8),

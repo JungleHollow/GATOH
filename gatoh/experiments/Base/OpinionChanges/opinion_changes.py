@@ -6,7 +6,7 @@ import pickle
 import random as rd
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, TypedDict
 
 import numpy as np
 
@@ -14,6 +14,14 @@ import gatoh.agents.agents as agt
 import gatoh.graphs.graphs as gr
 import gatoh.model.model as md
 from gatoh.utils.utils import random_coinflip
+
+
+class SaveStructDict(TypedDict):
+    model_id: str
+    max_iterations: int
+    change_iteration: int
+    changed_agents: dict[str, list[str]]
+    current_iteration: int
 
 
 @dataclass
@@ -123,7 +131,7 @@ class OpinionChangesTester:
                     TEST_PARAMETERS["iterations"]
                     // TEST_PARAMETERS["opinion_change_interval"]
                 ),
-                dtype=np.int64,
+                dtype=int,
             )
         )
         self.model_repeats: int = TEST_PARAMETERS["repeats"]
@@ -404,18 +412,20 @@ class OpinionChangesTester:
 
         :param existing_saves: An optional partial list of the model names representing the models that can be loaded.
         """
+        save_struct_path: str
+        save_struct_dict: SaveStructDict
+        new_model: md.ABModel
         if existing_saves:
             for existing_save in existing_saves:
                 # Create an empty dummy model object
-                new_model: md.ABModel = md.ABModel(
-                    TEST_PARAMETERS["hierarchy_names"], TEST_PARAMETERS["hierarchy_rw"]
+                new_model = md.ABModel(
+                    TEST_PARAMETERS["hierarchy_names"], list(TEST_PARAMETERS["hierarchy_rw"].values())
                 )
                 new_model.load_model(SAVEDIRS[existing_save])
 
-                save_struct_path: str = (
+                save_struct_path = (
                     f"{SAVEDIRS[existing_save]}/{new_model.model_id}.pkl"
                 )
-                save_struct_dict: dict[str, Any]
                 with open(save_struct_path, "rb") as pickle_file:
                     save_struct_dict = pickle.load(pickle_file)
 
@@ -433,14 +443,13 @@ class OpinionChangesTester:
             return None
 
         for model_name, model_savedir in SAVEDIRS.items():
-            new_model: md.ABModel = md.ABModel(
+            new_model = md.ABModel(
                 TEST_PARAMETERS["hierarchy_names"],
-                TEST_PARAMETERS["hierarchy_rw"],
+                list(TEST_PARAMETERS["hierarchy_rw"].values()),
             )
             new_model.load_model(model_savedir)
 
-            save_struct_path: str = f"{model_savedir}/{model_name}.pkl"
-            save_struct_dict: dict[str, Any]
+            save_struct_path = f"{model_savedir}/{model_name}.pkl"
             with open(save_struct_path, "rb") as pickle_file:
                 save_struct_dict = pickle.load(pickle_file)
 
@@ -468,7 +477,7 @@ class OpinionChangesTester:
         with open(LOGGED_SAVEDIRS, "w", newline="") as csv_file:
             field_names: list[str] = ["model_name", "model_savedir"]
 
-            csv_writer: csv.DictWriter = csv.DictWriter(
+            csv_writer: csv.DictWriter[str] = csv.DictWriter(
                 csv_file, fieldnames=field_names
             )
             csv_writer.writeheader()
@@ -503,8 +512,8 @@ class OpinionChangesTester:
 
                 # Create the ABModel object for this instance
                 new_model: md.ABModel = md.ABModel(
-                    deepcopy(TEST_PARAMETERS["hierarchy_names"]),
-                    deepcopy(list(TEST_PARAMETERS["hierarchy_rw"].values())),
+                    TEST_PARAMETERS["hierarchy_names"],
+                    list(TEST_PARAMETERS["hierarchy_rw"].values()),
                     suppress_warnings=True,
                     save_dir=f"{SAVEDIR_ROOT}/OpinionChanges_{model_name}",
                     data_file=f"{SAVEDIR_ROOT}/OpinionChanges_{model_name}/{model_name}_model_variables.csv",
@@ -514,9 +523,9 @@ class OpinionChangesTester:
                 # Add the Agents and Graphs to the new model
                 _ = new_model.add_agents(deepcopy(self.model_agents))
                 _ = new_model.add_graphs(
-                    deepcopy(self.model_graphs),
-                    deepcopy(TEST_PARAMETERS["hierarchy_names"]),
-                    deepcopy(TEST_PARAMETERS["hierarchy_rw"]),
+                    self.model_graphs,
+                    TEST_PARAMETERS["hierarchy_names"],
+                    list(TEST_PARAMETERS["hierarchy_rw"].values()),
                 )
 
                 # Sample Agents for which the opinion changes will be introduced in
@@ -534,25 +543,22 @@ class OpinionChangesTester:
                 # Extract the names of all the hierarchies that each sampled Agent belongs to in the model
                 changed_agents: dict[str, list[str]] = {}
                 for agent_id in agent_ids:
-                    agent_obj: Any = new_model.agents.get_agent_by_id(agent_id)
-                    agent_hierarchies: list[str] = (
-                        new_model.graphs.get_agent_hierarchies(agent_obj)
-                    )
-                    changed_agents[agent_id] = deepcopy(agent_hierarchies)
+                    agent_obj: agt.Agent | None = new_model.agents.get_agent_by_id(agent_id)
+                    if agent_obj is not None:
+                        agent_hierarchies: list[str] = (
+                            new_model.graphs.get_agent_hierarchies(agent_obj)
+                        )
+                        changed_agents[agent_id] = deepcopy(agent_hierarchies)
 
                 # Create the ModelStruct object
                 model_struct: ModelStruct = ModelStruct(
-                    deepcopy(new_model),
+                    new_model,
                     TEST_PARAMETERS["iterations"],
                     interval,
                     changed_agents,
                 )
 
-                self.models.append(deepcopy(model_struct))
-
-                # Manual garbage collection
-                del new_model, model_struct
-
+                self.models.append(model_struct)
         self.create_savedir_validation()
         return None
 
@@ -727,10 +733,16 @@ class OpinionChangesTester:
                             # Update the opinion across all hierarchies
                             hierarchy.agent_opinion_change(agent, total_change)
 
+                    all_neighbour_indices: list[int] = list(model_struct.model.base_graph.graph.neighbors(agent.index))
+                    all_neighbour_benefits: list[bool] = []
+                    for neighbour_index in all_neighbour_indices:
+                        neighbour_object: agt.Agent = model_struct.model.base_graph.graph[neighbour_index].agent
+                        all_neighbour_benefits.append(neighbour_object.personal_benefit)
+
                     # After the opinion change, determine if the Agent has become radicalised
                     was_radicalised: bool = agent.radicalisation(
                         collective_changes,
-                        list(model_struct.model.hierarchy_information.keys()),
+                        all_neighbour_benefits,
                         model_struct.model.radicalisation_threshold,
                     )
 
@@ -759,8 +771,18 @@ class OpinionChangesTester:
 
 
 if __name__ == "__main__":
+    class TestParameters(TypedDict):
+        iterations: int
+        opinion_change_interval: int
+        repeats: int
+        hierarchy_names: list[str]
+        hierarchy_rw: dict[str, tuple[float, float]]
+        relationship_rw: tuple[float, float]
+        graph_generation_alg: str
+        use_subsetting: bool
+
     # The relevant parameters that are defined for the identical model instances
-    TEST_PARAMETERS: dict[str, Any] = {
+    TEST_PARAMETERS: TestParameters = {
         "iterations": 100,
         "opinion_change_interval": 20,
         "repeats": 5,
@@ -778,8 +800,17 @@ if __name__ == "__main__":
         "use_subsetting": True,
     }
 
+    class AgentParameters(TypedDict):
+        n_agents: int
+        opinions: tuple[float, float]
+        relationships: tuple[float, float]
+        hierarchy_weighting: tuple[float, float]
+        personal_benefit: dict[bool, float]
+        social_susceptibility: tuple[float, float]
+        id_base: str
+
     # The parameters that will be used to create the Agent population that is shared across models
-    AGENT_PARAMETERS: dict[str, Any] = {
+    AGENT_PARAMETERS: AgentParameters = {
         "n_agents": 100,
         "opinions": (-0.9, 0.9),
         "relationships": (-0.9, 0.9),
@@ -818,7 +849,7 @@ if __name__ == "__main__":
         directory_missing = True
     else:
         with open(LOGGED_SAVEDIRS, "r", newline="") as csv_file:
-            csv_reader: csv.DictReader = csv.DictReader(csv_file)
+            csv_reader: csv.DictReader[str] = csv.DictReader(csv_file)
             for row in csv_reader:
                 SAVEDIRS[row["model_name"]] = row["model_savedir"]
 

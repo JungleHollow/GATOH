@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import random as rd
 from copy import deepcopy
-from typing import Any
+from typing import Any, TypedDict
 
 import numpy as np
 
@@ -45,10 +45,8 @@ class RandomWalkTester:
 
         for model_name in self.model_names:
             new_model: md.ABModel = md.ABModel(
-                deepcopy(TEST_PARAMETERS["hierarchy_names"]),
-                deepcopy(
-                    list(TEST_PARAMETERS["shared_hierarchy_rw"].values())
-                ),  # The rw params passed to model are overridden by the explicit ones set for the Agents and Graphs...
+                TEST_PARAMETERS["hierarchy_names"],
+                list(TEST_PARAMETERS["shared_hierarchy_rw"].values()),  # The rw params passed to model are overridden by the explicit ones set for the Agents and Graphs...
                 save_dir=SAVEDIRS[model_name],
                 data_file=SAVEFILES[model_name],
                 model_id=model_name,
@@ -231,8 +229,8 @@ class RandomWalkTester:
                 )
                 _ = self.models[missing_save].add_graphs(
                     deepcopy(self.model_graphs[missing_save]),
-                    deepcopy(TEST_PARAMETERS["hierarchy_names"]),
-                    deepcopy(TEST_PARAMETERS["shared_hierarchy_rw"]),
+                    TEST_PARAMETERS["hierarchy_names"],
+                    list(TEST_PARAMETERS["shared_hierarchy_rw"].values()),
                 )
             return None
 
@@ -242,8 +240,8 @@ class RandomWalkTester:
             )
             _ = self.models[model_name].add_graphs(
                 deepcopy(self.model_graphs[model_name]),
-                deepcopy(TEST_PARAMETERS["hierarchy_names"]),
-                deepcopy(TEST_PARAMETERS["shared_hierarchy_rw"]),
+                TEST_PARAMETERS["hierarchy_names"],
+                list(TEST_PARAMETERS["shared_hierarchy_rw"].values()),
             )
         return None
 
@@ -268,8 +266,18 @@ class RandomWalkTester:
 
 
 if __name__ == "__main__":
+    class TestParameters(TypedDict):
+        iterations: int
+        model_names: list[str]
+        shared_hierarchy_rw: dict[str, tuple[float, float]]
+        unique_hierarchy_rw: dict[str, tuple[float, float]]
+        shared_relationship_rw: tuple[float, float]
+        unique_rel_rw_range: tuple[tuple[float, float], tuple[float, float]]
+        hierarchy_names: list[str]
+        graph_generation_alg: str
+
     # The relevant parameters that are being applied in this experiment
-    TEST_PARAMETERS: dict[str, Any] = {
+    TEST_PARAMETERS: TestParameters = {
         "iterations": 100,
         "model_names": ["BASE", "RELS", "HIER", "BOTH"],
         "shared_hierarchy_rw": {
@@ -297,8 +305,18 @@ if __name__ == "__main__":
         "graph_generation_alg": "small-world",
     }
 
+    class AgentParameters(TypedDict):
+        n_agents: int
+        opinions: tuple[float, float]
+        relationships: tuple[float, float]
+        social_susceptibility: tuple[float, float]
+        hierarchy_weighting: tuple[float, float]
+        personality: dict[str, float]
+        personal_benefit: dict[bool, float]
+        id_base: str
+
     # The parameters that will be used to create the shared population of Agents to be used across models
-    AGENT_PARAMETERS: dict[str, Any] = {
+    AGENT_PARAMETERS: AgentParameters = {
         "n_agents": 100,
         "opinions": (-0.8, 0.8),
         "relationships": (-0.8, 0.8),
