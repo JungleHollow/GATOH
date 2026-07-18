@@ -4,6 +4,22 @@ Release Notes
 
 .. release-notes::
 
+2026.7.1-alpha
+==============
+
+GATOH changes from a semantic to a calendar versioning scheme with this release for simplicity of version control.
+
+This version involves a large number of logistic or 'housekeeping' changes in preparation for an official release
+as a PyPI package.
+
+New Features
+------------
+
+- Changed the layout of the package modules to simplify import statements
+
+Fixes
+-----
+
 0.2.0-alpha
 ===========
 
