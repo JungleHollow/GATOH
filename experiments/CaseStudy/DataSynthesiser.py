@@ -54,7 +54,7 @@ class DataSynthesiser:
 
         :param n: The number of randomly distributed data entries to create
         """
-        for entry in range(n):
+        for _ in range(n):
             self.num_synthetic_entries += 1
 
             agent_id: str = f"{self.community_code}{self.num_synthetic_entries:05}"

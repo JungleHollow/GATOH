@@ -16,6 +16,7 @@ New Features
 ------------
 
 - Changed the layout of the package modules to simplify import statements
+- Extended full docstrings to case study experiment code
 
 Fixes
 -----

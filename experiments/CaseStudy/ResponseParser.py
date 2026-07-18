@@ -4,16 +4,15 @@ import json
 import os
 import pickle
 import random as rd
-import zipfile
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypedDict
 
 import numpy as np
 import polars as pl
 
-import gatoh.agents.agents as agt
-import gatoh.graphs.graphs as gr
+import gatoh.agents as agt
+import gatoh.graphs as gr
 
 
 @dataclass
@@ -50,11 +49,26 @@ class AgentAttributes:
         self.sociability = sociability
 
 
+class GraphsDict(TypedDict):
+    """
+    A helper class for type checking of ResponseParser.graphs.
+    """
+    hierarchies: list[str]
+    adj_matrices: list[np.ndarray]
+    rw_params: list[tuple[float, float]]
+    agents: list[list[str]]
+
+
 class ResponseParser:
+    """
+    A class that is used to generate GATOH agents and graphs for the case study.
+
+    The data used corresponds to specific, anonymised surveys that were carried out by research collaborators.
+    """
     def __init__(self) -> None:
         self.agents: dict[str, list[AgentAttributes]] = {}
         self.agent_objects: dict[str, dict[str, agt.Agent]] = {}
-        self.graphs: dict[str, dict[str, list[Any]]] = {}
+        self.graphs: dict[str, GraphsDict] = {}
         self.graph_objects: dict[str, list[gr.Graph]] = {}
         self.hierarchy_clusters: dict[str, dict[str, dict[str, list[str]]]] = {}
 
@@ -133,16 +147,52 @@ class ResponseParser:
         religious_total: float = float(self.survey_values["ReligiousTotal"])
         cultural_total: float = float(self.survey_values["CulturalTotal"])
 
+        class AgentValues(TypedDict):
+            """
+            A helper class for type checking of agent_values.
+            """
+            dependant_sum: float
+            religious_sum: float
+            cultural_sum: float
+            age: str
+            id: str
+            gender: str
+            religious: str
+            dialogue: str
+            sport: str
+            music: str
+            time: str
+            influencing_factor: str
+            activity: str
+            opinion: float
+            benefit: bool
+            sociability: tuple[str, float]
+
         for community, survey in self.surveys.items():
             for agent_row in survey.iter_rows(named=True):
                 agent_weightings: dict[str, float] = {}
                 for hierarchy in HIERARCHIES:
                     agent_weightings[hierarchy] = 0.0
 
-                agent_values: dict[str, Any] = {}
-                agent_values["dependant_sum"] = 0.0
-                agent_values["religious_sum"] = 0.0
-                agent_values["cultural_sum"] = 0.0
+                # Define all of the necessary Agent values and initialise them as empty
+                agent_values: AgentValues = {
+                    "dependant_sum": 0.0,
+                    "religious_sum": 0.0,
+                    "cultural_sum": 0.0,
+                    "age": "",
+                    "id": "",
+                    "gender": "",
+                    "religious": "",
+                    "dialogue": "",
+                    "sport": "",
+                    "music": "",
+                    "time": "",
+                    "influencing_factor": "",
+                    "activity": "",
+                    "opinion": 0.0,
+                    "benefit": False,
+                    "sociability": ("", 0.0),
+                }
 
                 for column, value in agent_row.items():
                     if column == "AgentId":
@@ -324,9 +374,13 @@ class ResponseParser:
         the relationship strengths.
 
         :param adj_matrix: The codified social hierarchy adjacency matrix.
-        :param hierarchy: An optional string indicating that explicit conversion values are used for this hierarchy.
-        :param community: An optional string indicating the community that these strengths are being generated for.
+        :type adj_matrix: :class:`~numpy.ndarray`
+        :param hierarchy: An indication that explicit conversion values are used for the hierarchy with the input name.
+        :type hierarchy: str, optional
+        :param community: The community that these strengths are being generated for.
+        :type community: str, optional
         :return: The modified adjacency matrix.
+        :rtype: :class:`~numpy.ndarray`
         """
         new_adj_matrix = adj_matrix.copy()
         if hierarchy:
@@ -384,8 +438,6 @@ class ResponseParser:
         Creates the remaining hierarchy graphs using the available information and the input adjacency matrices.
         """
         for community, adj_matrix_paths in ADJ_MATRIX_PATHS.items():
-            num_agents: int = len(self.agents[community])
-
             for hierarchy, adj_matrix_path in adj_matrix_paths.items():
                 adj_matrix = pl.read_csv(adj_matrix_path)
 
@@ -525,8 +577,10 @@ class ResponseParser:
         A helper function that handles the serialising and saving of a Graph object to a subdirectory within the input
         hierarchy subdirectory.
 
-        :param graph_obj: The Graph object that is being serialised and saved.
+        :param graph_obj: The graph that is being serialised and saved.
+        :type graph_obj: :class:`~gatoh.graphs.Graph`
         :param hierarchy_dir: The directory for this Graph's hierarchy within the community's `graphs' subdirectory.
+        :type hierarchy_dir: str
         """
         graphml_path: str = f"{hierarchy_dir}/graph_{graph_obj.name}.graphml"
 

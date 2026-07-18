@@ -9,16 +9,35 @@ import warnings
 from copy import deepcopy
 from dataclasses import dataclass
 from itertools import repeat
+from multiprocessing.pool import Pool as WorkerPool  # Renamed for use in type checking
 from multiprocessing import Pool, set_start_method
-from typing import Any
+from typing import TypedDict, NotRequired
 
 import polars as pl
 from rustworkx import NodeIndices
 
-from gatoh.agents.agents import Agent
-from gatoh.graphs.graphs import Graph, GraphEdge, GraphNode
-from gatoh.model.model import ABModel
-from gatoh.utils.utils import random_coinflip
+from gatoh.agents import Agent
+from gatoh.graphs import Graph, GraphEdge, GraphNode
+from gatoh.model import ABModel
+from gatoh.utils import random_coinflip
+
+
+class ModelParamsInput(TypedDict):
+    """
+    A helper class that is used to ensure the typing of the input dictionary to ModelParameters.
+    """
+    model_id: str
+    hierarchies: list[str]
+    hierarchy_rw: dict[str, tuple[float, float]]
+    iterations: int
+    agent_opinion_rw: NotRequired[tuple[float, float]]
+    silencing_threshold: NotRequired[float]
+    negation_threshold: NotRequired[float]
+    radicalisation_threshold: NotRequired[float]
+    visualisation_dir: NotRequired[str]
+    suppress_warnings: NotRequired[bool]
+    save_dir: NotRequired[str]
+    data_file: NotRequired[str]
 
 
 @dataclass
@@ -41,53 +60,69 @@ class ModelParameters:
     save_dir: str
     data_file: str
 
-    def __init__(self, parameters_dict: dict[str, Any]) -> None:
+    def __init__(self, parameters_dict: ModelParamsInput) -> None:
         self.model_id = parameters_dict["model_id"]
         self.hierarchy_names = parameters_dict["hierarchies"]
         self.hierarchy_rw_distributions = parameters_dict["hierarchy_rw"]
         self.max_iterations = parameters_dict["iterations"]
 
-        if "agent_opinion_rw" in parameters_dict.keys():
-            self.agent_opinion_rw = parameters_dict["agent_opinion_rw"]
+        agent_opinion_rw: tuple[float, float] | None = parameters_dict.get("agent_opinion_rw")
+        if agent_opinion_rw is not None:
+            self.agent_opinion_rw = agent_opinion_rw
         else:
             self.agent_opinion_rw = TEST_PARAMETERS["DEFAULT"]["agent_opinion_rw"]
+        del agent_opinion_rw
 
-        if "silencing_threshold" in parameters_dict.keys():
-            self.silencing_threshold = parameters_dict["silencing_threshold"]
+        silencing_threshold: float | None = parameters_dict.get("silencing_threshold")
+        if silencing_threshold is not None:
+            self.silencing_threshold = silencing_threshold
         else:
             self.silencing_threshold = TEST_PARAMETERS["DEFAULT"]["silencing_threshold"]
+        del silencing_threshold
 
-        if "negation_threshold" in parameters_dict.keys():
-            self.negation_threshold = parameters_dict["negation_threshold"]
+        negation_threshold: float | None = parameters_dict.get("negation_threshold")
+        if negation_threshold is not None:
+            self.negation_threshold = negation_threshold
         else:
             self.negation_threshold = TEST_PARAMETERS["DEFAULT"]["negation_threshold"]
+        del negation_threshold
 
-        if "radicalisation_threshold" in parameters_dict.keys():
-            self.radicalisation_threshold = parameters_dict["radicalisation_threshold"]
+        radicalisation_threshold: float | None = parameters_dict.get("radicalisation_threshold")
+        if radicalisation_threshold is not None:
+            self.radicalisation_threshold = radicalisation_threshold
         else:
             self.radicalisation_threshold = TEST_PARAMETERS["DEFAULT"][
                 "radicalisation_threshold"
             ]
+        del radicalisation_threshold
 
-        if "visualisation_dir" in parameters_dict.keys():
-            self.visualisation_dir = parameters_dict["visualisation_dir"]
+        visualisation_dir: str | None = parameters_dict.get("visualisation_dir")
+        if visualisation_dir is not None:
+            self.visualisation_dir = visualisation_dir
         else:
             self.visualisation_dir = VISDIRS[self.model_id]
+        del visualisation_dir
 
-        if "suppress_warnings" in parameters_dict.keys():
-            self.suppress_warnings = parameters_dict["suppress_warnings"]
+        suppress_warnings: bool | None = parameters_dict.get("suppress_warnings")
+        if suppress_warnings is not None:
+            self.suppress_warnings = suppress_warnings
         else:
             self.suppress_warnings = TEST_PARAMETERS["DEFAULT"]["suppress_warnings"]
+        del suppress_warnings
 
-        if "save_dir" in parameters_dict.keys():
-            self.save_dir = parameters_dict["save_dir"]
+        save_dir: str | None = parameters_dict.get("save_dir")
+        if save_dir is not None:
+            self.save_dir = save_dir
         else:
             self.save_dir = SAVEDIRS[self.model_id]
+        del save_dir
 
-        if "data_file" in parameters_dict.keys():
-            self.data_file = parameters_dict["data_file"]
+        data_file: str | None = parameters_dict.get("data_file")
+        if data_file is not None:
+            self.data_file = data_file
         else:
             self.data_file = SAVEFILES[self.model_id]
+        del data_file
 
 
 class DataReader:
@@ -97,6 +132,23 @@ class DataReader:
 
     The expected agent and graph inputs for this class are structured according to the outputs from the
     ResponseParser script.
+
+    :param agent_paths: A <model name : path> mapping pointing to the subdirectories at which each model's Agent objects are saved.
+    :type agent_paths: dict[str, str]
+    :param graph_paths: A <model name: path> mapping pointing to the subdirectories at which each model's Graph objects are saved.
+    :type graph_paths: dict[str, str]
+    :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
+    :type initial_hierarchies: list[str]
+    :param agent_parameters: A <parameter : value> mapping specifying any additional, relevant parameters for agents in this experiment.
+    :type agent_parameters: dict[str, float]
+    :param test_parameters: A <model : parameters> mapping specifying explicit initialisation and runtime parameters for each model.
+    :type test_parameters: dict[str, dict[str, Any]]
+    :param opinion_paths: A <model name: path> mapping pointing to csv files containing dependant variable data (for model validation after running).
+    :type opinion_paths: dict[str, str], optional
+    :param worker_pool: A pool of workers that can distribute the processing of the object loading function amongst themselves.
+    :type worker_pool: :class:`~multiprocessing.Pool`, optional
+    :param existing: A flag indicating if the DataReader is loading an existing experiment.
+    :type existing: bool, optional
     """
 
     def __init__(
@@ -105,29 +157,11 @@ class DataReader:
         graph_paths: dict[str, str],
         initial_hierarchies: list[str],
         agent_parameters: dict[str, float],
-        test_parameters: dict[str, dict[str, Any]],
+        test_parameters: TestParameters,
         opinion_paths: dict[str, str] | None = None,
-        worker_pool: Any | None = None,
+        worker_pool: WorkerPool | None = None,
         existing: bool = False,
     ) -> None:
-        """
-        :param agent_paths: A <model name : path> mapping pointing to the subdirectories at which each model's Agent objects are saved.
-        :type agent_paths: dict[str, str]
-        :param graph_paths: A <model name: path> mapping pointing to the subdirectories at which each model's Graph objects are saved.
-        :type graph_paths: dict[str, str]
-        :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
-        :type initial_hierarchies: list[str]
-        :param agent_parameters: A <parameter : value> mapping specifying any additional, relevant parameters for agents in this experiment.
-        :type agent_parameters: dict[str, float]
-        :param test_parameters: A <model : parameters> mapping specifying explicit initialisation and runtime parameters for each model.
-        :type test_parameters: dict[str, dict[str, Any]]
-        :param opinion_paths: A <model name: path> mapping pointing to csv files containing dependant variable data (for model validation after running).
-        :type opinion_paths: dict[str, str], optional
-        :param worker_pool: A pool of workers that can distribute the processing of the object loading function amongst themselves.
-        :type worker_pool: :class:`~multiprocessing.Pool`, optional
-        :param existing: A flag indicating if the DataReader is loading an existing experiment.
-        :type existing: bool, optional
-        """
         self.existing: bool = existing
 
         self.agent_paths: dict[str, str] = agent_paths
@@ -166,7 +200,7 @@ class DataReader:
 
         self.load_objects(worker_pool=worker_pool)
 
-    def load_objects(self, worker_pool: Any | None = None) -> None:
+    def load_objects(self, worker_pool: WorkerPool | None = None) -> None:
         """
         Loads the Agent and Graph objects for each model in the experiment.
 
@@ -296,14 +330,15 @@ class DataReader:
         """
         Loads the model objects that have been previously saved in their respective directories.
 
-        :param existing_saves: An optional partial list of the model names representing the models that can be loaded.
+        :param existing_saves: The model names of the existing models that can be loaded.
+        :type existing_saves: list[str], optional
         """
         if existing_saves:
             for existing_save in existing_saves:
                 # Create an empty dummy model
                 new_model: ABModel = ABModel(
                     TEST_PARAMETERS["DEFAULT"]["hierarchies"],
-                    TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"],
+                    list(TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"].values()),
                 )
                 new_model.load_model(SAVEDIRS[existing_save])
 
@@ -313,7 +348,7 @@ class DataReader:
         for model_name, model_savedir in SAVEDIRS.items():
             new_model: ABModel = ABModel(
                 TEST_PARAMETERS["DEFAULT"]["hierarchies"],
-                TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"],
+                list(TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"].values()),
             )
             new_model.load_model(model_savedir)
 
@@ -325,7 +360,8 @@ class DataReader:
         Use the loaded Agent and Graph objects plus the defined ModelParameters to create the appropriate model
         instances to use in this experiment.
 
-        :param missing_saves: An optional partial list of model names representing models that should be initialised.
+        :param missing_saves: The model names of non-existing models that should be initialised.
+        :type missing_saves: list[str], optional
         """
         for model_name, model_parameters in self.model_params.items():
             # Only models in missing saves need to be initialised
@@ -365,7 +401,8 @@ class DataReader:
         """
         Saves the model objects to allow for future loading.
 
-        :param missing_saves: An optional partial list of model names representing the models that should be saved.
+        :param missing_saves: The model names of the models that were just newly run and should be saved.
+        :type missing_saves: list[str], optional
         """
         if missing_saves is None:
             for model in self.models.values():
@@ -704,7 +741,8 @@ class DataReader:
         """
         Runs each model instance in the experiment.
 
-        :param missing_saves: An optional partial list of the model names representing models that should be run.
+        :param missing_saves: The model names of non-existing models that should be run.
+        :type missing_saves: list[str], optional
         """
         print("==== Beginning model iterations ====\n\n")
         if missing_saves:
@@ -778,24 +816,54 @@ if __name__ == "__main__":
         "Social": (0.0, 0.1),
     }
 
+    class ModelTestParameters(TypedDict):
+        """
+        A helper class for type checking the NONMNG and MINNG TEST_PARAMETERS subdictionary.
+        """
+        model_id: str
+        iterations: int
+        hierarchies: list[str]
+        hierarchy_rw: dict[str, tuple[float, float]]
+
+    class DefaultTestParameters(TypedDict):
+        """
+        A helper class for type checking the DEFAULT TEST_PARAMETERS subdictionary.
+        """
+        iterations: int
+        hierarchies: list[str]
+        hierarchy_rw: dict[str, tuple[float, float]]
+        agent_opinion_rw: tuple[float, float]
+        silencing_threshold: float
+        negation_threshold: float
+        radicalisation_threshold: float
+        suppress_warnings: bool
+
+    class TestParameters(TypedDict):
+        """
+        A helper class for type checking of TEST_PARAMETERS.
+        """
+        NONMN: ModelTestParameters
+        MINNG: ModelTestParameters
+        DEFAULT: DefaultTestParameters
+
     # The relevant parameters that are defined for the model instances
-    TEST_PARAMETERS: dict[str, dict[str, Any]] = {
+    TEST_PARAMETERS: TestParameters = {
         "NONMN": {
             "model_id": "NONMN",
             "iterations": 100,
-            "hierarchies": deepcopy(BASE_HIERARCHIES),
-            "hierarchy_rw": deepcopy(HIERARCHY_RW),
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
         },
         "MINNG": {
             "model_id": "MINNG",
             "iterations": 100,
-            "hierarchies": deepcopy(BASE_HIERARCHIES),
-            "hierarchy_rw": deepcopy(HIERARCHY_RW),
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
         },
         "DEFAULT": {
             "iterations": 100,
-            "hierarchies": deepcopy(BASE_HIERARCHIES),
-            "hierarchy_rw": deepcopy(HIERARCHY_RW),
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
             "agent_opinion_rw": (0.0, 0.05),
             "silencing_threshold": 0.95,
             "negation_threshold": 0.999,
