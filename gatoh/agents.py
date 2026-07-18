@@ -12,7 +12,7 @@ from copy import deepcopy
 from shutil import rmtree
 from typing import TypeVar, override
 
-from gatoh.utils.utils import draw_random_value, random_coinflip, value_rw_delta
+from gatoh.utils import draw_random_value, random_coinflip, value_rw_delta
 
 # Definition of all valid, existing Agent personality types
 PERSONALITIES: list[str] = ["neutral", "rational", "erratic", "impulsive", "social"]

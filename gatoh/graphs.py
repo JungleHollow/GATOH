@@ -21,9 +21,9 @@ import rustworkx as rx
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from gatoh.agents.agents import Agent
+    from gatoh.agents import Agent
 
-from gatoh.utils.utils import (
+from gatoh.utils import (
     EdgeChanges,
     beta_value_attenuation,
     connected_watts_strogatz_graph,

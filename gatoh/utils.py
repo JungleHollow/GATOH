@@ -10,7 +10,7 @@ from typing import TypeVar, cast
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from gatoh.model.model import ConfigData
+    from gatoh.model import ConfigData
     from yaml import SequenceNode
 
 import matplotlib.pyplot as plt

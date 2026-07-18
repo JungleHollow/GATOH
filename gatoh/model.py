@@ -17,15 +17,15 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from rustworkx.rustworkx import NoEdgeBetweenNodes
 
-from gatoh.agents.agents import Agent, AgentSet
-from gatoh.graphs.graphs import Graph, GraphNode, GraphEdge, GraphSet
-from gatoh.logging.logging import GATOHLogger
-from gatoh.utils.utils import (
+from gatoh.agents import Agent, AgentSet
+from gatoh.graphs import Graph, GraphNode, GraphEdge, GraphSet
+from gatoh.logging import GATOHLogger
+from gatoh.utils import (
     EdgeChanges,
     YamlLoader,
     create_config_file,
 )
-from gatoh.visualisation.visualisation import ABVisualiser
+from gatoh.visualisation import ABVisualiser
 
 
 class ConfigData(TypedDict):

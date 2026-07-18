@@ -15,7 +15,7 @@ from rustworkx.visualization import mpl_draw
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from gatoh.graphs.graphs import Graph, GraphNode
+    from gatoh.graphs import Graph, GraphNode
 
 
 class ABVisualiser:
