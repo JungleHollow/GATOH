@@ -5,14 +5,23 @@ import os
 import pickle
 import random as rd
 from copy import deepcopy
-from typing import Any, Self
+from typing import Any, Self, TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-import gatoh.agents.agents as agt
-import gatoh.graphs.graphs as gr
-import gatoh.model.model as md
+import gatoh.agents as agt
+import gatoh.graphs as gr
+import gatoh.model as md
+
+
+class OutputDict(TypedDict):
+    """
+    A helper class used for typechecking output_dict in AnalysisResults.calculate_results_statistics.
+    """
+    opinion_statistics: tuple[list[float], list[float]]
+    radicalised_statistics: tuple[list[float], list[float]]
+    polarisation_statistics: tuple[dict[str, list[float]], dict[str, list[float]]]
 
 
 class AnalysisResults:
@@ -22,6 +31,15 @@ class AnalysisResults:
 
     This class will also provide all functions related to the aggregation, exploration, and visualisation
     of the results.
+
+    :param model_id: The ID that has been assigned to the model object.
+    :type model_id: str
+    :param aggregate_opinion: The runtime aggregate opinions that the model logged over its iterations.
+    :type aggregate_opinion: list[float]
+    :param radicalised_agent: The total radicalised agents that the model logged over its iterations.
+    :type radicalised_agent: list[int]
+    :param polarisation: The network polarisations that the model logged over its iterations.
+    :type polarisation: dict[str, list[float]]
     """
 
     def __init__(self) -> None:
@@ -36,14 +54,6 @@ class AnalysisResults:
         radicalised_agent: list[int],
         polarisation: dict[str, list[float]],
     ) -> None:
-        """
-        An initialisation function that creates the appropriate entries in the data dicts for the specified model.
-
-        :param model_id: The ID that has been assigned to the model object.
-        :param aggregate_opinion: The runtime aggregate opinions that the model logged over its iterations.
-        :param radicalised_agent: The total radicalised agents that the model logged over its iterations.
-        :param polarisation: The network polarisations that the model logged over its iterations.
-        """
         if model_id not in self.aggregate_opinions.keys():
             self.aggregate_opinions[model_id] = deepcopy(aggregate_opinion)
         if model_id not in self.radicalised_agents.keys():
@@ -69,7 +79,7 @@ class AnalysisResults:
             for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
                 polarisation_fieldnames.append(f"{hierarchy}_iteration_{i + 1}")
 
-        csv_writer: csv.DictWriter
+        csv_writer: csv.DictWriter[str]
         row_dict: dict[str, str | int | float]
 
         # First store the aggregate opinions
@@ -118,7 +128,7 @@ class AnalysisResults:
         radicalised_path: str = f"{ROOT_DIR}/radicalised_agents.csv"
         polarisation_path: str = f"{ROOT_DIR}/polarisations.csv"
 
-        csv_reader: csv.DictReader
+        csv_reader: csv.DictReader[str]
         model_name: str = ""
 
         # First load the aggregate opinions
@@ -165,7 +175,8 @@ class AnalysisResults:
         """
         Calculates the basic statistics of the aggregate opinion across the models.
 
-        :return: A tuple containing two lists -- the average and the standard deviation of the aggregate opinions across the models.
+        :return: The average and the standard deviation of the aggregate opinions across the models.
+        :rtype: tuple[list[float], list[float]]
         """
         average_opinions: list[float] = []
         opinions_sd: list[float] = []
@@ -188,7 +199,8 @@ class AnalysisResults:
         """
         Calculates the basic statistics of the total number of radicalised agents across the models.
 
-        :return: A tuple containing two lists -- the average and the standard deviation of the total number of radicalised agents across the models.
+        :return: The average and the standard deviation of the total number of radicalised agents across the models.
+        :rtype: tuple[list[float], list[float]]
         """
         average_radicalised: list[float] = []
         radicalised_sd: list[float] = []
@@ -213,7 +225,8 @@ class AnalysisResults:
         """
         Calculates the basic statistics for the polarisation across models for each hierarchy.
 
-        :return: A tuple of two <hierarchy, list> mappings containing the average and standard deviation values of polarisation at each iteration per hierarchy.
+        :return: Two <hierarchy, list> mappings containing the average and standard deviation values of polarisation at each iteration per hierarchy.
+        :rtype: tuple[dict[str, list[float]], dict[str, list[float]]]
         """
         average_polarisation: dict[str, list[float]] = {}
         polarisation_sd: dict[str, list[float]] = {}
@@ -251,15 +264,16 @@ class VarianceTester:
 
     A secondary objective being a characterisation of the number of model repetitions that need to be run
     and aggregated before any further reductions to the variance are insignificant.
+
+    :param results_container: The container to which the tester's model results will be stored to.
+    :type results_container: AnalysisResults
+    :param existing: A flag indicating if the experiment has already been run and saved models are present to inspect.
+    :type existing: bool, optional
     """
 
     def __init__(
         self, results_container: AnalysisResults, existing: bool = False
     ) -> None:
-        """
-        :param results_container: The AnalysisResults object to which the tester's model results will be stored to.
-        :param existing: A flag indicating if the experiment has already been run and saved models are present to inspect.
-        """
         self.results: AnalysisResults = results_container
         self.num_agents: int = AGENT_PARAMETERS["n_agents"]
 
@@ -409,7 +423,8 @@ class VarianceTester:
         """
         Generates and sets the shared collection of social hierarchy Graph objects that will be used across the instances.
 
-        :param agents: The population of Agents to use for Graph creation.
+        :param agents: The population of agents to use for graph creation.
+        :type agents: list[:class:`~gatoh.agents.Agent`]
         """
         print("==== Starting Graph creation ====")
 
@@ -543,7 +558,8 @@ class VarianceTester:
         """
         Loads the model objects that have been previously saved in their respective directories.
 
-        :param existing_saves: An optional partial list of the model names representing the models that can be loaded.
+        :param existing_saves: The model names of existing models that can be loaded.
+        :type existing_saves: list[str], optional
         """
         if existing_saves:
             for existing_save in existing_saves:
@@ -584,7 +600,7 @@ class VarianceTester:
         with open(LOGGED_SAVEDIRS, "w", newline="") as csv_file:
             field_names: list[str] = ["model_name", "model_savedir"]
 
-            csv_writer: csv.DictWriter = csv.DictWriter(
+            csv_writer: csv.DictWriter[str] = csv.DictWriter(
                 csv_file, fieldnames=field_names
             )
             csv_writer.writeheader()
@@ -602,7 +618,8 @@ class VarianceTester:
         """
         Creates the Model objects and adds copies of the shared Agent and Graph populations to them.
 
-        :param missing_saves: An optional partial list of the model names representing the models that should be set up.
+        :param missing_saves: The model names of non-existing models that should be set up.
+        :type missing_saves: list[str], optional
         """
         print("==== Setting up the model instances ====")
         if missing_saves:
@@ -610,8 +627,8 @@ class VarianceTester:
                 _ = self.models[missing_save].add_agents(deepcopy(self.model_agents))
                 _ = self.models[missing_save].add_graphs(
                     deepcopy(self.model_graphs),
-                    deepcopy(TEST_PARAMETERS["hierarchy_names"]),
-                    deepcopy(TEST_PARAMETERS["hierarchy_rw"]),
+                    TEST_PARAMETERS["hierarchy_names"],
+                    list(TEST_PARAMETERS["hierarchy_rw"].values()),
                 )
             return None
 
@@ -619,8 +636,8 @@ class VarianceTester:
             _ = model.add_agents(deepcopy(self.model_agents))
             _ = model.add_graphs(
                 deepcopy(self.model_graphs),
-                deepcopy(TEST_PARAMETERS["hierarchy_names"]),
-                deepcopy(TEST_PARAMETERS["hierarchy_rw"]),
+                TEST_PARAMETERS["hierarchy_names"],
+                list(TEST_PARAMETERS["hierarchy_rw"].values()),
             )
         return None
 
@@ -629,6 +646,7 @@ class VarianceTester:
         A helper class that takes a model which has finished iterating and calls AnalysisResults.init_model() appropriately.
 
         :param model: The model that is being initialised in the AnalysisResults.
+        :type model: :class:`~gatoh.model.ABModel`
         """
         self.results.init_model(
             model.model_id,
@@ -653,11 +671,12 @@ class VarianceTester:
         self.results = self.results.load_results()
         return None
 
-    def calculate_results_statistics(self) -> dict[str, Any]:
+    def calculate_results_statistics(self) -> OutputDict:
         """
         Calculate and return all of the AnalysisResults statistics.
 
         :return: A <parameter name: statistics> mapping containing the relevant means and standard deviations for each model parameter.
+        :rtype: dict[str, Any]
         """
         opinion_statistics: tuple[list[float], list[float]] = (
             self.results.calculate_opinions_statistics()
@@ -669,7 +688,7 @@ class VarianceTester:
             dict[str, list[float]], dict[str, list[float]]
         ] = self.results.calculate_polarisation_statistics()
 
-        output_dict: dict[str, Any] = {
+        output_dict: OutputDict = {
             "opinion_statistics": opinion_statistics,
             "radicalised_statistics": radicalised_statistics,
             "polarisation_statistics": polarisation_statistics,
@@ -681,7 +700,8 @@ class VarianceTester:
         """
         Runs each model instance in the tester class.
 
-        :param missing_saves: An optional partial list of the model names representing models that should be run.
+        :param missing_saves: The model names of non-existing models that should be run.
+        :type missing_saves: list[str], optional
         """
         if missing_saves:
             for missing_save in missing_saves:
@@ -700,7 +720,8 @@ class VarianceTester:
 
 def plot_var_over_models(analysis_results: AnalysisResults) -> None:
     """
-    :param analysis_results: An AnalysisResults object containing all of the result data from the experiment.
+    :param analysis_results: The result data from the experiment.
+    :type analysis_results: AnalysisResults
     """
     current_opinion_values: list[float] = []
 
@@ -730,16 +751,18 @@ def plot_var_over_models(analysis_results: AnalysisResults) -> None:
 
 
 def plot_model_runtimes(
-    analysis_results: AnalysisResults, analysis_statistics: dict[str, Any]
+    analysis_results: AnalysisResults, analysis_statistics: OutputDict
 ) -> None:
     """
-    :param analysis_results: An AnalysisResults object containing all of the result data from the experiment.
+    :param analysis_results: The result data from the experiment.
+    :type analysis_results: AnalysisResults.
     :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations for the model parameters.
+    :type analysis_statistics: dict[str, Any]
     """
     iterations: list[int] = [i + 1 for i in range(TEST_PARAMETERS["iterations"])]
     fig, ax = plt.subplots()
 
-    for model_name, values in analysis_results.aggregate_opinions.items():
+    for _, values in analysis_results.aggregate_opinions.items():
         _ = ax.plot(iterations, values, "-k", linewidth=0.7, alpha=0.25)
 
     _ = ax.plot(
@@ -764,9 +787,10 @@ def plot_model_runtimes(
     return None
 
 
-def plot_parameter_whiskers(analysis_statistics: dict[str, Any]) -> None:
+def plot_parameter_whiskers(analysis_statistics: OutputDict) -> None:
     """
     :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations for the model parameters.
+    :type analysis_statistics: dict[str, Any]
     """
     unpacked_results: list[list[float | int]] = []
     tick_labels: list[str] = []
@@ -863,13 +887,15 @@ def plot_parameter_whiskers(analysis_statistics: dict[str, Any]) -> None:
 
 
 def create_analysis_plots(
-    analysis_results: AnalysisResults, analysis_statistics: dict[str, Any]
+    analysis_results: AnalysisResults, analysis_statistics: OutputDict
 ) -> None:
     """
     Create all relevant analysis plots and then store them to the experiment's save directory.
 
-    :param analysis_results: An AnalysisResults object containing all of the result data from the experiment.
+    :param analysis_results: The result data from the experiment.
+    :type analysis_results: AnalysisResults
     :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations for all model parameters.
+    :type analysis_statistics: dict[str, Any]
     """
     plot_var_over_models(analysis_results)
     plot_model_runtimes(analysis_results, analysis_statistics)
@@ -878,8 +904,20 @@ def create_analysis_plots(
 
 
 if __name__ == "__main__":
+    class TestParameters(TypedDict):
+        """
+        A helper class used for typechecking of TEST_PARAMETERS.
+        """
+        iterations: int
+        repetitions: int
+        hierarchy_names: list[str]
+        hierarchy_rw: dict[str, tuple[float, float]]
+        relationship_rw: tuple[float, float]
+        graph_generation_alg: str
+        model_id_base: str
+
     # The relevant parameters that are defined for the identical model instances
-    TEST_PARAMETERS: dict[str, Any] = {
+    TEST_PARAMETERS: TestParameters = {
         "iterations": 100,
         "repetitions": 100,
         "hierarchy_names": ["A", "B", "C"],
@@ -893,8 +931,21 @@ if __name__ == "__main__":
         "model_id_base": "SARV-Model",
     }
 
+    class AgentParameters(TypedDict):
+        """
+        A helper class used for typechecking of AGENT_PARAMETERS.
+        """
+        n_agents: int
+        subset_size_range: tuple[int, int]
+        opinions: tuple[float, float]
+        relationships: tuple[float, float]
+        hierarchy_weighting: tuple[float, float]
+        personal_benefit: dict[bool, float]
+        social_susceptibility: tuple[float, float]
+        id_base: str
+
     # The parameters that will be used to create the Agent population that is shared across models
-    AGENT_PARAMETERS: dict[str, Any] = {
+    AGENT_PARAMETERS: AgentParameters = {
         "n_agents": 100,
         "subset_size_range": (25, 50),
         "opinions": (-1.0, 1.0),
@@ -934,7 +985,7 @@ if __name__ == "__main__":
         directory_missing = True
     else:
         with open(LOGGED_SAVEDIRS, "r", newline="") as csv_file:
-            csv_reader: csv.DictReader = csv.DictReader(csv_file)
+            csv_reader: csv.DictReader[str] = csv.DictReader(csv_file)
             for row in csv_reader:
                 SAVEDIRS[row["model_name"]] = row["model_savedir"]
 
@@ -973,7 +1024,7 @@ if __name__ == "__main__":
         tester.load_results()
 
         # Calculate the means and standard deviations for all relevant model parameters
-        analysis_statistics: dict[str, Any] = tester.calculate_results_statistics()
+        analysis_statistics: OutputDict = tester.calculate_results_statistics()
 
         # Create all relevant output plots for this experiment
         create_analysis_plots(tester.results, analysis_statistics)
