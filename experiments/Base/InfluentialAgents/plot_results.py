@@ -1,6 +1,6 @@
 import csv
 
-from gatoh.utils.utils import plot_graph
+from gatoh.utils import plot_graph
 
 if __name__ == "__main__":
     DATAFILES: dict[str, str] = {
@@ -12,7 +12,7 @@ if __name__ == "__main__":
         "high-influence": [],
         "low-influence": [],
     }
-    radicalised_agents: dict[str, list[int]] = {
+    radicalised_agents: dict[str, list[int | float]] = {
         "high-influence": [],
         "low-influence": [],
     }
@@ -21,14 +21,14 @@ if __name__ == "__main__":
         "low-influence": [],
     }
 
-    iterations: dict[str, list[int]] = {
+    iterations: dict[str, list[int | float]] = {
         "high-influence": [i + 1 for i in range(100)],
         "low-influence": [i + 1 for i in range(100)],
     }
 
     for model_type, data_file in DATAFILES.items():
         with open(data_file, "r", newline="") as csv_file:
-            csv_reader: csv.DictReader = csv.DictReader(csv_file)
+            csv_reader: csv.DictReader[str] = csv.DictReader(csv_file)
             for row in csv_reader:
                 aggregate_opinion: float = float(row["aggregate_opinions"])
                 radicalised_agent: int = int(row["radicalised_agents"])

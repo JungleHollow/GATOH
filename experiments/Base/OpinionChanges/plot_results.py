@@ -1,7 +1,7 @@
 import csv
 from copy import deepcopy
 
-from gatoh.utils.utils import plot_graph
+from gatoh.utils import plot_graph
 
 if __name__ == "__main__":
     ROOT_DIR: str = "./gatoh/experiments/Base/OpinionChanges"
@@ -14,13 +14,13 @@ if __name__ == "__main__":
 
     graph_groups: dict[str, list[tuple[str, str]]] = {}
 
-    iterations: dict[str, dict[str, list[int]]] = {}
+    iterations: dict[str, dict[str, list[int | float]]] = {}
 
     aggregate_opinions: dict[str, dict[str, list[float]]] = {}
     radicalised_agents: dict[str, dict[str, list[float]]] = {}
     polarisations: dict[str, dict[str, list[float]]] = {}
 
-    csv_reader: csv.DictReader
+    csv_reader: csv.DictReader[str]
 
     with open(LOGGED_SAVEDIRS, "r", newline="") as csv_file:
         csv_reader = csv.DictReader(csv_file)
