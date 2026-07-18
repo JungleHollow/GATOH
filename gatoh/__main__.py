@@ -1,18 +1,19 @@
 import argparse
 
-from gatoh.agents.agents import Agent as Agent
-from gatoh.agents.agents import AgentSet as AgentSet
-from gatoh.graphs.graphs import Graph as Graph
-from gatoh.graphs.graphs import GraphEdge as GraphEdge
-from gatoh.graphs.graphs import GraphNode as GraphNode
-from gatoh.graphs.graphs import GraphSet as GraphSet
-from gatoh.logging.logging import GATOHLogger as GATOHLogger
-from gatoh.model.model import ABModel as ABModel
+from gatoh.agents import Agent as Agent
+from gatoh.agents import AgentSet as AgentSet
+from gatoh.graphs import Graph as Graph
+from gatoh.graphs import GraphEdge as GraphEdge
+from gatoh.graphs import GraphNode as GraphNode
+from gatoh.graphs import GraphSet as GraphSet
+from gatoh.logging import GATOHLogger as GATOHLogger
+from gatoh.model import ABModel as ABModel
+from gatoh.visualisation import ABVisualiser as ABVisualiser
 
-__version__ = "0.1"
+__version__ = "2026.07.0"
 __authors__ = "Manuel Munizaga Sepulveda"
 __license__ = "MIT License"
-__year__ = "2025"
+__year__ = "2026"
 __repo__ = "https://www.github.com/JungleHollow/GATOH"
 
 ###
