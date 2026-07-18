@@ -1,0 +1,28 @@
+current_iteration: 100
+data_file: ./gatoh/experiments/Base/OpinionChanges/models/OpinionChanges_ITER-025_NUM-01/ITER-025_NUM-01_model_variables.csv
+hierarchy_information:
+  A: !!python/tuple
+  - 0.0
+  - 0.3
+  B: !!python/tuple
+  - 0.0
+  - 0.1
+  C: !!python/tuple
+  - 0.0
+  - 0.45
+  D: !!python/tuple
+  - 0.0
+  - 0.15
+  E: !!python/tuple
+  - 0.0
+  - 0.05
+  F: !!python/tuple
+  - 0.0
+  - 0.25
+max_iterations: 100
+model_id: ITER-025_NUM-01
+negation_threshold: 0.99
+radicalisation_threshold: 0.9
+save_dir: ./gatoh/experiments/Base/OpinionChanges/models/OpinionChanges_ITER-025_NUM-01
+silencing_threshold: 0.8
+suppress_warnings: true
