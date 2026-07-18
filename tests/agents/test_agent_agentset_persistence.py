@@ -6,7 +6,7 @@ import pickle
 import zipfile
 from typing import override
 
-from gatoh.agents.agents import Agent, AgentSet
+from gatoh.agents import Agent, AgentSet
 
 
 class TestAgentSetPersistence(ut.TestCase):

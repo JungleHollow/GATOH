@@ -3,8 +3,8 @@ from __future__ import annotations
 import unittest as ut
 from typing import override
 
-import gatoh.graphs.graphs as gr
-from gatoh.agents.agents import Agent
+import gatoh.graphs as gr
+from gatoh.agents import Agent
 
 
 class TestGraphObjectsEmpty(ut.TestCase):

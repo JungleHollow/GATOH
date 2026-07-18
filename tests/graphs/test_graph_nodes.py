@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import unittest as ut
 
-import gatoh.graphs.graphs as gr
-from gatoh.agents.agents import Agent
+import gatoh.graphs as gr
+from gatoh.agents import Agent
 
 
 class TestGraphNodes(ut.TestCase):

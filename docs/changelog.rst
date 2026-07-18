@@ -20,6 +20,8 @@ New Features
 Fixes
 -----
 
+- Fixed all the existing imports across scripts to reflect the module restructuring
+
 0.2.0-alpha
 ===========
 

@@ -4,7 +4,7 @@ import unittest as ut
 
 from rustworkx import PyDiGraph
 
-import gatoh.graphs.graphs as gr
+import gatoh.graphs as gr
 
 
 class TestGraphAttributes(ut.TestCase):

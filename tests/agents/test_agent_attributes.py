@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest as ut
 
-import gatoh.agents.agents as agt
+import gatoh.agents as agt
 
 
 class TestAgentAttributes(ut.TestCase):

@@ -4,9 +4,9 @@ import os
 import unittest as ut
 from typing import override
 
-import gatoh.agents.agents as agt
-import gatoh.graphs.graphs as gr
-import gatoh.model.model as md
+import gatoh.agents as agt
+import gatoh.graphs as gr
+import gatoh.model as md
 
 MODEL_ID: str = "TEST_SIMULATION"
 HIERARCHY_NAMES: list[str] = ["A", "B", "C", "D"]

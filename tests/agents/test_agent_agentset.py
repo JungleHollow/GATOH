@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest as ut
 import random as rd
 
-import gatoh.agents.agents as agt
+import gatoh.agents as agt
 
 
 class TestAgentSet(ut.TestCase):

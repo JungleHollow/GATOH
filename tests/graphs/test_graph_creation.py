@@ -5,8 +5,8 @@ from typing import override
 
 from rustworkx import PyDiGraph
 
-import gatoh.graphs.graphs as gr
-from gatoh.agents.agents import Agent
+import gatoh.graphs as gr
+from gatoh.agents import Agent
 
 
 class TestGraphCreation(ut.TestCase):

@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest as ut
 from typing import override
 
-import gatoh.graphs.graphs as gr
+import gatoh.graphs as gr
 
 
 class TestGraphEdges(ut.TestCase):
