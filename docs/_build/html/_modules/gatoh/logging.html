@@ -1,0 +1,524 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gatoh.logging &mdash; gatoh 0.1.0</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/thebelab.css" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/thebelab-helper.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            gatoh
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/index.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Release Notes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gatoh</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gatoh.logging</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gatoh.logging</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+
+
+<div class="viewcode-block" id="LoggerVariables">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.html#gatoh.logging.LoggerVariables">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LoggerVariables</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dataclass that defines the simulation variables that are stored and tracked by the Logger.</span>
+
+<span class="sd">    :param max_iterations: The maximum number of iterations that the model will run its simulation for.</span>
+<span class="sd">    :type max_iterations: int</span>
+<span class="sd">    :param hierarchies: The names of all social hierarchies present in the model.</span>
+<span class="sd">    :type hierarchies: list[str]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># The maximum number of iterations that the simulation will run for</span>
+    <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="c1"># The aggregated community opinion climate at each timestep</span>
+    <span class="n">aggregate_opinions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The number of radicalised agents that exist in the model at each timestep</span>
+    <span class="n">radicalised_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The total count of opinion silencing effects that have ocurred in the simulation over time</span>
+    <span class="n">silenced_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The total count of opinion negation effects that have ocurred in the simulation over time</span>
+    <span class="n">negated_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The calculated layer interdependence of each hierarchy at each timestep</span>
+    <span class="n">layer_interdependences</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The calculated layer polarisation of each hierarchy at each timestep</span>
+    <span class="n">layer_polarisations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The log odds of radicalisation in the model at each timestep</span>
+    <span class="n">radicalisation_logodds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The current iteration that the simulation is at</span>
+    <span class="n">current_iteration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store the number of max iterations and initialise all lists and dictionaries with the appropriate hierarchy names</span>
+<span class="sd">        and sizes to match the number of iterations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span> <span class="o">=</span> <span class="n">max_iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinions</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_logodds</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_polarisations</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="n">hierarchies</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layer_polarisations</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)</span>
+            <span class="p">]</span>
+
+<div class="viewcode-block" id="LoggerVariables.increment_radicalised">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_radicalised.html#gatoh.logging.LoggerVariables.increment_radicalised">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_radicalised</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A simple setter function that checks the input flag and updates the radicalisation count accordingly.</span>
+
+<span class="sd">        :param flag: A flag indicating if radicalisation ocurred.</span>
+<span class="sd">        :type flag: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.increment_silenced">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_silenced.html#gatoh.logging.LoggerVariables.increment_silenced">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_silenced</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A simple setter function that checks the input flag and updates the opinion silencing events count accordingly.</span>
+
+<span class="sd">        :param flag: A flag indicating if opinion silencing ocurred.</span>
+<span class="sd">        :type flag: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.increment_negated">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_negated.html#gatoh.logging.LoggerVariables.increment_negated">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_negated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A simple setter function that checks the input flag and updates the opinion negation events count accordingly.</span>
+
+<span class="sd">        :param flag: A flag indicating if opinion negation ocurred.</span>
+<span class="sd">        :type flag: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.store_aggregate_opinion">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.store_aggregate_opinion.html#gatoh.logging.LoggerVariables.store_aggregate_opinion">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">store_aggregate_opinion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agg_opp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that simplifies the storing of aggregate opinion values at each iteration.</span>
+
+<span class="sd">        :param agg_opp: The aggregate opinion value to store for the current iteration.</span>
+<span class="sd">        :type agg_opp: float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">agg_opp</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.store_radicalisation_logodds">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.store_radicalisation_logodds.html#gatoh.logging.LoggerVariables.store_radicalisation_logodds">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">store_radicalisation_logodds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r_logodds</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that simplifies the storing of the model&#39;s radicalisation log odds at each iteration.</span>
+
+<span class="sd">        :param r_logodds: The model&#39;s radicalisation log odds value to store for the current iteration.</span>
+<span class="sd">        :type r_logodds: float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_logodds</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">r_logodds</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.store_layer_interdependences">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.store_layer_interdependences.html#gatoh.logging.LoggerVariables.store_layer_interdependences">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">store_layer_interdependences</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_interdeps</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that simplifies the storing of the model&#39;s layer interdependences at each iteration.</span>
+
+<span class="sd">        :param layer_interdeps: A &lt;hierarchy : interdependence value&gt; mapping that tracks the layer interdependences to be stored for this iteration.</span>
+<span class="sd">        :type layer_interdeps: dict[str, float]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">hierarchy</span><span class="p">,</span> <span class="n">interdependence</span> <span class="ow">in</span> <span class="n">layer_interdeps</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">interdependence</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.store_layer_polarisations">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.store_layer_polarisations.html#gatoh.logging.LoggerVariables.store_layer_polarisations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">store_layer_polarisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_polars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that simplifies the storing of the model&#39;s layer polarisations at each iteration.</span>
+
+<span class="sd">        :param layer_polars: A &lt;hierarchy : polarisation value&gt; mapping that tracks the layer polarisations to be stored for this iteration.</span>
+<span class="sd">        :type layer_polars: dict[str, float]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">hierarchy</span><span class="p">,</span> <span class="n">polarisation</span> <span class="ow">in</span> <span class="n">layer_polars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layer_polarisations</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">polarisation</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.new_iteration">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.new_iteration.html#gatoh.logging.LoggerVariables.new_iteration">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">new_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Increment the current_iteration counter and then copy all the values from the previous iteration to their respective list indexes for the new iteration.</span>
+
+<span class="sd">        :param init: A flag indicating if the call is being made during the first model iteration (no previous values to copy)</span>
+<span class="sd">        :type init: bool, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">init</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># Variables defined to reduce repetition below</span>
+        <span class="n">t_now</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">t_last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">2</span>
+        <span class="c1"># -1 and -2 indexes due to indexing logic for lists...</span>
+
+        <span class="c1"># Only these 3 variables must be carried over, all others are calculated at the end of the timestep independently</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.current_layers_repr">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.current_layers_repr.html#gatoh.logging.LoggerVariables.current_layers_repr">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">current_layers_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract all the per-hierarchy variables for the current iteration and format it into a substring to be appended to the main iteration output.</span>
+
+<span class="sd">        :return: A formatted text representation containing all the per-hierarchy variables for the current model iteration.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">output_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Hierarchy Name</span><span class="se">\t</span><span class="s2">Layer Interdependence</span><span class="se">\t</span><span class="s2">Layer Polarisation</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">interdepence</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">][</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="p">]</span>
+            <span class="n">polarisation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_polarisations</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">][</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="p">]</span>
+            <span class="n">hierarchy_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">interdepence</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">polarisation</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">output_string</span> <span class="o">+=</span> <span class="n">hierarchy_string</span>
+        <span class="k">return</span> <span class="n">output_string</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.current_iteration_repr">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.current_iteration_repr.html#gatoh.logging.LoggerVariables.current_iteration_repr">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">current_iteration_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract all variable information for the current iteration and format it into a string to be printed to the terminal.</span>
+
+<span class="sd">        :return: A formatted text representation containing all the variables for the current model iteration.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">formatted_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\n\n</span><span class="s2">==== GATOH model variables at iteration </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2"> ====</span><span class="se">\n\n</span><span class="s2">Aggregate community opinion: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Number of radicalised agents in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Log odds of radicalisation ocurring: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_logodds</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Number of opinion silencing events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Number of opinion negation events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">**** Layer statistics ****</span><span class="se">\n\n</span><span class="s2">&quot;&quot;&quot;</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_layers_repr</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">formatted_string</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.get_fieldnames">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.get_fieldnames.html#gatoh.logging.LoggerVariables.get_fieldnames">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_fieldnames</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that provides a place to collect and return all of the dataclass&#39; attribute names for use</span>
+<span class="sd">        as CSV column names.</span>
+
+<span class="sd">        :return: The names of all the attributes in this dataclass.</span>
+<span class="sd">        :rtype: list[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attribute_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;iterations&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;aggregate_opinions&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;radicalised_agents&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;silenced_agents&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;negated_agents&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;radicalisation_logodds&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">attribute_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;layer_interdependences_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_polarisations</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">attribute_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;layer_polarisations_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">attribute_names</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="GATOHLogger">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.html#gatoh.logging.GATOHLogger">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GATOHLogger</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The logging module will contain all functions related to logging and/or printing model progress and information</span>
+<span class="sd">    both during and after simulation.</span>
+
+<span class="sd">    :param max_iterations: The maximum number of iterations that the parent model is running its simulation for.</span>
+<span class="sd">    :type max_iterations: int</span>
+<span class="sd">    :param hierarchies: The names of the social hierarchies present in the parent model.</span>
+<span class="sd">    :type hierarchies: list[str]</span>
+<span class="sd">    :param verbose: A flag indicating if extended information should be printed during logging.</span>
+<span class="sd">    :type verbose: bool, optional</span>
+<span class="sd">    :param print_interval: The number of model iterations to run in between each printed logging output.</span>
+<span class="sd">    :type print_interval: int, optional</span>
+<span class="sd">    :param print_outside_interval: A flag indicating if a simple string indicating just the iteration number should be printed outside the print_interval.</span>
+<span class="sd">    :type print_outside_interval: bool, optional</span>
+<span class="sd">    :param write_file: A flag indicating if a log file should be written to disk at the end of logging.</span>
+<span class="sd">    :type write_file: bool, optional</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: Expand on logging capabilities</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">hierarchies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">print_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">print_outside_interval</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">write_file</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">print_interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_outside_interval</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">print_outside_interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_file</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">write_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span> <span class="n">LoggerVariables</span> <span class="o">=</span> <span class="n">LoggerVariables</span><span class="p">(</span><span class="n">max_iterations</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GATOHLogger.format_non_interval_print">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.format_non_interval_print.html#gatoh.logging.GATOHLogger.format_non_interval_print">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">format_non_interval_print</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a formatted string to be printed out on iterations which fall outside the print interval (to still provide some feedback on iteration progress)</span>
+
+<span class="sd">        Defined as its own function to allow for easy modification in the future.</span>
+
+<span class="sd">        :return: The formatted text to print outside of the print interval.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">non_interval_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">========== Iteration </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2"> ==========</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">non_interval_string</span></div>
+
+
+<div class="viewcode-block" id="GATOHLogger.new_iteration">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.new_iteration.html#gatoh.logging.GATOHLogger.new_iteration">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">new_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A wrapper that calls LoggerVariables new_iteration().</span>
+
+<span class="sd">        :param init: A flag indicating if this function is being called from the first iteration of the model.</span>
+<span class="sd">        :type init: bool, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">new_iteration</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="n">init</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="GATOHLogger.iteration">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.iteration.html#gatoh.logging.GATOHLogger.iteration">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">iteration</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">aggregate_opinion</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">radicalisation_logodds</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">layer_interdependences</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">layer_polarisations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store all relevant model variables and states based on the level of logging that has been specified.</span>
+
+<span class="sd">        :param aggregate_opinion: The aggregate network opinion that has been observed in the model at the end of this iteration.</span>
+<span class="sd">        :type aggregate_opinion: float</span>
+<span class="sd">        :param radicalisation_logodds: The log odds of an agent being radicalised in the model at the end of this iteration.</span>
+<span class="sd">        :type radicalisation_logodds: float</span>
+<span class="sd">        :param layer_interdependences: A &lt;hierarchy : value&gt; mapping containing the calculated layer interdependency for each hierarchy in the model at the end of this iteration.</span>
+<span class="sd">        :type layer_interdependences: dict[str, float]</span>
+<span class="sd">        :param layers_polarisation: A &lt;hierarchy : value&gt; mapping containing the calculated polarisation for each hierarchy in the model at the end of this iteration.</span>
+<span class="sd">        :type layers_polarisation: dict[str, float]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_aggregate_opinion</span><span class="p">(</span><span class="n">aggregate_opinion</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_radicalisation_logodds</span><span class="p">(</span><span class="n">radicalisation_logodds</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_interdependences</span><span class="p">(</span><span class="n">layer_interdependences</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_polarisations</span><span class="p">(</span><span class="n">layer_polarisations</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="GATOHLogger.iteration_print">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.iteration_print.html#gatoh.logging.GATOHLogger.iteration_print">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">iteration_print</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A method which formats the model statistics at the appropriate print_interval.</span>
+
+<span class="sd">        :return: An appropriately formatted textrual representation to be printed out by the model for this iteration.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">print_string</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">print_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">current_iteration_repr</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">print_string</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">print_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_non_interval_print</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">print_string</span></div>
+
+
+<div class="viewcode-block" id="GATOHLogger.save_data">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.save_data.html#gatoh.logging.GATOHLogger.save_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves all logged data to the specified path.</span>
+
+<span class="sd">        :param save_path: The path to save the logger&#39;s data to.</span>
+<span class="sd">        :type save_path: str</span>
+<span class="sd">        :return: A flag indicating if data was successfully saved or not.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># An empty string means that no explicit save path was given to the model, and it is assumed that no saving is desired.</span>
+        <span class="k">if</span> <span class="n">save_path</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+            <span class="n">field_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">get_fieldnames</span><span class="p">()</span>
+
+            <span class="n">csv_writer</span><span class="p">:</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">fieldnames</span><span class="o">=</span><span class="n">field_names</span><span class="p">)</span>
+            <span class="n">csv_writer</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">):</span>
+                <span class="n">row_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;iterations&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;aggregate_opinions&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">aggregate_opinions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;radicalised_agents&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;silenced_agents&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;negated_agents&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;radicalisation_logodds&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">radicalisation_logodds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+
+                <span class="c1"># Append interdependences and polarisations in the same loop as the headers should handle ordering automatically</span>
+                <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">row_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;layer_interdependences_</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">row_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;layer_polarisations_</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">layer_polarisations</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="n">csv_writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">row_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Manuel Munizaga Sepúlveda.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

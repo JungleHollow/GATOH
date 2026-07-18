@@ -3,4 +3,4 @@
 .. autosummary::
     :toctree: ../../apiref
 
-    gatoh.utils.utils.plot_graph
+    gatoh.utils.plot_graph

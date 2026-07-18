@@ -1,4 +1,4 @@
 .. autosummary::
     :toctree: ../../apiref
 
-    gatoh.model.model.ABModel
+    gatoh.model.ABModel

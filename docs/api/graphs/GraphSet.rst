@@ -1,4 +1,4 @@
 .. autosummary::
     :toctree: ../../apiref
 
-    gatoh.graphs.graphs.GraphSet
+    gatoh.graphs.GraphSet

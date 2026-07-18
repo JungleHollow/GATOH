@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gatoh"
-version = "0.1.2-alpha"
+current_version = "2026.07.0"
 authors = [
     { name="Manuel Munizaga Sepulveda", email="manuel.chile@yahoo.com" },
 ]
@@ -17,12 +17,10 @@ dependencies = [
     "rustworkx",
     "matplotlib",
     "scipy",
-    "scipy-stubs",
     "pyyaml",
     "multimethod",
     "pycairo",
     "PyGObject",
-    "sphinx",
     "seaborn",
 ]
 classifiers = [
@@ -36,5 +34,37 @@ license-files = ["LICEN[CS]E*"]
 Homepage = "https://github.com/JungleHollow/GATOH"
 Issues = "https://github.com/JungleHollow/GATOH/issues"
 
+[project.optional-dependencies]
+dev = [
+    "bumpver",
+    "sphinx",
+    "scipy-stubs"
+]
+
 [tool.setuptools.packages]
 find = {}
+
+[tool.bumpver]
+current_version = "2026.07.0"
+version_pattern = "YYYY.0M.PATCH"
+commit_message = "Bump version {old_version} -> {new_version}"
+tag_message = "{new_version}"
+tag_scope = "default"
+pre_commit_hook = ""
+post_commit_hook = ""
+commit = true
+tag = true
+push = true
+allowed_branches = "master,main,default,release*"
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'current_version = "{version}"',
+]
+"./docs/conf.py" = [
+    'version = "{version}"',
+    'release = "{version}"'
+]
+"./docs/index.rst" = [
+    "**Version**: {version}"
+]

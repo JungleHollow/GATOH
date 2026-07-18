@@ -1,0 +1,297 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Graph &mdash; gatoh 2026.07.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5d2ae42f"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/thebelab-helper.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gatoh.graphs.Graph.add_edges" href="gatoh.graphs.Graph.add_edges.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="../api/graphs/Graph.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            gatoh
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api/index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gatoh.agents.Agent.html">Agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.agents.AgentSet.html">AgentSet</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Graph</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gatoh.graphs.Graph"><code class="docutils literal notranslate"><span class="pre">Graph</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.add_edges.html">gatoh.graphs.Graph.add_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.add_nodes.html">gatoh.graphs.Graph.add_nodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.agent_in_graph.html">gatoh.graphs.Graph.agent_in_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.agent_opinion_change.html">gatoh.graphs.Graph.agent_opinion_change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.agent_previous_opinion.html">gatoh.graphs.Graph.agent_previous_opinion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.agent_radicalisation_change.html">gatoh.graphs.Graph.agent_radicalisation_change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.calculate_polarisation.html">gatoh.graphs.Graph.calculate_polarisation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.change_generation_params.html">gatoh.graphs.Graph.change_generation_params</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.change_weights.html">gatoh.graphs.Graph.change_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.dynamic_relationships.html">gatoh.graphs.Graph.dynamic_relationships</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.estimate_neighbour_opinions.html">gatoh.graphs.Graph.estimate_neighbour_opinions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.estimate_opinion_climate.html">gatoh.graphs.Graph.estimate_opinion_climate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.generate_graph.html">gatoh.graphs.Graph.generate_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_agent_index.html">gatoh.graphs.Graph.get_agent_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_edge.html">gatoh.graphs.Graph.get_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_edge_changes.html">gatoh.graphs.Graph.get_edge_changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_neighbours.html">gatoh.graphs.Graph.get_neighbours</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_node.html">gatoh.graphs.Graph.get_node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_relationship.html">gatoh.graphs.Graph.get_relationship</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_relationships.html">gatoh.graphs.Graph.get_relationships</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.load_graph.html">gatoh.graphs.Graph.load_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.neighbour_influences.html">gatoh.graphs.Graph.neighbour_influences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.node_from_agent.html">gatoh.graphs.Graph.node_from_agent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.register_edge_change.html">gatoh.graphs.Graph.register_edge_change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.relationship_exists.html">gatoh.graphs.Graph.relationship_exists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.remove_edge.html">gatoh.graphs.Graph.remove_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.remove_node.html">gatoh.graphs.Graph.remove_node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.save_graph.html">gatoh.graphs.Graph.save_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.step.html">gatoh.graphs.Graph.step</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.update_edge_indices.html">gatoh.graphs.Graph.update_edge_indices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.update_node_indices.html">gatoh.graphs.Graph.update_node_indices</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphNode.html">GraphNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphEdge.html">GraphEdge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphSet.html">GraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.logging.GATOHLogger.html">GATOHLogger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.logging.LoggerVariables.html">LoggerVariables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.model.ABModel.html">ABModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.visualisation.ABVisualiser.html">ABVisualiser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.NodeChanges.html">NodeChanges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.EdgeChanges.html">EdgeChanges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.pygraph_to_pydigraph.html">gatoh.utils.pygraph_to_pydigraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_graph.html">gatoh.utils.watts_strogatz_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_creator.html">gatoh.utils.watts_strogatz_creator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.connected_watts_strogatz_graph.html">gatoh.utils.connected_watts_strogatz_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.beta_value_attenuation.html">gatoh.utils.beta_value_attenuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.create_config_file.html">gatoh.utils.create_config_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.draw_random_value.html">gatoh.utils.draw_random_value</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.random_coinflip.html">gatoh.utils.random_coinflip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.value_rw_delta.html">gatoh.utils.value_rw_delta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.plot_graph.html">gatoh.utils.plot_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/index.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Release Notes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">gatoh</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api/index.html">GATOH API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../api/graphs/index.html">&lt;no title&gt;</a></li>
+          <li class="breadcrumb-item"><a href="../api/graphs/Graph.html">&lt;no title&gt;</a></li>
+      <li class="breadcrumb-item active">Graph</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/apiref/gatoh.graphs.Graph.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="graph">
+<h1>Graph<a class="headerlink" href="#graph" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="gatoh.graphs.Graph">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rw_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generation_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warnings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_rels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gatoh/graphs.html#Graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.graphs.Graph" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A graph class that defines a single agent-based model layer.</p>
+<p>This corresponds to the agents’ attitudes towards one another
+with respect to different social hierarchies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name of the social hierarchy that this Graph object will be representing.</p></li>
+<li><p><strong>rw_params</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – The (mean, variance) of the normal distribution used for the dynamic relationships random walk.</p></li>
+<li><p><strong>generation_method</strong> (<em>str</em><em>, </em><em>optional</em>) – The random graph generation method that should be used where relevant.</p></li>
+<li><p><strong>suppress_warnings</strong> (<em>bool</em><em>, </em><em>optional</em>) – A flag indicating if non-critical warnings should be suppressed.</p></li>
+<li><p><strong>dynamic_rels</strong> (<em>bool</em><em>, </em><em>optional</em>) – A flag indicating if dynamic relationships should be modelled for this social hierarchy.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.add_edges.html#gatoh.graphs.Graph.add_edges" title="gatoh.graphs.Graph.add_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_edges</span></code></a></p></td>
+<td><p>Creates appropriate GraphEdges from the given dictionary and then adds these to the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.add_nodes.html#gatoh.graphs.Graph.add_nodes" title="gatoh.graphs.Graph.add_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_nodes</span></code></a></p></td>
+<td><p>Creates appropriate GraphNodes from the given Agents, and then adds these to the graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.agent_in_graph.html#gatoh.graphs.Graph.agent_in_graph" title="gatoh.graphs.Graph.agent_in_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">agent_in_graph</span></code></a></p></td>
+<td><p>A simple function that checks wether an Agent exists within a Graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.agent_opinion_change.html#gatoh.graphs.Graph.agent_opinion_change" title="gatoh.graphs.Graph.agent_opinion_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">agent_opinion_change</span></code></a></p></td>
+<td><p>Changes the specified Agent's current opinion by the given delta.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.agent_previous_opinion.html#gatoh.graphs.Graph.agent_previous_opinion" title="gatoh.graphs.Graph.agent_previous_opinion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">agent_previous_opinion</span></code></a></p></td>
+<td><p>Set the specified Agent's previous opinion to be equal to the current opinion (before the current opinion changes in the current iteration).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.agent_radicalisation_change.html#gatoh.graphs.Graph.agent_radicalisation_change" title="gatoh.graphs.Graph.agent_radicalisation_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">agent_radicalisation_change</span></code></a></p></td>
+<td><p>Change the specified Agent's radicalisation status.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.calculate_polarisation.html#gatoh.graphs.Graph.calculate_polarisation" title="gatoh.graphs.Graph.calculate_polarisation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_polarisation</span></code></a></p></td>
+<td><p>Calculates the level of opinion polarisation in this <a class="reference internal" href="#gatoh.graphs.Graph" title="gatoh.graphs.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a> based on the equation:</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.change_generation_params.html#gatoh.graphs.Graph.change_generation_params" title="gatoh.graphs.Graph.change_generation_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_generation_params</span></code></a></p></td>
+<td><p>Setter function which outlines the existing generation parameters used in generate_graph() and allows the user to alter them.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.change_weights.html#gatoh.graphs.Graph.change_weights" title="gatoh.graphs.Graph.change_weights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_weights</span></code></a></p></td>
+<td><p>Updates the weight of the relationship between two agents in the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.dynamic_relationships.html#gatoh.graphs.Graph.dynamic_relationships" title="gatoh.graphs.Graph.dynamic_relationships"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dynamic_relationships</span></code></a></p></td>
+<td><p>Uses the (mean, variance) passed at initialisation to draw random walk values by which each edge (relationship) in the hierarchy will be shifted.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.estimate_neighbour_opinions.html#gatoh.graphs.Graph.estimate_neighbour_opinions" title="gatoh.graphs.Graph.estimate_neighbour_opinions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate_neighbour_opinions</span></code></a></p></td>
+<td><p>Return the individual opinion climate values perceived by the Agent for each other Agent within this social hierarchy.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.estimate_opinion_climate.html#gatoh.graphs.Graph.estimate_opinion_climate" title="gatoh.graphs.Graph.estimate_opinion_climate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate_opinion_climate</span></code></a></p></td>
+<td><p>Return the unique opinion climate perceived by the Agent within this social hierarchy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.generate_graph.html#gatoh.graphs.Graph.generate_graph" title="gatoh.graphs.Graph.generate_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_graph</span></code></a></p></td>
+<td><p>Randomly generate edges between existing Graph nodes and add them to the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.get_agent_index.html#gatoh.graphs.Graph.get_agent_index" title="gatoh.graphs.Graph.get_agent_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_agent_index</span></code></a></p></td>
+<td><p>Searches for the node index in the Graph which corresponds to the input Agent object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.get_edge.html#gatoh.graphs.Graph.get_edge" title="gatoh.graphs.Graph.get_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_edge</span></code></a></p></td>
+<td><p>A getter function to access GraphEdge objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.get_edge_changes.html#gatoh.graphs.Graph.get_edge_changes" title="gatoh.graphs.Graph.get_edge_changes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_edge_changes</span></code></a></p></td>
+<td><p>A getter function that returns the current register of pending edge changes for this graph, and then resets the attribute to an empty entry.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.get_neighbours.html#gatoh.graphs.Graph.get_neighbours" title="gatoh.graphs.Graph.get_neighbours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_neighbours</span></code></a></p></td>
+<td><p>Finds all the nodes in the graph with direct relationships to the specified Agent.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.get_node.html#gatoh.graphs.Graph.get_node" title="gatoh.graphs.Graph.get_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_node</span></code></a></p></td>
+<td><p>A getter function to access GraphNode objects.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.get_relationship.html#gatoh.graphs.Graph.get_relationship" title="gatoh.graphs.Graph.get_relationship"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_relationship</span></code></a></p></td>
+<td><p>Return a directed relationship from one node to another.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.get_relationships.html#gatoh.graphs.Graph.get_relationships" title="gatoh.graphs.Graph.get_relationships"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_relationships</span></code></a></p></td>
+<td><p>Retrieves and reports the bidirectional relationship weightings between two nodes in the Graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.load_graph.html#gatoh.graphs.Graph.load_graph" title="gatoh.graphs.Graph.load_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_graph</span></code></a></p></td>
+<td><p>Loads a Graph object stored in the GraphML format from the given path.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.neighbour_influences.html#gatoh.graphs.Graph.neighbour_influences" title="gatoh.graphs.Graph.neighbour_influences"><code class="xref py py-obj docutils literal notranslate"><span class="pre">neighbour_influences</span></code></a></p></td>
+<td><p>Looks at all the neighbours for an Agent and uses the neighbours' own opinions plus the weight of the relationship between Agents to return a final value by which the given Agent's opinion value will increment or decrement.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.node_from_agent.html#gatoh.graphs.Graph.node_from_agent" title="gatoh.graphs.Graph.node_from_agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">node_from_agent</span></code></a></p></td>
+<td><p>Returns the GraphNode object corresponding to the given Agent object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.register_edge_change.html#gatoh.graphs.Graph.register_edge_change" title="gatoh.graphs.Graph.register_edge_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_edge_change</span></code></a></p></td>
+<td><p>A helper function that records a pending edge change for this graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.relationship_exists.html#gatoh.graphs.Graph.relationship_exists" title="gatoh.graphs.Graph.relationship_exists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">relationship_exists</span></code></a></p></td>
+<td><p>Checks for the existence of a relationship (weighted edge) between two Agents (nodes).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.remove_edge.html#gatoh.graphs.Graph.remove_edge" title="gatoh.graphs.Graph.remove_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_edge</span></code></a></p></td>
+<td><p>Removes a single edge from the graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.remove_node.html#gatoh.graphs.Graph.remove_node" title="gatoh.graphs.Graph.remove_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_node</span></code></a></p></td>
+<td><p>Removes a node from the graph, along with any relationships involving it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.save_graph.html#gatoh.graphs.Graph.save_graph" title="gatoh.graphs.Graph.save_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_graph</span></code></a></p></td>
+<td><p>Saves the existing Graph object in the GraphML format to the given path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.step.html#gatoh.graphs.Graph.step" title="gatoh.graphs.Graph.step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code></a></p></td>
+<td><p>Step the individual Graph object:</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.update_edge_indices.html#gatoh.graphs.Graph.update_edge_indices" title="gatoh.graphs.Graph.update_edge_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_edge_indices</span></code></a></p></td>
+<td><p>Iterates over all the existing edges in the graph and updates their stored indices to reflect the current graph state.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.update_node_indices.html#gatoh.graphs.Graph.update_node_indices" title="gatoh.graphs.Graph.update_node_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_node_indices</span></code></a></p></td>
+<td><p>Iterates over all the existing nodes in the graph and updates their stored indices to reflect the current graph state.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../api/graphs/Graph.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gatoh.graphs.Graph.add_edges.html" class="btn btn-neutral float-right" title="gatoh.graphs.Graph.add_edges" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Manuel Munizaga Sepúlveda.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,6 +1,0 @@
-gatoh.model.model.ABModel.load\_model
-=====================================
-
-.. currentmodule:: gatoh.model.model
-
-.. automethod:: ABModel.load_model

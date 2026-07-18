@@ -4,7 +4,7 @@ Release Notes
 
 .. release-notes::
 
-2026.7.1-alpha
+2026.07.0
 ==============
 
 GATOH changes from a semantic to a calendar versioning scheme with this release for simplicity of version control.
@@ -15,6 +15,7 @@ as a PyPI package.
 New Features
 ------------
 
+- Changed from semantic to calendar versioning
 - Changed the layout of the package modules to simplify import statements
 - Extended full docstrings to case study experiment code
 
@@ -22,6 +23,7 @@ Fixes
 -----
 
 - Fixed all the existing imports across scripts to reflect the module restructuring
+- Fixed all the code references in the existing documentation
 
 0.2.0-alpha
 ===========

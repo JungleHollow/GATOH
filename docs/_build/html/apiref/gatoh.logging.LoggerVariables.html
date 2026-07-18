@@ -1,0 +1,271 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoggerVariables &mdash; gatoh 2026.07.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5d2ae42f"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/thebelab-helper.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gatoh.logging.LoggerVariables.current_iteration_repr" href="gatoh.logging.LoggerVariables.current_iteration_repr.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="../api/logging/LoggerVariables.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            gatoh
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api/index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gatoh.agents.Agent.html">Agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.agents.AgentSet.html">AgentSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.Graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphNode.html">GraphNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphEdge.html">GraphEdge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphSet.html">GraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.logging.GATOHLogger.html">GATOHLogger</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">LoggerVariables</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gatoh.logging.LoggerVariables"><code class="docutils literal notranslate"><span class="pre">LoggerVariables</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.current_iteration"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.current_iteration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.max_iterations"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.max_iterations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.aggregate_opinions"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.aggregate_opinions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.radicalised_agents"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.radicalised_agents</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.silenced_agents"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.silenced_agents</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.negated_agents"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.negated_agents</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.layer_interdependences"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.layer_interdependences</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.layer_polarisations"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.layer_polarisations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.radicalisation_logodds"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.radicalisation_logodds</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.current_iteration_repr.html">gatoh.logging.LoggerVariables.current_iteration_repr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.current_layers_repr.html">gatoh.logging.LoggerVariables.current_layers_repr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.get_fieldnames.html">gatoh.logging.LoggerVariables.get_fieldnames</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_negated.html">gatoh.logging.LoggerVariables.increment_negated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_radicalised.html">gatoh.logging.LoggerVariables.increment_radicalised</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_silenced.html">gatoh.logging.LoggerVariables.increment_silenced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.new_iteration.html">gatoh.logging.LoggerVariables.new_iteration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_aggregate_opinion.html">gatoh.logging.LoggerVariables.store_aggregate_opinion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_interdependences.html">gatoh.logging.LoggerVariables.store_layer_interdependences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_polarisations.html">gatoh.logging.LoggerVariables.store_layer_polarisations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_radicalisation_logodds.html">gatoh.logging.LoggerVariables.store_radicalisation_logodds</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.model.ABModel.html">ABModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.visualisation.ABVisualiser.html">ABVisualiser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.NodeChanges.html">NodeChanges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.EdgeChanges.html">EdgeChanges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.pygraph_to_pydigraph.html">gatoh.utils.pygraph_to_pydigraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_graph.html">gatoh.utils.watts_strogatz_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_creator.html">gatoh.utils.watts_strogatz_creator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.connected_watts_strogatz_graph.html">gatoh.utils.connected_watts_strogatz_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.beta_value_attenuation.html">gatoh.utils.beta_value_attenuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.create_config_file.html">gatoh.utils.create_config_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.draw_random_value.html">gatoh.utils.draw_random_value</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.random_coinflip.html">gatoh.utils.random_coinflip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.value_rw_delta.html">gatoh.utils.value_rw_delta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.plot_graph.html">gatoh.utils.plot_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/index.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Release Notes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">gatoh</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api/index.html">GATOH API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../api/logging/index.html">&lt;no title&gt;</a></li>
+          <li class="breadcrumb-item"><a href="../api/logging/LoggerVariables.html">&lt;no title&gt;</a></li>
+      <li class="breadcrumb-item active">LoggerVariables</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/apiref/gatoh.logging.LoggerVariables.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="loggervariables">
+<h1>LoggerVariables<a class="headerlink" href="#loggervariables" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">LoggerVariables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hierarchies</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gatoh/logging.html#LoggerVariables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.logging.LoggerVariables" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Dataclass that defines the simulation variables that are stored and tracked by the Logger.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_iterations</strong> (<em>int</em>) – The maximum number of iterations that the model will run its simulation for.</p></li>
+<li><p><strong>hierarchies</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – The names of all social hierarchies present in the model.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Store the number of max iterations and initialise all lists and dictionaries with the appropriate hierarchy names
+and sizes to match the number of iterations.</p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.current_iteration_repr.html#gatoh.logging.LoggerVariables.current_iteration_repr" title="gatoh.logging.LoggerVariables.current_iteration_repr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">current_iteration_repr</span></code></a></p></td>
+<td><p>Extract all variable information for the current iteration and format it into a string to be printed to the terminal.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.current_layers_repr.html#gatoh.logging.LoggerVariables.current_layers_repr" title="gatoh.logging.LoggerVariables.current_layers_repr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">current_layers_repr</span></code></a></p></td>
+<td><p>Extract all the per-hierarchy variables for the current iteration and format it into a substring to be appended to the main iteration output.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.get_fieldnames.html#gatoh.logging.LoggerVariables.get_fieldnames" title="gatoh.logging.LoggerVariables.get_fieldnames"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fieldnames</span></code></a></p></td>
+<td><p>A helper function that provides a place to collect and return all of the dataclass' attribute names for use as CSV column names.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_negated.html#gatoh.logging.LoggerVariables.increment_negated" title="gatoh.logging.LoggerVariables.increment_negated"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_negated</span></code></a></p></td>
+<td><p>A simple setter function that checks the input flag and updates the opinion negation events count accordingly.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_radicalised.html#gatoh.logging.LoggerVariables.increment_radicalised" title="gatoh.logging.LoggerVariables.increment_radicalised"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_radicalised</span></code></a></p></td>
+<td><p>A simple setter function that checks the input flag and updates the radicalisation count accordingly.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_silenced.html#gatoh.logging.LoggerVariables.increment_silenced" title="gatoh.logging.LoggerVariables.increment_silenced"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_silenced</span></code></a></p></td>
+<td><p>A simple setter function that checks the input flag and updates the opinion silencing events count accordingly.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.new_iteration.html#gatoh.logging.LoggerVariables.new_iteration" title="gatoh.logging.LoggerVariables.new_iteration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_iteration</span></code></a></p></td>
+<td><p>Increment the current_iteration counter and then copy all the values from the previous iteration to their respective list indexes for the new iteration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_aggregate_opinion.html#gatoh.logging.LoggerVariables.store_aggregate_opinion" title="gatoh.logging.LoggerVariables.store_aggregate_opinion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_aggregate_opinion</span></code></a></p></td>
+<td><p>A setter function that simplifies the storing of aggregate opinion values at each iteration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_interdependences.html#gatoh.logging.LoggerVariables.store_layer_interdependences" title="gatoh.logging.LoggerVariables.store_layer_interdependences"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_layer_interdependences</span></code></a></p></td>
+<td><p>A setter function that simplifies the storing of the model's layer interdependences at each iteration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_polarisations.html#gatoh.logging.LoggerVariables.store_layer_polarisations" title="gatoh.logging.LoggerVariables.store_layer_polarisations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_layer_polarisations</span></code></a></p></td>
+<td><p>A setter function that simplifies the storing of the model's layer polarisations at each iteration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_radicalisation_logodds.html#gatoh.logging.LoggerVariables.store_radicalisation_logodds" title="gatoh.logging.LoggerVariables.store_radicalisation_logodds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_radicalisation_logodds</span></code></a></p></td>
+<td><p>A setter function that simplifies the storing of the model's radicalisation log odds at each iteration.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.current_iteration">
+<span class="sig-name descname"><span class="pre">current_iteration</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.current_iteration" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.max_iterations">
+<span class="sig-name descname"><span class="pre">max_iterations</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.max_iterations" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.aggregate_opinions">
+<span class="sig-name descname"><span class="pre">aggregate_opinions</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.aggregate_opinions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.radicalised_agents">
+<span class="sig-name descname"><span class="pre">radicalised_agents</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.radicalised_agents" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.silenced_agents">
+<span class="sig-name descname"><span class="pre">silenced_agents</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.silenced_agents" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.negated_agents">
+<span class="sig-name descname"><span class="pre">negated_agents</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.negated_agents" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.layer_interdependences">
+<span class="sig-name descname"><span class="pre">layer_interdependences</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.layer_interdependences" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.layer_polarisations">
+<span class="sig-name descname"><span class="pre">layer_polarisations</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.layer_polarisations" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.radicalisation_logodds">
+<span class="sig-name descname"><span class="pre">radicalisation_logodds</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.radicalisation_logodds" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../api/logging/LoggerVariables.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gatoh.logging.LoggerVariables.current_iteration_repr.html" class="btn btn-neutral float-right" title="gatoh.logging.LoggerVariables.current_iteration_repr" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Manuel Munizaga Sepúlveda.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

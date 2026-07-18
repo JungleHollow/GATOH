@@ -1,6 +1,0 @@
-gatoh.model.model.ABModel.update
-================================
-
-.. currentmodule:: gatoh.model.model
-
-.. automethod:: ABModel.update

@@ -1,6 +1,0 @@
-gatoh.agents.agents.AgentSet.remove\_index
-==========================================
-
-.. currentmodule:: gatoh.agents.agents
-
-.. automethod:: AgentSet.remove_index

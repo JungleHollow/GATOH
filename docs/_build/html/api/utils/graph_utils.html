@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>&lt;no title&gt; &mdash; gatoh 0.1.0</title>
+  <title>&lt;no title&gt; &mdash; gatoh 2026.07.0</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/documentation_options.js?v=5d2ae42f"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/thebelab-helper.js"></script>
@@ -24,8 +24,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="NodeChanges" href="../../apiref/gatoh.utils.utils.NodeChanges.html" />
-    <link rel="prev" title="gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration" href="../../apiref/gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration.html" /> 
+    <link rel="next" title="NodeChanges" href="../../apiref/gatoh.utils.NodeChanges.html" />
+    <link rel="prev" title="gatoh.visualisation.ABVisualiser.visualiser_iteration_mpl" href="../../apiref/gatoh.visualisation.ABVisualiser.visualiser_iteration_mpl.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -83,22 +83,22 @@
              
   <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.utils.NodeChanges.html#gatoh.utils.utils.NodeChanges" title="gatoh.utils.utils.NodeChanges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.utils.NodeChanges</span></code></a>(opinion, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.NodeChanges.html#gatoh.utils.NodeChanges" title="gatoh.utils.NodeChanges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.NodeChanges</span></code></a>(opinion, ...)</p></td>
 <td><p>Dataclass that stores all the relevant information needed to update GraphNodes in the model's base graph.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.utils.EdgeChanges.html#gatoh.utils.utils.EdgeChanges" title="gatoh.utils.utils.EdgeChanges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.utils.EdgeChanges</span></code></a>(hierarchy, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.EdgeChanges.html#gatoh.utils.EdgeChanges" title="gatoh.utils.EdgeChanges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.EdgeChanges</span></code></a>(hierarchy, weighting)</p></td>
 <td><p>Dataclass that stores all the relevant information needed to update GraphEdges in the model's base graph.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.utils.pygraph_to_pydigraph.html#gatoh.utils.utils.pygraph_to_pydigraph" title="gatoh.utils.utils.pygraph_to_pydigraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.utils.pygraph_to_pydigraph</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.pygraph_to_pydigraph.html#gatoh.utils.pygraph_to_pydigraph" title="gatoh.utils.pygraph_to_pydigraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.pygraph_to_pydigraph</span></code></a>(input_graph)</p></td>
 <td><p>Transform an arbitrary <code class="xref py py-class docutils literal notranslate"><span class="pre">rustworxk.PyGraph</span></code> to a <code class="xref py py-class docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph</span></code> object where each unidirectional edge in the <code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code> becomes two opposing monodirectional edges with weight equal to the original.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.utils.watts_strogatz_graph.html#gatoh.utils.utils.watts_strogatz_graph" title="gatoh.utils.utils.watts_strogatz_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.utils.watts_strogatz_graph</span></code></a>(n, k, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.watts_strogatz_graph.html#gatoh.utils.watts_strogatz_graph" title="gatoh.utils.watts_strogatz_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.watts_strogatz_graph</span></code></a>(n, k, p, seed)</p></td>
 <td><p>Returns an undirected Watts-Strogatz small-world graph generated using <code class="xref py py-mod docutils literal notranslate"><span class="pre">rustworkx</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.utils.watts_strogatz_creator.html#gatoh.utils.utils.watts_strogatz_creator" title="gatoh.utils.utils.watts_strogatz_creator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.utils.watts_strogatz_creator</span></code></a>(n, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.watts_strogatz_creator.html#gatoh.utils.watts_strogatz_creator" title="gatoh.utils.watts_strogatz_creator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.watts_strogatz_creator</span></code></a>(n, k, p, ...)</p></td>
 <td><p>A helper function that performs the actual Graph object creation for the multidispatched functions above.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.utils.connected_watts_strogatz_graph.html#gatoh.utils.utils.connected_watts_strogatz_graph" title="gatoh.utils.utils.connected_watts_strogatz_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.utils.connected_watts_strogatz_graph</span></code></a>(n, k, p)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../../apiref/gatoh.utils.connected_watts_strogatz_graph.html#gatoh.utils.connected_watts_strogatz_graph" title="gatoh.utils.connected_watts_strogatz_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gatoh.utils.connected_watts_strogatz_graph</span></code></a>(n, k, p)</p></td>
 <td><p>Returns a connected, directed Watts-Strogatz small-world graph.</p></td>
 </tr>
 </tbody>
@@ -108,8 +108,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../../apiref/gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration.html" class="btn btn-neutral float-left" title="gatoh.visualisation.visualisation.ABVisualiser.visualiser_iteration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../apiref/gatoh.utils.utils.NodeChanges.html" class="btn btn-neutral float-right" title="NodeChanges" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../../apiref/gatoh.visualisation.ABVisualiser.visualiser_iteration_mpl.html" class="btn btn-neutral float-left" title="gatoh.visualisation.ABVisualiser.visualiser_iteration_mpl" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../apiref/gatoh.utils.NodeChanges.html" class="btn btn-neutral float-right" title="NodeChanges" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -1,6 +1,0 @@
-gatoh.graphs.graphs.Graph.add\_nodes
-====================================
-
-.. currentmodule:: gatoh.graphs.graphs
-
-.. automethod:: Graph.add_nodes

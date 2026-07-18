@@ -1,6 +1,0 @@
-gatoh.graphs.graphs.Graph.step
-==============================
-
-.. currentmodule:: gatoh.graphs.graphs
-
-.. automethod:: Graph.step

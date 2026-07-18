@@ -1,6 +1,0 @@
-gatoh.model.model.ABModel.calculate\_radicalisation\_logodds
-============================================================
-
-.. currentmodule:: gatoh.model.model
-
-.. automethod:: ABModel.calculate_radicalisation_logodds

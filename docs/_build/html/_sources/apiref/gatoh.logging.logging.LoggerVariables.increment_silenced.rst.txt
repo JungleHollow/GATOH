@@ -1,6 +1,0 @@
-gatoh.logging.logging.LoggerVariables.increment\_silenced
-=========================================================
-
-.. currentmodule:: gatoh.logging.logging
-
-.. automethod:: LoggerVariables.increment_silenced

@@ -1,6 +1,0 @@
-gatoh.graphs.graphs.GraphSet.load\_graphset
-===========================================
-
-.. currentmodule:: gatoh.graphs.graphs
-
-.. automethod:: GraphSet.load_graphset

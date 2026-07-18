@@ -1,6 +1,0 @@
-gatoh.graphs.graphs.GraphSet.save\_graphset
-===========================================
-
-.. currentmodule:: gatoh.graphs.graphs
-
-.. automethod:: GraphSet.save_graphset

@@ -1,0 +1,174 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gatoh.agents.Agent.store_previous_opinion &mdash; gatoh 2026.07.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5d2ae42f"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/thebelab-helper.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gatoh.agents.Agent.update" href="gatoh.agents.Agent.update.html" />
+    <link rel="prev" title="gatoh.agents.Agent.stochastic_opinion" href="gatoh.agents.Agent.stochastic_opinion.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            gatoh
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api/index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="gatoh.agents.Agent.html">Agent</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.html#gatoh.agents.Agent"><code class="docutils literal notranslate"><span class="pre">Agent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.add_attribute.html">gatoh.agents.Agent.add_attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_opinion.html">gatoh.agents.Agent.change_opinion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_opinion_rw.html">gatoh.agents.Agent.change_opinion_rw</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_radicalisation.html">gatoh.agents.Agent.change_radicalisation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_rw_distribution.html">gatoh.agents.Agent.change_rw_distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.evolve_hierarchies.html">gatoh.agents.Agent.evolve_hierarchies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.generate_agent.html">gatoh.agents.Agent.generate_agent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.get_attribute.html">gatoh.agents.Agent.get_attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.life_events.html">gatoh.agents.Agent.life_events</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.opinion_negation.html">gatoh.agents.Agent.opinion_negation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.opinion_silencing.html">gatoh.agents.Agent.opinion_silencing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.radicalisation.html">gatoh.agents.Agent.radicalisation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.step.html">gatoh.agents.Agent.step</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.stochastic_opinion.html">gatoh.agents.Agent.stochastic_opinion</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gatoh.agents.Agent.store_previous_opinion</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.agents.Agent.store_previous_opinion"><code class="docutils literal notranslate"><span class="pre">Agent.store_previous_opinion()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.update.html">gatoh.agents.Agent.update</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.agents.AgentSet.html">AgentSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.Graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphNode.html">GraphNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphEdge.html">GraphEdge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphSet.html">GraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.logging.GATOHLogger.html">GATOHLogger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.logging.LoggerVariables.html">LoggerVariables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.model.ABModel.html">ABModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.visualisation.ABVisualiser.html">ABVisualiser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.NodeChanges.html">NodeChanges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.EdgeChanges.html">EdgeChanges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.pygraph_to_pydigraph.html">gatoh.utils.pygraph_to_pydigraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_graph.html">gatoh.utils.watts_strogatz_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_creator.html">gatoh.utils.watts_strogatz_creator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.connected_watts_strogatz_graph.html">gatoh.utils.connected_watts_strogatz_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.beta_value_attenuation.html">gatoh.utils.beta_value_attenuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.create_config_file.html">gatoh.utils.create_config_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.draw_random_value.html">gatoh.utils.draw_random_value</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.random_coinflip.html">gatoh.utils.random_coinflip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.value_rw_delta.html">gatoh.utils.value_rw_delta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.plot_graph.html">gatoh.utils.plot_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/index.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Release Notes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">gatoh</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api/index.html">GATOH API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../api/agents/index.html">&lt;no title&gt;</a></li>
+          <li class="breadcrumb-item"><a href="../api/agents/Agent.html">&lt;no title&gt;</a></li>
+          <li class="breadcrumb-item"><a href="gatoh.agents.Agent.html">Agent</a></li>
+      <li class="breadcrumb-item active">gatoh.agents.Agent.store_previous_opinion</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/apiref/gatoh.agents.Agent.store_previous_opinion.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gatoh-agents-agent-store-previous-opinion">
+<h1>gatoh.agents.Agent.store_previous_opinion<a class="headerlink" href="#gatoh-agents-agent-store-previous-opinion" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="gatoh.agents.Agent.store_previous_opinion">
+<span class="sig-prename descclassname"><span class="pre">Agent.</span></span><span class="sig-name descname"><span class="pre">store_previous_opinion</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/gatoh/agents.html#Agent.store_previous_opinion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.agents.Agent.store_previous_opinion" title="Link to this definition"></a></dt>
+<dd><p>A setter method that stores the Agent’s current opinion into the previous opinion.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gatoh.agents.Agent.stochastic_opinion.html" class="btn btn-neutral float-left" title="gatoh.agents.Agent.stochastic_opinion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gatoh.agents.Agent.update.html" class="btn btn-neutral float-right" title="gatoh.agents.Agent.update" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Manuel Munizaga Sepúlveda.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

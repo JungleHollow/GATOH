@@ -1,6 +1,0 @@
-gatoh.agents.agents.AgentSet.get\_agent\_by\_id
-===============================================
-
-.. currentmodule:: gatoh.agents.agents
-
-.. automethod:: AgentSet.get_agent_by_id

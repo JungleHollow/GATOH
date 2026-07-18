@@ -1,4 +1,4 @@
 .. autosummary::
     :toctree: ../../apiref
 
-    gatoh.visualisation.visualisation.ABVisualiser
+    gatoh.visualisation.ABVisualiser

@@ -1,6 +1,0 @@
-gatoh.graphs.graphs.Graph.neighbour\_influences
-===============================================
-
-.. currentmodule:: gatoh.graphs.graphs
-
-.. automethod:: Graph.neighbour_influences

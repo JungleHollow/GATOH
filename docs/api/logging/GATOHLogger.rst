@@ -1,4 +1,4 @@
 .. autosummary::
     :toctree: ../../apiref
 
-    gatoh.logging.logging.GATOHLogger
+    gatoh.logging.GATOHLogger

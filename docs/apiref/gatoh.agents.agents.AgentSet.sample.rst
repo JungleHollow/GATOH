@@ -1,6 +1,0 @@
-gatoh.agents.agents.AgentSet.sample
-===================================
-
-.. currentmodule:: gatoh.agents.agents
-
-.. automethod:: AgentSet.sample

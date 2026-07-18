@@ -1,6 +1,0 @@
-gatoh.graphs.graphs.Graph.get\_edge
-===================================
-
-.. currentmodule:: gatoh.graphs.graphs
-
-.. automethod:: Graph.get_edge

@@ -1,6 +1,0 @@
-gatoh.logging.logging.LoggerVariables.store\_radicalisation\_logodds
-====================================================================
-
-.. currentmodule:: gatoh.logging.logging
-
-.. automethod:: LoggerVariables.store_radicalisation_logodds

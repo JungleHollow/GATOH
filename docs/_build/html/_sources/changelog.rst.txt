@@ -4,6 +4,27 @@ Release Notes
 
 .. release-notes::
 
+2026.07.0
+==============
+
+GATOH changes from a semantic to a calendar versioning scheme with this release for simplicity of version control.
+
+This version involves a large number of logistic or 'housekeeping' changes in preparation for an official release
+as a PyPI package.
+
+New Features
+------------
+
+- Changed from semantic to calendar versioning
+- Changed the layout of the package modules to simplify import statements
+- Extended full docstrings to case study experiment code
+
+Fixes
+-----
+
+- Fixed all the existing imports across scripts to reflect the module restructuring
+- Fixed all the code references in the existing documentation
+
 0.2.0-alpha
 ===========
 
@@ -31,6 +52,10 @@ New Features
 - Multithreading added to :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`
 - Multiprocessing added to :meth:`~gatoh.model.model.ABModel.calculate_interdependence`
 - Creation of a quickstart guide for the documentation
+- Multiprocessing and multithreading added to :meth:`~gatoh.agents.agents.AgentSet.load_agentset`
+- Multiprocessing and multithreading added to :meth:`~gatoh.graphs.graphs.GraphSet.load_graphset`
+- Tests added for AgentSet objects
+- Implemented a custom visualisation system and started using this (previously the one provided by rustworkx was used)
 
 Fixes
 -----
@@ -43,6 +68,9 @@ Fixes
   for the planned case study experiment
 - Fixed the radicalisation checks in :meth:`~gatoh.model.model.ABModel.iteration_opinion_changes` to stop repeated deradicalisation of agents
 - **MAJOR:** Fixed numerous variable declarations and added manual garbage collection throughout various functions to prevent memory leaks during model runtimes
+- Fixed modulo operations in new :class:`~gatoh.visualisation.visualisation.ABVisualiser` methods
+- Removed most uses of "Any" in the code typing
+- Stricter type annotations throughout the code
 
 0.1.0-alpha
 ===========
