@@ -469,8 +469,8 @@ class ResponseParser:
 
         One subdirectory is created per community.
         """
-        if not os.path.exists("./gatoh/experiments/CaseStudy/Agents"):
-            os.mkdir("./gatoh/experiments/CaseStudy/Agents")
+        if not os.path.exists("./experiments/CaseStudy/Agents"):
+            os.mkdir("./experiments/CaseStudy/Agents")
 
         for community, agents_dir in AGENT_PATHS.items():
             # Create the agents subdirectory if needed
@@ -507,8 +507,8 @@ class ResponseParser:
 
         One subdirectory is created per hierarchy, per community.
         """
-        if not os.path.exists("./gatoh/experiments/CaseStudy/Graphs"):
-            os.mkdir("./gatoh/experiments/CaseStudy/Graphs")
+        if not os.path.exists("./experiments/CaseStudy/Graphs"):
+            os.mkdir("./experiments/CaseStudy/Graphs")
 
         for community, graphs_dir in GRAPH_PATHS.items():
             # Create the Graphs subdirectory if needed
