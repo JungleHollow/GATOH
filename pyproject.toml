@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gatoh"
-current_version = "2026.07.0"
+version = "2026.07.0"
 authors = [
     { name="Manuel Munizaga Sepulveda", email="manuel.chile@yahoo.com" },
 ]
@@ -59,7 +59,7 @@ allowed_branches = "master,main,default,release*"
 
 [tool.bumpver.file_patterns]
 "pyproject.toml" = [
-    'current_version = "{version}"',
+    'version = "{version}"',
 ]
 "./docs/conf.py" = [
     'version = "{version}"',
