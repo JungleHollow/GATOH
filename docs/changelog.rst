@@ -26,6 +26,12 @@ Fixes
 - Fixed all the code references in the existing documentation
 - Fixed all the save/load paths in the experiment scripts to reflect the new layout
 
+Breaking Changes
+----------------
+
+- Any pickled GATOH objects from previous versions cannot be used in future versions starting with this one.
+  This is due to the simplification from gatoh.X.X.x to gatoh.X.x imports.
+
 0.2.0-alpha
 ===========
 
