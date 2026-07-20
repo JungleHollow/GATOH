@@ -245,19 +245,19 @@ class TableReader:
 
 if __name__ == "__main__":
     table_reader: TableReader = TableReader(
-        "/home/manuelms/Desktop/Uni Work/Masters Thesis/Papers Submissions/no_mineria_tabla.csv",
+        "./data/CaseStudy/no_mineria_tabla.csv",
         "NONMN",
     )
     table_reader.parse_values()
     table_reader.write_out(
-        "/home/manuelms/Desktop/Uni Work/Masters Thesis/GATOH/data/NONMN/NonMining.csv"
+        "./data/NONMN/NonMining.csv"
     )
 
     table_reader_two: TableReader = TableReader(
-        "/home/manuelms/Desktop/Uni Work/Masters Thesis/Papers Submissions/mineria_tabla.csv",
+        "./data/CaseStudy/mineria_tabla.csv",
         "MINNG",
     )
     table_reader_two.parse_values()
     table_reader_two.write_out(
-        "/home/manuelms/Desktop/Uni Work/Masters Thesis/GATOH/data/MINNG/Mining.csv"
+        "./data/MINNG/Mining.csv"
     )

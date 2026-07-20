@@ -4,9 +4,9 @@ from copy import deepcopy
 from gatoh.utils import plot_graph
 
 if __name__ == "__main__":
-    ROOT_DIR: str = "./gatoh/experiments/Base/OpinionChanges"
+    ROOT_DIR: str = "./experiments/Base/OpinionChanges"
     LOGGED_SAVEDIRS: str = (
-        "./gatoh/experiments/Base/OpinionChanges/OpinionChanges_logged_savedirs.csv"
+        "./experiments/Base/OpinionChanges/OpinionChanges_logged_savedirs.csv"
     )
     SAVEDIRS: dict[str, str] = {}
 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     change_iteration_int: int
 
     for graph_group, instances in aggregate_opinions.items():
-        graph_group_save_path = f"./gatoh/experiments/Base/OpinionChanges/plots/OpinionChanges_{graph_group}_AggOps.png"
+        graph_group_save_path = f"./experiments/Base/OpinionChanges/plots/OpinionChanges_{graph_group}_AggOps.png"
 
         change_iteration_int = int(graph_group.split("-")[1])
 
@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
     # Create the radicalised agents plots for each graph group
     for graph_group, instances in radicalised_agents.items():
-        graph_group_save_path = f"./gatoh/experiments/Base/OpinionChanges/plots/OpinionChanges_{graph_group}_RadicalAgents.png"
+        graph_group_save_path = f"./experiments/Base/OpinionChanges/plots/OpinionChanges_{graph_group}_RadicalAgents.png"
 
         change_iteration_int = int(graph_group.split("-")[1])
 
@@ -146,7 +146,7 @@ if __name__ == "__main__":
 
     # Create the polarisation plots for each graph group
     for graph_group, instances in polarisations.items():
-        graph_group_save_path = f"./gatoh/experiments/Base/OpinionChanges/plots/OpinionChanges_{graph_group}_Polarisations.png"
+        graph_group_save_path = f"./experiments/Base/OpinionChanges/plots/OpinionChanges_{graph_group}_Polarisations.png"
 
         change_iteration_int = int(graph_group.split("-")[1])
 
@@ -189,7 +189,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Average Aggregate Opinions",
         title="Average Aggregate Opinions over Iterations",
-        save_path="./gatoh/experiments/Base/OpinionChanges/OpinionChanges_AggOps.png",
+        save_path="./experiments/Base/OpinionChanges/OpinionChanges_AggOps.png",
     )
     plot_graph(
         group_iterations,
@@ -197,7 +197,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Average Number of Radicalised Agents",
         title="Average Number of Radicalised Agents over Iterations",
-        save_path="./gatoh/experiments/Base/OpinionChanges/OpinionChanges_RadicalAgents.png",
+        save_path="./experiments/Base/OpinionChanges/OpinionChanges_RadicalAgents.png",
     )
     plot_graph(
         group_iterations,
@@ -205,5 +205,5 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Average Network Polarisation",
         title="Average Network Polarisation over Iterations",
-        save_path="./gatoh/experiments/Base/OpinionChanges/OpinionChanges_Polarisations.png",
+        save_path="./experiments/Base/OpinionChanges/OpinionChanges_Polarisations.png",
     )

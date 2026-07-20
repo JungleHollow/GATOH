@@ -821,7 +821,7 @@ if __name__ == "__main__":
     }
 
     # The root directory of the experiment itself
-    ROOT_DIR: str = "./gatoh/experiments/Base/OpinionChanges"
+    ROOT_DIR: str = "./experiments/Base/OpinionChanges"
 
     # The root of the directory in which each instance's save directory will be located
     # (using a /models subdirectory just for this experiment due to significant increase in number of instances)

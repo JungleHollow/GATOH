@@ -5,10 +5,10 @@ from gatoh.utils import plot_graph
 
 if __name__ == "__main__":
     DATAFILES: dict[str, str] = {
-        "BASE": "./gatoh/experiments/Base/RandomWalk/BASE_model_variables.csv",
-        "RELS": "./gatoh/experiments/Base/RandomWalk/RELS_model_variables.csv",
-        "HIER": "./gatoh/experiments/Base/RandomWalk/HIER_model_variables.csv",
-        "BOTH": "./gatoh/experiments/Base/RandomWalk/BOTH_model_variables.csv",
+        "BASE": "./experiments/Base/RandomWalk/BASE_model_variables.csv",
+        "RELS": "./experiments/Base/RandomWalk/RELS_model_variables.csv",
+        "HIER": "./experiments/Base/RandomWalk/HIER_model_variables.csv",
+        "BOTH": "./experiments/Base/RandomWalk/BOTH_model_variables.csv",
     }
 
     aggregate_opinions: dict[str, list[float]] = {
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Network Aggregate Opinions",
         title="Network Aggregate Opinions over Iterations",
-        save_path="./gatoh/experiments/Base/RandomWalk/RandomWalk_AggOps.png",
+        save_path="./experiments/Base/RandomWalk/RandomWalk_AggOps.png",
     )
 
     # Plot the radicalised agents
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Number of Radicalised Agents",
         title="Number of Radicalised Agents over Iterations",
-        save_path="./gatoh/experiments/Base/RandomWalk/RandomWalk_RadicalAgents.png",
+        save_path="./experiments/Base/RandomWalk/RandomWalk_RadicalAgents.png",
     )
 
     # Plot the polarisations
@@ -77,5 +77,5 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Network Polarisation",
         title="Network Polarisation over Iterations",
-        save_path="./gatoh/experiments/Base/RandomWalk/RandomWalk_Polarisations.png",
+        save_path="./experiments/Base/RandomWalk/RandomWalk_Polarisations.png",
     )

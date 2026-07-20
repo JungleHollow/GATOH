@@ -622,13 +622,13 @@ if __name__ == "__main__":
     }
 
     AGENT_PATHS: dict[str, str] = {
-        "NONMN": "./gatoh/experiments/CaseStudy/Agents/NONMN_Agents",
-        "MINNG": "./gatoh/experiments/CaseStudy/Agents/MINNG_Agents",
+        "NONMN": "./experiments/CaseStudy/Agents/NONMN_Agents",
+        "MINNG": "./experiments/CaseStudy/Agents/MINNG_Agents",
     }
 
     GRAPH_PATHS: dict[str, str] = {
-        "NONMN": "./gatoh/experiments/CaseStudy/Graphs/NONMN_Graphs",
-        "MINNG": "./gatoh/experiments/CaseStudy/Graphs/MINNG_Graphs",
+        "NONMN": "./experiments/CaseStudy/Graphs/NONMN_Graphs",
+        "MINNG": "./experiments/CaseStudy/Graphs/MINNG_Graphs",
     }
 
     HIERARCHIES: list[str] = [

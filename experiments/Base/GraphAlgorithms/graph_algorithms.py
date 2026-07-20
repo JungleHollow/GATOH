@@ -258,20 +258,20 @@ if __name__ == "__main__":
     MODEL_DATAFILES: dict[str, str] = {}
     for algorithm in TEST_PARAMETERS["generation_algorithms"]:
         MODEL_DATAFILES[algorithm] = (
-            f"./gatoh/experiments/Base/GraphAlgorithms/{algorithm}_model_variables.csv"
+            f"./experiments/Base/GraphAlgorithms/{algorithm}_model_variables.csv"
         )
 
     # Define the save directories for each model
     MODEL_SAVEDIRS: dict[str, str] = {}
     for algorithm in TEST_PARAMETERS["generation_algorithms"]:
         MODEL_SAVEDIRS[algorithm] = (
-            f"./gatoh/experiments/Base/GraphAlgorithms/GraphAlgorithms_{algorithm}"
+            f"./experiments/Base/GraphAlgorithms/GraphAlgorithms_{algorithm}"
         )
 
     tester: GraphAlgTester
 
     # Check for existing saved models and store the relevant information
-    save_dirs = list(os.walk("./gatoh/experiments/Base/GraphAlgorithms"))[0][1]
+    save_dirs = list(os.walk("./experiments/Base/GraphAlgorithms"))[0][1]
 
     directory_missing: bool = False
     existing_savedirs: list[str] = []

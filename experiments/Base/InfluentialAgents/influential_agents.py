@@ -497,15 +497,15 @@ if __name__ == "__main__":
 
     # Define the save paths for each model's logged variables (must point to a .csv file)
     LI_MODEL_DATAFILE: str = (
-        "./gatoh/experiments/Base/InfluentialAgents/li_model_variables.csv"
+        "./experiments/Base/InfluentialAgents/li_model_variables.csv"
     )
     HI_MODEL_DATAFILE: str = (
-        "./gatoh/experiments/Base/InfluentialAgents/hi_model_variables.csv"
+        "./experiments/Base/InfluentialAgents/hi_model_variables.csv"
     )
 
     # Define the save directories for each model
-    LI_SAVEDIR: str = "./gatoh/experiments/Base/InfluentialAgents/InfluentialAgents_LI"
-    HI_SAVEDIR: str = "./gatoh/experiments/Base/InfluentialAgents/InfluentialAgents_HI"
+    LI_SAVEDIR: str = "./experiments/Base/InfluentialAgents/InfluentialAgents_LI"
+    HI_SAVEDIR: str = "./experiments/Base/InfluentialAgents/InfluentialAgents_HI"
 
     tester: InfluentialTester
 

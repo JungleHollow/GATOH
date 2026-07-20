@@ -24,6 +24,7 @@ Fixes
 
 - Fixed all the existing imports across scripts to reflect the module restructuring
 - Fixed all the code references in the existing documentation
+- Fixed all the save/load paths in the experiment scripts to reflect the new layout
 
 0.2.0-alpha
 ===========

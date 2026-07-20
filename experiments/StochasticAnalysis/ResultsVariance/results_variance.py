@@ -5,7 +5,7 @@ import os
 import pickle
 import random as rd
 from copy import deepcopy
-from typing import Any, Self, TypedDict
+from typing import Self, TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -957,7 +957,7 @@ if __name__ == "__main__":
     }
 
     # The root directory of the experiment itself
-    ROOT_DIR: str = "./gatoh/experiments/StochasticAnalysis/ResultsVariance"
+    ROOT_DIR: str = "./experiments/StochasticAnalysis/ResultsVariance"
 
     # The root directory in which each instance's save directory will be located
     # (using a /models subdirectory for this experiment due to large number of instances)
