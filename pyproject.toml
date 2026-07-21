@@ -38,7 +38,8 @@ Issues = "https://github.com/JungleHollow/GATOH/issues"
 dev = [
     "bumpver",
     "sphinx",
-    "scipy-stubs"
+    "scipy-stubs",
+    "typing-extensions"
 ]
 
 [tool.setuptools.packages]
