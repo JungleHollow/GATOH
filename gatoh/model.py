@@ -807,6 +807,38 @@ class ABModel:
         polarisation_value: float = self.graphs.calculate_polarisation(hierarchy_name)
         return (hierarchy_name, polarisation_value)
 
+    def calculate_density(self) -> float:
+        r"""
+        Calculate the density of the entire network.
+
+        The density of a graph is defined as:
+
+        .. math::
+
+            D = \frac{l}{\frac{n(n-1)}{2}}
+
+        which simply refers to the proportion of existing relationships versus the total possible relationships.
+
+        Given that gatoh is multilayer, the density calculation must instead be defined as:
+
+        .. math::
+
+            D = \frac{l}{\sum \frac{n(n-1)}{2}}
+
+        where the summation is the total possible relationships across all layers.
+
+        :return: The density metric for the entire social network.
+        :rtype: float
+        """
+        # Base graph edge count represents the total existing relationships across all hierarchies
+        total_l: int = self.base_graph.edge_count
+        final_n: float = 0.0
+
+        for hierarchy in self.graphs:
+            hierarchy_n: float = (hierarchy.node_count * (hierarchy.node_count - 1)) / 2
+            final_n += hierarchy_n
+
+        return total_l / final_n
 
     def calculate_navigability(
         self, from_node: tuple[int, int], to_node: tuple[int, int]
