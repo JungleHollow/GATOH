@@ -56,6 +56,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#id1">2026.07.0</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#new-features">New Features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fixes">Fixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#breaking-changes">Breaking Changes</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#alpha">0.2.0-alpha</a><ul>
@@ -109,6 +110,8 @@ as a PyPI package.</p>
 <li><p>Changed from semantic to calendar versioning</p></li>
 <li><p>Changed the layout of the package modules to simplify import statements</p></li>
 <li><p>Extended full docstrings to case study experiment code</p></li>
+<li><p>Implemented the <a class="reference internal" href="apiref/gatoh.model.ABModel.calculate_navigability.html#gatoh.model.ABModel.calculate_navigability" title="gatoh.model.ABModel.calculate_navigability"><code class="xref py py-meth docutils literal notranslate"><span class="pre">calculate_navigability()</span></code></a> function</p></li>
+<li><p>Implemented an initial prototype for <a class="reference internal" href="apiref/gatoh.agents.Agent.life_events.html#gatoh.agents.Agent.life_events" title="gatoh.agents.Agent.life_events"><code class="xref py py-meth docutils literal notranslate"><span class="pre">life_events()</span></code></a></p></li>
 </ul>
 </section>
 <section id="fixes">
@@ -116,6 +119,15 @@ as a PyPI package.</p>
 <ul class="simple">
 <li><p>Fixed all the existing imports across scripts to reflect the module restructuring</p></li>
 <li><p>Fixed all the code references in the existing documentation</p></li>
+<li><p>Fixed all the save/load paths in the experiment scripts to reflect the new layout</p></li>
+<li><p>Fixed the layout of agents in the radicalisation heatmap (from shapes of (10, x) to (x, 10))</p></li>
+</ul>
+</section>
+<section id="breaking-changes">
+<h3>Breaking Changes<a class="headerlink" href="#breaking-changes" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Any pickled GATOH objects from previous versions cannot be used in future versions starting with this one.
+This is due to the simplification from gatoh.X.X.x to gatoh.X.x imports.</p></li>
 </ul>
 </section>
 </section>

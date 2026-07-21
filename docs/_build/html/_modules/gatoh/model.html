@@ -5,16 +5,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.model &mdash; gatoh 0.1.0</title>
+  <title>gatoh.model &mdash; gatoh 2026.07.0</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
       <link rel="stylesheet" type="text/css" href="../../_static/thebelab.css" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/documentation_options.js?v=5d2ae42f"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/thebelab-helper.js"></script>
@@ -96,6 +96,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.axes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Axes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.figure</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rustworkx.rustworkx</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoEdgeBetweenNodes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rustworkx</span><span class="w"> </span><span class="kn">import</span> <span class="n">all_shortest_paths</span> <span class="k">as</span> <span class="n">rx_shortest_paths</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">AgentSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.graphs</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">GraphNode</span><span class="p">,</span> <span class="n">GraphEdge</span><span class="p">,</span> <span class="n">GraphSet</span>
@@ -955,13 +956,20 @@
 <span class="sd">        Calculate the difficulty of navigating from an arbitrary node :math:`s` in some layer :math:`a` to another arbitrary</span>
 <span class="sd">        node :math:`t` in some layer :math:`b`, where :math:`a` and :math:`b` may or may not be the same layer.</span>
 
-<span class="sd">        The formulae for the navigatability are defined by:</span>
+<span class="sd">        The general formulae for the navigatability are defined by:</span>
 
 <span class="sd">        .. math::</span>
 
 <span class="sd">            S(s \rightarrow t) = -\log_{2}\sum_{\{p(s,t)\}} P[p(s,t)]</span>
 
 <span class="sd">            P[p(s,t)] = \frac{1}{k_{s}} \prod_{j \in p(s,t)} \frac{1}{k_{j} - 1}</span>
+
+<span class="sd">        Although, the relationships across the layers in gatoh are bidirectional and weighted, and as such,</span>
+<span class="sd">        :math:`P[p(s,t)]` is redefined as:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            P[p(s,t)] = \frac{w_{s \rightarrow j_{o}}}{k_{s}} \prod_{j \in p(s,t)} \frac{w_{j \rightarrow j + 1}}{k_{j} - 1}</span>
 
 <span class="sd">        :param from_node: (agent_index, graph_index) for the starting node.</span>
 <span class="sd">        :type from_node: tuple[int, int]</span>
@@ -970,11 +978,28 @@
 <span class="sd">        :return: The navigability value for the specified path.</span>
 <span class="sd">        :rtype: float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># TODO: Implement this function</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="s2">&quot;Navigability measure calculation is not yet implemented...&quot;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="mf">0.0</span></div>
+        <span class="c1"># First, calculate all the possible shortest paths (from_node -&gt; to_node) using the all-encompassing base graph.</span>
+        <span class="n">all_shortest_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">rx_shortest_paths</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">from_node</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">to_node</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">navigability_summation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="c1"># Next, for each shortest path, find P[p(s,t)]</span>
+        <span class="k">for</span> <span class="n">shortest_path</span> <span class="ow">in</span> <span class="n">all_shortest_paths</span><span class="p">:</span>
+            <span class="n">path_product</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shortest_path</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">current_edge</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get_edge_data</span><span class="p">(</span><span class="n">shortest_path</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">shortest_path</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">node_out_degree</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">shortest_path</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">path_product</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">current_edge</span><span class="o">.</span><span class="n">weighting</span> <span class="o">/</span> <span class="n">node_out_degree</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Node degree should always be &gt;= 2, as there must exist at least one ingoing and one outgoing edge for the path to exist</span>
+                    <span class="n">path_product</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">current_edge</span><span class="o">.</span><span class="n">weighting</span> <span class="o">/</span> <span class="n">node_out_degree</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">navigability_summation</span> <span class="o">+=</span> <span class="n">path_product</span>
+
+        <span class="c1"># -log2(x) == log2(1 / x)</span>
+        <span class="n">navigability_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">navigability_summation</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">navigability_value</span></div>
 
 
 <div class="viewcode-block" id="ABModel.calculate_interdependences">

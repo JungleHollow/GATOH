@@ -18,6 +18,8 @@ New Features
 - Changed from semantic to calendar versioning
 - Changed the layout of the package modules to simplify import statements
 - Extended full docstrings to case study experiment code
+- Implemented the :meth:`~gatoh.model.ABModel.calculate_navigability` function
+- Implemented an initial prototype for :meth:`~gatoh.agents.Agent.life_events`
 
 Fixes
 -----
@@ -25,6 +27,7 @@ Fixes
 - Fixed all the existing imports across scripts to reflect the module restructuring
 - Fixed all the code references in the existing documentation
 - Fixed all the save/load paths in the experiment scripts to reflect the new layout
+- Fixed the layout of agents in the radicalisation heatmap (from shapes of (10, x) to (x, 10))
 
 Breaking Changes
 ----------------

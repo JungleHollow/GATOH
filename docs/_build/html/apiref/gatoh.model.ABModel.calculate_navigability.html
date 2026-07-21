@@ -148,9 +148,13 @@
 <span class="sig-prename descclassname"><span class="pre">ABModel.</span></span><span class="sig-name descname"><span class="pre">calculate_navigability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/gatoh/model.html#ABModel.calculate_navigability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.model.ABModel.calculate_navigability" title="Link to this definition"></a></dt>
 <dd><p>Calculate the difficulty of navigating from an arbitrary node <span class="math notranslate nohighlight">\(s\)</span> in some layer <span class="math notranslate nohighlight">\(a\)</span> to another arbitrary
 node <span class="math notranslate nohighlight">\(t\)</span> in some layer <span class="math notranslate nohighlight">\(b\)</span>, where <span class="math notranslate nohighlight">\(a\)</span> and <span class="math notranslate nohighlight">\(b\)</span> may or may not be the same layer.</p>
-<p>The formulae for the navigatability are defined by:</p>
+<p>The general formulae for the navigatability are defined by:</p>
 <div class="math notranslate nohighlight">
 \[ \begin{align}\begin{aligned}S(s \rightarrow t) = -\log_{2}\sum_{\{p(s,t)\}} P[p(s,t)]\\P[p(s,t)] = \frac{1}{k_{s}} \prod_{j \in p(s,t)} \frac{1}{k_{j} - 1}\end{aligned}\end{align} \]</div>
+<p>Although, the relationships across the layers in gatoh are bidirectional and weighted, and as such,
+<span class="math notranslate nohighlight">\(P[p(s,t)]\)</span> is redefined as:</p>
+<div class="math notranslate nohighlight">
+\[P[p(s,t)] = \frac{w_{s \rightarrow j_{o}}}{k_{s}} \prod_{j \in p(s,t)} \frac{w_{j \rightarrow j + 1}}{k_{j} - 1}\]</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
