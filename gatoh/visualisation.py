@@ -127,17 +127,17 @@ class ABVisualiser:
                 agent_data[i] = 2
 
         # Create the listed colour map
-        colour_map: ListedColormap = ListedColormap(["red", "green"])
+        colour_map: ListedColormap = ListedColormap(["green", "red"])
 
-        # Reshape the arrays into 2D shapes (10, x)
-        agent_labels = agent_labels.reshape(10, int(array_size / 10))
-        agent_data = agent_data.reshape(10, int(array_size / 10))
+        # Reshape the arrays into 2D shapes (x, 10)
+        agent_labels = agent_labels.reshape(int(array_size / 10), 10)
+        agent_data = agent_data.reshape(int(array_size / 10), 10)
 
         fig, ax = plt.subplots()
 
-        ax = sns.heatmap(agent_data, cmap=colour_map, ax=ax, annot=agent_labels, fmt="s", cbar=False, linewidth=0.5, mask=agent_data==2)
+        ax = sns.heatmap(agent_data, cmap=colour_map, ax=ax, fmt="s", cbar=False, linewidth=0.5, mask=agent_data==2)
         _ = ax.set_title(f"Visualisation of hierarchy '{hierarchy_graph.name}'")
-        _ = ax.set(xlabel="", ylabel="")
+        _ = ax.set(xlabel="Agents (ones)", ylabel="Agents (tens)")
 
         if save_graph:
             plt.savefig(f"{self.visualisation_dir}/{hierarchy_graph.name}_graph.png", dpi=300.0)
@@ -255,21 +255,21 @@ class ABVisualiser:
                 agent_data[i] = 2
 
         # Create the listed colour map
-        colour_map: ListedColormap = ListedColormap(["red", "green"])
+        colour_map: ListedColormap = ListedColormap(["green", "red"])
 
-        # Reshape the arrays into 2D shapes (10, x)
-        agent_labels = agent_labels.reshape(10, int(array_size / 10))
-        agent_data = agent_data.reshape(10, int(array_size / 10))
+        # Reshape the arrays into 2D shapes (x, 10)
+        agent_labels = agent_labels.reshape(int(array_size / 10), 10)
+        agent_data = agent_data.reshape(int(array_size / 10), 10)
 
         fig, ax = plt.subplots()
 
-        ax = sns.heatmap(agent_data, cmap=colour_map, ax=ax, annot=agent_labels, fmt="s", cbar=False, linewidth=0.5, mask=agent_data==2)
+        ax = sns.heatmap(agent_data, cmap=colour_map, ax=ax, fmt="s", cbar=False, linewidth=0.5, mask=agent_data==2)
         if model_name is not None:
             _ = ax.set_title(f"Visualisation of model {model_name} at iteration {current_iteration}")
         else:
             _ = ax.set_title(f"Visualisation of a GATOH model at iteration {current_iteration}")
 
-        _ = ax.set(xlabel="", ylabel="")
+        _ = ax.set(xlabel="Agents (ones)", ylabel="Agents (tens)")
 
         if self.save_visualisations:
             # Ensure that the model_runtime subdirectory exists
