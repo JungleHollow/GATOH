@@ -10,12 +10,20 @@ from collections.abc import Iterable, Iterator
 import concurrent.futures
 from copy import deepcopy
 from shutil import rmtree
-from typing import TypeVar, override
+from typing import NotRequired, TypeVar, TypedDict, override
 
 from gatoh.utils import draw_random_value, random_coinflip, value_rw_delta
 
 # Definition of all valid, existing Agent personality types
 PERSONALITIES: list[str] = ["neutral", "rational", "erratic", "impulsive", "social"]
+
+# Used for type-checking valid personality types wherever relevant
+class PersonalityProbs(TypedDict):
+    neutral: NotRequired[float]
+    rational: NotRequired[float]
+    erratic: NotRequired[float]
+    impulsive: NotRequired[float]
+    social: NotRequired[float]
 
 # A generic to be used in cases where variables may be any type.
 T = TypeVar("T")
@@ -605,14 +613,152 @@ class Agent:
 
         return None
 
-    def life_events(self) -> None:
+    def stochastic_personality_change(self, personality_probs: PersonalityProbs | None = None) -> None:
         """
-        Experimental function that aims to model the ways in which Agent behaviours change according to major random life events over time
+        Calls to this function are primarily meant to originate from :meth:`~gatoh.agents.Agent.life_events`.
+
+        Will redraw a valid personality type from the ones that have been defined, and then change the agent's personality
+        to this new type.
+
+        :param personality_probs: Specific per-personality type probabilities to be used for drawing the new agent personality.
+        :type personality_probs: dict[str, float]
         """
-        # TODO: Implement this function
-        raise NotImplementedError(
-            "Agent life events have not been implemented as a feature yet."
-        )
+        if personality_probs is None:
+            self.personality = draw_personality()
+        else:
+            personality_flags: list[str] = list(personality_probs.keys())
+            personality_p: list[float] = []
+            for value in personality_probs.values():
+                personality_p.append(value)
+            chosen_personality = rd.choices(personality_flags, weights=personality_p, k=1)
+            self.personality = chosen_personality[0]
+        return None
+
+    def stochastic_benefit_change(self) -> None:
+        """
+        Calls to this function are primarily meant to originate from :meth:`~gatoh.agents.Agent.life_events`.
+
+        Will flip the value of the agent's personal benefit attribute when called.
+        """
+        if self.personal_benefit:
+            self.personal_benefit = False
+        else:
+            self.personal_benefit = True
+        return None
+
+    def stochastic_radicalisation_change(self) -> None:
+        """
+        Calls to this function are primarily meant to originate from :meth:`~gatoh.agents.Agent.life_events`.
+
+        Will flip the value of the agent's personal benefit attribute when called.
+        """
+        if self.radicalised:
+            self.radicalised = False
+        else:
+            self.radicalised = True
+        return None
+
+    def stochastic_silencing_change(self, silencing_probs: dict[str, float] | None = None) -> None:
+        """
+        Calls to this function are primarily meant to originate from :meth:`~gatoh.agents.Agent.life_events`.
+
+        Will flip the silenced status of an agent within their hierarchies, with the possibility of per-hierarchy
+        probabilities of this occurring.
+
+        :param silencing_probs: The per-hierarchy probabilities of a flip in the silencing status occurring.
+        :type silencing_probs: dict[str, float], optional
+        """
+        if silencing_probs is not None:
+            for hierarchy, threshold in silencing_probs.items():
+                if hierarchy not in self.is_silenced.keys():
+                    # Just skip any invalid hierarchy keys
+                    continue
+                elif rd.random() >= threshold:
+                    if self.is_silenced[hierarchy]:
+                        self.is_silenced[hierarchy] = False
+                    else:
+                        self.is_silenced[hierarchy] = True
+        else:
+            for hierarchy in self.is_silenced.keys():
+                if rd.random() >= 0.999 and self.is_silenced[hierarchy]:
+                    self.is_silenced[hierarchy] = False
+                elif rd.random() >= 0.999 and not self.is_silenced[hierarchy]:
+                    self.is_silenced[hierarchy] = True
+        return None
+
+    class LifeEventsDict(TypedDict):
+        personality_thresh: NotRequired[float]
+        personality_probs: NotRequired[PersonalityProbs]
+        benefit_thresh: NotRequired[float]
+        radicalisation_thresh: NotRequired[float]
+        silencing_thresh: NotRequired[float]
+        silencing_probs: NotRequired[dict[str, float]]
+
+    def life_events(
+        self,
+        personality_changes: bool = False,
+        benefit_changes: bool = False,
+        radicalisation_changes: bool = False,
+        silencing_changes: bool = False,
+        parameters: LifeEventsDict | None = None,
+    ) -> None:
+        """
+        Experimental function that aims to model the ways in which Agent behaviours change according to major random life events over time.
+
+        :param personality_changes: A flag indicating if personality changes are allowed to occur due to life events.
+        :type personality_changes: bool, optional
+        :param benefit_changes: A flag indicating if changes in personal benefit status are allowed to occur due to life events.
+        :type benefit_changes: bool, optional
+        :param radicalisation_changes: A flag indicating if spontaneous changes to radicalisation status are allowed to occur due to life events.
+        :type radicalisation_changes: bool, optional
+        :param silencing_changes: A flag indicating if spontaneous changes to hierarchy silencing status are allowed to occur due to life events.
+        :type silencing_changes: bool, optional
+        :param parameters: A <key, value> mapping which outlines all relevant thresholds or other values used in this function.
+        :type parameters: dict[str, Any], optional
+        """
+        if personality_changes:
+            if parameters is not None:
+                personality_thresh: float | None = parameters.get("personality_thresh")
+                personality_probs: PersonalityProbs | None = parameters.get("personality_probs")
+                if personality_thresh is not None and rd.random() >= personality_thresh:
+                    self.stochastic_personality_change(personality_probs=personality_probs)
+                elif rd.random() >= 0.999:
+                    self.stochastic_personality_change(personality_probs=personality_probs)
+            elif rd.random() >= 0.999:
+                self.stochastic_personality_change()
+
+        if benefit_changes:
+            if parameters is not None:
+                benefit_thresh: float | None = parameters.get("benefit_thresh")
+                if benefit_thresh is not None and rd.random() >= benefit_thresh:
+                    self.stochastic_benefit_change()
+                elif rd.random() >= 0.999:
+                    self.stochastic_benefit_change()
+            elif rd.random() >= 0.999:
+                self.stochastic_benefit_change()
+
+        if radicalisation_changes:
+            if parameters is not None:
+                radicalisation_thresh: float | None = parameters.get("radicalisation_thresh")
+                if radicalisation_thresh is not None and rd.random() >= radicalisation_thresh:
+                    self.stochastic_radicalisation_change()
+                elif rd.random() >= 0.999:
+                    self.stochastic_radicalisation_change()
+            elif rd.random() >= 0.999:
+                self.stochastic_radicalisation_change()
+
+        if silencing_changes:
+            if parameters is not None:
+                silencing_thresh: float | None  = parameters.get("silencing_thresh")
+                silencing_probs: dict[str, float] | None = parameters.get("silencing_probs")
+                if silencing_thresh is not None and rd.random() >= silencing_thresh:
+                    self.stochastic_silencing_change(silencing_probs=silencing_probs)
+                elif rd.random() >= 0.999:
+                    self.stochastic_silencing_change(silencing_probs=silencing_probs)
+            elif rd.random() >= 0.999:
+                self.stochastic_silencing_change()
+
+        return None
 
     def __in__(self, iterable: Iterable[Agent]) -> bool:
         """
