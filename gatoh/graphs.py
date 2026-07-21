@@ -775,6 +775,19 @@ class Graph:
         # No need to update indices, as rustworkx will automatically add new nodes/edges into the largest empty index
         return None
 
+    def node_relationships_count(self, node_index: int) -> int:
+        """
+        Report the number of ingoing and outgoing relationships that a specific node is involved in.
+
+        :param node_index: The index of the node that is being inspected.
+        :type node_index: int
+        :return: The total number of relationships involving the input node.
+        :rtype: int
+        """
+        ingoing_relationships: int = self.graph.in_degree(node_index)
+        outgoing_relationships: int = self.graph.out_degree(node_index)
+        return ingoing_relationships + outgoing_relationships
+
     def remove_edge(self, from_node: int, to_node: int) -> None:
         """
         Removes a single edge from the graph.
@@ -790,6 +803,16 @@ class Graph:
         edge_exists: int | None = self.relationship_exists(from_node, to_node)
         if edge_exists:
             self.graph.remove_edge(from_node, to_node)
+
+            # Check the number of relationships that each node now has
+            from_rels_count: int = self.node_relationships_count(from_node)
+            to_rels_count: int = self.node_relationships_count(to_node)
+
+            # If either node now has no relationships, it is removed from the graph entirely
+            if from_rels_count == 0:
+                self.remove_node(from_node)
+            if to_rels_count == 0:
+                self.remove_node(to_node)
         else:
             warnings.warn(
                 f"WARNING: Attempted to remove edge ({from_node} -> {to_node}) which does not exist in the graph.",
