@@ -22,6 +22,7 @@ New Features
 - Implemented an initial prototype for :meth:`~gatoh.agents.Agent.life_events`
 - Implemented a function to calculate graph density metrics with :meth:`~gatoh.model.ABModel.calculate_density`
 - Implemented functionality to automatically remove any nodes in graphs without neighbours after relevant edges are removed
+- Added functions that allow for the spontaneous formation and disintegration of relationships in graphs
 
 Fixes
 -----

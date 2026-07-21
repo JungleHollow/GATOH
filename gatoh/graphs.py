@@ -10,7 +10,7 @@ import zipfile
 from collections.abc import Iterable, Iterator
 from copy import deepcopy
 from multiprocessing.pool import Pool
-from random import Random
+from random import Random, random, randint
 from shutil import rmtree
 from typing import Any, Self
 from typing import TypedDict
@@ -790,7 +790,7 @@ class Graph:
 
     def remove_edge(self, from_node: int, to_node: int) -> None:
         """
-        Removes a single edge from the graph.
+        Removes a single edge from the graph corresponding to the indicated directed node indices.
 
         Throws a warning without interrupting the runtime if the edge did not exist in the first place.
 
@@ -818,6 +818,43 @@ class Graph:
                 f"WARNING: Attempted to remove edge ({from_node} -> {to_node}) which does not exist in the graph.",
                 category=UserWarning,
             )
+        return None
+
+    def remove_edge_index(self, edge_index: int) -> None:
+        """
+        Removes a single edge from the graph corresponding to the input edge index.
+
+        Raises an error if the edge index is out of bounds of existing edges.
+
+        This function is meant as an extended wrapper to rustworkx :func:`remove_edge_from_index` that also handles cases
+        where nodes are left neighbourless after the edge removal.
+
+        :param edge_index: The index of the edge to remove.
+        :type edge_index: int
+        :raises KeyError: If the input edge index is out of bounds.
+        """
+        if edge_index < 0 or edge_index >= self.edge_count:
+            raise KeyError(f"Tried to remove edge with index {edge_index}, which is out of bounds for hierarchy graph {self.name} with {self.edge_count} edges.")
+
+        edge_to_remove: GraphEdge | None = self.get_edge(edge_index)
+        if edge_to_remove is None:
+            # The edge index was valid but it has already been removed previously...
+            return None
+        else:
+            from_node: int = edge_to_remove.from_node
+            to_node: int = edge_to_remove.to_node
+
+            self.graph.remove_edge_from_index(edge_index)
+
+            from_rels_count: int = self.node_relationships_count(from_node)
+            to_rels_count: int = self.node_relationships_count(to_node)
+
+            # If either node now has no relationships, it is removed from the graph entirely
+            if from_rels_count == 0:
+                self.remove_node(from_node)
+            if to_rels_count == 0:
+                self.remove_node(to_node)
+
         return None
 
     def agent_in_graph(self, agent: Agent) -> bool:
@@ -937,6 +974,59 @@ class Graph:
             1. Handle dynamic relationships within the graph.
         """
         self.dynamic_relationships()
+        return None
+
+    def stochastic_relationships(
+        self,
+        formation: bool = False,
+        formation_thresh: float = 0.999,
+        formation_num: int = 1,
+        disintegration: bool = False,
+        disintegration_thresh: float = 0.999,
+        disintegration_num: int = 1,
+        ) -> None:
+        """
+        An experimental function which aims to simulate the possible formation and disintegration of relationships
+        within a social network.
+
+        :param formation: A flag indicating if the spontaneous formation of new relationships should be allowed.
+        :type formation: bool, optional
+        :param formation_thresh: The threshold that must be surpassed for spontaneous formation to occur.
+        :type formation_thresh: float, optional
+        :param formation_num: The number of new relationships to form.
+        :type formation_num: int, optional
+        :param disintegration: A flag indicating if the spontaneous disintegration of existing relationships should be allowed.
+        :type disintegration: bool, optional
+        :param disintegration_thresh: The threshold that must be surpassed for spontaneous disintegration to occur.
+        :type disintegration_thresh: float, optional
+        :param disintegration_num: The number of existing relationships to disintegrate.
+        :type disintegration_num: int, optional
+        """
+        if formation and random() >= formation_thresh:
+            formation_counter: int = formation_num
+            while formation_counter > 0:
+                form_from: int = randint(0, self.node_count - 1)
+                form_to: int = randint(0, self.node_count - 1)
+                if form_from == form_to:
+                    continue
+                elif self.relationship_exists(form_from, form_to):
+                    continue
+
+                new_edge: dict[str, list[Any]] = {
+                    "from_node": [form_from],
+                    "to_node": [form_to],
+                    "weighting": [random()],
+                }
+                self.add_edges(new_edge)
+                formation_counter -= 1
+
+        if disintegration and random() >= disintegration_thresh:
+            disintegration_counter: int = disintegration_num
+            while disintegration_counter > 0:
+                selected_index: int = randint(0, self.edge_count - 1)
+                self.remove_edge_index(selected_index)
+                disintegration_counter -= 1
+
         return None
 
     def neighbour_influences(self, agent: Agent) -> float | None:
@@ -1206,12 +1296,31 @@ class GraphSet:
 
     :param graphs: Existing Graph objects that should be added to the GraphSet.
     :type graphs: list[Graph], optional
+    :param stochastic_relationships: A <hierarchy: flag> mapping indicating if the stochastic formation and disintegration of relationships should be modelled for a hierarchy.
+    :type stochastic_relationships: dict[str, bool], optional
+    :param stochastic_rels_flags: A <hierarchy: flags> mapping providing the necessary stochastic_relationships flags per-graph.
+    :type stochastic_rels_flags: dict[str, tuple[bool, bool]], optional
     """
 
-    def __init__(self, graphs: list[Graph] | None = None) -> None:
+    def __init__(
+        self,
+        graphs: list[Graph] | None = None,
+        stochastic_relationships: dict[str, bool] | None = None,
+        stochastic_rels_flags: dict[str, tuple[bool, bool]] | None = None,
+    ) -> None:
         self.graphs: list[Graph] = []
         if graphs:
             self.graphs = graphs
+        self.stochastic_relationships: dict[str, bool]
+        if stochastic_relationships is not None:
+            self.stochastic_relationships = stochastic_relationships
+        else:
+            self.stochastic_relationships = {}
+        self.stochastic_rels_flags: dict[str, tuple[bool, bool]]
+        if stochastic_rels_flags is not None:
+            self.stochastic_rels_flags = stochastic_rels_flags
+        else:
+            self.stochastic_rels_flags = {}
 
     def save_graphset(self, directory_path: str) -> None:
         """
@@ -1394,6 +1503,10 @@ class GraphSet:
                 loaded_graph: Graph = self.load_graphset_multi(save_dir, subdirectory_path, rw_params[os.path.basename(save_dir)])
                 self.add_graph(loaded_graph)
 
+                # Automatically initialise stochastic relationships as False
+                # (must be explicitly enabled if so desired)
+                self.set_stochastic_rels(loaded_graph.name, False)
+
                 # Manual garbage collection
                 del loaded_graph
                 _ = gc.collect()
@@ -1487,6 +1600,30 @@ class GraphSet:
         :type graph: Graph
         """
         self.graphs.append(graph)
+
+        # Automatically initialise stochastic rels for this graph as False
+        # (must be explicitly enabled if so desired)
+        self.set_stochastic_rels(graph.name, False)
+
+        return None
+
+    def set_stochastic_rels(self, hierarchy: str, status: bool, flags: tuple[bool, bool] = (False, False)) -> None:
+        """
+        A setter function that defines whether stochastic relationships should be modelled for a specific hierarchy.
+
+        :param hierarchy: The name of the hierarchy for which the status is being set.
+        :type hierarchy: str
+        :param status: A flag indicating whether stochastic relationships should be modelled.
+        :type status: bool
+        :param flags: The flags that should be input to the graph's stochastic_relationships function.
+        :type flags: tuple[bool, bool], optional
+        """
+        # Only set a flag if the input hierarchy is a valid hierarchy in the GraphSet
+        for graph in self.graphs:
+            if graph.name == hierarchy:
+                self.stochastic_relationships[hierarchy] = status
+                self.stochastic_rels_flags[hierarchy] = flags
+                return None
         return None
 
     def graph_at_index(self, graph_index: int) -> Graph | None:

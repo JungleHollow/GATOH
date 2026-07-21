@@ -90,7 +90,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing.pool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="kn">import</span> <span class="n">Random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="kn">import</span> <span class="n">Random</span><span class="p">,</span> <span class="n">random</span><span class="p">,</span> <span class="n">randint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shutil</span><span class="w"> </span><span class="kn">import</span> <span class="n">rmtree</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Self</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypedDict</span>
@@ -952,7 +952,7 @@
 <a class="viewcode-back" href="../../apiref/gatoh.graphs.Graph.remove_edge.html#gatoh.graphs.Graph.remove_edge">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">remove_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_node</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">to_node</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Removes a single edge from the graph.</span>
+<span class="sd">        Removes a single edge from the graph corresponding to the indicated directed node indices.</span>
 
 <span class="sd">        Throws a warning without interrupting the runtime if the edge did not exist in the first place.</span>
 
@@ -982,6 +982,43 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_edge_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes a single edge from the graph corresponding to the input edge index.</span>
+
+<span class="sd">        Raises an error if the edge index is out of bounds of existing edges.</span>
+
+<span class="sd">        This function is meant as an extended wrapper to rustworkx :func:`remove_edge_from_index` that also handles cases</span>
+<span class="sd">        where nodes are left neighbourless after the edge removal.</span>
+
+<span class="sd">        :param edge_index: The index of the edge to remove.</span>
+<span class="sd">        :type edge_index: int</span>
+<span class="sd">        :raises KeyError: If the input edge index is out of bounds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">edge_index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">edge_index</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_count</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tried to remove edge with index </span><span class="si">{</span><span class="n">edge_index</span><span class="si">}</span><span class="s2">, which is out of bounds for hierarchy graph </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_count</span><span class="si">}</span><span class="s2"> edges.&quot;</span><span class="p">)</span>
+
+        <span class="n">edge_to_remove</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_edge</span><span class="p">(</span><span class="n">edge_index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">edge_to_remove</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># The edge index was valid but it has already been removed previously...</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">from_node</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">edge_to_remove</span><span class="o">.</span><span class="n">from_node</span>
+            <span class="n">to_node</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">edge_to_remove</span><span class="o">.</span><span class="n">to_node</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">remove_edge_from_index</span><span class="p">(</span><span class="n">edge_index</span><span class="p">)</span>
+
+            <span class="n">from_rels_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_relationships_count</span><span class="p">(</span><span class="n">from_node</span><span class="p">)</span>
+            <span class="n">to_rels_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_relationships_count</span><span class="p">(</span><span class="n">to_node</span><span class="p">)</span>
+
+            <span class="c1"># If either node now has no relationships, it is removed from the graph entirely</span>
+            <span class="k">if</span> <span class="n">from_rels_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">from_node</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">to_rels_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">to_node</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="Graph.agent_in_graph">
 <a class="viewcode-back" href="../../apiref/gatoh.graphs.Graph.agent_in_graph.html#gatoh.graphs.Graph.agent_in_graph">[docs]</a>
@@ -1125,6 +1162,59 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dynamic_relationships</span><span class="p">()</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">stochastic_relationships</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">formation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">formation_thresh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.999</span><span class="p">,</span>
+        <span class="n">formation_num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">disintegration</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">disintegration_thresh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.999</span><span class="p">,</span>
+        <span class="n">disintegration_num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        An experimental function which aims to simulate the possible formation and disintegration of relationships</span>
+<span class="sd">        within a social network.</span>
+
+<span class="sd">        :param formation: A flag indicating if the spontaneous formation of new relationships should be allowed.</span>
+<span class="sd">        :type formation: bool, optional</span>
+<span class="sd">        :param formation_thresh: The threshold that must be surpassed for spontaneous formation to occur.</span>
+<span class="sd">        :type formation_thresh: float, optional</span>
+<span class="sd">        :param formation_num: The number of new relationships to form.</span>
+<span class="sd">        :type formation_num: int, optional</span>
+<span class="sd">        :param disintegration: A flag indicating if the spontaneous disintegration of existing relationships should be allowed.</span>
+<span class="sd">        :type disintegration: bool, optional</span>
+<span class="sd">        :param disintegration_thresh: The threshold that must be surpassed for spontaneous disintegration to occur.</span>
+<span class="sd">        :type disintegration_thresh: float, optional</span>
+<span class="sd">        :param disintegration_num: The number of existing relationships to disintegrate.</span>
+<span class="sd">        :type disintegration_num: int, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">formation</span> <span class="ow">and</span> <span class="n">random</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">formation_thresh</span><span class="p">:</span>
+            <span class="n">formation_counter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">formation_num</span>
+            <span class="k">while</span> <span class="n">formation_counter</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">form_from</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">form_to</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">form_from</span> <span class="o">==</span> <span class="n">form_to</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationship_exists</span><span class="p">(</span><span class="n">form_from</span><span class="p">,</span> <span class="n">form_to</span><span class="p">):</span>
+                    <span class="k">continue</span>
+
+                <span class="n">new_edge</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;from_node&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">form_from</span><span class="p">],</span>
+                    <span class="s2">&quot;to_node&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">form_to</span><span class="p">],</span>
+                    <span class="s2">&quot;weighting&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">random</span><span class="p">()],</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">new_edge</span><span class="p">)</span>
+                <span class="n">formation_counter</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">disintegration</span> <span class="ow">and</span> <span class="n">random</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">disintegration_thresh</span><span class="p">:</span>
+            <span class="n">disintegration_counter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">disintegration_num</span>
+            <span class="k">while</span> <span class="n">disintegration_counter</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">selected_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">remove_edge_index</span><span class="p">(</span><span class="n">selected_index</span><span class="p">)</span>
+                <span class="n">disintegration_counter</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="Graph.neighbour_influences">
 <a class="viewcode-back" href="../../apiref/gatoh.graphs.Graph.neighbour_influences.html#gatoh.graphs.Graph.neighbour_influences">[docs]</a>
@@ -1411,12 +1501,31 @@
 
 <span class="sd">    :param graphs: Existing Graph objects that should be added to the GraphSet.</span>
 <span class="sd">    :type graphs: list[Graph], optional</span>
+<span class="sd">    :param stochastic_relationships: A &lt;hierarchy: flag&gt; mapping indicating if the stochastic formation and disintegration of relationships should be modelled for a hierarchy.</span>
+<span class="sd">    :type stochastic_relationships: dict[str, bool], optional</span>
+<span class="sd">    :param stochastic_rels_flags: A &lt;hierarchy: flags&gt; mapping providing the necessary stochastic_relationships flags per-graph.</span>
+<span class="sd">    :type stochastic_rels_flags: dict[str, tuple[bool, bool]], optional</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Graph</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">graphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Graph</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">stochastic_relationships</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">stochastic_rels_flags</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Graph</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">graphs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span> <span class="o">=</span> <span class="n">graphs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_relationships</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">stochastic_relationships</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_relationships</span> <span class="o">=</span> <span class="n">stochastic_relationships</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_relationships</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_rels_flags</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">stochastic_rels_flags</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_rels_flags</span> <span class="o">=</span> <span class="n">stochastic_rels_flags</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_rels_flags</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="GraphSet.save_graphset">
 <a class="viewcode-back" href="../../apiref/gatoh.graphs.GraphSet.save_graphset.html#gatoh.graphs.GraphSet.save_graphset">[docs]</a>
@@ -1610,6 +1719,10 @@
                 <span class="n">loaded_graph</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_graphset_multi</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">,</span> <span class="n">rw_params</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)])</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">add_graph</span><span class="p">(</span><span class="n">loaded_graph</span><span class="p">)</span>
 
+                <span class="c1"># Automatically initialise stochastic relationships as False</span>
+                <span class="c1"># (must be explicitly enabled if so desired)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_stochastic_rels</span><span class="p">(</span><span class="n">loaded_graph</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
                 <span class="c1"># Manual garbage collection</span>
                 <span class="k">del</span> <span class="n">loaded_graph</span>
                 <span class="n">_</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
@@ -1715,8 +1828,32 @@
 <span class="sd">        :type graph: Graph</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+
+        <span class="c1"># Automatically initialise stochastic rels for this graph as False</span>
+        <span class="c1"># (must be explicitly enabled if so desired)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_stochastic_rels</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="kc">None</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_stochastic_rels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that defines whether stochastic relationships should be modelled for a specific hierarchy.</span>
+
+<span class="sd">        :param hierarchy: The name of the hierarchy for which the status is being set.</span>
+<span class="sd">        :type hierarchy: str</span>
+<span class="sd">        :param status: A flag indicating whether stochastic relationships should be modelled.</span>
+<span class="sd">        :type status: bool</span>
+<span class="sd">        :param flags: The flags that should be input to the graph&#39;s stochastic_relationships function.</span>
+<span class="sd">        :type flags: tuple[bool, bool], optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Only set a flag if the input hierarchy is a valid hierarchy in the GraphSet</span>
+        <span class="k">for</span> <span class="n">graph</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">hierarchy</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_relationships</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_rels_flags</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">=</span> <span class="n">flags</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="GraphSet.graph_at_index">
 <a class="viewcode-back" href="../../apiref/gatoh.graphs.GraphSet.graph_at_index.html#gatoh.graphs.GraphSet.graph_at_index">[docs]</a>
