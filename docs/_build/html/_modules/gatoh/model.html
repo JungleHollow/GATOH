@@ -946,6 +946,38 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">hierarchy_name</span><span class="p">,</span> <span class="n">polarisation_value</span><span class="p">)</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_density</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the density of the entire network.</span>
+
+<span class="sd">        The density of a graph is defined as:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            D = \frac{l}{\frac{n(n-1)}{2}}</span>
+
+<span class="sd">        which simply refers to the proportion of existing relationships versus the total possible relationships.</span>
+
+<span class="sd">        Given that gatoh is multilayer, the density calculation must instead be defined as:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            D = \frac{l}{\sum \frac{n(n-1)}{2}}</span>
+
+<span class="sd">        where the summation is the total possible relationships across all layers.</span>
+
+<span class="sd">        :return: The density metric for the entire social network.</span>
+<span class="sd">        :rtype: float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Base graph edge count represents the total existing relationships across all hierarchies</span>
+        <span class="n">total_l</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">edge_count</span>
+        <span class="n">final_n</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
+            <span class="n">hierarchy_n</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="p">(</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">node_count</span> <span class="o">*</span> <span class="p">(</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">node_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">final_n</span> <span class="o">+=</span> <span class="n">hierarchy_n</span>
+
+        <span class="k">return</span> <span class="n">total_l</span> <span class="o">/</span> <span class="n">final_n</span>
 
 <div class="viewcode-block" id="ABModel.calculate_navigability">
 <a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.calculate_navigability.html#gatoh.model.ABModel.calculate_navigability">[docs]</a>
