@@ -16,6 +16,7 @@ import yaml
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from rustworkx.rustworkx import NoEdgeBetweenNodes
+from rustworkx import all_shortest_paths as rx_shortest_paths
 
 from gatoh.agents import Agent, AgentSet
 from gatoh.graphs import Graph, GraphNode, GraphEdge, GraphSet
@@ -814,13 +815,20 @@ class ABModel:
         Calculate the difficulty of navigating from an arbitrary node :math:`s` in some layer :math:`a` to another arbitrary
         node :math:`t` in some layer :math:`b`, where :math:`a` and :math:`b` may or may not be the same layer.
 
-        The formulae for the navigatability are defined by:
+        The general formulae for the navigatability are defined by:
 
         .. math::
 
             S(s \rightarrow t) = -\log_{2}\sum_{\{p(s,t)\}} P[p(s,t)]
 
             P[p(s,t)] = \frac{1}{k_{s}} \prod_{j \in p(s,t)} \frac{1}{k_{j} - 1}
+
+        Although, the relationships across the layers in gatoh are bidirectional and weighted, and as such,
+        :math:`P[p(s,t)]` is redefined as:
+
+        .. math::
+
+            P[p(s,t)] = \frac{w_{s \rightarrow j_{o}}}{k_{s}} \prod_{j \in p(s,t)} \frac{w_{j \rightarrow j + 1}}{k_{j} - 1}
 
         :param from_node: (agent_index, graph_index) for the starting node.
         :type from_node: tuple[int, int]
@@ -829,11 +837,28 @@ class ABModel:
         :return: The navigability value for the specified path.
         :rtype: float
         """
-        # TODO: Implement this function
-        raise NotImplementedError(
-            "Navigability measure calculation is not yet implemented..."
-        )
-        return 0.0
+        # First, calculate all the possible shortest paths (from_node -> to_node) using the all-encompassing base graph.
+        all_shortest_paths: list[list[int]] = rx_shortest_paths(self.base_graph.graph, from_node[1], to_node[1])
+
+        navigability_summation: float = 0.0
+
+        # Next, for each shortest path, find P[p(s,t)]
+        for shortest_path in all_shortest_paths:
+            path_product: float = 0.0
+            for i in range(len(shortest_path) - 1):
+                current_edge: GraphEdge = self.base_graph.graph.get_edge_data(shortest_path[i], shortest_path[i + 1])
+                node_out_degree: int = self.base_graph.graph.out_degree(shortest_path[i])
+                if i == 0:
+                    path_product = float(current_edge.weighting / node_out_degree)
+                else:
+                    # Node degree should always be >= 2, as there must exist at least one ingoing and one outgoing edge for the path to exist
+                    path_product *= float(current_edge.weighting / node_out_degree - 1)
+
+            navigability_summation += path_product
+
+        # -log2(x) == log2(1 / x)
+        navigability_value: float = float(np.log2(1.0 / navigability_summation))
+        return navigability_value
 
     def calculate_interdependences(self, worker_pool: Pool | None = None) -> list[tuple[str, float]]:
         """
