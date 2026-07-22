@@ -12,6 +12,8 @@ from copy import deepcopy
 from shutil import rmtree
 from typing import NotRequired, TypeVar, TypedDict, override
 
+from numpy.core.numeric import absolute
+
 from gatoh.utils import draw_random_value, random_coinflip, value_rw_delta
 
 # Definition of all valid, existing Agent personality types
@@ -459,6 +461,105 @@ class Agent:
 
         return negation_strength > threshold
 
+    def deradicalisation(
+        self,
+        hierarchy_changes: list[float],
+        neighbour_benefits: list[bool],
+        threshold: float,
+    ) -> bool:
+        """
+        Uses the agent's own opinion as well as the neighbours' opinions to determine if an already radicalised
+        agent will deradicalise.
+
+        :param hierarchy_changes: The opinion changes caused in each social hierarchy by neighbours during this iteration.
+        :type hierarchy_changes: list[float]
+        :param neighbour_benefits: Flags indicating the presence of personal benefit across an agent's neighbours.
+        :type neighbour_benefits: list[bool]
+        :param threshold: The deradicalisation threshold that has been defined at the global level in the model.
+        :type threshold: float
+        :return: A flag indicating if the agent has deradicalised or not.
+        :rtype: bool
+        """
+        # If the Agent is not radicalised, always return False (the Agent cannot 'deradicalise')
+        if not self.radicalised:
+            return False
+
+        absolute_opinion: float = abs(self.opinion)
+
+        # Calculate the "aggregate benefit" as a simple fraction of (personal benefit = True) / (length of neighbours)
+        aggregate_benefit_count: float = 0.0
+        for neighbour_benefit in neighbour_benefits:
+            if neighbour_benefit:
+                aggregate_benefit_count += 1.0
+
+        if len(neighbour_benefits) != 0:
+            aggregate_benefit: float = aggregate_benefit_count / len(neighbour_benefits)
+        else:
+            aggregate_benefit = aggregate_benefit_count
+
+        match self.personality:
+            case "neutral":
+                # This will mean that deradicalisation is exclusively determined by the strength of the Agent's opinion
+                if absolute_opinion <= threshold:
+                    self.radicalised = False
+                    return not self.radicalised
+            case "rational":
+                # This will likely mean that the agent is more disposed towards considering tangible benefits and their own
+                # opinions when determining deradicalisation, rather than external influences
+                if absolute_opinion <= threshold and aggregate_benefit <= 0.5:
+                    self.radicalised = False
+                    return not self.radicalised
+                elif absolute_opinion <= threshold and aggregate_benefit >= 0.5:
+                    # In the case where the radicalisation threshold is not met but there is a presence of aggregate benefit, deradicalisation is treated as a coinflip
+                    self.radicalised = random_coinflip("bool")
+                    return not self.radicalised
+            case "erratic":
+                # Deradicalisation is influenced by personal opinion to some extent, but is largely stochastically determined
+                if absolute_opinion * 1.25 <= threshold:
+                    self.radicalised = random_coinflip("bool")
+                    return not self.radicalised
+            case "impulsive":
+                # The agent places very strong consideration on tangible benefits over anything else
+                if absolute_opinion <= threshold and not self.personal_benefit:
+                    self.radicalised = False
+                    return not self.radicalised
+                elif absolute_opinion <= threshold and self.personal_benefit:
+                    # The choice is stochastically determined but the presence of personal benefit affects the weighting
+                    # and it is no longer an even coinflip
+                    self.radicalised = rd.choices([True, False], weights=[0.75, 0.25])[0]
+                    return not self.radicalised
+            case "social":
+                # Deradicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors
+                absolute_changes: float = 0.0
+                change_directions: float = 0.0
+
+                for change in hierarchy_changes:
+                    absolute_change: float = abs(change)
+
+                    # Flag whether the change is moving in the same direction as the agent's original opinion
+                    change_direction: bool = (change < 0.0 and self.opinion < 0.0) or (change > 0.0 and self.opinion > 0.0)
+
+                    if absolute_change >= self.social_susceptibility and not change_direction:
+                        # A strong opinion change which disagreed with the agent's opinion was caused by some hierarchy
+                        self.radicalised = False
+                        return not self.radicalised
+                    else:
+                        absolute_changes += absolute_change
+
+                        # Track the 'total' magnitude of the absolute changes
+                        if change_direction:
+                            change_directions += 1.0
+                        else:
+                            change_directions -= 1.0
+                # If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)
+                if absolute_changes >= self.social_susceptibility * len(hierarchy_changes) // 2 and change_directions <= 0.0:
+                    self.radicalised = False
+                    return not self.radicalised
+            case _:
+                return False
+        # If this is somehow reached, an error has occurred (but False is returned just in case)
+        return False
+
     def radicalisation(
         self,
         hierarchy_changes: list[float],
@@ -509,7 +610,7 @@ class Agent:
                     self.radicalised = True
                     return self.radicalised
                 elif absolute_opinion >= threshold and not aggregate_benefit >= 0.5:
-                    # In the case where the threshold is met but there is no explicit personal benefit, radicalisation is treated as a coinflip
+                    # In the case where the threshold is met but there is no explicit aggregate benefit, radicalisation is treated as a coinflip
                     self.radicalised = random_coinflip("bool")
                     return self.radicalised
             case "erratic":
@@ -519,32 +620,45 @@ class Agent:
                     return self.radicalised
             case "impulsive":
                 # The agent places very strong consideration on tangible benefits over anything else
-                if (
-                    absolute_opinion >= threshold / 2
-                ):  # (threshold / 2) as the Agent behaves impulsively and less is required for them to consider becoming radicalised
+                # (threshold / 2) as the Agent behaves impulsively and less is required for them to consider becoming radicalised
+                if absolute_opinion >= threshold / 2 and self.personal_benefit:
                     self.radicalised = self.personal_benefit
+                    return self.radicalised
+                elif absolute_opinion >= threshold / 2 and not self.personal_benefit:
+                    # The choice is stochastically determined but the lack of personal benefit affects the weighting
+                    # and it is no longer an even coinflip
+                    self.radicalised = rd.choices([True, False], weights=[0.25, 0.75])[0]
                     return self.radicalised
             case "social":
                 # Radicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors
                 absolute_changes: float = 0.0
+                change_directions: float = 0.0
 
                 for change in hierarchy_changes:
                     absolute_change: float = abs(change)
-                    if absolute_change >= self.social_susceptibility:
-                        # A strong opinion change was caused by some hierarchy
+
+                    # Flag whether the change is moving in the same direction as the agent's original opinion
+                    change_direction: bool = (change < 0.0 and self.opinion < 0.0) or (change > 0.0 and self.opinion > 0.0)
+
+                    if absolute_change >= self.social_susceptibility and change_direction:
+                        # A strong opinion change which agreed with the agent's opinion was caused by some hierarchy
                         self.radicalised = True
                         return self.radicalised
                     else:
                         absolute_changes += absolute_change
+
+                        # Track the 'total' magnitude of the absolute changes
+                        if change_direction:
+                            change_directions += 1.0
+                        else:
+                            change_directions -= 1.0
                 # If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)
-                if absolute_changes >= self.social_susceptibility * (
-                    len(hierarchy_changes) // 2
-                ):
+                if absolute_changes >= self.social_susceptibility * len(hierarchy_changes) // 2 and change_directions >= 0.0:
                     self.radicalised = True
                     return self.radicalised
             case _:
                 return False
-        # If this is somehow reached, an error has ocurred (but False is returned just in case)
+        # If this is somehow reached, an error has occurred (but False is returned just in case)
         return False
 
     def evolve_hierarchies(

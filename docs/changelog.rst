@@ -23,6 +23,7 @@ New Features
 - Implemented a function to calculate graph density metrics with :meth:`~gatoh.model.ABModel.calculate_density`
 - Implemented functionality to automatically remove any nodes in graphs without neighbours after relevant edges are removed
 - Added functions that allow for the spontaneous formation and disintegration of relationships in graphs
+- Implemented a mechanism that allows for thresholded agent deradicalisation
 
 Fixes
 -----
