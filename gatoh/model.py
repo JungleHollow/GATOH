@@ -536,7 +536,19 @@ class ABModel:
             neighbour_influences: float | None = hierarchy.neighbour_influences(agent)
             if neighbour_influences is not None:
                 collective_changes.append(neighbour_influences)
-        total_change: float = sum(collective_changes)
+        collective_changes_sum: float = sum(collective_changes)
+
+        # Account for the idea that a collection of like-minded agents will push each other towards more extreme opinions
+        # even if all neighbours are already averaging around the same opinion value
+        total_change: float
+        if agent.previous_opinion < 0.0 and -0.05 < collective_changes_sum < 0.0:
+            total_change = -0.05
+        elif agent.previous_opinion > 0.0 and 0.0 < collective_changes_sum < 0.05:
+            total_change = 0.05
+        else:
+            # The previous checks mean that a "minor" collective changes sum that is going in the opposite direction
+            # to the agent's opinion will still have the effect of moving the agent towards the neighbour average
+            total_change = collective_changes_sum
 
         # Check for the existence of personal benefit across all of the agent's neighbours
         all_neighbour_indices: list[int] = list(
@@ -590,10 +602,6 @@ class ABModel:
         for agent_id, opinion_change_info in changes_dict.items():
             agent_object: Agent | None = self.agents.get_agent_by_id(agent_id)
             if agent_object is not None:
-                for hierarchy in self.graphs:
-                    # Update the current opinion across all hierarchies
-                    hierarchy.agent_opinion_change(agent_object, opinion_change_info[0])
-
                 # Flag if the Agent was already radicalised
                 existing_radicalisation: bool = agent_object.radicalised
 
@@ -621,6 +629,10 @@ class ABModel:
                     # Update the radicalisation count in the logger as needed
                     # (was_radicalised will always be False if the agent was already radicalised)
                     self.logger.variables.increment_radicalised(was_radicalised)
+
+                    # Update the current opinion across all hierarchies
+                    for hierarchy in self.graphs:
+                        hierarchy.agent_opinion_change(agent_object, opinion_change_info[0])
                 else:
                     was_deradicalised: bool = agent_object.deradicalisation(
                         opinion_change_info[1],
@@ -633,9 +645,9 @@ class ABModel:
                             agent_object, not was_deradicalised
                         )
 
-                    # Update the node in the base graph
+                    # Update the node in the base graph (flagging for deradicalisation)
                     self.base_graph.agent_opinion_change(
-                        agent_object, opinion_change_info[0]
+                        agent_object, opinion_change_info[0], deradicalisation=True
                     )
                     self.base_graph.agent_radicalisation_change(
                         agent_object, not was_deradicalised
@@ -644,6 +656,10 @@ class ABModel:
                     # Update the deradicalisation count in the logger as needed
                     # (was_deradicalised will always be False if the agent was not already radicalised)
                     self.logger.variables.increment_deradicalised(was_deradicalised)
+
+                    # Update the current opinion across all hierarchies (flagging for deradicalisation)
+                    for hierarchy in self.graphs:
+                        hierarchy.agent_opinion_change(agent_object, opinion_change_info[0], deradicalisation=True)
         return None
 
     def step(self) -> None:
