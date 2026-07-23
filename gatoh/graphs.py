@@ -883,7 +883,7 @@ class Graph:
             agent_node.agent.store_previous_opinion()
         return None
 
-    def agent_opinion_change(self, agent: Agent, change_delta: float) -> None:
+    def agent_opinion_change(self, agent: Agent, change_delta: float, deradicalisation: bool = False) -> None:
         """
         Changes the specified Agent's current opinion by the given delta.
 
@@ -891,10 +891,19 @@ class Graph:
         :type agent: Agent
         :param change_delta: The value by which to change the Agent's current opinion.
         :type change_delta: float
+        :param deradicalisation: A flag indicating if this opinion change is occurring after deradicalisation.
+        :type deradicalisation: bool, optional
         """
         agent_node: GraphNode | None = self.node_from_agent(agent)
         if agent_node:
-            agent_node.agent.change_opinion(change_delta)
+            if not deradicalisation:
+                agent_node.agent.change_opinion(change_delta)
+            # If the agent was deradicalised this iteration, the change delta is overriden by a moderately significant delta
+            # in the direction opposite to the previously held radical opinion
+            elif deradicalisation and agent_node.agent.opinion < 0.0:
+                agent_node.agent.change_opinion(0.25)
+            elif deradicalisation and 0.0 < agent_node.agent.opinion:
+                agent_node.agent.change_opinion(-0.25)
         return None
 
     def agent_radicalisation_change(self, agent: Agent, radicalisation: bool) -> None:
