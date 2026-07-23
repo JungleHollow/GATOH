@@ -31,7 +31,7 @@ from gatoh.visualisation import ABVisualiser
 
 class ConfigData(TypedDict):
     """
-    A helper class used to type check the config data for :class:`~gatoh.model.model.ABModel`.
+    A helper class used to type check the config data for :class:`~gatoh.model.ABModel`.
     """
     hierarchy_information: dict[str, tuple[float, float]]
     current_iteration: int
@@ -146,6 +146,183 @@ class ABModel:
         self.save_dir: str = save_dir
         self.data_file: str = data_file
         self.model_id: str = model_id
+
+    def set_hierarchy_information(self, hierarchy: str, rw_params: tuple[float, float]) -> None:
+        """
+        A setter function that adds a new entry into the model's hierarchy information attribute.
+
+        This function will always overwrite the parameters for an existing hierarchy in the model.
+
+        :param hierarchy: The name of the new hierarchy being recorded.
+        :type hierarchy: str
+        :param rw_params: The random-walk (mean, variance) parameters for the new hierarchy.
+        :type rw_params: tuple[float, float]
+        """
+        self.hierarchy_information[hierarchy] = rw_params
+        return None
+
+    def set_agent_opinion_rw(self, agent_opinion_rw: tuple[float, float]) -> None:
+        """
+        A setter function that changes the model's agent_opinion_rw attribute.
+
+        :param agent_opinion_rw: The (mean, variance) parameters used for the agent opinions random-walk effect.
+        :type agent_opinion_rw: tuple[float, float]
+        """
+        self.agent_opinion_rw = agent_opinion_rw
+        return None
+
+    def set_visualise(self, visualise: bool) -> None:
+        """
+        A setter function that changes the model's visualise flag.
+
+        :param visualise: A flag indicating if the model should visualise its runtime and outputs.
+        :type visualise: bool
+        """
+        self.visualise = visualise
+        return None
+
+    def set_visualisation_dir(self, visualisation_dir: str, force: bool = False) -> None:
+        """
+        A setter function that changes the model's visualisation directory.
+
+        :param visualisation_dir: The path to the directory where model visualisations should be saved.
+        :type visualisation_dir: str
+        :param force: A flag indicating if the function should explicitly create the directory if it does not exist.
+        :type force: bool, optional
+        :raises NotADirectoryError: If the input directory is not valid and the operation is not being forced.
+        """
+        if os.path.exists(visualisation_dir):
+            self.visualisation_dir = visualisation_dir
+        elif not os.path.exists(visualisation_dir) and force:
+            os.mkdir(visualisation_dir)
+            self.visualisation_dir = visualisation_dir
+        elif not os.path.exists(visualisation_dir) and not force:
+            raise NotADirectoryError(f"The path {visualisation_dir} does not point to a valid directory -- change the path or set 'force=True' to fix this")
+        return None
+
+    def override_current_iteration(self, current_iteration: int) -> None:
+        """
+        A setter function that overrides the model's current iteration value with a new one.
+
+        This function should not be used if a custom iteration function is not in use, as it will cause unexpected simulation behaviours
+        if not handled appropriately.
+        """
+        self.current_iteration = current_iteration
+        return None
+
+    def set_max_iterations(self, max_iterations: int) -> None:
+        """
+        A setter function that changes the model's max iterations attribute.
+
+        :param max_iterations: The total number of iterations that the model should run for.
+        :type max_iterations: int
+        :raises ValueError: If max_iterations is not a valid integer.
+        """
+        if max_iterations < 0:
+            raise ValueError(f"The max_iterations value {max_iterations} is invalid -- Use a positive integer")
+        self.max_iterations = max_iterations
+        return None
+
+    def set_silencing_threshold(self, silencing_thresh: float) -> None:
+        """
+        A setter function that changes the model's silencing threshold.
+
+        :param silencing_thresh: The threshold that the model should use for the opinion silencing effect.
+        :type silencing_thresh: float
+        :raises ValueError: If the silencing threshold is outside the range [0.0, 1.0].
+        """
+        if 0.0 <= silencing_thresh <= 1.0:
+            self.silencing_threshold = silencing_thresh
+        else:
+            raise ValueError(f"The silencing threshold value of {silencing_thresh} is outside the valid range of [0.0, 1.0]")
+        return None
+
+    def set_negation_threshold(self, negation_thresh: float) -> None:
+        """
+        A setter function that changes the model's negation threshold.
+
+        :param negation_thresh: The threshold that the model should use for the opinion negation effect.
+        :type negation_thresh: float
+        :raises ValueError: If the negation threshold is outside the range [0.0, 1.0].
+        """
+        if 0.0 <= negation_thresh <= 1.0:
+            self.negation_threshold = negation_thresh
+        else:
+            raise ValueError(f"The negation threshold value of {negation_thresh} is outside the valid range of [0.0, 1.0]")
+        return None
+
+    def set_radicalisation_threshold(self, radical_thresh: float) -> None:
+        """
+        A setter function that changes the model's radicalisation threshold.
+
+        :param radical_thresh: The threshold that the model should use when determining agent (de)radicalisation.
+        :type radical_thresh: float
+        :raises ValueError: If the radicalisation threshold is outside the range [0.0, 1.0].
+        """
+        if 0.0 <= radical_thresh <= 1.0:
+            self.radicalisation_threshold = radical_thresh
+        else:
+            raise ValueError(f"The radicalisation threshold value of {radical_thresh} is outside the valid range of [0.0, 1.0]")
+        return None
+
+    def set_suppress_warnings(self, suppress_warnings: bool) -> None:
+        """
+        A setter function that changes the model's suppress warnings flag.
+
+        :param suppress_warnings: A flag indicating if non-critical runtime warnings should be suppressed.
+        :type suppress_warnings: bool
+        """
+        self.suppress_warnings = suppress_warnings
+        return None
+
+    def set_checkpointing(self, checkpointing: bool) -> None:
+        """
+        A setter function that changes the model's checkpointing flag.
+
+        :param checkpointing: A flag indicating if the model should save checkpoints at the end of every iteration.
+        :type checkpointing: bool
+        """
+        self.checkpointing = checkpointing
+        return None
+
+    def set_save_dir(self, save_dir: str, force: bool = False) -> None:
+        """
+        A setter function that changes the model's save directory.
+
+        :param save_dir: The path to the root directory where all model components and sub-components should be saved.
+        :type save_dir: str
+        :param force: A flag indicating if the function should explicitly create the directory if it does not exist.
+        :type force: bool, optional
+        :raises NotADirectoryError: If the input directory is not valid and the operation is not being forced.
+        """
+        if os.path.exists(save_dir):
+            self.save_dir = save_dir
+        elif not os.path.exists(save_dir) and force:
+            os.mkdir(save_dir)
+            self.save_dir = save_dir
+        elif not os.path.exists(save_dir) and not force:
+            raise NotADirectoryError(f"The path {save_dir} does not point to a valid directory -- change the path or set 'force=True' to fix this")
+        return None
+
+    def set_data_file(self, data_file: str) -> None:
+        """
+        A setter function that changes the path to which the final data file should be written.
+
+        :param data_file: The path to where the model's final data .csv file should be written.
+        :type data_file: str
+        """
+        self.data_file = data_file
+        return None
+
+    def set_model_id(self, model_id: str) -> None:
+        """
+        A setter function that changes the model's unique ID.
+
+        :param model_id: The new identifier to assign to the model.
+        :type model_id: str
+        """
+        self.model_id = model_id
+        return None
 
     def save_model(self) -> None:
         """
