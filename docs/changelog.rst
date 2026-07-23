@@ -24,6 +24,9 @@ New Features
 - Implemented functionality to automatically remove any nodes in graphs without neighbours after relevant edges are removed
 - Added functions that allow for the spontaneous formation and disintegration of relationships in graphs
 - Implemented a mechanism that allows for thresholded agent deradicalisation
+- Now accounting for the idea that like-minded agents will push each other towards more extreme opinions even if the average opinion
+  is currently stable (:meth:`~gatoh.model.ABModel.iteration_opinion_calculation`)
+- Added new checks to :meth:`~gatoh.graphs.Graph.agent_opinion_change` that account for agent deradicalisation
 
 Fixes
 -----
