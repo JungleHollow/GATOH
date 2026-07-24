@@ -68,6 +68,10 @@ class ABModel:
     :type radicalisation_threshold: float, optional
     :param suppress_warnings: A flag indicating if non-critical runtime warnings should be suppressed.
     :type suppress_warnings: bool, optional
+    :param print_interval: The iteration interval at which the model's logger should be printing detailed variable reports.
+    :type print_interval: int, optional
+    :param debug: A flag indicating if additional developer statistics should be tracked and reported during runtime.
+    :type debug: bool, optional
     :param visualise: A flag indicating if the model should visualise emergent behaviour in real time.
     :type visualise: bool, optional
     :param visualisation_dir: The path to a directory in which all of this model's visualiser outputs should be saved to.
@@ -94,6 +98,8 @@ class ABModel:
         negation_threshold: float = 0.999,
         radicalisation_threshold: float = 0.99,
         suppress_warnings: bool = False,
+        print_interval: int = 10,
+        debug: bool = False,
         visualise: bool = True,
         visualisation_dir: str = "",
         vis_aggregation_method: str = "median",
@@ -117,7 +123,13 @@ class ABModel:
             "base", (0.0, 0.0), suppress_warnings=suppress_warnings
         )
 
-        self.logger: GATOHLogger = GATOHLogger(iterations, hierarchy_names)
+        self.debug: bool = debug
+        self.logger: GATOHLogger = GATOHLogger(
+            iterations,
+            hierarchy_names,
+            print_interval=print_interval,
+            debug=self.debug,
+        )
 
         self.visualise: bool = visualise
         self.visualisation_dir: str = visualisation_dir
@@ -159,6 +171,8 @@ class ABModel:
         :type rw_params: tuple[float, float]
         """
         self.hierarchy_information[hierarchy] = rw_params
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_hierarchy_information")
         return None
 
     def set_agent_opinion_rw(self, agent_opinion_rw: tuple[float, float]) -> None:
@@ -169,6 +183,8 @@ class ABModel:
         :type agent_opinion_rw: tuple[float, float]
         """
         self.agent_opinion_rw = agent_opinion_rw
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_agent_opinion_rw")
         return None
 
     def set_visualise(self, visualise: bool) -> None:
@@ -179,6 +195,8 @@ class ABModel:
         :type visualise: bool
         """
         self.visualise = visualise
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_visualise")
         return None
 
     def set_visualisation_dir(self, visualisation_dir: str, force: bool = False) -> None:
@@ -198,6 +216,10 @@ class ABModel:
             self.visualisation_dir = visualisation_dir
         elif not os.path.exists(visualisation_dir) and not force:
             raise NotADirectoryError(f"The path {visualisation_dir} does not point to a valid directory -- change the path or set 'force=True' to fix this")
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_visualisation_dir")
+
         return None
 
     def override_current_iteration(self, current_iteration: int) -> None:
@@ -208,6 +230,8 @@ class ABModel:
         if not handled appropriately.
         """
         self.current_iteration = current_iteration
+        if self.debug:
+            self.logger.log_function_call("ABModel.override_current_iteration")
         return None
 
     def set_max_iterations(self, max_iterations: int) -> None:
@@ -221,6 +245,8 @@ class ABModel:
         if max_iterations < 0:
             raise ValueError(f"The max_iterations value {max_iterations} is invalid -- Use a positive integer")
         self.max_iterations = max_iterations
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_max_iterations")
         return None
 
     def set_silencing_threshold(self, silencing_thresh: float) -> None:
@@ -235,6 +261,10 @@ class ABModel:
             self.silencing_threshold = silencing_thresh
         else:
             raise ValueError(f"The silencing threshold value of {silencing_thresh} is outside the valid range of [0.0, 1.0]")
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_silencing_threshold")
+
         return None
 
     def set_negation_threshold(self, negation_thresh: float) -> None:
@@ -249,6 +279,10 @@ class ABModel:
             self.negation_threshold = negation_thresh
         else:
             raise ValueError(f"The negation threshold value of {negation_thresh} is outside the valid range of [0.0, 1.0]")
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_negation_threshold")
+
         return None
 
     def set_radicalisation_threshold(self, radical_thresh: float) -> None:
@@ -263,6 +297,10 @@ class ABModel:
             self.radicalisation_threshold = radical_thresh
         else:
             raise ValueError(f"The radicalisation threshold value of {radical_thresh} is outside the valid range of [0.0, 1.0]")
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_radicalisation_threshold")
+
         return None
 
     def set_suppress_warnings(self, suppress_warnings: bool) -> None:
@@ -273,6 +311,8 @@ class ABModel:
         :type suppress_warnings: bool
         """
         self.suppress_warnings = suppress_warnings
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_suppress_warnings")
         return None
 
     def set_checkpointing(self, checkpointing: bool) -> None:
@@ -283,6 +323,8 @@ class ABModel:
         :type checkpointing: bool
         """
         self.checkpointing = checkpointing
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_checkpointing")
         return None
 
     def set_save_dir(self, save_dir: str, force: bool = False) -> None:
@@ -302,6 +344,10 @@ class ABModel:
             self.save_dir = save_dir
         elif not os.path.exists(save_dir) and not force:
             raise NotADirectoryError(f"The path {save_dir} does not point to a valid directory -- change the path or set 'force=True' to fix this")
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_save_dir")
+
         return None
 
     def set_data_file(self, data_file: str) -> None:
@@ -312,6 +358,8 @@ class ABModel:
         :type data_file: str
         """
         self.data_file = data_file
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_data_file")
         return None
 
     def set_model_id(self, model_id: str) -> None:
@@ -322,6 +370,8 @@ class ABModel:
         :type model_id: str
         """
         self.model_id = model_id
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_model_id")
         return None
 
     def save_model(self) -> None:
@@ -348,6 +398,11 @@ class ABModel:
         base_graph_path: str = f"{self.save_dir}/graph_base_graph.graphml"
         self.base_graph.save_graph(base_graph_path)
 
+        if self.debug:
+            self.logger.log_function_call("AgentSet.save_agentset")
+            self.logger.log_function_call("GraphSet.save_graphset")
+            self.logger.log_function_call("Graph.save_graph")
+
         # Store the model's configurations in a YAML config file
         config_path: str
         if self.model_id != "":
@@ -370,6 +425,10 @@ class ABModel:
             "model_id": self.model_id,
         }
         create_config_file(config_path, config_data)
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.save_model")
+
         return None
 
     def load_model(self, load_dir: str) -> None:
@@ -430,6 +489,8 @@ class ABModel:
                 case "graphml":
                     # For now, only the model's base graph should exist as an uncompressed graphml file in the root of the save directory
                     self.base_graph.load_graph(file_path, "base_graph", (0.0, 0.0))
+                    if self.debug:
+                        self.logger.log_function_call("Graph.load_graph")
                 case _:
                     # Currently unknown how/if to handle edge cases here
                     pass
@@ -437,8 +498,15 @@ class ABModel:
         # Check if any compressed files exist and handle them from their parent modules
         if agentset_exists:
             self.agents.load_agentset(load_dir)
+            if self.debug:
+                self.logger.log_function_call("AgentSet.load_agentset")
         if graphset_exists:
             self.graphs.load_graphset(load_dir, self.hierarchy_information)
+            if self.debug:
+                self.logger.log_function_call("GraphSet.load_graphset")
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.load_model")
 
         return None
 
@@ -456,6 +524,11 @@ class ABModel:
 
         # Also add new edges to the model's base graph
         self.add_base_graph_edges(graph)
+
+        if self.debug:
+            self.logger.log_function_call("GraphSet.add_graph")
+            self.logger.log_function_call("ABModel.add_graph")
+
         return self.graphs
 
     def add_graphs(
@@ -479,11 +552,21 @@ class ABModel:
         for idx, graph in enumerate(graphs):
             if type(graph) is Graph:
                 self.graphs.add_graph(graph)
+                if self.debug:
+                    self.logger.log_function_call("GraphSet.add_graph")
             elif type(graph) is str:
                 new_graph: Graph = Graph(names[idx], rw_params[idx])
                 new_graph.load_graph(graph, names[idx])
                 self.graphs.add_graph(new_graph)
+                if self.debug:
+                    self.logger.log_function_call("Graph.load_graph")
+                    self.logger.log_function_call("GraphSet.add_graph")
+
         self.init_base_graph()
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.add_graphs")
+
         return self.graphs
 
     def generate_graphs(
@@ -543,6 +626,13 @@ class ABModel:
                 )
 
             _ = self.add_graph(hierarchy_graph)
+
+            if self.debug:
+                self.logger.log_function_call("Graph.generate_graph")
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.generate_graphs")
+
         return None
 
     def add_agent(self, agent: Agent) -> int:
@@ -556,6 +646,11 @@ class ABModel:
         """
         # Add the Agent object to the model-handled 'base' graph
         self.base_graph.add_nodes([agent])
+        if self.debug:
+            self.logger.log_function_call("Graph.add_nodes")
+            self.logger.log_function_call("ABModel.add_agent")
+            # Preemptively logging the agentset add
+            self.logger.log_function_call("AgentSet.add")
         return self.agents.add(agent)
 
     def add_agents(self, agents: list[Agent]) -> AgentSet:
@@ -569,9 +664,16 @@ class ABModel:
         """
         for agent in agents:
             _ = self.agents.add(agent)
+            if self.debug:
+                self.logger.log_function_call("AgentSet.add")
 
         # Add all the new Agent objects to the model-handled 'base' graph
         self.base_graph.add_nodes(agents)
+
+        if self.debug:
+            self.logger.log_function_call("Graph.add_nodes")
+            self.logger.log_function_call("ABModel.add_agents")
+
         return self.agents
 
     def generate_agents(
@@ -618,6 +720,8 @@ class ABModel:
                 personality=agent_personality,
                 parameters=parameters,
             )
+        if self.debug:
+            self.logger.log_function_call("model.generate_agents")
         return None
 
     def iterate(self, worker_pool: Pool | None = None) -> None:
@@ -634,6 +738,12 @@ class ABModel:
             else:
                 self.logger.new_iteration()
 
+            # Get and print the formatted debug string if appropriate
+            if self.debug:
+                self.logger_debug_iteration()
+                debug_print_string: str = self.logger.debug_iteration_print()
+                print(debug_print_string)
+
             # Initialise a dictionary to keep track of agent opinion changes
             # (this is done to prevent recursive updating of opinions during the evolution of opinions)
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
@@ -647,6 +757,8 @@ class ABModel:
                 )
                 for opinion_result in opinion_results:
                     new_agent_opinions[opinion_result[0]] = opinion_result[1]
+                    if self.debug:
+                        self.logger.log_function_call("ABModel.iteration_opinion_calculation")
 
                 # Manual garbage collection
                 del opinion_results
@@ -655,6 +767,9 @@ class ABModel:
                 for agent in self.agents:
                     opinion_result = self.iteration_opinion_calculation(agent)
                     new_agent_opinions[opinion_result[0]] = opinion_result[1]
+
+                    if self.debug:
+                        self.logger.log_function_call("ABModel.iteration_opinion_calculation")
 
                     # Manual garbage collection
                     del opinion_result
@@ -684,6 +799,8 @@ class ABModel:
             print(
                 f"\n\nGATOH logger data was successfully written to the file at path: {self.data_file}\n\n"
             )
+        if self.debug:
+            self.logger.log_function_call("ABModel.iterate")
         return None
 
     def iteration_opinion_calculation(
@@ -778,6 +895,9 @@ class ABModel:
         """
         for agent_id, opinion_change_info in changes_dict.items():
             agent_object: Agent | None = self.agents.get_agent_by_id(agent_id)
+            if self.debug:
+                self.logger.log_function_call("AgentSet.get_agent_by_id")
+
             if agent_object is not None:
                 # Flag if the Agent was already radicalised
                 existing_radicalisation: bool = agent_object.radicalised
@@ -789,11 +909,15 @@ class ABModel:
                         opinion_change_info[2],
                         self.radicalisation_threshold,
                     )
+                    if self.debug:
+                        self.logger.log_function_call("Agent.radicalisation")
                     for hierarchy in self.graphs:
                         # Update the radicalisation status of the agent across all hierarchies
                         hierarchy.agent_radicalisation_change(
                             agent_object, was_radicalised
                         )
+                        if self.debug:
+                            self.logger.log_function_call("Graph.agent_radicalisation_change")
 
                     # Update the node in the base graph
                     self.base_graph.agent_opinion_change(
@@ -807,20 +931,33 @@ class ABModel:
                     # (was_radicalised will always be False if the agent was already radicalised)
                     self.logger.variables.increment_radicalised(was_radicalised)
 
+                    if self.debug:
+                        self.logger.log_function_call("Graph.agent_opinion_change")
+                        self.logger.log_function_call("Graph.agent_radicalisation_change")
+                        self.logger.log_function_call("LoggerVariables.increment_radicalised")
+
                     # Update the current opinion across all hierarchies
                     for hierarchy in self.graphs:
                         hierarchy.agent_opinion_change(agent_object, opinion_change_info[0])
+                        if self.debug:
+                            self.logger.log_function_call("Graph.agent_opinion_change")
                 else:
                     was_deradicalised: bool = agent_object.deradicalisation(
                         opinion_change_info[1],
                         opinion_change_info[2],
                         self.radicalisation_threshold,
                     )
+
+                    if self.debug:
+                        self.logger.log_function_call("Agent.deradicalisation")
+
                     for hierarchy in self.graphs:
                         # Update the radicalisation status of the agent across all hierarchies
                         hierarchy.agent_radicalisation_change(
                             agent_object, not was_deradicalised
                         )
+                        if self.debug:
+                            self.logger.log_function_call("Graph.agent_radicalisation_change")
 
                     # Update the node in the base graph (flagging for deradicalisation)
                     self.base_graph.agent_opinion_change(
@@ -834,9 +971,18 @@ class ABModel:
                     # (was_deradicalised will always be False if the agent was not already radicalised)
                     self.logger.variables.increment_deradicalised(was_deradicalised)
 
+                    if self.debug:
+                        self.logger.log_function_call("Graph.agent_opinion_change")
+                        self.logger.log_function_call("Graph.agent_radicalisation_change")
+                        self.logger.log_function_call("LoggerVariables.increment_deradicalised")
+
                     # Update the current opinion across all hierarchies (flagging for deradicalisation)
                     for hierarchy in self.graphs:
                         hierarchy.agent_opinion_change(agent_object, opinion_change_info[0], deradicalisation=True)
+                        if self.debug:
+                            self.logger.log_function_call("Graph.agent_opinion_change")
+        if self.debug:
+            self.logger.log_function_call("ABModel.iteration_opinion_changes")
         return None
 
     def step(self) -> None:
@@ -848,11 +994,18 @@ class ABModel:
         """
         for graph in self.graphs:
             graph.step()
+            if self.debug:
+                self.logger.log_function_call("Graph.step")
         for agent in self.agents:
             agent.step(
                 self.hierarchy_information,
                 self.agent_opinion_rw,
             )
+            if self.debug:
+                self.logger.log_function_call("Agent.step")
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.step")
         return None
 
     def update(self, worker_pool: Pool | None = None) -> None:
@@ -882,6 +1035,15 @@ class ABModel:
                 # Update the logger variables as needed
                 self.logger.variables.increment_silenced(agent_update[1])
                 self.logger.variables.increment_negated(agent_update[2])
+
+        if self.debug:
+            for _ in range(len(self.agents)):
+                self.logger.log_function_call("ABModel.update_multi")
+                self.logger.log_function_call("Agent.update")
+                self.logger.log_function_call("LoggerVariables.increment_silenced")
+                self.logger.log_function_call("LoggerVariables.increment_negated")
+            self.logger.log_function_call("ABModel.update")
+
         return None
 
     def update_multi(self, agent: Agent) -> tuple[dict[str, bool], bool, bool]:
@@ -916,6 +1078,15 @@ class ABModel:
                     )
         return (silenced, was_silenced, negation)
 
+    def logger_debug_iteration(self) -> None:
+        """
+        A helper function that handles the iteration of the logger's debugging component.
+        """
+        self.logger.debug_iteration()
+        if self.debug:
+            self.logger.log_function_call("ABModel.logger_debug_iteration")
+        return None
+
     def logger_iteration(self, worker_pool: Pool | None = None) -> None:
         """
         Calculate any relevant aggregate statistics and then pass these to the logger's iteration() function to be stored.
@@ -945,6 +1116,8 @@ class ABModel:
             layer_interdependences,
             layers_polarisation,
         )
+        if self.debug:
+            self.logger.log_function_call("ABModel.logger_iteration")
         return None
 
     def calculate_aggregate_opinion(self) -> float:
@@ -963,6 +1136,9 @@ class ABModel:
 
         average_opinion: float = opinion_sum / opinion_count
 
+        if self.debug:
+            self.logger.log_function_call("ABModel.calculate_aggregate_opinion")
+
         return average_opinion
 
     def calculate_radicalisation_logodds(self) -> float:
@@ -980,7 +1156,15 @@ class ABModel:
         radicalisation_p: float = radicalised_count / len(self.agents)
         if 1.0 - radicalisation_p != 0.0:
             log_odds: float = np.log1p(radicalisation_p / (1.0 - radicalisation_p))
+
+            if self.debug:
+                self.logger.log_function_call("ABModel.calculate_radicalisation_logodds")
+
             return log_odds
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.calculate_radicalisation_logodds")
+
         return 0.0
 
     def calculate_layers_polarisation(self, worker_pool: Pool | None = None) -> dict[str, float]:
@@ -1003,6 +1187,11 @@ class ABModel:
             polarisation_results = worker_pool.map(self.layers_polarisation_multi, self.hierarchy_information.keys())
             for polarisation_result in polarisation_results:
                 layers_polarisation[polarisation_result[0]] = polarisation_result[1]
+
+        if self.debug:
+            for _ in range(len(self.hierarchy_information.keys())):
+                self.logger.log_function_call("GraphSet.calculate_polarisation")
+            self.logger.log_function_call("ABModel.calculate_layers_polarisation")
 
         return layers_polarisation
 
@@ -1049,6 +1238,9 @@ class ABModel:
             hierarchy_n: float = (hierarchy.node_count * (hierarchy.node_count - 1)) / 2
             final_n += hierarchy_n
 
+        if self.debug:
+            self.logger.log_function_call("ABModel.calculate_density")
+
         return total_l / final_n
 
     def calculate_navigability(
@@ -1083,6 +1275,11 @@ class ABModel:
         # First, calculate all the possible shortest paths (from_node -> to_node) using the all-encompassing base graph.
         all_shortest_paths: list[list[int]] = rx_shortest_paths(self.base_graph.graph, from_node[1], to_node[1])
 
+        if self.debug:
+            # This DOES NOT indicate that rx_shortest_paths was authored in GATOH Graphs, simply that it is being
+            # grouped with other Graph-related functions...
+            self.logger.log_function_call("Graph.rx_shortest_paths")
+
         navigability_summation: float = 0.0
 
         # Next, for each shortest path, find P[p(s,t)]
@@ -1097,10 +1294,18 @@ class ABModel:
                     # Node degree should always be >= 2, as there must exist at least one ingoing and one outgoing edge for the path to exist
                     path_product *= float(current_edge.weighting / node_out_degree - 1)
 
+                if self.debug:
+                    self.logger.log_function_call("Graph.get_edge_data")
+                    self.logger.log_function_call("Graph.out_degree")
+
             navigability_summation += path_product
 
         # -log2(x) == log2(1 / x)
         navigability_value: float = float(np.log2(1.0 / navigability_summation))
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.calculate_navigability")
+
         return navigability_value
 
     def calculate_interdependences(self, worker_pool: Pool | None = None) -> list[tuple[str, float]]:
@@ -1121,6 +1326,12 @@ class ABModel:
             result_values = worker_pool.map(self.calculate_interdependence, list(range(len(self.graphs))))
             for idx, result_value in enumerate(result_values):
                 interdependence_results.append((self.graphs.graphs[idx].name, result_value))
+
+        if self.debug:
+            for _ in range(len(self.hierarchy_information.keys())):
+                self.logger.log_function_call("GraphSet.get_index")
+                self.logger.log_function_call("ABModel.calculate_interdependence")
+            self.logger.log_function_call("ABModel.calculate_interdependences")
 
         return interdependence_results
 
@@ -1166,6 +1377,8 @@ class ABModel:
                 agent_i_oc: dict[str, float] = hierarchy.estimate_neighbour_opinions(
                     agent_i.agent
                 )
+                if self.debug:
+                    self.logger.log_function_call("Graph.estimate_neighbour_opinions")
                 observed_opinions_layer[agent_i.agent.id] = agent_i_oc
             observed_opinions_all[hierarchy.name] = observed_opinions_layer
 
@@ -1188,6 +1401,7 @@ class ABModel:
             layer_interdependence: float = interdep_numerator / interdep_denominator
         else:
             layer_interdependence = 0.0
+
         return layer_interdependence
 
     def init_base_graph(self) -> None:
@@ -1214,6 +1428,10 @@ class ABModel:
                         self.base_graph.change_weights(
                             base_from_idx, base_to_idx, graph_edge.weighting
                         )
+                        if self.debug:
+                            self.logger.log_function_call("Graph.change_weights")
+                    if self.debug:
+                        self.logger.log_function_call("Graph.get_edge_data")
                 # If the edge does not exist in the base graph, create it and add it to the base graph
                 except NoEdgeBetweenNodes:
                     new_edge: dict[str, list[Any]] = {
@@ -1224,9 +1442,16 @@ class ABModel:
                     }
                     self.base_graph.add_edges(new_edge)
 
+                    if self.debug:
+                        self.logger.log_function_call("Graph.add_edges")
+
                     # Manual garbage collection
                     del new_edge
                     _ = gc.collect()
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.init_base_graph")
+
         return None
 
     def get_base_indices_from_edge(
@@ -1248,9 +1473,19 @@ class ABModel:
         from_node: GraphNode | None = hierarchy_graph.get_node(edge.from_node)
         to_node: GraphNode | None = hierarchy_graph.get_node(edge.to_node)
 
+        if self.debug:
+            self.logger.log_function_call("Graph.get_node")
+            self.logger.log_function_call("Graph.get_node")
+
         if from_node is not None and to_node is not None:
             from_index_base: int = self.agents.get_index(from_node.agent)
             to_index_base: int = self.agents.get_index(to_node.agent)
+
+            if self.debug:
+                self.logger.log_function_call("AgentSet.get_index")
+                self.logger.log_function_call("AgentSet.get_index")
+                self.logger.log_function_call("ABModel.get_base_indices_from_edge")
+
             return from_index_base, to_index_base
 
         # Including here for return checking
@@ -1293,6 +1528,10 @@ class ABModel:
         del new_edges
         _ = gc.collect()
 
+        if self.debug:
+            self.logger.log_function_call("Graph.add_edges")
+            self.logger.log_function_call("ABModel.add_base_graph_edges")
+
         return None
 
     def update_base_graph(self) -> None:
@@ -1305,6 +1544,9 @@ class ABModel:
         for hierarchy in self.graphs:
             pending_changes: dict[str, EdgeChanges] = hierarchy.get_edge_changes()
 
+            if self.debug:
+                self.logger.log_function_call("Graph.get_edge_changes")
+
             if len(pending_changes.keys()) == 0:
                 continue
 
@@ -1313,6 +1555,11 @@ class ABModel:
 
                 from_agent = self.agents.get_agent_by_id(from_id)
                 to_agent = self.agents.get_agent_by_id(to_id)
+
+                if self.debug:
+                    # Log twice as two calls were made
+                    self.logger.log_function_call("AgentSet.get_agent_by_id")
+                    self.logger.log_function_call("AgentSet.get_agent_by_id")
 
                 # Included for type checking
                 if from_agent is not None and to_agent is not None:
@@ -1323,10 +1570,16 @@ class ABModel:
                         from_idx, to_idx
                     )
 
+                    if self.debug:
+                        self.logger.log_function_call("Graph.edge_indices_from_endpoints")
+
                     for edge_index in edge_indices:
                         edge_data: GraphEdge = (
                             self.base_graph.graph.get_edge_data_by_index(edge_index)
                         )
+                        if self.debug:
+                            self.logger.log_function_call("Graph.get_edge_data_by_index")
+
                         if edge_data.hierarchy != change.hierarchy:
                             continue
                         else:
@@ -1334,4 +1587,11 @@ class ABModel:
                             self.base_graph.graph.update_edge_by_index(
                                 edge_index, deepcopy(edge_data)
                             )
+                            if self.debug:
+                                self.logger.log_function_call("GraphEdge.set_weighting")
+                                self.logger.log_function_call("Graph.update_edge_by_index")
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.update_base_graph")
+
         return None

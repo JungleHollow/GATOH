@@ -1,13 +1,198 @@
 from __future__ import annotations
 
 import csv
+import tracemalloc
 from dataclasses import dataclass, field
+
+
+@dataclass
+class LoggerDevStats:
+    """
+    Dataclass that defines the relevant developer statistics that are tracked and stored by the Logger.
+
+    :param max_iterations: The maximum number of iterations that the model will run its simulation for.
+    :type max_iterations: int
+    """
+
+    # Model memory usage at the start of each iteration
+    current_memory_usage: list[int] = field(default_factory=list)
+    # The highest reported memory usage during model runtime
+    peak_memory_usage: int = 0
+    # Total number of function calls throughout the entire runtime
+    all_function_calls: int = 0
+    # Total number of calls to functions throughout the runtime
+    function_calls: dict[str, int] = field(default_factory=dict)
+    # Total computational runtime of each function per iteration
+    functions_runtime: dict[int, dict[str, float]] = field(default_factory=dict)
+    # Total computational runtime of each iteration
+    iteration_runtime: list[float] = field(default_factory=list)
+    # The current iteration that the simulation is at
+    current_iteration: int = 0
+    # The total number of I/O writes performed during runtime
+    write_operations: int = 0
+    # The total number of I/O reads performed during runtime
+    read_operations: int = 0
+    # The total runtime, calculated by summing the individual iteration runtimes
+    total_runtime: float = 0.0
+
+    def __init__(self, max_iterations: int) -> None:
+        """
+        Store the number of max iterations and initialise all lists and dictionaries with the approrpiate
+        sizes to match the number of iterations.
+        """
+        # Start tracing memory usage
+        tracemalloc.start()
+
+        self.max_iterations  = max_iterations
+        self.current_iteration  = 0
+
+        self.peak_memory_usage = 0
+        self.current_memory_usage = [0 for _ in range(self.max_iterations)]
+
+        self.all_function_calls = 0
+        self.function_calls = {}
+
+        self.iteration_runtime = [0 for _ in range(self.max_iterations)]
+        self.functions_runtime = {}
+        self.total_runtime = 0.0
+
+        for iteration in range(self.max_iterations):
+            self.functions_runtime[iteration] = {}
+
+    def record_peak_mem_usage(self, memory_usage: int) -> None:
+        """
+        A setter function that checks if the input memory usage is higher than the current recorded peak,
+        and updates the stored value as needed.
+
+        :param memory_usage: The memory usage value that is being checked (in bytes).
+        :type memory_usage: int
+        """
+        if memory_usage > self.peak_memory_usage:
+            self.peak_memory_usage = memory_usage
+        self.log_function_call("LoggerDevStats.record_peak_mem_usage")
+        return None
+
+    def log_function_call(self, function_name: str) -> None:
+        """
+        A setter function that increments the count of calls to a specific function.
+
+        :param function_name: The name of the function that was called.
+        :type function_name: str
+        """
+        if function_name not in self.function_calls.keys():
+            self.function_calls[function_name] = 1
+        else:
+            self.function_calls[function_name] += 1
+        # Also update the overall number of model function calls
+        self.increment_function_calls()
+        return None
+
+    def log_function_runtime(self, function_name: str, runtime: float, iteration: int) -> None:
+        """
+        A setter function that updates the total runtime for a specific function.
+
+        :param function_name: The name of the function that finished running.
+        :type function_name: str
+        :param runtime: The time in seconds that the function ran for.
+        :type runtime: float
+        :param iteration: The iteration that the runtime is being logged for.
+        :type iteration: int
+        """
+        # Ensure that the function name exists in functions_runtime for this iteration
+        self.functions_runtime[iteration].setdefault(function_name, 0.0)
+        self.functions_runtime[iteration][function_name] += runtime
+        self.log_function_call("LoggerDevStats.log_function_runtime")
+        return None
+
+    def increment_function_calls(self) -> None:
+        """
+        A setter function that increments the count of overall model function calls.
+        """
+        self.all_function_calls += 1
+        return None
+
+    def increment_writes(self) -> None:
+        """
+        A setter function that increments the count of the total write operations.
+        """
+        self.write_operations += 1
+        self.log_function_call("LoggerDevStats.increment_writes")
+        return None
+
+    def increment_reads(self) -> None:
+        """
+        A setter function that increments the count of total write operations.
+        """
+        self.read_operations += 1
+        self.log_function_call("LoggerDevStats.increment_reads")
+        return None
+
+    def set_memory_usage(self, memory_usage: int, iteration: int) -> None:
+        """
+        A setter function that records the total model memory usage at the start of a specific iteration.
+
+        :param memory_usage: The total memory usage of the model at the start of an iteration (in bytes).
+        :type memory_usage: int
+        :param iteration: The iteration that the memory usage is being recorded for.
+        :type iteration: int
+        """
+        self.current_memory_usage[iteration] = memory_usage
+
+        # Check if this is a new peak usage value and handle accordingly
+        self.record_peak_mem_usage(memory_usage)
+        self.log_function_call("LoggerDevStats.set_memory_usage")
+        return None
+
+    def set_iteration_runtime(self, runtime: float, iteration: int) -> None:
+        """
+        A setter function that records the total runtime of a specific iteration.
+
+        :param runtime: The total runtime in seconds of an iteration.
+        :type runtime: float
+        :param iteration: The iteration that the runtime is being recorded for.
+        :type iteration: int
+        """
+        self.iteration_runtime[iteration] = runtime
+        self.log_function_call("LoggerDevStats.set_iteration_runtime")
+        return None
+
+    def new_iteration(self, init: bool = False) -> None:
+        """
+        Increment the current_iteration counter and update the total runtime.
+        """
+        self.current_iteration += 1
+
+        if init or self.current_iteration < 1:
+            self.log_function_call("LoggerDevStats.new_iteration")
+            return None
+
+        self.total_runtime += self.iteration_runtime[self.current_iteration - 1]
+        self.log_function_call("LoggerDevStats.new_iteration")
+        return None
+
+    def current_iteration_repr(self) -> str:
+        """
+        Extract all the relevant information for the current iteration and format it into a string to be printed to the terminal.
+
+        :return: A formatted text representation containing all the developer information for the current model iteration.
+        :rtype: str
+        """
+        formatted_string: str = (
+            f"""\n\n==== DEBUG -- GATOH model runtime statistics at iteration {self.current_iteration}/{self.max_iterations}====
+                \n\nMemory usage at the start of the iteration: {self.current_memory_usage[self.current_iteration]}
+                \nRecorded peak memory usage: {self.peak_memory_usage}
+                \nTotal number of model function calls: {self.all_function_calls}
+                \nCurrent model runtime: {self.total_runtime}
+            """
+        )
+        self.log_function_call("LoggerDevStats.current_iteration_repr")
+        return formatted_string
 
 
 @dataclass
 class LoggerVariables:
     """
-    Dataclass that defines the simulation variables that are stored and tracked by the Logger.
+    Dataclass that defines the simulation variables that are tracked and stored by the Logger.
 
     :param max_iterations: The maximum number of iterations that the model will run its simulation for.
     :type max_iterations: int
@@ -260,10 +445,9 @@ class GATOHLogger:
     :type print_outside_interval: bool, optional
     :param write_file: A flag indicating if a log file should be written to disk at the end of logging.
     :type write_file: bool, optional
+    :param debug: A flag indicating if additional developer statistics should be logged and reported.
+    :type debug: bool, optional
     """
-
-    # TODO: Expand on logging capabilities
-
     def __init__(
         self,
         max_iterations: int,
@@ -272,12 +456,16 @@ class GATOHLogger:
         print_interval: int = 10,
         print_outside_interval: bool = True,
         write_file: bool = True,
+        debug: bool = False,
     ) -> None:
         self.verbose: bool = verbose
         self.print_interval: int = print_interval
         self.print_outside_interval: bool = print_outside_interval
         self.write_file: bool = write_file
+        self.debug: bool = debug
         self.variables: LoggerVariables = LoggerVariables(max_iterations, hierarchies)
+        if self.debug:
+            self.dev_stats: LoggerDevStats = LoggerDevStats(max_iterations)
 
     def format_non_interval_print(self) -> str:
         """
@@ -289,6 +477,8 @@ class GATOHLogger:
         :rtype: str
         """
         non_interval_string: str = f"\n\n========== Iteration {self.variables.current_iteration}/{self.variables.max_iterations} ==========\n\n"
+        if self.debug:
+            self.log_function_call("GATOHLogger.format_non_interval_print")
         return non_interval_string
 
     def new_iteration(self, init: bool = False) -> None:
@@ -299,6 +489,9 @@ class GATOHLogger:
         :type init: bool, optional
         """
         self.variables.new_iteration(init=init)
+        if self.debug:
+            self.dev_stats.new_iteration(init=init)
+            self.log_function_call("GATOHLogger.new_iteration")
         return None
 
     def iteration(
@@ -324,22 +517,72 @@ class GATOHLogger:
         self.variables.store_radicalisation_logodds(radicalisation_logodds)
         self.variables.store_layer_interdependences(layer_interdependences)
         self.variables.store_layer_polarisations(layer_polarisations)
+
+        if self.debug:
+            self.log_function_call("LoggerVariables.store_aggregate_opinion")
+            self.log_function_call("LoggerVariables.store_radicalisation_logodds")
+            self.log_function_call("LoggerVariables.store_layer_interdependences")
+            self.log_function_call("LoggerVariables.store_layer_polarisations")
+            self.log_function_call("GATOHLogger.iteration")
         return None
+
+    def debug_iteration(self) -> None:
+        """
+        Store all relevant developer variables based on the level of logging that has been specified.
+        """
+        current, peak = tracemalloc.get_traced_memory()
+
+        self.dev_stats.set_memory_usage(current, self.dev_stats.current_iteration)
+        self.dev_stats.record_peak_mem_usage(peak)
+
+        self.log_function_call("GATOHLogger.debug_iteration")
+        return None
+
+    def debug_iteration_print(self) -> str:
+        """
+        A method which formats the debug statistics for printing.
+
+        :return: An appropriately formatted textual representation of debug statistics to be printed out by the model for this iteration.
+        :rtype: str
+        """
+        print_string: str
+        if self.debug:
+            print_string = self.dev_stats.current_iteration_repr()
+            self.log_function_call("LoggerDevStats.debug_iteration_print")
+            return print_string
+        else:
+            return ""
 
     def iteration_print(self) -> str:
         """
         A method which formats the model statistics at the appropriate print_interval.
 
-        :return: An appropriately formatted textrual representation to be printed out by the model for this iteration.
+        :return: An appropriately formatted textual representation of variables to be printed out by the model for this iteration.
         :rtype: str
         """
         print_string: str
         if self.variables.current_iteration % self.print_interval == 0:
             print_string = self.variables.current_iteration_repr()
+            if self.debug:
+                self.log_function_call("LoggerVariables.current_iteration_repr")
+                self.log_function_call("GATOHLogger.iteration_print")
             return print_string
         else:
             print_string = self.format_non_interval_print()
+            if self.debug:
+                self.log_function_call("GATOHLogger.iteration_print")
             return print_string
+
+    def log_function_call(self, function_name: str) -> None:
+        """
+        A wrapper to the DevStats log_function_call.
+
+        :param function_name: The name of the function that was called.
+        :type function_name: str
+        """
+        self.dev_stats.log_function_call(function_name)
+        self.dev_stats.log_function_call("GATOHLogger.log_function_call")
+        return None
 
     def save_data(self, save_path: str) -> bool:
         """
@@ -381,4 +624,8 @@ class GATOHLogger:
                     )
 
                 csv_writer.writerow(row_dict)
+
+        if self.debug:
+            self.log_function_call("GATOHLogger.save_data")
+
         return True

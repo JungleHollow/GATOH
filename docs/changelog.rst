@@ -28,6 +28,7 @@ New Features
   is currently stable (:meth:`~gatoh.model.ABModel.iteration_opinion_calculation`)
 - Added new checks to :meth:`~gatoh.graphs.Graph.agent_opinion_change` that account for agent deradicalisation
 - Added multiple QoL setter functions to :class:`~gatoh.model.ABModel`
+- Rudimentary prototype for a debugging system in :class:`~gatoh.logging.GATOHLogger`
 
 Fixes
 -----
