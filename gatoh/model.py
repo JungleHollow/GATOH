@@ -194,6 +194,12 @@ class ABModel:
         :param visualise: A flag indicating if the model should visualise its runtime and outputs.
         :type visualise: bool
         """
+        # Assume that flipping from False to True means that the visualiser has not been initialised yet
+        if not self.visualise and visualise:
+            self.visualiser = ABVisualiser(self.visualisation_dir)
+        # Assume that flipping from True to False means that the visualiser will not be used any more, or requires a full reset
+        elif self.visualise and not visualise:
+            del self.visualiser
         self.visualise = visualise
         if self.debug:
             self.logger.log_function_call("ABModel.set_visualise")

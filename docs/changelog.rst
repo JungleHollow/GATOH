@@ -29,6 +29,7 @@ New Features
 - Added new checks to :meth:`~gatoh.graphs.Graph.agent_opinion_change` that account for agent deradicalisation
 - Added multiple QoL setter functions to :class:`~gatoh.model.ABModel`
 - Rudimentary prototype for a debugging system in :class:`~gatoh.logging.GATOHLogger`
+- Expanded test coverage to include all the new QoL setter functions in :class:`~gatoh.model.ABModel`
 
 Fixes
 -----

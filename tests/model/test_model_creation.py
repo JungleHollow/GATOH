@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest as ut
 from typing import override
 
@@ -45,6 +46,11 @@ class TestModelCreation(ut.TestCase):
             "Current iteration not being initialised properly",
         )
         self.assertEqual(
+            self.model.agent_opinion_rw,
+            (0.0, 0.1),
+            "Agent opinion rw not being initialised correctly",
+        )
+        self.assertEqual(
             self.model.max_iterations, 99, "Max iterations not being stored correctly"
         )
         self.assertEqual(
@@ -68,10 +74,24 @@ class TestModelCreation(ut.TestCase):
         self.assertFalse(
             self.model.visualise, "Visualisation flag not being stored correctly"
         )
+        self.assertNotHasAttr(
+            self.model,
+            "visualiser",
+            "Model visualiser is being initialised despite setting visualise to false",
+        )
         self.assertEqual(
             self.model.visualiser.aggregation_method,
             "median",
             "Default value for vis_aggregation_method is not being applied correctly"
+        )
+        self.assertFalse(
+            self.model.debug,
+            "Default value for debug is not being applied correctly"
+        )
+        self.assertIsInstance(
+            self.model.logger,
+            md.GATOHLogger,
+            "Model logger is not being initialised as a GATOHLogger instance",
         )
         self.assertEqual(
             self.model.model_id, "TEST_MODEL", "Model ID not being stored correctly"
@@ -83,6 +103,332 @@ class TestModelCreation(ut.TestCase):
         self.assertTrue(
             self.model.checkpointing,
             "Default value for checkpointing is not being applied correctly",
+        )
+        self.assertEqual(
+            self.model.data_file,
+            "",
+            "Default value for data_file is not being applied correctly",
+        )
+        self.assertEqual(
+            self.model.visualisation_dir,
+            "",
+            "Default value for visualisation_dir is not being applied correctly",
+        )
+
+    def test_set_hierarchy_information(self) -> None:
+        """
+        Test that set_hierarchy_information is working correctly.
+        """
+        self.model.set_hierarchy_information(HIERARCHY_NAMES[0], (0.0, 0.4))
+        self.assertEqual(
+            self.model.hierarchy_information[HIERARCHY_NAMES[0]],
+            (0.0, 0.4),
+            "ABModel -- set_hierarchy_information is not updating the specified hierarchy",
+        )
+        self.assertEqual(
+            self.model.hierarchy_information[HIERARCHY_NAMES[1]],
+            HIERARCHY_RW_DISTRIB[1],
+            "ABModel -- set_hierarchy_information is changing an unspecified hierarchy",
+        )
+
+    def test_set_agent_opinion_rw(self) -> None:
+        """
+        Test that set_agent_opinion_rw is working correctly.
+        """
+        self.model.set_agent_opinion_rw((0.0, 0.4))
+        self.assertEqual(
+            self.model.agent_opinion_rw,
+            (0.0, 0.4),
+            "ABModel -- set_agent_opinion_rw is not updating the agent_opinion_rw",
+        )
+
+    def test_set_visualise(self) -> None:
+        """
+        Test that set_visualise is working correctly.
+        """
+        self.model.set_visualise(True)
+        self.assertTrue(
+            self.model.visualise,
+            "ABModel -- set_visualise is not updating the visualise flag",
+        )
+        self.assertIsInstance(
+            self.model.visualiser,
+            md.ABVisualiser,
+            "ABModel -- set_visualise flipping from False to True is not initialising the model visualiser",
+        )
+
+    def test_set_visualise_same(self) -> None:
+        """
+        Test that set_visualise with the existing state does nothing.
+        """
+        self.model.set_visualise(False)
+        self.assertFalse(
+            self.model.visualise,
+            "ABModel -- set_visualise with the current flag state as input is changing the visualise flag",
+        )
+        self.assertNotHasAttr(
+            self.model,
+            "visualiser",
+            "ABModel -- set_visualise with False as an input is resulting in an existing model visualiser object",
+        )
+
+    def test_set_visualisation_dir(self) -> None:
+        """
+        Test that set_visualisation_dir is working correctly.
+
+        This test assumes that model_creation is an existing directory in ./tests/test_saves.
+        """
+        # Ensure that the directory exists
+        if not os.path.exists("./tests/test_saves/model_creation"):
+            os.mkdir("./tests/test_saves/model_creation")
+        self.model.set_visualisation_dir("./tests/test_saves/model_creation")
+        self.assertEqual(
+            self.model.visualisation_dir,
+            "./tests/test_saves/model_creation",
+            "ABModel -- set_visualisation_dir with a valid directory is not correctly updating the visualisation_dir attribute",
+        )
+
+    def test_forced_set_visualisation_dir(self) -> None:
+        """
+        Test that set_visualisation_dir with a non-existent directory but force=True is working correctly.
+        """
+        if os.path.exists("./tests/test_saves/model_creation/forced_dir"):
+            os.rmdir("./tests/test_saves/model_creation/forced_dir")
+        self.assertFalse(
+            os.path.exists("./tests/test_saves/model_creation/forced_dir"),
+            "ABModel -- Cannot proceed with the test as the non-existent directory already exists",
+        )
+        self.model.set_visualisation_dir("./tests/test_saves/model_creation/forced_dir", force=True)
+        self.assertTrue(
+            os.path.exists("./tests/test_saves/model_creation/forced_dir"),
+            "ABModel -- Forced set_visualisation_dir is not creating the specified directory",
+        )
+        self.assertEqual(
+            self.model.visualisation_dir,
+            "./tests/test_saves/model_creation/forced_dir",
+            "ABModel -- Forced set_visualisation_dir that created a non-existent directory is not updating visualisation_dir in the model",
+        )
+
+    def test_set_visualisation_dir_invalid(self) -> None:
+        """
+        Test that set_visualisation_dir with an invalid directory and no force raises the expected error.
+        """
+        with self.assertRaises(NotADirectoryError) as cm:
+            self.model.set_visualisation_dir("./foo/bar/1312")
+        self.assertEqual(
+            cm.msg,
+            "The path ./foo/bar/1312 does not point to a valid directory -- change the path or set 'force=True' to fix this",
+        )
+
+    def test_override_current_iteration(self) -> None:
+        """
+        Test that override_current_iteration is working correctly.
+        """
+        self.model.override_current_iteration(44)
+        self.assertEqual(
+            self.model.current_iteration,
+            44,
+            "ABModel -- override_current_iteration is not updating the current_iteration correctly",
+        )
+
+    def test_set_max_iterations(self) -> None:
+        """
+        Test that set_max_iterations is working correctly.
+        """
+        self.model.set_max_iterations(444)
+        self.assertEqual(
+            self.model.max_iterations,
+            444,
+            "ABModel -- set_max_iterations is not updating max_iterations correctly",
+        )
+
+    def test_set_max_iterations_invalid(self) -> None:
+        """
+        Test that set_max_iterations with an invalid value raises the expected error.
+        """
+        with self.assertRaises(ValueError) as cm:
+            self.model.set_max_iterations(-4)
+        self.assertEqual(
+            cm.msg,
+            "The max_iterations value -4 is invalid -- Use a positive integer",
+            "ABModel -- set_max_iterations is not raising the expected error with a negative integer input",
+        )
+
+    def test_set_silencing_threshold(self) -> None:
+        """
+        Test that set_silencing_threshold is working correctly.
+        """
+        self.model.set_silencing_threshold(0.04)
+        self.assertEqual(
+            self.model.silencing_threshold,
+            0.04,
+            "ABModel -- set_silencing_threshold is not updating silencing_threshold correctly",
+        )
+
+    def test_set_silencing_threshold_invalid(self) -> None:
+        """
+        Test that set_silencing_threshold with an invalid value raises the expected error.
+        """
+        with self.assertRaises(ValueError) as cm:
+            self.model.set_silencing_threshold(10.2)
+        self.assertEqual(
+            cm.msg,
+            "The silencing threshold value of 10.2 is outside the valid range of [0.0, 1.0]",
+            "ABModel -- set_silencing_threshold with a positive invalid input is not producing the expected error message",
+        )
+        with self.assertRaises(ValueError) as cm:
+            self.model.set_silencing_threshold(-0.4)
+        self.assertEqual(
+            cm.msg,
+            "The silencing threshold value of -0.4 is outside the valid range of [0.0, 1.0]",
+            "ABModel -- set_silencing_threshold with a negative invalid input is not producing the expected error message",
+        )
+
+    def test_set_negation_threshold(self) -> None:
+        """
+        Test that set_negation_threshold is working correctly.
+        """
+        self.model.set_negation_threshold(0.04)
+        self.assertEqual(
+            self.model.negation_threshold,
+            0.04,
+            "ABModel -- set_negation_threshold is not updating negation_threshold correctly",
+        )
+
+    def test_set_negation_threshold_invalid(self) -> None:
+        """
+        Test that set_negation_threshold with an invalid value raises the expected error.
+        """
+        with self.assertRaises(ValueError) as cm:
+            self.model.set_negation_threshold(10.2)
+        self.assertEqual(
+            cm.msg,
+            "The negation threshold value of 10.2 is outside the valid range of [0.0, 1.0]",
+            "ABModel -- set_negation_threshold with a positive invalid input is not producing the expected error message",
+        )
+        with self.assertRaises(ValueError) as cm:
+            self.model.set_negation_threshold(-0.4)
+        self.assertEqual(
+            cm.msg,
+            "The negation threshold value of -0.4 is outside the valid range of [0.0, 1.0]",
+            "ABModel -- set_negation_threshold with a negative invalid input is not producing the expected error message",
+        )
+
+    def test_set_radicalisation_threshold(self) -> None:
+        """
+        Test that set_radicalisation_threshold is working correctly.
+        """
+        self.model.set_radicalisation_threshold(0.04)
+        self.assertEqual(
+            self.model.radicalisation_threshold,
+            0.04,
+            "ABModel -- set_radicalisation_threshold is not updating radicalisation_threshold correctly",
+        )
+
+    def test_set_radicalisation_threshold_invalid(self) -> None:
+        """
+        Test that set_radicalisation_threshold with an invalid value raises the expected error.
+        """
+        with self.assertRaises(ValueError) as cm:
+            self.model.set_radicalisation_threshold(10.2)
+        self.assertEqual(
+            cm.msg,
+            "The radicalisation threshold value of 10.2 is outside the valid range of [0.0, 1.0]",
+            "ABModel -- set_radicalisation_threshold with a positive invalid input is not producing the expected error message",
+        )
+        with self.assertRaises(ValueError) as cm:
+            self.model.set_radicalisation_threshold(-0.4)
+        self.assertEqual(
+            cm.msg,
+            "The radicalisation threshold value of -0.4 is outside the valid range of [0.0, 1.0]",
+            "ABModel -- set_radicalisation_threshold with a negative invalid input is not producing the expected error message",
+        )
+
+    def test_set_suppress_warnings(self) -> None:
+        """
+        Test that set_suppress_warnings is working correctly.
+        """
+        self.model.set_suppress_warnings(True)
+        self.assertTrue(
+            self.model.suppress_warnings,
+            "ABModel -- set_suppress_warnings is not updating the suppress_warnings flag",
+        )
+
+    def test_set_checkpointing(self) -> None:
+        """
+        Test that set_checkpointing is working correctly.
+        """
+        self.model.set_checkpointing(False)
+        self.assertFalse(
+            self.model.checkpointing,
+            "ABModel -- set_checkpointing is not updating the checkpointing flag",
+        )
+
+    def test_set_save_dir(self) -> None:
+        """
+        Test that set_save_dir is working correctly.
+        """
+        if not os.path.exists("./tests/test_saves/model_creation"):
+            os.mkdir("./tests/test_saves/model_creation")
+        self.model.set_save_dir("./tests/test_saves/model_creation")
+        self.assertEqual(
+            self.model.save_dir,
+            "./tests/test_saves/model_creation",
+            "ABModel -- set_save_dir with a valid directory is not updating save_dir correctly",
+        )
+
+    def test_set_save_dir_forced(self) -> None:
+        """
+        Test that a forced set_save_dir is working correctly.
+        """
+        if os.path.exists("./tests/test_saves/model_creation"):
+            os.rmdir("./tests/test_saves/model_creation")
+        self.model.set_save_dir("./tests/test_saves/model_creation", force=True)
+        self.assertTrue(
+            os.path.exists("./tests/test_saves/model_creation"),
+            "ABModel -- forced set_save_dir is not creating the specified directory",
+        )
+        self.assertEqual(
+            self.model.save_dir,
+            "./tests/test_saves/model_creation",
+            "ABModel -- forced set_save_dir that created a directory did not correctly update the model's save_dir",
+        )
+
+    def test_set_save_dir_invalid(self) -> None:
+        """
+        Test that an unforced set_save_dir with an invalid directory raises the expected error.
+        """
+        with self.assertRaises(NotADirectoryError) as cm:
+            self.model.set_save_dir("./foo/bar/1312")
+        self.assertEqual(
+            cm.msg,
+            "The path ./foo/bar/1312 does not point to a valid directory -- change the path or set 'force=True' to fix this",
+            "ABModel -- unforced set_save_dir with an invalid directory is not producing the expected error message",
+        )
+
+    def test_set_data_file(self) -> None:
+        """
+        Test that set_data_file is working correctly.
+
+        This function does not have existence checking like set_save_dir or set_visualisation_dir,
+        the error is handled within the GATOHLogger at the time of attempting to write results.
+        """
+        self.model.set_data_file("./tests/test_saves/model_creation/foobar_1312.csv")
+        self.assertEqual(
+            self.model.data_file,
+            "./tests/test_saves/model_creation/foobar_1312.csv",
+            "ABModel -- set_data_file is not updating data_file correctly",
+        )
+
+    def test_set_model_id(self) -> None:
+        """
+        Test that set_model_id is working correctly.
+        """
+        self.model.set_model_id("MODEL_TEST")
+        self.assertEqual(
+            self.model.model_id,
+            "MODEL_TEST",
+            "ABModel -- set_model_id is not updating model_id correctly",
         )
 
     def test_add_agent(self) -> None:
