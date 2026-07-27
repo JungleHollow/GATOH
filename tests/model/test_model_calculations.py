@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import unittest as ut
-from typing import override
+from typing import Any, override
 
 import gatoh.model as md
 import gatoh.agents as agt
@@ -73,6 +73,20 @@ GRAPH_B: gr.Graph = gr.Graph(
     dynamic_rels=False,
 )
 
+# Define the relationships for A
+A_RELS: dict[str, list[Any]] = {
+    "from_node": [0, 0, 0, 3, 1, 2, 1, 2, 3],
+    "to_node": [1, 2, 3, 2, 3, 3, 0, 0, 0],
+    "weighting": [0.4, 0.8, 0.2, 0.45, 0.75, -0.3, 0.35, 0.85, -0.1],
+}
+# Define the relationships for B
+B_RELS: dict[str, list[Any]] = {
+    "from_node": [0, 2, 1, 1],
+    "to_node": [1, 1, 0, 2],
+    "weighting": [0.4, 0.3, 0.45, -0.1],
+}
+
+
 class TestModelCalculations(ut.TestCase):
     @classmethod
     @override
@@ -89,3 +103,6 @@ class TestModelCalculations(ut.TestCase):
         cls._model.add_agents_to_hierarchy(cls._agents, "A")
         # Add all agents minus the last to B
         cls._model.add_agents_to_hierarchy(cls._agents[:-1], "B")
+        # Add the relationships to each hierarchy
+        cls._model.add_relationships_to_hierarchy(A_RELS, "A")
+        cls._model.add_relationships_to_hierarchy(B_RELS, "B")
