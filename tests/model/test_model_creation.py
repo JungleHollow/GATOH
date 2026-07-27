@@ -431,10 +431,76 @@ class TestModelCreation(ut.TestCase):
             "ABModel -- set_model_id is not updating model_id correctly",
         )
 
+    def test_add_graph(self) -> None:
+        """
+        Test function that checks if adding Graphs to the ABModel is working correctly.
+        """
+        test_graph: gr.Graph = gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0])
+        model_graphset: gr.GraphSet = self.model.add_graph(test_graph)
+        self.assertIsInstance(
+            model_graphset,
+            gr.GraphSet,
+            "The add_graph function's return type is not the expected one",
+        )
+        self.assertIn(
+            test_graph,
+            self.model.graphs,
+            "The add_graph function is not adding the first Graph to the GraphSet",
+        )
+        test_graph_2: gr.Graph = gr.Graph(HIERARCHY_NAMES[1], HIERARCHY_RW_DISTRIB[1])
+        model_graphset = self.model.add_graph(test_graph_2)
+        self.assertIn(
+            test_graph_2,
+            self.model.graphs,
+            "The add_graph function is not adding subsequent graphs to the GraphSet",
+        )
+        self.assertIn(
+            test_graph,
+            self.model.graphs,
+            "The add_graph function is causing existing graphs to disappear from the GraphSet",
+        )
+
+    def test_add_graphs(self) -> None:
+        """
+        Test function that checks if adding multiple Graphs at once to the ABModel is working correctly.
+        """
+        graphs_to_add: list[gr.Graph] = [
+            gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0]),
+            gr.Graph(HIERARCHY_NAMES[1], HIERARCHY_RW_DISTRIB[1]),
+        ]
+        graphset: gr.GraphSet = self.model.add_graphs(
+            graphs_to_add, HIERARCHY_NAMES, HIERARCHY_RW_DISTRIB
+        )
+        self.assertIsInstance(
+            graphset, gr.GraphSet, "The add_graphs return type is not the expected one"
+        )
+        for graph in graphs_to_add:
+            self.assertIn(
+                graph,
+                self.model.graphs,
+                f"The add_graphs function did not add Graph {graph.name} correctly",
+            )
+            graph_in_graphset: gr.Graph | None = self.model.graphs.get_hierarchy(
+                graph.name
+            )
+            if graph_in_graphset is not None:
+                self.assertEqual(
+                    graph.rw_params,
+                    graph_in_graphset.rw_params,
+                    "The add_graphs function is dropping the rw_params attribute during addition",
+                )
+                # Checks on further parameters are done from the graph-centric tests scripts
+
     def test_add_agent(self) -> None:
         """
         Test function that checks if adding Agents to the ABModel is working correctly.
         """
+        # Remember to actually add the graphs before agents...
+        graphs_to_add: list[gr.Graph] = [
+            gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0], suppress_warnings=True),
+            gr.Graph(HIERARCHY_NAMES[1], HIERARCHY_RW_DISTRIB[1], suppress_warnings=True),
+        ]
+        _ = self.model.add_graphs(graphs_to_add, HIERARCHY_NAMES, HIERARCHY_RW_DISTRIB)
         test_agent: agt.Agent = agt.Agent(
             "TEST_AGENT",
             {
@@ -490,6 +556,12 @@ class TestModelCreation(ut.TestCase):
         """
         Test function that checks if addings multiple Agents at once to the ABModel is working correctly.
         """
+        # Remember to actually add the graphs before the agents...
+        graphs_to_add: list[gr.Graph] = [
+            gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0], suppress_warnings=True),
+            gr.Graph(HIERARCHY_NAMES[1], HIERARCHY_RW_DISTRIB[1], suppress_warnings=True),
+        ]
+        _ = self.model.add_graphs(graphs_to_add, HIERARCHY_NAMES, HIERARCHY_RW_DISTRIB)
         agents_to_add: list[agt.Agent] = [
             agt.Agent(
                 "TEST_AGENT_1",
@@ -565,65 +637,96 @@ class TestModelCreation(ut.TestCase):
                     "The add_agents function is dropping the social_susceptibility attribute during addition",
                 )
 
-    def test_add_graph(self) -> None:
+    def test_add_agents_to_hierarchy_nonvalue(self) -> None:
         """
-        Test function that checks if adding Graphs to the ABModel is working correctly.
+        Test that add_agents_to_hierarchy with a non-Agent object included raises the expected error.
         """
-        test_graph: gr.Graph = gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0])
-        model_graphset: gr.GraphSet = self.model.add_graph(test_graph)
-        self.assertIsInstance(
-            model_graphset,
-            gr.GraphSet,
-            "The add_graph function's return type is not the expected one",
-        )
-        self.assertIn(
-            test_graph,
-            self.model.graphs,
-            "The add_graph function is not adding the first Graph to the GraphSet",
-        )
-        test_graph_2: gr.Graph = gr.Graph(HIERARCHY_NAMES[1], HIERARCHY_RW_DISTRIB[1])
-        model_graphset = self.model.add_graph(test_graph_2)
-        self.assertIn(
-            test_graph_2,
-            self.model.graphs,
-            "The add_graph function is not adding subsequent graphs to the GraphSet",
-        )
-        self.assertIn(
-            test_graph,
-            self.model.graphs,
-            "The add_graph function is causing existing graphs to disappear from the GraphSet",
+        _ = self.model.add_graph(gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0], suppress_warnings=True))
+        invalid_agents = [
+            agt.Agent("TEST_AGENT_1"),
+            agt.Agent("TEST_AGENT_2"),
+            "IMPOSTOR",
+            agt.Agent("TEST_AGENT_4"),
+        ]
+        with self.assertRaises(ValueError) as cm:
+            self.model.add_agents_to_hierarchy(invalid_agents, HIERARCHY_NAMES[0])
+        self.assertEqual(
+            cm.msg,
+            f"The object at index 2 of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph '{HIERARCHY_NAMES[0]}'",
+            "ABModel -- add_agents_to_hierarchy with an invalid object in the iterable is not producing the expected error message",
         )
 
-    def test_add_graphs(self) -> None:
+    def test_add_agents_to_hierarchy_nonhierarchy(self) -> None:
         """
-        Test function that checks if adding multiple Graphs at once to the ABModel is working correctly.
+        Test that add_agents_to_hierarchy with a non-existent hierarchy raises the expected error.
+        """
+        agents_to_add: list[agt.Agent] = [
+            agt.Agent("TEST_AGENT_1"),
+            agt.Agent("TEST_AGENT_2"),
+        ]
+        with self.assertRaises(KeyError) as cm:
+            self.model.add_agents_to_hierarchy(agents_to_add, "foo")
+        self.assertEqual(
+            cm.msg,
+            "The specified hierarchy 'foo' does not exist in the GraphSet -- cannot add agents to it",
+            "ABModel -- add_agents_to_hierarchy with an invalid hierarchy is not producing the expected error message",
+        )
+
+    def test_add_agents_to_hierarchy(self) -> None:
+        """
+        Test that add_agents_to_hierarchy is working correctly.
         """
         graphs_to_add: list[gr.Graph] = [
-            gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0]),
-            gr.Graph(HIERARCHY_NAMES[1], HIERARCHY_RW_DISTRIB[1]),
+            gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0], suppress_warnings=True),
+            gr.Graph(HIERARCHY_NAMES[1], HIERARCHY_RW_DISTRIB[1], suppress_warnings=True),
         ]
-        graphset: gr.GraphSet = self.model.add_graphs(
-            graphs_to_add, HIERARCHY_NAMES, HIERARCHY_RW_DISTRIB
-        )
-        self.assertIsInstance(
-            graphset, gr.GraphSet, "The add_graphs return type is not the expected one"
-        )
-        for graph in graphs_to_add:
-            self.assertIn(
-                graph,
-                self.model.graphs,
-                f"The add_graphs function did not add Graph {graph.name} correctly",
+        _ = self.model.add_graphs(graphs_to_add, HIERARCHY_NAMES, HIERARCHY_RW_DISTRIB)
+        agents_to_add: list[agt.Agent] = [
+            agt.Agent("TEST_AGENT_1"),
+            agt.Agent("TEST_AGENT_2"),
+            agt.Agent("TEST_AGENT_3"),
+            agt.Agent("TEST_AGENT_4"),
+        ]
+        self.model.add_agents_to_hierarchy(agents_to_add, HIERARCHY_NAMES[0])
+        test_1: gr.Graph | None = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[0])
+        test_2: gr.Graph | None = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[1])
+        if test_1 is not None and test_2 is not None:
+            self.assertEqual(
+                test_1.node_count,
+                4,
+                "ABModel -- add_agents_to_hierarchy did not add the agents to the specified hierarchy"
             )
-            graph_in_graphset: gr.Graph | None = self.model.graphs.get_hierarchy(
-                graph.name
+            self.assertEqual(
+                test_2.node_count,
+                0,
+                "ABModel -- add_agents_to_hierarchy added agents to an unspecified hierarchy"
             )
-            if graph_in_graphset is not None:
-                self.assertEqual(
-                    graph.rw_params,
-                    graph_in_graphset.rw_params,
-                    "The add_graphs function is dropping the rw_params attribute during addition",
+            for node in test_1.graph.nodes():
+                self.assertIn(
+                    node.agent,
+                    agents_to_add,
+                    "ABModel -- add_agents_to_hierarchy added an unexpected agent to the specified hierarchy"
                 )
-                # Checks on further parameters are done from the graph-centric tests scripts
+        self.model.add_agents_to_hierarchy(agents_to_add[:-2], HIERARCHY_NAMES[1])
+        test_1 = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[0])
+        test_2 = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[1])
+        if test_1 is not None and test_2 is not None:
+            self.assertEqual(
+                test_1.node_count,
+                4,
+                "ABModel -- add_agents_to_hierarchy is changing the agents of a populated, existing hierarchy",
+            )
+            self.assertEqual(
+                test_2.node_count,
+                2,
+                "ABModel -- add_agents_to_hierarchy is not adding the correct number of agents to the specified hierarchy",
+            )
+            for node in test_2.graph.nodes():
+                self.assertIn(
+                    node.agent,
+                    agents_to_add[:-2],
+                    "ABModel -- add_agents_to_hierarchy added an unexpected agent to the specified hierarchy"
+                )
 
     def test_generate_agents(self) -> None:
         """
