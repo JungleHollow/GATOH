@@ -80,6 +80,8 @@ class ABModel:
     :type vis_aggregation_method: str, optional
     :param checkpointing: A flag indicating if the model's progress should be saved at the end of each iteration (useful in case of interrupted runtimes).
     :type checkpointing: bool, optional
+    :param init_graphs: A flag indicating if empty graphs should be initialised with the input hierarchy information.
+    :type init_graphs: bool, optional
     :param save_dir: The path to a directory in which all of this model's non-logger data should be saved to.
     :type save_dir: str, optional
     :param data_file: The path to which the logger's data should be saved to after iterations are run.
@@ -104,6 +106,7 @@ class ABModel:
         visualisation_dir: str = "",
         vis_aggregation_method: str = "median",
         checkpointing: bool = True,
+        init_graphs: bool = False,
         save_dir: str = "",
         data_file: str = "",
         model_id: str = "",
@@ -116,6 +119,15 @@ class ABModel:
 
         self.agents: AgentSet = AgentSet()
         self.graphs: GraphSet = GraphSet()
+
+        if init_graphs:
+            # Ensure that the input hierarchy information always produce at least empty graphs in the graphset
+            # (Although, it is expected that add_graphs() or generate_graphs() will be called normally)
+            for hierarchy, rw_distrib in self.hierarchy_information.items():
+                hierarchy_graph: Graph = Graph(
+                    hierarchy, rw_distrib, suppress_warnings=suppress_warnings
+                )
+                self.graphs.add_graph(hierarchy_graph)
 
         # A model-handled 'base' Graph that keeps track of all relationships across the social hierarchies
         # (Used to greatly simplify network-level graph calculations)
@@ -681,6 +693,28 @@ class ABModel:
             self.logger.log_function_call("ABModel.add_agents")
 
         return self.agents
+
+    def add_agents_to_hierarchy(self, agents: list[Agent], hierarchy: str) -> None:
+        """
+        A helper function that can directly add a collection of agents to a specific hierarchy in the model's
+        graph set.
+
+        :param agents: The collection of agents that should be added as nodes to the hierarchy.
+        :type agents: list[Agent]
+        :param hierarchy: The hierarchy that the agents are being added to.
+        :type hierarchy: str
+        :raises KeyError: If the specified hierarchy does not exist in the graph set.
+        :raises ValueError: If any object in the agents iterable is of an invalid type.
+        """
+        for idx, agent in enumerate(agents):
+            if agent is not Agent:
+                raise ValueError(f"The object at index {idx} of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph '{hierarchy}'")
+        hierarchy_to_extend: Graph | None = self.graphs.get_hierarchy(hierarchy)
+        if hierarchy_to_extend is None:
+            raise KeyError(f"The specified hierarchy '{hierarchy}' does not exist in the GraphSet -- cannot add agents to it")
+        else:
+            hierarchy_to_extend.add_nodes(agents)
+        return None
 
     def generate_agents(
         self,
