@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import unittest as ut
-from typing import override
+from typing import Any, override
 
 import gatoh.agents as agt
 import gatoh.graphs as gr
@@ -688,6 +688,17 @@ class TestModelCreation(ut.TestCase):
             agt.Agent("TEST_AGENT_4"),
         ]
         self.model.add_agents_to_hierarchy(agents_to_add, HIERARCHY_NAMES[0])
+        self.assertEqual(
+            len(self.model.agents),
+            4,
+            "ABModel -- add_agents_to_hierarchy is not adding non-existing agents to the model's agentset",
+        )
+        for agent in agents_to_add:
+            self.assertIn(
+                agent,
+                self.model.agents,
+                "ABModel -- add_agents_to_hierarchy is not correctly adding some non-existing agent to the model's agentset",
+            )
         test_1: gr.Graph | None = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[0])
         test_2: gr.Graph | None = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[1])
         if test_1 is not None and test_2 is not None:
@@ -708,6 +719,11 @@ class TestModelCreation(ut.TestCase):
                     "ABModel -- add_agents_to_hierarchy added an unexpected agent to the specified hierarchy"
                 )
         self.model.add_agents_to_hierarchy(agents_to_add[:-2], HIERARCHY_NAMES[1])
+        self.assertEqual(
+            len(self.model.agents),
+            4,
+            "ABModel -- add_agents_to_hierarchy is adding agents which already exist to the model's agentset",
+        )
         test_1 = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[0])
         test_2 = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[1])
         if test_1 is not None and test_2 is not None:
@@ -768,6 +784,98 @@ class TestModelCreation(ut.TestCase):
                     list(agent.social_weightings.keys()),
                     "The generate_agents function is not generating hierarchy weightings for all model hierarchies",
                 )
+
+    def test_add_relationships_to_hierarchy_nonvalue(self) -> None:
+        """
+        Test that add_relationships_to_hierarchy with a missing value raises the expected error.
+        """
+        _ = self.model.add_graph(gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0], suppress_warnings=True))
+        agents_to_add: list[agt.Agent] = [
+            agt.Agent("TEST_AGENT_1"),
+            agt.Agent("TEST_AGENT_2"),
+        ]
+        self.model.add_agents_to_hierarchy(agents_to_add, HIERARCHY_NAMES[0])
+        invalid_relationships: dict[str, list[Any]] = {
+            "from_node": [0, 1],
+            "weighting": [0.44, 0.2]
+        }
+        with self.assertRaises(ValueError) as cm:
+            self.model.add_relationships_to_hierarchy(invalid_relationships, HIERARCHY_NAMES[0])
+        self.assertEqual(
+            cm.msg,
+            "The relationships information is missing one of the required 'from_node' or 'to_node' keys",
+            "ABModel -- add_relationships_to_hierarchy with a missing required key is not producing the expected error message",
+        )
+
+    def test_add_relationships_to_hierarchy_nonhierarchy(self) -> None:
+        """
+        Test that add_relationships_to_hierarchy with a non-existent hierarchy raises the expected error.
+        """
+        relationships_to_add: dict[str, list[Any]] = {
+            "from_node": [13, 12],
+            "to_node": [12, 13],
+        }
+        with self.assertRaises(KeyError) as cm:
+            self.model.add_relationships_to_hierarchy(relationships_to_add, "foo")
+        self.assertEqual(
+            cm.msg,
+            "The specified hierarchy 'foo' does not exist in the GraphSet -- cannot add relationships to it",
+            "ABModel -- add_relationships_to_hierarchy with an invalid hierarchy is not producing the expected error message",
+        )
+
+    def test_add_relationships_to_hierarchy(self) -> None:
+        """
+        Test that add_relationships_to_hierarchy is working correctly.
+        """
+        graphs_to_add: list[gr.Graph] = [
+            gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0], suppress_warnings=True),
+            gr.Graph(HIERARCHY_NAMES[1], HIERARCHY_RW_DISTRIB[1], suppress_warnings=True),
+        ]
+        _ = self.model.add_graphs(graphs_to_add, HIERARCHY_NAMES, HIERARCHY_RW_DISTRIB)
+        agents_to_add: list[agt.Agent] = [
+            agt.Agent("TEST_AGENT_1"),
+            agt.Agent("TEST_AGENT_2"),
+        ]
+        self.model.add_agents_to_hierarchy(agents_to_add, HIERARCHY_NAMES[0])
+        self.model.add_agents_to_hierarchy(agents_to_add, HIERARCHY_NAMES[1])
+        relationships_to_add: dict[str, list[Any]] = {
+            "from_node": [0, 1],
+            "to_node": [1, 0],
+            "weighting": [0.13, -0.12],
+        }
+        self.model.add_relationships_to_hierarchy(relationships_to_add, HIERARCHY_NAMES[0])
+        test_1: gr.Graph | None = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[0])
+        test_2: gr.Graph | None = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[1])
+        if test_1 is not None and test_2 is not None:
+            self.assertEqual(
+                test_1.edge_count,
+                2,
+                "ABModel -- add_relationships_to_hierarchy did not add the relationships to the specified hierarchy",
+            )
+            # ==== Check that the added edges have the appropriate attributes ====
+            for idx, edge in enumerate(test_1.graph.edges()):
+                self.assertEqual(
+                    edge.from_node,
+                    relationships_to_add["from_node"][idx],
+                    "ABModel -- add_relationships_to_hierarchy added a relationship with an incorrect from_node",
+                )
+                self.assertEqual(
+                    edge.to_node,
+                    relationships_to_add["to_node"][idx],
+                    "ABModel -- add_relationships_to_hierarchy added a relationship with an incorrect to_node",
+                )
+                self.assertEqual(
+                    edge.weighting,
+                    relationships_to_add["weighting"][idx],
+                    "ABModel -- add_relationships_to_hierarchy added a relationship with an incorrect weighting",
+                )
+            # ==== End of attribute check ====
+            self.assertEqual(
+                test_2.edge_count,
+                0,
+                "ABModel -- add_relationships_to_hierarchy added relationships to an unspecified hierarchy",
+            )
+        # Further checking for adding relationships to graph test_2 as in test_add_agents_to_hierarchy should not be necessary here...
 
     @override
     def tearDown(self) -> None:
