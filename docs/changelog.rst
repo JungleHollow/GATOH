@@ -30,6 +30,8 @@ New Features
 - Added multiple QoL setter functions to :class:`~gatoh.model.ABModel`
 - Rudimentary prototype for a debugging system in :class:`~gatoh.logging.GATOHLogger`
 - Expanded test coverage to include all the new QoL setter functions in :class:`~gatoh.model.ABModel`
+- QoL method :meth:`~gatoh.model.ABModel.add_agents_to_hierarchy`
+- Created new tests to cover the various calculation methods in :class:`~gatoh.model.ABModel`
 
 Fixes
 -----
