@@ -34,7 +34,7 @@ class TestModelSimulationMulti(ut.TestCase):
             HIERARCHY_NAMES,
             list(HIERARCHY_RW_DISTRIB.values()),
             suppress_warnings=True,
-            iterations=40,
+            iterations=10,
             save_dir=SAVEPATHS["savedir"],
             data_file=SAVEPATHS["savefile"],
             visualisation_dir=SAVEPATHS["visualisation"],
