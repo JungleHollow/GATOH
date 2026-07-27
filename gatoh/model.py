@@ -699,6 +699,9 @@ class ABModel:
         A helper function that can directly add a collection of agents to a specific hierarchy in the model's
         graph set.
 
+        This function will also add any input agents to the model's overarching AgentSet if they do not already
+        exist in it.
+
         :param agents: The collection of agents that should be added as nodes to the hierarchy.
         :type agents: list[Agent]
         :param hierarchy: The hierarchy that the agents are being added to.
@@ -713,7 +716,34 @@ class ABModel:
         if hierarchy_to_extend is None:
             raise KeyError(f"The specified hierarchy '{hierarchy}' does not exist in the GraphSet -- cannot add agents to it")
         else:
+            # Add the agents to the AgentSet if they do not exist
+            for agent in agents:
+                if agent not in self.agents:
+                    self.add_agent(agent)
+            # Finally, add the agents as nodes to the specified hierarchy
             hierarchy_to_extend.add_nodes(agents)
+        return None
+
+    def add_relationships_to_hierarchy(self, relationships: dict[str, list[Any]], hierarchy: str) -> None:
+        """
+        A helper function that can directly add relationships to a specific hierarchy in the model's graph set.
+
+        Validation of from_node and to_node indices is performed within the called Graph function when adding the relationships.
+
+        :param relationships: A <key, values> mapping providing 'to_node', 'from_node', and 'weighting' information.
+        :type relationships: dict[str, list[int | float]]
+        :param hierarchy: The hierarchy that the relationships are being added to.
+        :type hierarchy: str
+        :raises KeyError: If the specified hierarchy does not exist in the graph set.
+        :raises ValueError: If any required key is missing, or the information is of a mismatching data type.
+        """
+        if "to_node" not in relationships.keys() or "from_node" not in relationships.keys():
+            raise ValueError(f"The relationships information is missing one of the required 'from_node' or 'to_node' keys")
+        specified_hierarchy: Graph | None = self.graphs.get_hierarchy(hierarchy)
+        if specified_hierarchy is None:
+            raise KeyError(f"The specified hierarchy '{hierarchy}' does not exist in the GraphSet -- cannot add relationships to it")
+        else:
+            specified_hierarchy.add_edges(relationships)
         return None
 
     def generate_agents(
