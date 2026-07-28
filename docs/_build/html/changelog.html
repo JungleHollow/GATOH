@@ -115,6 +115,16 @@ as a PyPI package.</p>
 <li><p>Implemented a function to calculate graph density metrics with <code class="xref py py-meth docutils literal notranslate"><span class="pre">calculate_density()</span></code></p></li>
 <li><p>Implemented functionality to automatically remove any nodes in graphs without neighbours after relevant edges are removed</p></li>
 <li><p>Added functions that allow for the spontaneous formation and disintegration of relationships in graphs</p></li>
+<li><p>Implemented a mechanism that allows for thresholded agent deradicalisation</p></li>
+<li><p>Now accounting for the idea that like-minded agents will push each other towards more extreme opinions even if the average opinion
+is currently stable (<a class="reference internal" href="apiref/gatoh.model.ABModel.iteration_opinion_calculation.html#gatoh.model.ABModel.iteration_opinion_calculation" title="gatoh.model.ABModel.iteration_opinion_calculation"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iteration_opinion_calculation()</span></code></a>)</p></li>
+<li><p>Added new checks to <a class="reference internal" href="apiref/gatoh.graphs.Graph.agent_opinion_change.html#gatoh.graphs.Graph.agent_opinion_change" title="gatoh.graphs.Graph.agent_opinion_change"><code class="xref py py-meth docutils literal notranslate"><span class="pre">agent_opinion_change()</span></code></a> that account for agent deradicalisation</p></li>
+<li><p>Added multiple QoL setter functions to <a class="reference internal" href="apiref/gatoh.model.ABModel.html#gatoh.model.ABModel" title="gatoh.model.ABModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABModel</span></code></a></p></li>
+<li><p>Rudimentary prototype for a debugging system in <a class="reference internal" href="apiref/gatoh.logging.GATOHLogger.html#gatoh.logging.GATOHLogger" title="gatoh.logging.GATOHLogger"><code class="xref py py-class docutils literal notranslate"><span class="pre">GATOHLogger</span></code></a></p></li>
+<li><p>Expanded test coverage to include all the new QoL setter functions in <a class="reference internal" href="apiref/gatoh.model.ABModel.html#gatoh.model.ABModel" title="gatoh.model.ABModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABModel</span></code></a></p></li>
+<li><p>QoL method <code class="xref py py-meth docutils literal notranslate"><span class="pre">add_agents_to_hierarchy()</span></code></p></li>
+<li><p>Created new tests to cover the various calculation methods in <a class="reference internal" href="apiref/gatoh.model.ABModel.html#gatoh.model.ABModel" title="gatoh.model.ABModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABModel</span></code></a></p></li>
+<li><p>QoL method <code class="xref py py-meth docutils literal notranslate"><span class="pre">add_relationships_to_hierarchy()</span></code></p></li>
 </ul>
 </section>
 <section id="fixes">

@@ -92,6 +92,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">shutil</span><span class="w"> </span><span class="kn">import</span> <span class="n">rmtree</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NotRequired</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">TypedDict</span><span class="p">,</span> <span class="n">override</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.core.numeric</span><span class="w"> </span><span class="kn">import</span> <span class="n">absolute</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">draw_random_value</span><span class="p">,</span> <span class="n">random_coinflip</span><span class="p">,</span> <span class="n">value_rw_delta</span>
 
 <span class="c1"># Definition of all valid, existing Agent personality types</span>
@@ -577,6 +579,105 @@
         <span class="k">return</span> <span class="n">negation_strength</span> <span class="o">&gt;</span> <span class="n">threshold</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">deradicalisation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">hierarchy_changes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">neighbour_benefits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span>
+        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Uses the agent&#39;s own opinion as well as the neighbours&#39; opinions to determine if an already radicalised</span>
+<span class="sd">        agent will deradicalise.</span>
+
+<span class="sd">        :param hierarchy_changes: The opinion changes caused in each social hierarchy by neighbours during this iteration.</span>
+<span class="sd">        :type hierarchy_changes: list[float]</span>
+<span class="sd">        :param neighbour_benefits: Flags indicating the presence of personal benefit across an agent&#39;s neighbours.</span>
+<span class="sd">        :type neighbour_benefits: list[bool]</span>
+<span class="sd">        :param threshold: The deradicalisation threshold that has been defined at the global level in the model.</span>
+<span class="sd">        :type threshold: float</span>
+<span class="sd">        :return: A flag indicating if the agent has deradicalised or not.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If the Agent is not radicalised, always return False (the Agent cannot &#39;deradicalise&#39;)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">absolute_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opinion</span><span class="p">)</span>
+
+        <span class="c1"># Calculate the &quot;aggregate benefit&quot; as a simple fraction of (personal benefit = True) / (length of neighbours)</span>
+        <span class="n">aggregate_benefit_count</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">neighbour_benefit</span> <span class="ow">in</span> <span class="n">neighbour_benefits</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">neighbour_benefit</span><span class="p">:</span>
+                <span class="n">aggregate_benefit_count</span> <span class="o">+=</span> <span class="mf">1.0</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbour_benefits</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">aggregate_benefit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">aggregate_benefit_count</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbour_benefits</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">aggregate_benefit</span> <span class="o">=</span> <span class="n">aggregate_benefit_count</span>
+
+        <span class="k">match</span> <span class="bp">self</span><span class="o">.</span><span class="n">personality</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">&quot;neutral&quot;</span><span class="p">:</span>
+                <span class="c1"># This will mean that deradicalisation is exclusively determined by the strength of the Agent&#39;s opinion</span>
+                <span class="k">if</span> <span class="n">absolute_opinion</span> <span class="o">&lt;=</span> <span class="n">threshold</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
+            <span class="k">case</span> <span class="s2">&quot;rational&quot;</span><span class="p">:</span>
+                <span class="c1"># This will likely mean that the agent is more disposed towards considering tangible benefits and their own</span>
+                <span class="c1"># opinions when determining deradicalisation, rather than external influences</span>
+                <span class="k">if</span> <span class="n">absolute_opinion</span> <span class="o">&lt;=</span> <span class="n">threshold</span> <span class="ow">and</span> <span class="n">aggregate_benefit</span> <span class="o">&lt;=</span> <span class="mf">0.5</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
+                <span class="k">elif</span> <span class="n">absolute_opinion</span> <span class="o">&lt;=</span> <span class="n">threshold</span> <span class="ow">and</span> <span class="n">aggregate_benefit</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span>
+                    <span class="c1"># In the case where the radicalisation threshold is not met but there is a presence of aggregate benefit, deradicalisation is treated as a coinflip</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="n">random_coinflip</span><span class="p">(</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
+            <span class="k">case</span> <span class="s2">&quot;erratic&quot;</span><span class="p">:</span>
+                <span class="c1"># Deradicalisation is influenced by personal opinion to some extent, but is largely stochastically determined</span>
+                <span class="k">if</span> <span class="n">absolute_opinion</span> <span class="o">*</span> <span class="mf">1.25</span> <span class="o">&lt;=</span> <span class="n">threshold</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="n">random_coinflip</span><span class="p">(</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
+            <span class="k">case</span> <span class="s2">&quot;impulsive&quot;</span><span class="p">:</span>
+                <span class="c1"># The agent places very strong consideration on tangible benefits over anything else</span>
+                <span class="k">if</span> <span class="n">absolute_opinion</span> <span class="o">&lt;=</span> <span class="n">threshold</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">personal_benefit</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
+                <span class="k">elif</span> <span class="n">absolute_opinion</span> <span class="o">&lt;=</span> <span class="n">threshold</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">personal_benefit</span><span class="p">:</span>
+                    <span class="c1"># The choice is stochastically determined but the presence of personal benefit affects the weighting</span>
+                    <span class="c1"># and it is no longer an even coinflip</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">choices</span><span class="p">([</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
+            <span class="k">case</span> <span class="s2">&quot;social&quot;</span><span class="p">:</span>
+                <span class="c1"># Deradicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors</span>
+                <span class="n">absolute_changes</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">change_directions</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+                <span class="k">for</span> <span class="n">change</span> <span class="ow">in</span> <span class="n">hierarchy_changes</span><span class="p">:</span>
+                    <span class="n">absolute_change</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">change</span><span class="p">)</span>
+
+                    <span class="c1"># Flag whether the change is moving in the same direction as the agent&#39;s original opinion</span>
+                    <span class="n">change_direction</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="p">(</span><span class="n">change</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">opinion</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">change</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">opinion</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">absolute_change</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">change_direction</span><span class="p">:</span>
+                        <span class="c1"># A strong opinion change which disagreed with the agent&#39;s opinion was caused by some hierarchy</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">absolute_changes</span> <span class="o">+=</span> <span class="n">absolute_change</span>
+
+                        <span class="c1"># Track the &#39;total&#39; magnitude of the absolute changes</span>
+                        <span class="k">if</span> <span class="n">change_direction</span><span class="p">:</span>
+                            <span class="n">change_directions</span> <span class="o">+=</span> <span class="mf">1.0</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">change_directions</span> <span class="o">-=</span> <span class="mf">1.0</span>
+                <span class="c1"># If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)</span>
+                <span class="k">if</span> <span class="n">absolute_changes</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">hierarchy_changes</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">change_directions</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># If this is somehow reached, an error has occurred (but False is returned just in case)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
 <div class="viewcode-block" id="Agent.radicalisation">
 <a class="viewcode-back" href="../../apiref/gatoh.agents.Agent.radicalisation.html#gatoh.agents.Agent.radicalisation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">radicalisation</span><span class="p">(</span>
@@ -629,7 +730,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">True</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
                 <span class="k">elif</span> <span class="n">absolute_opinion</span> <span class="o">&gt;=</span> <span class="n">threshold</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">aggregate_benefit</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span>
-                    <span class="c1"># In the case where the threshold is met but there is no explicit personal benefit, radicalisation is treated as a coinflip</span>
+                    <span class="c1"># In the case where the threshold is met but there is no explicit aggregate benefit, radicalisation is treated as a coinflip</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="n">random_coinflip</span><span class="p">(</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
             <span class="k">case</span> <span class="s2">&quot;erratic&quot;</span><span class="p">:</span>
@@ -639,32 +740,45 @@
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
             <span class="k">case</span> <span class="s2">&quot;impulsive&quot;</span><span class="p">:</span>
                 <span class="c1"># The agent places very strong consideration on tangible benefits over anything else</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">absolute_opinion</span> <span class="o">&gt;=</span> <span class="n">threshold</span> <span class="o">/</span> <span class="mi">2</span>
-                <span class="p">):</span>  <span class="c1"># (threshold / 2) as the Agent behaves impulsively and less is required for them to consider becoming radicalised</span>
+                <span class="c1"># (threshold / 2) as the Agent behaves impulsively and less is required for them to consider becoming radicalised</span>
+                <span class="k">if</span> <span class="n">absolute_opinion</span> <span class="o">&gt;=</span> <span class="n">threshold</span> <span class="o">/</span> <span class="mi">2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">personal_benefit</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">personal_benefit</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
+                <span class="k">elif</span> <span class="n">absolute_opinion</span> <span class="o">&gt;=</span> <span class="n">threshold</span> <span class="o">/</span> <span class="mi">2</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">personal_benefit</span><span class="p">:</span>
+                    <span class="c1"># The choice is stochastically determined but the lack of personal benefit affects the weighting</span>
+                    <span class="c1"># and it is no longer an even coinflip</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">choices</span><span class="p">([</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
             <span class="k">case</span> <span class="s2">&quot;social&quot;</span><span class="p">:</span>
                 <span class="c1"># Radicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors</span>
                 <span class="n">absolute_changes</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">change_directions</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
 
                 <span class="k">for</span> <span class="n">change</span> <span class="ow">in</span> <span class="n">hierarchy_changes</span><span class="p">:</span>
                     <span class="n">absolute_change</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">change</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">absolute_change</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span><span class="p">:</span>
-                        <span class="c1"># A strong opinion change was caused by some hierarchy</span>
+
+                    <span class="c1"># Flag whether the change is moving in the same direction as the agent&#39;s original opinion</span>
+                    <span class="n">change_direction</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="p">(</span><span class="n">change</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">opinion</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">change</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">opinion</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">absolute_change</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="ow">and</span> <span class="n">change_direction</span><span class="p">:</span>
+                        <span class="c1"># A strong opinion change which agreed with the agent&#39;s opinion was caused by some hierarchy</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">absolute_changes</span> <span class="o">+=</span> <span class="n">absolute_change</span>
+
+                        <span class="c1"># Track the &#39;total&#39; magnitude of the absolute changes</span>
+                        <span class="k">if</span> <span class="n">change_direction</span><span class="p">:</span>
+                            <span class="n">change_directions</span> <span class="o">+=</span> <span class="mf">1.0</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">change_directions</span> <span class="o">-=</span> <span class="mf">1.0</span>
                 <span class="c1"># If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)</span>
-                <span class="k">if</span> <span class="n">absolute_changes</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="p">(</span>
-                    <span class="nb">len</span><span class="p">(</span><span class="n">hierarchy_changes</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
-                <span class="p">):</span>
+                <span class="k">if</span> <span class="n">absolute_changes</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">hierarchy_changes</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">change_directions</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">True</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
             <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
-        <span class="c1"># If this is somehow reached, an error has ocurred (but False is returned just in case)</span>
+        <span class="c1"># If this is somehow reached, an error has occurred (but False is returned just in case)</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
 

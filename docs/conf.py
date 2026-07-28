@@ -31,7 +31,14 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinxemoji.sphinxemoji",
     "sphinx_reredirects",
+    "sphinxcontrib.bibtex",
 ]
+
+bibtex_bibfiles = [
+    "references.bib"
+]
+
+bibtex_default_style = "unsrt"
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build"]

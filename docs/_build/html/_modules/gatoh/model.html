@@ -111,7 +111,7 @@
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ConfigData</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A helper class used to type check the config data for :class:`~gatoh.model.model.ABModel`.</span>
+<span class="sd">    A helper class used to type check the config data for :class:`~gatoh.model.ABModel`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">hierarchy_information</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
     <span class="n">current_iteration</span><span class="p">:</span> <span class="nb">int</span>
@@ -150,6 +150,10 @@
 <span class="sd">    :type radicalisation_threshold: float, optional</span>
 <span class="sd">    :param suppress_warnings: A flag indicating if non-critical runtime warnings should be suppressed.</span>
 <span class="sd">    :type suppress_warnings: bool, optional</span>
+<span class="sd">    :param print_interval: The iteration interval at which the model&#39;s logger should be printing detailed variable reports.</span>
+<span class="sd">    :type print_interval: int, optional</span>
+<span class="sd">    :param debug: A flag indicating if additional developer statistics should be tracked and reported during runtime.</span>
+<span class="sd">    :type debug: bool, optional</span>
 <span class="sd">    :param visualise: A flag indicating if the model should visualise emergent behaviour in real time.</span>
 <span class="sd">    :type visualise: bool, optional</span>
 <span class="sd">    :param visualisation_dir: The path to a directory in which all of this model&#39;s visualiser outputs should be saved to.</span>
@@ -158,6 +162,8 @@
 <span class="sd">    :type vis_aggregation_method: str, optional</span>
 <span class="sd">    :param checkpointing: A flag indicating if the model&#39;s progress should be saved at the end of each iteration (useful in case of interrupted runtimes).</span>
 <span class="sd">    :type checkpointing: bool, optional</span>
+<span class="sd">    :param init_graphs: A flag indicating if empty graphs should be initialised with the input hierarchy information.</span>
+<span class="sd">    :type init_graphs: bool, optional</span>
 <span class="sd">    :param save_dir: The path to a directory in which all of this model&#39;s non-logger data should be saved to.</span>
 <span class="sd">    :type save_dir: str, optional</span>
 <span class="sd">    :param data_file: The path to which the logger&#39;s data should be saved to after iterations are run.</span>
@@ -176,10 +182,13 @@
         <span class="n">negation_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.999</span><span class="p">,</span>
         <span class="n">radicalisation_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span><span class="p">,</span>
         <span class="n">suppress_warnings</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">print_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">visualise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">visualisation_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
         <span class="n">vis_aggregation_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;median&quot;</span><span class="p">,</span>
         <span class="n">checkpointing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">init_graphs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
         <span class="n">data_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
         <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
@@ -193,13 +202,28 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span> <span class="n">AgentSet</span> <span class="o">=</span> <span class="n">AgentSet</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span> <span class="n">GraphSet</span> <span class="o">=</span> <span class="n">GraphSet</span><span class="p">()</span>
 
+        <span class="k">if</span> <span class="n">init_graphs</span><span class="p">:</span>
+            <span class="c1"># Ensure that the input hierarchy information always produce at least empty graphs in the graphset</span>
+            <span class="c1"># (Although, it is expected that add_graphs() or generate_graphs() will be called normally)</span>
+            <span class="k">for</span> <span class="n">hierarchy</span><span class="p">,</span> <span class="n">rw_distrib</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">hierarchy_graph</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span>
+                    <span class="n">hierarchy</span><span class="p">,</span> <span class="n">rw_distrib</span><span class="p">,</span> <span class="n">suppress_warnings</span><span class="o">=</span><span class="n">suppress_warnings</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">add_graph</span><span class="p">(</span><span class="n">hierarchy_graph</span><span class="p">)</span>
+
         <span class="c1"># A model-handled &#39;base&#39; Graph that keeps track of all relationships across the social hierarchies</span>
         <span class="c1"># (Used to greatly simplify network-level graph calculations)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span>
             <span class="s2">&quot;base&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">suppress_warnings</span><span class="o">=</span><span class="n">suppress_warnings</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span> <span class="n">GATOHLogger</span> <span class="o">=</span> <span class="n">GATOHLogger</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="n">hierarchy_names</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">debug</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span> <span class="n">GATOHLogger</span> <span class="o">=</span> <span class="n">GATOHLogger</span><span class="p">(</span>
+            <span class="n">iterations</span><span class="p">,</span>
+            <span class="n">hierarchy_names</span><span class="p">,</span>
+            <span class="n">print_interval</span><span class="o">=</span><span class="n">print_interval</span><span class="p">,</span>
+            <span class="n">debug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">visualise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">visualise</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">visualisation_dir</span>
@@ -229,6 +253,227 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">data_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">data_file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">model_id</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_hierarchy_information</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rw_params</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that adds a new entry into the model&#39;s hierarchy information attribute.</span>
+
+<span class="sd">        This function will always overwrite the parameters for an existing hierarchy in the model.</span>
+
+<span class="sd">        :param hierarchy: The name of the new hierarchy being recorded.</span>
+<span class="sd">        :type hierarchy: str</span>
+<span class="sd">        :param rw_params: The random-walk (mean, variance) parameters for the new hierarchy.</span>
+<span class="sd">        :type rw_params: tuple[float, float]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">=</span> <span class="n">rw_params</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_hierarchy_information&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_agent_opinion_rw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_opinion_rw</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the model&#39;s agent_opinion_rw attribute.</span>
+
+<span class="sd">        :param agent_opinion_rw: The (mean, variance) parameters used for the agent opinions random-walk effect.</span>
+<span class="sd">        :type agent_opinion_rw: tuple[float, float]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agent_opinion_rw</span> <span class="o">=</span> <span class="n">agent_opinion_rw</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_agent_opinion_rw&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_visualise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visualise</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the model&#39;s visualise flag.</span>
+
+<span class="sd">        :param visualise: A flag indicating if the model should visualise its runtime and outputs.</span>
+<span class="sd">        :type visualise: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Assume that flipping from False to True means that the visualiser has not been initialised yet</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">visualise</span> <span class="ow">and</span> <span class="n">visualise</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visualiser</span> <span class="o">=</span> <span class="n">ABVisualiser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="p">)</span>
+        <span class="c1"># Assume that flipping from True to False means that the visualiser will not be used any more, or requires a full reset</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">visualise</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">visualise</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">visualiser</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visualise</span> <span class="o">=</span> <span class="n">visualise</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_visualise&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_visualisation_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visualisation_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the model&#39;s visualisation directory.</span>
+
+<span class="sd">        :param visualisation_dir: The path to the directory where model visualisations should be saved.</span>
+<span class="sd">        :type visualisation_dir: str</span>
+<span class="sd">        :param force: A flag indicating if the function should explicitly create the directory if it does not exist.</span>
+<span class="sd">        :type force: bool, optional</span>
+<span class="sd">        :raises NotADirectoryError: If the input directory is not valid and the operation is not being forced.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">visualisation_dir</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span> <span class="o">=</span> <span class="n">visualisation_dir</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">visualisation_dir</span><span class="p">)</span> <span class="ow">and</span> <span class="n">force</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">visualisation_dir</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span> <span class="o">=</span> <span class="n">visualisation_dir</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">visualisation_dir</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotADirectoryError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The path </span><span class="si">{</span><span class="n">visualisation_dir</span><span class="si">}</span><span class="s2"> does not point to a valid directory -- change the path or set &#39;force=True&#39; to fix this&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_visualisation_dir&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">override_current_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_iteration</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that overrides the model&#39;s current iteration value with a new one.</span>
+
+<span class="sd">        This function should not be used if a custom iteration function is not in use, as it will cause unexpected simulation behaviours</span>
+<span class="sd">        if not handled appropriately.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="n">current_iteration</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.override_current_iteration&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_max_iterations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the model&#39;s max iterations attribute.</span>
+
+<span class="sd">        :param max_iterations: The total number of iterations that the model should run for.</span>
+<span class="sd">        :type max_iterations: int</span>
+<span class="sd">        :raises ValueError: If max_iterations is not a valid integer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">max_iterations</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The max_iterations value </span><span class="si">{</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2"> is invalid -- Use a positive integer&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span> <span class="o">=</span> <span class="n">max_iterations</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_max_iterations&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_silencing_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">silencing_thresh</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the model&#39;s silencing threshold.</span>
+
+<span class="sd">        :param silencing_thresh: The threshold that the model should use for the opinion silencing effect.</span>
+<span class="sd">        :type silencing_thresh: float</span>
+<span class="sd">        :raises ValueError: If the silencing threshold is outside the range [0.0, 1.0].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">silencing_thresh</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">silencing_threshold</span> <span class="o">=</span> <span class="n">silencing_thresh</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The silencing threshold value of </span><span class="si">{</span><span class="n">silencing_thresh</span><span class="si">}</span><span class="s2"> is outside the valid range of [0.0, 1.0]&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_silencing_threshold&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_negation_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">negation_thresh</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the model&#39;s negation threshold.</span>
+
+<span class="sd">        :param negation_thresh: The threshold that the model should use for the opinion negation effect.</span>
+<span class="sd">        :type negation_thresh: float</span>
+<span class="sd">        :raises ValueError: If the negation threshold is outside the range [0.0, 1.0].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">negation_thresh</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">negation_threshold</span> <span class="o">=</span> <span class="n">negation_thresh</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The negation threshold value of </span><span class="si">{</span><span class="n">negation_thresh</span><span class="si">}</span><span class="s2"> is outside the valid range of [0.0, 1.0]&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_negation_threshold&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_radicalisation_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radical_thresh</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the model&#39;s radicalisation threshold.</span>
+
+<span class="sd">        :param radical_thresh: The threshold that the model should use when determining agent (de)radicalisation.</span>
+<span class="sd">        :type radical_thresh: float</span>
+<span class="sd">        :raises ValueError: If the radicalisation threshold is outside the range [0.0, 1.0].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">radical_thresh</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_threshold</span> <span class="o">=</span> <span class="n">radical_thresh</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The radicalisation threshold value of </span><span class="si">{</span><span class="n">radical_thresh</span><span class="si">}</span><span class="s2"> is outside the valid range of [0.0, 1.0]&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_radicalisation_threshold&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_suppress_warnings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">suppress_warnings</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the model&#39;s suppress warnings flag.</span>
+
+<span class="sd">        :param suppress_warnings: A flag indicating if non-critical runtime warnings should be suppressed.</span>
+<span class="sd">        :type suppress_warnings: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suppress_warnings</span> <span class="o">=</span> <span class="n">suppress_warnings</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_suppress_warnings&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_checkpointing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpointing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the model&#39;s checkpointing flag.</span>
+
+<span class="sd">        :param checkpointing: A flag indicating if the model should save checkpoints at the end of every iteration.</span>
+<span class="sd">        :type checkpointing: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkpointing</span> <span class="o">=</span> <span class="n">checkpointing</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_checkpointing&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_save_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the model&#39;s save directory.</span>
+
+<span class="sd">        :param save_dir: The path to the root directory where all model components and sub-components should be saved.</span>
+<span class="sd">        :type save_dir: str</span>
+<span class="sd">        :param force: A flag indicating if the function should explicitly create the directory if it does not exist.</span>
+<span class="sd">        :type force: bool, optional</span>
+<span class="sd">        :raises NotADirectoryError: If the input directory is not valid and the operation is not being forced.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_dir</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span> <span class="o">=</span> <span class="n">save_dir</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span> <span class="ow">and</span> <span class="n">force</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span> <span class="o">=</span> <span class="n">save_dir</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotADirectoryError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The path </span><span class="si">{</span><span class="n">save_dir</span><span class="si">}</span><span class="s2"> does not point to a valid directory -- change the path or set &#39;force=True&#39; to fix this&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_save_dir&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_data_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the path to which the final data file should be written.</span>
+
+<span class="sd">        :param data_file: The path to where the model&#39;s final data .csv file should be written.</span>
+<span class="sd">        :type data_file: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_file</span> <span class="o">=</span> <span class="n">data_file</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_data_file&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_model_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that changes the model&#39;s unique ID.</span>
+
+<span class="sd">        :param model_id: The new identifier to assign to the model.</span>
+<span class="sd">        :type model_id: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span> <span class="o">=</span> <span class="n">model_id</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_model_id&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
 <div class="viewcode-block" id="ABModel.save_model">
 <a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.save_model.html#gatoh.model.ABModel.save_model">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -255,6 +500,11 @@
         <span class="n">base_graph_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="si">}</span><span class="s2">/graph_base_graph.graphml&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">save_graph</span><span class="p">(</span><span class="n">base_graph_path</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;AgentSet.save_agentset&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GraphSet.save_graphset&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.save_graph&quot;</span><span class="p">)</span>
+
         <span class="c1"># Store the model&#39;s configurations in a YAML config file</span>
         <span class="n">config_path</span><span class="p">:</span> <span class="nb">str</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
@@ -277,6 +527,10 @@
             <span class="s2">&quot;model_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="n">create_config_file</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">config_data</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.save_model&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -340,6 +594,8 @@
                 <span class="k">case</span> <span class="s2">&quot;graphml&quot;</span><span class="p">:</span>
                     <span class="c1"># For now, only the model&#39;s base graph should exist as an uncompressed graphml file in the root of the save directory</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">load_graph</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;base_graph&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.load_graph&quot;</span><span class="p">)</span>
                 <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
                     <span class="c1"># Currently unknown how/if to handle edge cases here</span>
                     <span class="k">pass</span>
@@ -347,8 +603,15 @@
         <span class="c1"># Check if any compressed files exist and handle them from their parent modules</span>
         <span class="k">if</span> <span class="n">agentset_exists</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">load_agentset</span><span class="p">(</span><span class="n">load_dir</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;AgentSet.load_agentset&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">graphset_exists</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">load_graphset</span><span class="p">(</span><span class="n">load_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GraphSet.load_graphset&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.load_model&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">None</span></div>
 
@@ -369,6 +632,11 @@
 
         <span class="c1"># Also add new edges to the model&#39;s base graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add_base_graph_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GraphSet.add_graph&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.add_graph&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span></div>
 
 
@@ -395,11 +663,21 @@
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">graph</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graphs</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Graph</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">add_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GraphSet.add_graph&quot;</span><span class="p">)</span>
             <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
                 <span class="n">new_graph</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">rw_params</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
                 <span class="n">new_graph</span><span class="o">.</span><span class="n">load_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">names</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">add_graph</span><span class="p">(</span><span class="n">new_graph</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.load_graph&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GraphSet.add_graph&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">init_base_graph</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.add_graphs&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span></div>
 
 
@@ -462,6 +740,13 @@
                 <span class="p">)</span>
 
             <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_graph</span><span class="p">(</span><span class="n">hierarchy_graph</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.generate_graph&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.generate_graphs&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -478,6 +763,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Add the Agent object to the model-handled &#39;base&#39; graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">([</span><span class="n">agent</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.add_nodes&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.add_agent&quot;</span><span class="p">)</span>
+            <span class="c1"># Preemptively logging the agentset add</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;AgentSet.add&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span></div>
 
 
@@ -494,11 +784,70 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">agents</span><span class="p">:</span>
             <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;AgentSet.add&quot;</span><span class="p">)</span>
 
         <span class="c1"># Add all the new Agent objects to the model-handled &#39;base&#39; graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">agents</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.add_nodes&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.add_agents&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_agents_to_hierarchy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">],</span> <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that can directly add a collection of agents to a specific hierarchy in the model&#39;s</span>
+<span class="sd">        graph set.</span>
+
+<span class="sd">        This function will also add any input agents to the model&#39;s overarching AgentSet if they do not already</span>
+<span class="sd">        exist in it.</span>
+
+<span class="sd">        :param agents: The collection of agents that should be added as nodes to the hierarchy.</span>
+<span class="sd">        :type agents: list[Agent]</span>
+<span class="sd">        :param hierarchy: The hierarchy that the agents are being added to.</span>
+<span class="sd">        :type hierarchy: str</span>
+<span class="sd">        :raises KeyError: If the specified hierarchy does not exist in the graph set.</span>
+<span class="sd">        :raises ValueError: If any object in the agents iterable is of an invalid type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">agent</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">agents</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">agent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Agent</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The object at index </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph &#39;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="n">hierarchy_to_extend</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">get_hierarchy</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hierarchy_to_extend</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The specified hierarchy &#39;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&#39; does not exist in the GraphSet -- cannot add agents to it&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Add the agents to the AgentSet if they do not exist</span>
+            <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">agents</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">agent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_agent</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+            <span class="c1"># Finally, add the agents as nodes to the specified hierarchy</span>
+            <span class="n">hierarchy_to_extend</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">agents</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_relationships_to_hierarchy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">relationships</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that can directly add relationships to a specific hierarchy in the model&#39;s graph set.</span>
+
+<span class="sd">        Validation of from_node and to_node indices is performed within the called Graph function when adding the relationships.</span>
+
+<span class="sd">        :param relationships: A &lt;key, values&gt; mapping providing &#39;to_node&#39;, &#39;from_node&#39;, and &#39;weighting&#39; information.</span>
+<span class="sd">        :type relationships: dict[str, list[int | float]]</span>
+<span class="sd">        :param hierarchy: The hierarchy that the relationships are being added to.</span>
+<span class="sd">        :type hierarchy: str</span>
+<span class="sd">        :raises KeyError: If the specified hierarchy does not exist in the graph set.</span>
+<span class="sd">        :raises ValueError: If any required key is missing, or the information is of a mismatching data type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;to_node&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">relationships</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;from_node&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">relationships</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The relationships information is missing one of the required &#39;from_node&#39; or &#39;to_node&#39; keys&quot;</span><span class="p">)</span>
+        <span class="n">specified_hierarchy</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">get_hierarchy</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">specified_hierarchy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The specified hierarchy &#39;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&#39; does not exist in the GraphSet -- cannot add relationships to it&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">specified_hierarchy</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">relationships</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="ABModel.generate_agents">
 <a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.generate_agents.html#gatoh.model.ABModel.generate_agents">[docs]</a>
@@ -546,6 +895,8 @@
                 <span class="n">personality</span><span class="o">=</span><span class="n">agent_personality</span><span class="p">,</span>
                 <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
             <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;model.generate_agents&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -565,6 +916,12 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">new_iteration</span><span class="p">()</span>
 
+            <span class="c1"># Get and print the formatted debug string if appropriate</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger_debug_iteration</span><span class="p">()</span>
+                <span class="n">debug_print_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug_iteration_print</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">debug_print_string</span><span class="p">)</span>
+
             <span class="c1"># Initialise a dictionary to keep track of agent opinion changes</span>
             <span class="c1"># (this is done to prevent recursive updating of opinions during the evolution of opinions)</span>
             <span class="n">new_agent_opinions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -578,6 +935,8 @@
                 <span class="p">)</span>
                 <span class="k">for</span> <span class="n">opinion_result</span> <span class="ow">in</span> <span class="n">opinion_results</span><span class="p">:</span>
                     <span class="n">new_agent_opinions</span><span class="p">[</span><span class="n">opinion_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">opinion_result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.iteration_opinion_calculation&quot;</span><span class="p">)</span>
 
                 <span class="c1"># Manual garbage collection</span>
                 <span class="k">del</span> <span class="n">opinion_results</span>
@@ -586,6 +945,9 @@
                 <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
                     <span class="n">opinion_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration_opinion_calculation</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
                     <span class="n">new_agent_opinions</span><span class="p">[</span><span class="n">opinion_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">opinion_result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.iteration_opinion_calculation&quot;</span><span class="p">)</span>
 
                     <span class="c1"># Manual garbage collection</span>
                     <span class="k">del</span> <span class="n">opinion_result</span>
@@ -615,6 +977,8 @@
             <span class="nb">print</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">GATOH logger data was successfully written to the file at path: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
             <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.iterate&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -647,7 +1011,19 @@
             <span class="n">neighbour_influences</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">neighbour_influences</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">neighbour_influences</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">collective_changes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neighbour_influences</span><span class="p">)</span>
-        <span class="n">total_change</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">collective_changes</span><span class="p">)</span>
+        <span class="n">collective_changes_sum</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">collective_changes</span><span class="p">)</span>
+
+        <span class="c1"># Account for the idea that a collection of like-minded agents will push each other towards more extreme opinions</span>
+        <span class="c1"># even if all neighbours are already averaging around the same opinion value</span>
+        <span class="n">total_change</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">previous_opinion</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="o">-</span><span class="mf">0.05</span> <span class="o">&lt;</span> <span class="n">collective_changes_sum</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">total_change</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.05</span>
+        <span class="k">elif</span> <span class="n">agent</span><span class="o">.</span><span class="n">previous_opinion</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">collective_changes_sum</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span>
+            <span class="n">total_change</span> <span class="o">=</span> <span class="mf">0.05</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The previous checks mean that a &quot;minor&quot; collective changes sum that is going in the opposite direction</span>
+            <span class="c1"># to the agent&#39;s opinion will still have the effect of moving the agent towards the neighbour average</span>
+            <span class="n">total_change</span> <span class="o">=</span> <span class="n">collective_changes_sum</span>
 
         <span class="c1"># Check for the existence of personal benefit across all of the agent&#39;s neighbours</span>
         <span class="n">all_neighbour_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
@@ -703,43 +1079,94 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">agent_id</span><span class="p">,</span> <span class="n">opinion_change_info</span> <span class="ow">in</span> <span class="n">changes_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">agent_object</span><span class="p">:</span> <span class="n">Agent</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">get_agent_by_id</span><span class="p">(</span><span class="n">agent_id</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">agent_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
-                    <span class="c1"># Update the current opinion across all hierarchies</span>
-                    <span class="n">hierarchy</span><span class="o">.</span><span class="n">agent_opinion_change</span><span class="p">(</span><span class="n">agent_object</span><span class="p">,</span> <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;AgentSet.get_agent_by_id&quot;</span><span class="p">)</span>
 
+            <span class="k">if</span> <span class="n">agent_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># Flag if the Agent was already radicalised</span>
                 <span class="n">existing_radicalisation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">agent_object</span><span class="o">.</span><span class="n">radicalised</span>
 
-                <span class="c1"># After the opinion change, determine if the agent has become radicalised</span>
-                <span class="n">was_radicalised</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">agent_object</span><span class="o">.</span><span class="n">radicalisation</span><span class="p">(</span>
-                    <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_threshold</span><span class="p">,</span>
-                <span class="p">)</span>
-
-                <span class="c1"># Only update the status if the Agent was not already radicalised</span>
+                <span class="c1"># After the opinion change, determine if the agent has become radicalised or deradicalised</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">existing_radicalisation</span><span class="p">:</span>
+                    <span class="n">was_radicalised</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">agent_object</span><span class="o">.</span><span class="n">radicalisation</span><span class="p">(</span>
+                        <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_threshold</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Agent.radicalisation&quot;</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
                         <span class="c1"># Update the radicalisation status of the agent across all hierarchies</span>
                         <span class="n">hierarchy</span><span class="o">.</span><span class="n">agent_radicalisation_change</span><span class="p">(</span>
                             <span class="n">agent_object</span><span class="p">,</span> <span class="n">was_radicalised</span>
                         <span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_radicalisation_change&quot;</span><span class="p">)</span>
 
-                <span class="c1"># Update the nodes in the base graph</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">agent_opinion_change</span><span class="p">(</span>
-                    <span class="n">agent_object</span><span class="p">,</span> <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="p">)</span>
-
-                <span class="c1"># Only update the status if the Agent was not already radicalised</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">existing_radicalisation</span><span class="p">:</span>
+                    <span class="c1"># Update the node in the base graph</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">agent_opinion_change</span><span class="p">(</span>
+                        <span class="n">agent_object</span><span class="p">,</span> <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">agent_radicalisation_change</span><span class="p">(</span>
                         <span class="n">agent_object</span><span class="p">,</span> <span class="n">was_radicalised</span>
                     <span class="p">)</span>
 
-                <span class="c1"># Update the radicalisation count in the logger as needed</span>
-                <span class="c1"># (was_radicalised will always be False if the agent was already radicalised)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_radicalised</span><span class="p">(</span><span class="n">was_radicalised</span><span class="p">)</span>
+                    <span class="c1"># Update the radicalisation count in the logger as needed</span>
+                    <span class="c1"># (was_radicalised will always be False if the agent was already radicalised)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_radicalised</span><span class="p">(</span><span class="n">was_radicalised</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_opinion_change&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_radicalisation_change&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.increment_radicalised&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Update the current opinion across all hierarchies</span>
+                    <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
+                        <span class="n">hierarchy</span><span class="o">.</span><span class="n">agent_opinion_change</span><span class="p">(</span><span class="n">agent_object</span><span class="p">,</span> <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_opinion_change&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">was_deradicalised</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">agent_object</span><span class="o">.</span><span class="n">deradicalisation</span><span class="p">(</span>
+                        <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_threshold</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Agent.deradicalisation&quot;</span><span class="p">)</span>
+
+                    <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
+                        <span class="c1"># Update the radicalisation status of the agent across all hierarchies</span>
+                        <span class="n">hierarchy</span><span class="o">.</span><span class="n">agent_radicalisation_change</span><span class="p">(</span>
+                            <span class="n">agent_object</span><span class="p">,</span> <span class="ow">not</span> <span class="n">was_deradicalised</span>
+                        <span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_radicalisation_change&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Update the node in the base graph (flagging for deradicalisation)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">agent_opinion_change</span><span class="p">(</span>
+                        <span class="n">agent_object</span><span class="p">,</span> <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">deradicalisation</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">agent_radicalisation_change</span><span class="p">(</span>
+                        <span class="n">agent_object</span><span class="p">,</span> <span class="ow">not</span> <span class="n">was_deradicalised</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Update the deradicalisation count in the logger as needed</span>
+                    <span class="c1"># (was_deradicalised will always be False if the agent was not already radicalised)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_deradicalised</span><span class="p">(</span><span class="n">was_deradicalised</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_opinion_change&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_radicalisation_change&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.increment_deradicalised&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Update the current opinion across all hierarchies (flagging for deradicalisation)</span>
+                    <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
+                        <span class="n">hierarchy</span><span class="o">.</span><span class="n">agent_opinion_change</span><span class="p">(</span><span class="n">agent_object</span><span class="p">,</span> <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">deradicalisation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_opinion_change&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.iteration_opinion_changes&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -754,11 +1181,18 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">graph</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.step&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
             <span class="n">agent</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">agent_opinion_rw</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Agent.step&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.step&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -791,6 +1225,15 @@
                 <span class="c1"># Update the logger variables as needed</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_silenced</span><span class="p">(</span><span class="n">agent_update</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_negated</span><span class="p">(</span><span class="n">agent_update</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.update_multi&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Agent.update&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.increment_silenced&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.increment_negated&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.update&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -829,6 +1272,15 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">silenced</span><span class="p">,</span> <span class="n">was_silenced</span><span class="p">,</span> <span class="n">negation</span><span class="p">)</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">logger_debug_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that handles the iteration of the logger&#39;s debugging component.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug_iteration</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.logger_debug_iteration&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
 <div class="viewcode-block" id="ABModel.logger_iteration">
 <a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.logger_iteration.html#gatoh.model.ABModel.logger_iteration">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">logger_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">worker_pool</span><span class="p">:</span> <span class="n">Pool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -860,6 +1312,8 @@
             <span class="n">layer_interdependences</span><span class="p">,</span>
             <span class="n">layers_polarisation</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.logger_iteration&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -881,6 +1335,9 @@
 
         <span class="n">average_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">opinion_sum</span> <span class="o">/</span> <span class="n">opinion_count</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.calculate_aggregate_opinion&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">average_opinion</span></div>
 
 
@@ -901,7 +1358,15 @@
         <span class="n">radicalisation_p</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">radicalised_count</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span>
         <span class="k">if</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">radicalisation_p</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="n">log_odds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">radicalisation_p</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">radicalisation_p</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.calculate_radicalisation_logodds&quot;</span><span class="p">)</span>
+
             <span class="k">return</span> <span class="n">log_odds</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.calculate_radicalisation_logodds&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="mf">0.0</span></div>
 
 
@@ -927,6 +1392,11 @@
             <span class="n">polarisation_results</span> <span class="o">=</span> <span class="n">worker_pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers_polarisation_multi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
             <span class="k">for</span> <span class="n">polarisation_result</span> <span class="ow">in</span> <span class="n">polarisation_results</span><span class="p">:</span>
                 <span class="n">layers_polarisation</span><span class="p">[</span><span class="n">polarisation_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">polarisation_result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GraphSet.calculate_polarisation&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.calculate_layers_polarisation&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">layers_polarisation</span></div>
 
@@ -977,6 +1447,9 @@
             <span class="n">hierarchy_n</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="p">(</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">node_count</span> <span class="o">*</span> <span class="p">(</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">node_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span>
             <span class="n">final_n</span> <span class="o">+=</span> <span class="n">hierarchy_n</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.calculate_density&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">total_l</span> <span class="o">/</span> <span class="n">final_n</span>
 
 <div class="viewcode-block" id="ABModel.calculate_navigability">
@@ -1013,6 +1486,11 @@
         <span class="c1"># First, calculate all the possible shortest paths (from_node -&gt; to_node) using the all-encompassing base graph.</span>
         <span class="n">all_shortest_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">rx_shortest_paths</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">from_node</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">to_node</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="c1"># This DOES NOT indicate that rx_shortest_paths was authored in GATOH Graphs, simply that it is being</span>
+            <span class="c1"># grouped with other Graph-related functions...</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.rx_shortest_paths&quot;</span><span class="p">)</span>
+
         <span class="n">navigability_summation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
 
         <span class="c1"># Next, for each shortest path, find P[p(s,t)]</span>
@@ -1027,10 +1505,18 @@
                     <span class="c1"># Node degree should always be &gt;= 2, as there must exist at least one ingoing and one outgoing edge for the path to exist</span>
                     <span class="n">path_product</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">current_edge</span><span class="o">.</span><span class="n">weighting</span> <span class="o">/</span> <span class="n">node_out_degree</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.get_edge_data&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.out_degree&quot;</span><span class="p">)</span>
+
             <span class="n">navigability_summation</span> <span class="o">+=</span> <span class="n">path_product</span>
 
         <span class="c1"># -log2(x) == log2(1 / x)</span>
         <span class="n">navigability_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">navigability_summation</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.calculate_navigability&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">navigability_value</span></div>
 
 
@@ -1054,6 +1540,12 @@
             <span class="n">result_values</span> <span class="o">=</span> <span class="n">worker_pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calculate_interdependence</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">))))</span>
             <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">result_value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">result_values</span><span class="p">):</span>
                 <span class="n">interdependence_results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">graphs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">result_value</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GraphSet.get_index&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.calculate_interdependence&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.calculate_interdependences&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">interdependence_results</span></div>
 
@@ -1102,6 +1594,8 @@
                 <span class="n">agent_i_oc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">estimate_neighbour_opinions</span><span class="p">(</span>
                     <span class="n">agent_i</span><span class="o">.</span><span class="n">agent</span>
                 <span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.estimate_neighbour_opinions&quot;</span><span class="p">)</span>
                 <span class="n">observed_opinions_layer</span><span class="p">[</span><span class="n">agent_i</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_i_oc</span>
             <span class="n">observed_opinions_all</span><span class="p">[</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">observed_opinions_layer</span>
 
@@ -1124,6 +1618,7 @@
             <span class="n">layer_interdependence</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">interdep_numerator</span> <span class="o">/</span> <span class="n">interdep_denominator</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">layer_interdependence</span> <span class="o">=</span> <span class="mf">0.0</span>
+
         <span class="k">return</span> <span class="n">layer_interdependence</span></div>
 
 
@@ -1153,6 +1648,10 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">change_weights</span><span class="p">(</span>
                             <span class="n">base_from_idx</span><span class="p">,</span> <span class="n">base_to_idx</span><span class="p">,</span> <span class="n">graph_edge</span><span class="o">.</span><span class="n">weighting</span>
                         <span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.change_weights&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.get_edge_data&quot;</span><span class="p">)</span>
                 <span class="c1"># If the edge does not exist in the base graph, create it and add it to the base graph</span>
                 <span class="k">except</span> <span class="n">NoEdgeBetweenNodes</span><span class="p">:</span>
                     <span class="n">new_edge</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -1163,9 +1662,16 @@
                     <span class="p">}</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">new_edge</span><span class="p">)</span>
 
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.add_edges&quot;</span><span class="p">)</span>
+
                     <span class="c1"># Manual garbage collection</span>
                     <span class="k">del</span> <span class="n">new_edge</span>
                     <span class="n">_</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.init_base_graph&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -1190,9 +1696,19 @@
         <span class="n">from_node</span><span class="p">:</span> <span class="n">GraphNode</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">from_node</span><span class="p">)</span>
         <span class="n">to_node</span><span class="p">:</span> <span class="n">GraphNode</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">to_node</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.get_node&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.get_node&quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">from_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">to_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">from_index_base</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="n">from_node</span><span class="o">.</span><span class="n">agent</span><span class="p">)</span>
             <span class="n">to_index_base</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="n">to_node</span><span class="o">.</span><span class="n">agent</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;AgentSet.get_index&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;AgentSet.get_index&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.get_base_indices_from_edge&quot;</span><span class="p">)</span>
+
             <span class="k">return</span> <span class="n">from_index_base</span><span class="p">,</span> <span class="n">to_index_base</span>
 
         <span class="c1"># Including here for return checking</span>
@@ -1238,6 +1754,10 @@
         <span class="k">del</span> <span class="n">new_edges</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.add_edges&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.add_base_graph_edges&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -1253,6 +1773,9 @@
         <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
             <span class="n">pending_changes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EdgeChanges</span><span class="p">]</span> <span class="o">=</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">get_edge_changes</span><span class="p">()</span>
 
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.get_edge_changes&quot;</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending_changes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">continue</span>
 
@@ -1261,6 +1784,11 @@
 
                 <span class="n">from_agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">get_agent_by_id</span><span class="p">(</span><span class="n">from_id</span><span class="p">)</span>
                 <span class="n">to_agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">get_agent_by_id</span><span class="p">(</span><span class="n">to_id</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                    <span class="c1"># Log twice as two calls were made</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;AgentSet.get_agent_by_id&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;AgentSet.get_agent_by_id&quot;</span><span class="p">)</span>
 
                 <span class="c1"># Included for type checking</span>
                 <span class="k">if</span> <span class="n">from_agent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">to_agent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1271,10 +1799,16 @@
                         <span class="n">from_idx</span><span class="p">,</span> <span class="n">to_idx</span>
                     <span class="p">)</span>
 
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.edge_indices_from_endpoints&quot;</span><span class="p">)</span>
+
                     <span class="k">for</span> <span class="n">edge_index</span> <span class="ow">in</span> <span class="n">edge_indices</span><span class="p">:</span>
                         <span class="n">edge_data</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="p">(</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get_edge_data_by_index</span><span class="p">(</span><span class="n">edge_index</span><span class="p">)</span>
                         <span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.get_edge_data_by_index&quot;</span><span class="p">)</span>
+
                         <span class="k">if</span> <span class="n">edge_data</span><span class="o">.</span><span class="n">hierarchy</span> <span class="o">!=</span> <span class="n">change</span><span class="o">.</span><span class="n">hierarchy</span><span class="p">:</span>
                             <span class="k">continue</span>
                         <span class="k">else</span><span class="p">:</span>
@@ -1282,6 +1816,13 @@
                             <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update_edge_by_index</span><span class="p">(</span>
                                 <span class="n">edge_index</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge_data</span><span class="p">)</span>
                             <span class="p">)</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GraphEdge.set_weighting&quot;</span><span class="p">)</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.update_edge_by_index&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.update_base_graph&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="kc">None</span></div>
 </div>
 

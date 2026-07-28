@@ -23,6 +23,16 @@ New Features
 - Implemented a function to calculate graph density metrics with :meth:`~gatoh.model.ABModel.calculate_density`
 - Implemented functionality to automatically remove any nodes in graphs without neighbours after relevant edges are removed
 - Added functions that allow for the spontaneous formation and disintegration of relationships in graphs
+- Implemented a mechanism that allows for thresholded agent deradicalisation
+- Now accounting for the idea that like-minded agents will push each other towards more extreme opinions even if the average opinion
+  is currently stable (:meth:`~gatoh.model.ABModel.iteration_opinion_calculation`)
+- Added new checks to :meth:`~gatoh.graphs.Graph.agent_opinion_change` that account for agent deradicalisation
+- Added multiple QoL setter functions to :class:`~gatoh.model.ABModel`
+- Rudimentary prototype for a debugging system in :class:`~gatoh.logging.GATOHLogger`
+- Expanded test coverage to include all the new QoL setter functions in :class:`~gatoh.model.ABModel`
+- QoL method :meth:`~gatoh.model.ABModel.add_agents_to_hierarchy`
+- Created new tests to cover the various calculation methods in :class:`~gatoh.model.ABModel`
+- QoL method :meth:`~gatoh.model.ABModel.add_relationships_to_hierarchy`
 
 Fixes
 -----

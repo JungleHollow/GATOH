@@ -5,16 +5,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.logging &mdash; gatoh 0.1.0</title>
+  <title>gatoh.logging &mdash; gatoh 2026.07.0</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
       <link rel="stylesheet" type="text/css" href="../../_static/thebelab.css" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/documentation_options.js?v=5d2ae42f"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/thebelab-helper.js"></script>
@@ -81,7 +81,192 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tracemalloc</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LoggerDevStats</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dataclass that defines the relevant developer statistics that are tracked and stored by the Logger.</span>
+
+<span class="sd">    :param max_iterations: The maximum number of iterations that the model will run its simulation for.</span>
+<span class="sd">    :type max_iterations: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Model memory usage at the start of each iteration</span>
+    <span class="n">current_memory_usage</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The highest reported memory usage during model runtime</span>
+    <span class="n">peak_memory_usage</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Total number of function calls throughout the entire runtime</span>
+    <span class="n">all_function_calls</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Total number of calls to functions throughout the runtime</span>
+    <span class="n">function_calls</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># Total computational runtime of each function per iteration</span>
+    <span class="n">functions_runtime</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># Total computational runtime of each iteration</span>
+    <span class="n">iteration_runtime</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The current iteration that the simulation is at</span>
+    <span class="n">current_iteration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># The total number of I/O writes performed during runtime</span>
+    <span class="n">write_operations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># The total number of I/O reads performed during runtime</span>
+    <span class="n">read_operations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># The total runtime, calculated by summing the individual iteration runtimes</span>
+    <span class="n">total_runtime</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store the number of max iterations and initialise all lists and dictionaries with the approrpiate</span>
+<span class="sd">        sizes to match the number of iterations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Start tracing memory usage</span>
+        <span class="n">tracemalloc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span>  <span class="o">=</span> <span class="n">max_iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span>  <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">peak_memory_usage</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_memory_usage</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_function_calls</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function_calls</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iteration_runtime</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">functions_runtime</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_runtime</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">functions_runtime</span><span class="p">[</span><span class="n">iteration</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">record_peak_mem_usage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memory_usage</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that checks if the input memory usage is higher than the current recorded peak,</span>
+<span class="sd">        and updates the stored value as needed.</span>
+
+<span class="sd">        :param memory_usage: The memory usage value that is being checked (in bytes).</span>
+<span class="sd">        :type memory_usage: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">memory_usage</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">peak_memory_usage</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">peak_memory_usage</span> <span class="o">=</span> <span class="n">memory_usage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.record_peak_mem_usage&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_function_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that increments the count of calls to a specific function.</span>
+
+<span class="sd">        :param function_name: The name of the function that was called.</span>
+<span class="sd">        :type function_name: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">function_calls</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">function_calls</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">function_calls</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># Also update the overall number of model function calls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">increment_function_calls</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_function_runtime</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">runtime</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">iteration</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that updates the total runtime for a specific function.</span>
+
+<span class="sd">        :param function_name: The name of the function that finished running.</span>
+<span class="sd">        :type function_name: str</span>
+<span class="sd">        :param runtime: The time in seconds that the function ran for.</span>
+<span class="sd">        :type runtime: float</span>
+<span class="sd">        :param iteration: The iteration that the runtime is being logged for.</span>
+<span class="sd">        :type iteration: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Ensure that the function name exists in functions_runtime for this iteration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">functions_runtime</span><span class="p">[</span><span class="n">iteration</span><span class="p">]</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">functions_runtime</span><span class="p">[</span><span class="n">iteration</span><span class="p">][</span><span class="n">function_name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">runtime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.log_function_runtime&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_function_calls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that increments the count of overall model function calls.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_function_calls</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_writes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that increments the count of the total write operations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_operations</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.increment_writes&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_reads</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that increments the count of total write operations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read_operations</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.increment_reads&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_memory_usage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memory_usage</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">iteration</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that records the total model memory usage at the start of a specific iteration.</span>
+
+<span class="sd">        :param memory_usage: The total memory usage of the model at the start of an iteration (in bytes).</span>
+<span class="sd">        :type memory_usage: int</span>
+<span class="sd">        :param iteration: The iteration that the memory usage is being recorded for.</span>
+<span class="sd">        :type iteration: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_memory_usage</span><span class="p">[</span><span class="n">iteration</span><span class="p">]</span> <span class="o">=</span> <span class="n">memory_usage</span>
+
+        <span class="c1"># Check if this is a new peak usage value and handle accordingly</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">record_peak_mem_usage</span><span class="p">(</span><span class="n">memory_usage</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.set_memory_usage&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_iteration_runtime</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runtime</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">iteration</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that records the total runtime of a specific iteration.</span>
+
+<span class="sd">        :param runtime: The total runtime in seconds of an iteration.</span>
+<span class="sd">        :type runtime: float</span>
+<span class="sd">        :param iteration: The iteration that the runtime is being recorded for.</span>
+<span class="sd">        :type iteration: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iteration_runtime</span><span class="p">[</span><span class="n">iteration</span><span class="p">]</span> <span class="o">=</span> <span class="n">runtime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.set_iteration_runtime&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">new_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Increment the current_iteration counter and update the total runtime.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">init</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.new_iteration&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_runtime</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration_runtime</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.new_iteration&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">current_iteration_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract all the relevant information for the current iteration and format it into a string to be printed to the terminal.</span>
+
+<span class="sd">        :return: A formatted text representation containing all the developer information for the current model iteration.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">formatted_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\n\n</span><span class="s2">==== DEBUG -- GATOH model runtime statistics at iteration </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2">====</span>
+<span class="s2">                </span><span class="se">\n\n</span><span class="s2">Memory usage at the start of the iteration: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_memory_usage</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Recorded peak memory usage: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">peak_memory_usage</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Total number of model function calls: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">all_function_calls</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Current model runtime: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">total_runtime</span><span class="si">}</span>
+<span class="s2">            &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.current_iteration_repr&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">formatted_string</span>
 
 
 <div class="viewcode-block" id="LoggerVariables">
@@ -89,7 +274,7 @@
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">LoggerVariables</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Dataclass that defines the simulation variables that are stored and tracked by the Logger.</span>
+<span class="sd">    Dataclass that defines the simulation variables that are tracked and stored by the Logger.</span>
 
 <span class="sd">    :param max_iterations: The maximum number of iterations that the model will run its simulation for.</span>
 <span class="sd">    :type max_iterations: int</span>
@@ -103,6 +288,8 @@
     <span class="n">aggregate_opinions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># The number of radicalised agents that exist in the model at each timestep</span>
     <span class="n">radicalised_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The number of deradicalisation events that occur at each timestep</span>
+    <span class="n">deradicalised_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># The total count of opinion silencing effects that have ocurred in the simulation over time</span>
     <span class="n">silenced_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># The total count of opinion negation effects that have ocurred in the simulation over time</span>
@@ -125,6 +312,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinions</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_logodds</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
@@ -153,6 +341,17 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_deradicalised</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A simple setter function that checks the input flag and updates the deradicalisation count accordingly.</span>
+
+<span class="sd">        :param flag: A flag indicating if deradicalisation occurred.</span>
+<span class="sd">        :type flag: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="LoggerVariables.increment_silenced">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_silenced.html#gatoh.logging.LoggerVariables.increment_silenced">[docs]</a>
@@ -261,6 +460,7 @@
 
         <span class="c1"># Only these 3 variables must be carried over, all others are calculated at the end of the timestep independently</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_agents</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_agents</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
         <span class="k">return</span> <span class="kc">None</span></div>
@@ -300,7 +500,14 @@
 <span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">formatted_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\n\n</span><span class="s2">==== GATOH model variables at iteration </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2"> ====</span><span class="se">\n\n</span><span class="s2">Aggregate community opinion: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Number of radicalised agents in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Log odds of radicalisation ocurring: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_logodds</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Number of opinion silencing events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">Number of opinion negation events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">**** Layer statistics ****</span><span class="se">\n\n</span><span class="s2">&quot;&quot;&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\n\n</span><span class="s2">==== GATOH model variables at iteration </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2">====</span>
+<span class="s2">                </span><span class="se">\n\n</span><span class="s2">Aggregate community opinion: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of radicalisation events in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of deradicalisation events in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Log odds of radicalisation ocurring: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_logodds</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of opinion silencing events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of opinion negation events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n\n</span><span class="s2">**** Layer statistics ****</span><span class="se">\n\n</span><span class="s2">&quot;&quot;&quot;</span>
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_layers_repr</span><span class="p">()</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">formatted_string</span></div>
@@ -320,6 +527,7 @@
             <span class="s2">&quot;iterations&quot;</span><span class="p">,</span>
             <span class="s2">&quot;aggregate_opinions&quot;</span><span class="p">,</span>
             <span class="s2">&quot;radicalised_agents&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deradicalised_agents&quot;</span><span class="p">,</span>
             <span class="s2">&quot;silenced_agents&quot;</span><span class="p">,</span>
             <span class="s2">&quot;negated_agents&quot;</span><span class="p">,</span>
             <span class="s2">&quot;radicalisation_logodds&quot;</span><span class="p">,</span>
@@ -355,10 +563,9 @@
 <span class="sd">    :type print_outside_interval: bool, optional</span>
 <span class="sd">    :param write_file: A flag indicating if a log file should be written to disk at the end of logging.</span>
 <span class="sd">    :type write_file: bool, optional</span>
+<span class="sd">    :param debug: A flag indicating if additional developer statistics should be logged and reported.</span>
+<span class="sd">    :type debug: bool, optional</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># TODO: Expand on logging capabilities</span>
-
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -367,12 +574,16 @@
         <span class="n">print_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
         <span class="n">print_outside_interval</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">write_file</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">verbose</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">print_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">print_interval</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">print_outside_interval</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">print_outside_interval</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">write_file</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">write_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">debug</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span> <span class="n">LoggerVariables</span> <span class="o">=</span> <span class="n">LoggerVariables</span><span class="p">(</span><span class="n">max_iterations</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="p">:</span> <span class="n">LoggerDevStats</span> <span class="o">=</span> <span class="n">LoggerDevStats</span><span class="p">(</span><span class="n">max_iterations</span><span class="p">)</span>
 
 <div class="viewcode-block" id="GATOHLogger.format_non_interval_print">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.format_non_interval_print.html#gatoh.logging.GATOHLogger.format_non_interval_print">[docs]</a>
@@ -386,6 +597,8 @@
 <span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">non_interval_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">========== Iteration </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2"> ==========</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.format_non_interval_print&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">non_interval_string</span></div>
 
 
@@ -399,6 +612,9 @@
 <span class="sd">        :type init: bool, optional</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">new_iteration</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="n">init</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="o">.</span><span class="n">new_iteration</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="n">init</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.new_iteration&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -427,8 +643,42 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_radicalisation_logodds</span><span class="p">(</span><span class="n">radicalisation_logodds</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_interdependences</span><span class="p">(</span><span class="n">layer_interdependences</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_polarisations</span><span class="p">(</span><span class="n">layer_polarisations</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_aggregate_opinion&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_radicalisation_logodds&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_layer_interdependences&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_layer_polarisations&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.iteration&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">debug_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store all relevant developer variables based on the level of logging that has been specified.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">current</span><span class="p">,</span> <span class="n">peak</span> <span class="o">=</span> <span class="n">tracemalloc</span><span class="o">.</span><span class="n">get_traced_memory</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="o">.</span><span class="n">set_memory_usage</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="o">.</span><span class="n">current_iteration</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="o">.</span><span class="n">record_peak_mem_usage</span><span class="p">(</span><span class="n">peak</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.debug_iteration&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">debug_iteration_print</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A method which formats the debug statistics for printing.</span>
+
+<span class="sd">        :return: An appropriately formatted textual representation of debug statistics to be printed out by the model for this iteration.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">print_string</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="n">print_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="o">.</span><span class="n">current_iteration_repr</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.debug_iteration_print&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">print_string</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
 <div class="viewcode-block" id="GATOHLogger.iteration_print">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.iteration_print.html#gatoh.logging.GATOHLogger.iteration_print">[docs]</a>
@@ -436,17 +686,33 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A method which formats the model statistics at the appropriate print_interval.</span>
 
-<span class="sd">        :return: An appropriately formatted textrual representation to be printed out by the model for this iteration.</span>
+<span class="sd">        :return: An appropriately formatted textual representation of variables to be printed out by the model for this iteration.</span>
 <span class="sd">        :rtype: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">print_string</span><span class="p">:</span> <span class="nb">str</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">print_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">current_iteration_repr</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.current_iteration_repr&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.iteration_print&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">print_string</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">print_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_non_interval_print</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.iteration_print&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">print_string</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_function_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A wrapper to the DevStats log_function_call.</span>
+
+<span class="sd">        :param function_name: The name of the function that was called.</span>
+<span class="sd">        :type function_name: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="n">function_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.log_function_call&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="GATOHLogger.save_data">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.save_data.html#gatoh.logging.GATOHLogger.save_data">[docs]</a>
@@ -474,6 +740,7 @@
                     <span class="s2">&quot;iterations&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;aggregate_opinions&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">aggregate_opinions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;radicalised_agents&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;deradicalised_agents&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">deradicalised_agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;silenced_agents&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;negated_agents&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;radicalisation_logodds&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">radicalisation_logodds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -489,6 +756,10 @@
                     <span class="p">)</span>
 
                 <span class="n">csv_writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">row_dict</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.save_data&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="kc">True</span></div>
 </div>
 
