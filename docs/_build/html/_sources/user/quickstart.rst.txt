@@ -81,13 +81,17 @@ In the depiction below, we can see some examples of the behaviours that can emer
     ================================================================
 
 Whilst it was revolutionary at its time of creation, the Game of Life was developed in a context where computers were still in their infancy,
-and they were still basically fancy calculators. Now, in 2026, the newest :abbr:`CPUs (Computer Processing Units)` are capable of performing
-around 5 billion operations per second, and they have more memory available in just their L3 cache than multiple hard drives would have had collectively
-in the 1970s(!). Considering this, it is easy to see how :abbr:`ABMs (Agent-Based Models)` would have started evolving past these simple 2-dimensional,
-binary cells.
+and they were still basically just a step above calculators. To give an example, the Cray-1 -- a 5.5 ton supercomputer released in 1976 -- had
+a processor capable of running 80 million operations per second, and had 8.4 megabytes of memory available.
+
+Now, in 2026, the newest consumer :abbr:`CPUs (Computer Processing Units)` are capable of performing around 5 billion operations per second, and they
+have more memory available in just their L3 cache than 20 Cray-1 supercomputers would have had collectively in the 1970s(!). Considering this,
+it is easy to see how :abbr:`ABMs (Agent-Based Models)` would have started evolving past these simple 2-dimensional, binary cells in the following
+decades.
 
 Now it is possible to model extremely complex systems such as the spread of global pandemics, or the nature of peak-hour traffic in a large city.
 Although :abbr:`ABM (Agent-Based Modelling)` can be applied to many use-cases, there is still some care that must be taken when creating such models.
+
 Each area of interest has very specific characterisations, rules, and interactions, which must all be appropriately quantified and defined for the model
 to be representative of real life. Using the examples of global pandemics and car traffic, we can see that models for these scenarios would have inherently
 different approaches. A model that simulates a global pandemic might treat interactions between agents as the driving force that spreads the 'emergent behaviour'
