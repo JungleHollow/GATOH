@@ -84,9 +84,15 @@ Whilst it was revolutionary at its time of creation, the Game of Life was develo
 and they were still basically fancy calculators. Now, in 2026, the newest :abbr:`CPUs (Computer Processing Units)` are capable of performing
 around 5 billion operations per second, and they have more memory available in just their L3 cache than multiple hard drives would have had collectively
 in the 1970s(!). Considering this, it is easy to see how :abbr:`ABMs (Agent-Based Models)` would have started evolving past these simple 2-dimensional,
-on/off cells.
+binary cells.
 
-Now it is possible to model extremely complex systems such as the spread of global pandemics, or the nature of peak-hour traffic in a large city. 
+Now it is possible to model extremely complex systems such as the spread of global pandemics, or the nature of peak-hour traffic in a large city.
+Although :abbr:`ABM (Agent-Based Modelling)` can be applied to many use-cases, there is still some care that must be taken when creating such models.
+Each area of interest has very specific characterisations, rules, and interactions, which must all be appropriately quantified and defined for the model
+to be representative of real life. Using the examples of global pandemics and car traffic, we can see that models for these scenarios would have inherently
+different approaches. A model that simulates a global pandemic might treat interactions between agents as the driving force that spreads the 'emergent behaviour'
+(as interactions between agents would enable viral transmissions), whereas the 'interaction' between agents in a traffic model would in itself be the emergent
+behaviour (as the 'interaction' of a large number of agents would imply that traffic has built up).
 
 ------
 Agents
