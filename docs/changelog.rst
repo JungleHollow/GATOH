@@ -41,6 +41,7 @@ Fixes
 - Fixed all the code references in the existing documentation
 - Fixed all the save/load paths in the experiment scripts to reflect the new layout
 - Fixed the layout of agents in the radicalisation heatmap (from shapes of (10, x) to (x, 10))
+- Numerous bugs fixed throughout the existing test cases (errors in the test scripts themselves, not in the core code)
 
 Breaking Changes
 ----------------

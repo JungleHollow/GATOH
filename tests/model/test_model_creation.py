@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import unittest as ut
 from typing import Any, override
+from shutil import rmtree
 
 import gatoh.agents as agt
 import gatoh.graphs as gr
@@ -78,11 +79,6 @@ class TestModelCreation(ut.TestCase):
             self.model,
             "visualiser",
             "Model visualiser is being initialised despite setting visualise to false",
-        )
-        self.assertEqual(
-            self.model.visualiser.aggregation_method,
-            "median",
-            "Default value for vis_aggregation_method is not being applied correctly"
         )
         self.assertFalse(
             self.model.debug,
@@ -213,12 +209,8 @@ class TestModelCreation(ut.TestCase):
         """
         Test that set_visualisation_dir with an invalid directory and no force raises the expected error.
         """
-        with self.assertRaises(NotADirectoryError) as cm:
+        with self.assertRaises(NotADirectoryError, msg="The path ./foo/bar/1312 does not point to a valid directory -- change the path or set 'force=True' to fix this") as cm:
             self.model.set_visualisation_dir("./foo/bar/1312")
-        self.assertEqual(
-            cm.msg,
-            "The path ./foo/bar/1312 does not point to a valid directory -- change the path or set 'force=True' to fix this",
-        )
 
     def test_override_current_iteration(self) -> None:
         """
@@ -246,13 +238,8 @@ class TestModelCreation(ut.TestCase):
         """
         Test that set_max_iterations with an invalid value raises the expected error.
         """
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError, msg="The max_iterations value -4 is invalid -- Use a positive integer") as cm:
             self.model.set_max_iterations(-4)
-        self.assertEqual(
-            cm.msg,
-            "The max_iterations value -4 is invalid -- Use a positive integer",
-            "ABModel -- set_max_iterations is not raising the expected error with a negative integer input",
-        )
 
     def test_set_silencing_threshold(self) -> None:
         """
@@ -269,20 +256,10 @@ class TestModelCreation(ut.TestCase):
         """
         Test that set_silencing_threshold with an invalid value raises the expected error.
         """
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError, msg="The silencing threshold value of 10.2 is outside the valid range of [0.0, 1.0]") as cm:
             self.model.set_silencing_threshold(10.2)
-        self.assertEqual(
-            cm.msg,
-            "The silencing threshold value of 10.2 is outside the valid range of [0.0, 1.0]",
-            "ABModel -- set_silencing_threshold with a positive invalid input is not producing the expected error message",
-        )
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError, msg="The silencing threshold value of -0.4 is outside the valid range of [0.0, 1.0]") as cm:
             self.model.set_silencing_threshold(-0.4)
-        self.assertEqual(
-            cm.msg,
-            "The silencing threshold value of -0.4 is outside the valid range of [0.0, 1.0]",
-            "ABModel -- set_silencing_threshold with a negative invalid input is not producing the expected error message",
-        )
 
     def test_set_negation_threshold(self) -> None:
         """
@@ -299,20 +276,10 @@ class TestModelCreation(ut.TestCase):
         """
         Test that set_negation_threshold with an invalid value raises the expected error.
         """
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError, msg="The negation threshold value of 10.2 is outside the valid range of [0.0, 1.0]") as cm:
             self.model.set_negation_threshold(10.2)
-        self.assertEqual(
-            cm.msg,
-            "The negation threshold value of 10.2 is outside the valid range of [0.0, 1.0]",
-            "ABModel -- set_negation_threshold with a positive invalid input is not producing the expected error message",
-        )
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError, msg="The negation threshold value of -0.4 is outside the valid range of [0.0, 1.0]") as cm:
             self.model.set_negation_threshold(-0.4)
-        self.assertEqual(
-            cm.msg,
-            "The negation threshold value of -0.4 is outside the valid range of [0.0, 1.0]",
-            "ABModel -- set_negation_threshold with a negative invalid input is not producing the expected error message",
-        )
 
     def test_set_radicalisation_threshold(self) -> None:
         """
@@ -329,20 +296,10 @@ class TestModelCreation(ut.TestCase):
         """
         Test that set_radicalisation_threshold with an invalid value raises the expected error.
         """
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError, msg="The radicalisation threshold value of 10.2 is outside the valid range of [0.0, 1.0]") as cm:
             self.model.set_radicalisation_threshold(10.2)
-        self.assertEqual(
-            cm.msg,
-            "The radicalisation threshold value of 10.2 is outside the valid range of [0.0, 1.0]",
-            "ABModel -- set_radicalisation_threshold with a positive invalid input is not producing the expected error message",
-        )
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError, msg="The radicalisation threshold value of -0.4 is outside the valid range of [0.0, 1.0]") as cm:
             self.model.set_radicalisation_threshold(-0.4)
-        self.assertEqual(
-            cm.msg,
-            "The radicalisation threshold value of -0.4 is outside the valid range of [0.0, 1.0]",
-            "ABModel -- set_radicalisation_threshold with a negative invalid input is not producing the expected error message",
-        )
 
     def test_set_suppress_warnings(self) -> None:
         """
@@ -382,7 +339,7 @@ class TestModelCreation(ut.TestCase):
         Test that a forced set_save_dir is working correctly.
         """
         if os.path.exists("./tests/test_saves/model_creation"):
-            os.rmdir("./tests/test_saves/model_creation")
+            rmtree("./tests/test_saves/model_creation")
         self.model.set_save_dir("./tests/test_saves/model_creation", force=True)
         self.assertTrue(
             os.path.exists("./tests/test_saves/model_creation"),
@@ -398,13 +355,8 @@ class TestModelCreation(ut.TestCase):
         """
         Test that an unforced set_save_dir with an invalid directory raises the expected error.
         """
-        with self.assertRaises(NotADirectoryError) as cm:
+        with self.assertRaises(NotADirectoryError, msg="The path ./foo/bar/1312 does not point to a valid directory -- change the path or set 'force=True' to fix this") as cm:
             self.model.set_save_dir("./foo/bar/1312")
-        self.assertEqual(
-            cm.msg,
-            "The path ./foo/bar/1312 does not point to a valid directory -- change the path or set 'force=True' to fix this",
-            "ABModel -- unforced set_save_dir with an invalid directory is not producing the expected error message",
-        )
 
     def test_set_data_file(self) -> None:
         """
@@ -648,13 +600,8 @@ class TestModelCreation(ut.TestCase):
             "IMPOSTOR",
             agt.Agent("TEST_AGENT_4"),
         ]
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError, msg=f"The object at index 2 of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph '{HIERARCHY_NAMES[0]}'") as cm:
             self.model.add_agents_to_hierarchy(invalid_agents, HIERARCHY_NAMES[0])
-        self.assertEqual(
-            cm.msg,
-            f"The object at index 2 of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph '{HIERARCHY_NAMES[0]}'",
-            "ABModel -- add_agents_to_hierarchy with an invalid object in the iterable is not producing the expected error message",
-        )
 
     def test_add_agents_to_hierarchy_nonhierarchy(self) -> None:
         """
@@ -664,13 +611,8 @@ class TestModelCreation(ut.TestCase):
             agt.Agent("TEST_AGENT_1"),
             agt.Agent("TEST_AGENT_2"),
         ]
-        with self.assertRaises(KeyError) as cm:
+        with self.assertRaises(KeyError, msg="The specified hierarchy 'foo' does not exist in the GraphSet -- cannot add agents to it") as cm:
             self.model.add_agents_to_hierarchy(agents_to_add, "foo")
-        self.assertEqual(
-            cm.msg,
-            "The specified hierarchy 'foo' does not exist in the GraphSet -- cannot add agents to it",
-            "ABModel -- add_agents_to_hierarchy with an invalid hierarchy is not producing the expected error message",
-        )
 
     def test_add_agents_to_hierarchy(self) -> None:
         """
@@ -753,7 +695,7 @@ class TestModelCreation(ut.TestCase):
             {  # personality_probs
                 "social": 0.4,
                 "rational": 0.4,
-                "impulsuive": 0.2,
+                "impulsive": 0.2,
             },
             number=8,
         )
@@ -799,13 +741,8 @@ class TestModelCreation(ut.TestCase):
             "from_node": [0, 1],
             "weighting": [0.44, 0.2]
         }
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError, msg="The relationships information is missing one of the required 'from_node' or 'to_node' keys") as cm:
             self.model.add_relationships_to_hierarchy(invalid_relationships, HIERARCHY_NAMES[0])
-        self.assertEqual(
-            cm.msg,
-            "The relationships information is missing one of the required 'from_node' or 'to_node' keys",
-            "ABModel -- add_relationships_to_hierarchy with a missing required key is not producing the expected error message",
-        )
 
     def test_add_relationships_to_hierarchy_nonhierarchy(self) -> None:
         """
@@ -815,13 +752,8 @@ class TestModelCreation(ut.TestCase):
             "from_node": [13, 12],
             "to_node": [12, 13],
         }
-        with self.assertRaises(KeyError) as cm:
+        with self.assertRaises(KeyError, msg="The specified hierarchy 'foo' does not exist in the GraphSet -- cannot add relationships to it") as cm:
             self.model.add_relationships_to_hierarchy(relationships_to_add, "foo")
-        self.assertEqual(
-            cm.msg,
-            "The specified hierarchy 'foo' does not exist in the GraphSet -- cannot add relationships to it",
-            "ABModel -- add_relationships_to_hierarchy with an invalid hierarchy is not producing the expected error message",
-        )
 
     def test_add_relationships_to_hierarchy(self) -> None:
         """

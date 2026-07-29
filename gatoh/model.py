@@ -710,7 +710,7 @@ class ABModel:
         :raises ValueError: If any object in the agents iterable is of an invalid type.
         """
         for idx, agent in enumerate(agents):
-            if agent is not Agent:
+            if not isinstance(agent, Agent):
                 raise ValueError(f"The object at index {idx} of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph '{hierarchy}'")
         hierarchy_to_extend: Graph | None = self.graphs.get_hierarchy(hierarchy)
         if hierarchy_to_extend is None:

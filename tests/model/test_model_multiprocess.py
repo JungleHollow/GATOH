@@ -18,9 +18,9 @@ HIERARCHY_RW_DISTRIB: dict[str, tuple[float, float]] = {
     "D": (0.0, 0.05),
 }
 SAVEPATHS: dict[str, str] = {
-    "savedir": "./gatoh/tests/test_saves/model_simulation_multi",
-    "savefile": f"./gatoh/tests/test_saves/model_simulation_multi/{MODEL_ID}_model_variables.csv",
-    "visualisation": "./gatoh/tests/test_saves/model_simulation_multi/visualisation_output",
+    "savedir": "./tests/test_saves/model_simulation_multi",
+    "savefile": f"./tests/test_saves/model_simulation_multi/{MODEL_ID}_model_variables.csv",
+    "visualisation": "./tests/test_saves/model_simulation_multi/visualisation_output",
 }
 
 
@@ -28,6 +28,9 @@ class TestModelSimulationMulti(ut.TestCase):
     @classmethod
     @override
     def setUpClass(cls) -> None:
+        # Ensure that the save directory exists
+        if not os.path.exists(SAVEPATHS["savedir"]):
+            os.mkdir(SAVEPATHS["savedir"])
         # The multiprocessing worker pool
         cls._worker_pool = Pool()
         cls._model: md.ABModel = md.ABModel(

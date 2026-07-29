@@ -147,7 +147,7 @@ def watts_strogatz_graph(
 
 
 @multimethod
-def watts_strogatz_graph(n: int, k: int, p: float, seed: None) -> rx.PyGraph:
+def watts_strogatz_graph(n: int, k: int, p: float) -> rx.PyGraph:
     """
     Returns an undirected Watts-Strogatz small-world graph generated using :py:mod:`rustworkx`.
     An adapted version of :py:func:`~networkx.generators.random_graphs.watts_strogatz_graph` from the :py:mod:`NetworkX` library.

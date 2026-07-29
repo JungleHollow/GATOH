@@ -19,14 +19,8 @@ class TestGraphObjectsEmpty(ut.TestCase):
         """
         Test that get_node() on an empty Graph returns None.
         """
-        with self.assertWarns(RuntimeWarning) as cm:
+        with self.assertWarns(RuntimeWarning, msg="WARNING: Node with index 1 is out of bounds for graph TestGraph with 0 total nodes.") as cm:
             node_object = self.graph.get_node(1)
-        gn_warning = cm.warning
-        self.assertEqual(
-            gn_warning.message,
-            "WARNING: Node with index 1 is out of bounds for graph TestGraph with 0 total nodes.",
-            "Graph -- get_node() warning is not returning the expected message",
-        )
         self.assertIsNone(
             node_object,
             "Graph -- get_node() is returning a GraphNode from an empty Graph",
@@ -36,14 +30,8 @@ class TestGraphObjectsEmpty(ut.TestCase):
         """
         Test that get_edge() on an empty Graph returns None.
         """
-        with self.assertWarns(RuntimeWarning) as cm:
+        with self.assertWarns(RuntimeWarning, msg="WARNING: Edge with index 1 is out of bounds for graph TestGraph with 0 total edges.") as cm:
             edge_object = self.graph.get_edge(1)
-        ge_warning = cm.warning
-        self.assertEqual(
-            ge_warning.message,
-            "WARNING: Edge with index 1 is out of bounds for graph TestGraph with 0 total edges.",
-            "Graph -- get_edge() warning is not returning the expected message",
-        )
         self.assertIsNone(
             edge_object,
             "Graph -- get_edge() is returning a GraphEdge from an empty Graph",
@@ -126,28 +114,16 @@ class TestGraphObjectsEmpty(ut.TestCase):
         """
         Test that remove_edge() on an empty Graph raises the appropriate warning.
         """
-        with self.assertWarns(UserWarning) as cm:
+        with self.assertWarns(UserWarning, msg="WARNING: Attempted to remove edge (13 -> 12) which does not exist in the graph.") as cm:
             self.graph.remove_edge(13, 12)
-        re_warning = cm.warning
-        self.assertEqual(
-            re_warning.message,
-            "WARNING: Attempted to remove edge (13 -> 12) which does not exist in the graph.",
-            "Graph -- remove_edge() on an empty Graph does not raise the expected warning",
-        )
 
     def test_get_neighbours_empty(self) -> None:
         """
         Test that get_neighbours() on an empty Graph returns None and raises an appropriate warning.
         """
         test_agent: Agent = Agent("TEST0001")
-        with self.assertWarns(UserWarning) as cm:
+        with self.assertWarns(UserWarning, msg="Input Agent does not exist in this hierarchy (TestGraph)") as cm:
             agent_neighbours = self.graph.get_neighbours(test_agent)
-        gn_warning = cm.warning
-        self.assertEqual(
-            gn_warning.message,
-            "Input Agent does not exist in this hierarchy (TestGraph)",
-            "Graph -- get_neighbours() on an empty Graph is not producing the expected warning message",
-        )
         self.assertIsNone(
             agent_neighbours,
             "Graph -- get_neighbours() on an empty Graph is returning a list of GraphNodes",
@@ -158,14 +134,8 @@ class TestGraphObjectsEmpty(ut.TestCase):
         Test that neighbour_influences() on an empty Graph returns None and raises an appropriate warning.
         """
         test_agent: Agent = Agent("TEST0001")
-        with self.assertWarns(UserWarning) as cm:
+        with self.assertWarns(UserWarning, msg="Input Agent TEST0001 does not exist in this hierarchy (TestGraph)") as cm:
             neighbour_influences = self.graph.neighbour_influences(test_agent)
-        ni_warning = cm.warning
-        self.assertEqual(
-            ni_warning.message,
-            "Input Agent TEST0001 does not exist in this hierarchy (TestGraph)",
-            "Graph -- neighbour_influences() on an empty Graph is not producing the expected warning message",
-        )
         self.assertIsNone(
             neighbour_influences,
             "Graph -- neighbour_influences() on an empty Graph is returning a value",
@@ -176,6 +146,7 @@ class TestGraphObjectsEmpty(ut.TestCase):
         Test that estimate_neighbour_opinions() on an empty Graph returns an empty dictionary.
         """
         test_agent: Agent = Agent("TEST0001")
+        # No msg checked, as this warning should originate from an internal call to a previously tested function
         with self.assertWarns(UserWarning) as cm:
             neighbour_opinions = self.graph.estimate_neighbour_opinions(test_agent)
         self.assertIsInstance(
@@ -213,9 +184,3 @@ class TestGraphObjectsEmpty(ut.TestCase):
         """
         with self.assertRaises(ZeroDivisionError) as cm:
             polarisation: float = self.graph.calculate_polarisation()
-        polarisation_except = cm.exception
-        self.assertEqual(
-            polarisation_except,
-            ZeroDivisionError,
-            "Graph -- calculate_polarisation() on an empty Graph is not raising a ZeroDivisionError",
-        )

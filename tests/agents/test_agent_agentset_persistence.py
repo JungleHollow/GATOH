@@ -17,7 +17,7 @@ class TestAgentSetPersistence(ut.TestCase):
         for i in range(4):
             new_agent: Agent = Agent(f"{i}")
             _ = cls._agentset.add(new_agent)
-        cls._subdir_path: str = "./gatoh/tests/test_saves/agentset_persistence"
+        cls._subdir_path: str = "./tests/test_saves/agentset_persistence"
 
     def test_agent_pickle(self) -> None:
         """
@@ -51,8 +51,8 @@ class TestAgentSetPersistence(ut.TestCase):
                 "AgentSet -- write_agent_pickle() did not write an Agent object to the pickle file",
             )
             self.assertEqual(
-                loaded_pickle,
-                agent_to_pickle,
+                loaded_pickle.id,
+                agent_to_pickle.id,
                 "AgentSet -- write_agent_pickle() did not write the correct Agent object to the pickle file",
             )
             # Now check that extract_agent_pickle() is working
@@ -63,8 +63,8 @@ class TestAgentSetPersistence(ut.TestCase):
                 "AgentSet -- extract_agent_pickle() is not returning an Agent object",
             )
             self.assertEqual(
-                extracted_pickle,
-                agent_to_pickle,
+                extracted_pickle.id,
+                agent_to_pickle.id,
                 "AgentSet -- extract_agent_pickle() is not extracting the pickled Agent object correctly",
             )
 
@@ -107,8 +107,8 @@ class TestAgentSetPersistence(ut.TestCase):
                 "AgentSet -- save_agentset() is pickling one or more non-Agent objects to the subdirectory",
             )
             self.assertIn(
-                loaded_agent,
-                self._agentset,
+                loaded_agent.id,
+                self._agentset.get_agent_ids(),
                 "AgentSet -- save_agentset() is somehow pickling one or more Agents that do not exist in the AgentSet",
             )
 
@@ -132,8 +132,8 @@ class TestAgentSetPersistence(ut.TestCase):
         )
         for agent in new_agentset:
             self.assertIn(
-                agent,
-                self._agentset,
+                agent.id,
+                self._agentset.get_agent_ids(),
                 "AgentSet -- load_agentset() is somehow loading Agents that do not exist in the saved AgentSet",
             )
 

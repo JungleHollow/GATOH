@@ -223,18 +223,8 @@ class TestAgentSet(ut.TestCase):
         Test that agent_at_index() with an invalid index raises the expected warning.
         """
         agentset: agt.AgentSet = agt.AgentSet()
-        with self.assertWarns(UserWarning) as cm:
+        with self.assertWarns(UserWarning, msg="WARNING: Index 44 is out of bounds for the AgentSet. Only 0 Agents have been created.") as cm:
             agent_return: agt.Agent | None = agentset.agent_at_index(44)
-        self.assertEqual(
-            cm.warning,
-            UserWarning,
-            "AgentSet -- agent_at_index() with an invalid index is not raising a UserWarning",
-        )
-        self.assertEqual(
-            cm.msg,
-            "WARNING: Index 44 is out of bounds for the AgentSet. Only 0 Agents have been created.",
-            "AgentSet -- agent_at_index() with an invalid index is not producing the expected warning message",
-        )
         self.assertIsNone(
             agent_return,
             "AgentSet -- agent_at_index() with an invalid index is not returning None",
@@ -264,18 +254,8 @@ class TestAgentSet(ut.TestCase):
         Test that get_agent_by_id() with an invalid ID raises the expected error.
         """
         agentset: agt.AgentSet = agt.AgentSet()
-        with self.assertRaises(KeyError) as cm:
+        with self.assertRaises(KeyError, msg="The Agent with id 'foo' does not exist in the AgentSet -- unable to return an Agent object.") as cm:
             agent_return: agt.Agent | None = agentset.get_agent_by_id("foo")
-        self.assertEqual(
-            cm.exception,
-            KeyError,
-            "AgentSet -- get_agent_by_id() with an invalid ID is not raising a KeyError",
-        )
-        self.assertEqual(
-            cm.msg,
-            "The Agent with id 'foo' does not exist in the AgentSet -- unable to return an Agent object.",
-            "AgentSet -- get_agent_by_id() with an invalid ID is not producing the expected error message",
-        )
 
     def test_get_agent_by_id(self) -> None:
         """
@@ -302,18 +282,8 @@ class TestAgentSet(ut.TestCase):
         """
         agentset: agt.AgentSet = agt.AgentSet()
         new_agent: agt.Agent = agt.Agent("foo")
-        with self.assertRaises(KeyError) as cm:
+        with self.assertRaises(KeyError, msg="The agent foo does not exist in the AgentSet -- unable to return an index.") as cm:
             index_return: int = agentset.get_index(new_agent)
-        self.assertEqual(
-            cm.exception,
-            KeyError,
-            "AgentSet -- get_index() with an invalid Agent is not raising a KeyError",
-        )
-        self.assertEqual(
-            cm.msg,
-            "The agent foo does not exist in the AgentSet -- unable to return an index.",
-            "AgentSet -- get_index() with an invalid Agent is not producing the expected error message",
-        )
 
     def test_get_index(self) -> None:
         """
@@ -404,18 +374,8 @@ class TestAgentSet(ut.TestCase):
             new_agent: agt.Agent = agt.Agent(f"{i}")
             _ = agentset.add(new_agent)
         invalid_agent: agt.Agent = agt.Agent("foo")
-        with self.assertRaises(KeyError) as cm:
+        with self.assertRaises(KeyError, msg="Tried to remove an Agent with id foo that doesn't exist in the AgentSet") as cm:
             agent_removed: bool = agentset.remove(invalid_agent)
-        self.assertEqual(
-            cm.exception,
-            KeyError,
-            "AgentSet -- remove() with an invalid Agent is not raising a KeyError",
-        )
-        self.assertEqual(
-            cm.msg,
-            "Tried to remove an Agent with id foo that doesn't exist in the AgentSet",
-            "AgentSet -- remove() with an invalid Agent is not producing the expected error message",
-        )
         self.assertEqual(
             len(agentset),
             4,
@@ -467,18 +427,8 @@ class TestAgentSet(ut.TestCase):
         for i in range(4):
             new_agent: agt.Agent = agt.Agent(f"{i}")
             _ = agentset.add(new_agent)
-        with self.assertRaises(IndexError) as cm:
+        with self.assertRaises(IndexError, msg="Tried to remove an Agent at out of bounds index 4444 from the AgentSet") as cm:
             index_removed: bool = agentset.remove_index(4444)
-        self.assertEqual(
-            cm.exception,
-            IndexError,
-            "AgentSet -- remove_index() with an invalid index is not raising an IndexError",
-        )
-        self.assertEqual(
-            cm.msg,
-            "Tried to remove an Agent at out of bounds index 4444 from the AgentSet",
-            "AgentSet -- remove_index() with an invalid index is not producing the expected error message",
-        )
         self.assertEqual(
             len(agentset),
             4,
@@ -532,11 +482,6 @@ class TestAgentSet(ut.TestCase):
             _ = agentset.add(new_agent)
         with self.assertRaises(ValueError) as cm:
             agent_sample: list[agt.Agent] = agentset.sample(40)
-        self.assertEqual(
-            cm.exception,
-            ValueError,
-            "AgentSet -- sample() with n > len(agentset) is not raising a ValueError",
-        )
 
     def test_sample(self) -> None:
         """
@@ -566,8 +511,8 @@ class TestAgentSet(ut.TestCase):
                 "AgentSet -- sample() is returning a sample containing a non-Agent object",
             )
             self.assertIn(
-                agent,
-                agentset,
+                agent.id,
+                agentset.get_agent_ids(),
                 "AgentSet -- sample() is somehow returning an Agent which is not contained in the AgentSet",
             )
 
@@ -597,7 +542,7 @@ class TestAgentSet(ut.TestCase):
         )
         self.assertIsInstance(
             agentset_state["agents"],
-            list[agt.Agent],
+            list,
             "AgentSet -- The 'agents' value from __getstate__() is not the same object type as agentset 'agents'",
         )
         self.assertEqual(

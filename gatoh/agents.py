@@ -287,7 +287,13 @@ class Agent:
         :return: The value stored for the parameter.
         :rtype: Any
         """
-        return self.__dict__.get(name)
+        attribute: T | None = self.__dict__.get(name)
+        if attribute is None:
+            warnings.warn(
+                f"WARNING: Attempting to get an agent attribute ({name}) which doesn't exist.",
+                category=UserWarning
+            )
+        return attribute
 
     def store_previous_opinion(self) -> None:
         """
@@ -1264,6 +1270,18 @@ class AgentSet:
         """
         sampled_agents: list[Agent] = self.random.sample(self.agents, n)
         return deepcopy(sampled_agents)
+
+    def get_agent_ids(self) -> list[str]:
+        """
+        A getter function that returns the IDs of all agents contained within the agent set.
+
+        :return: All of the contained agents' IDs.
+        :rtype: list[str]
+        """
+        agent_ids: list[str] = []
+        for agent in self.agents:
+            agent_ids.append(agent.id)
+        return agent_ids
 
     @override
     def __getstate__(self) -> dict[str, list[Agent] | rd.Random]:

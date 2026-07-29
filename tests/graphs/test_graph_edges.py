@@ -18,8 +18,9 @@ class TestGraphEdges(ut.TestCase):
         """
         Test that GraphEdges are initialised correctly with no optional arguments passed.
         """
-        self.assertIsNone(
-            self.graph_edge.index,
+        self.assertNotHasAttr(
+            self.graph_edge,
+            "index",
             "GraphEdge -- existing edge index before any assignation",
         )
         self.assertEqual(

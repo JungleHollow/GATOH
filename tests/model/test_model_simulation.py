@@ -17,9 +17,9 @@ HIERARCHY_RW_DISTRIB: dict[str, tuple[float, float]] = {
     "D": (0.0, 0.05),
 }
 SAVEPATHS: dict[str, str] = {
-    "savedir": "./gatoh/tests/test_saves/model_simulation",
-    "savefile": f"./gatoh/tests/test_saves/model_simulation/{MODEL_ID}_model_variables.csv",
-    "visualisation": "./gatoh/tests/test_saves/model_simulation/visualisation_output",
+    "savedir": "./tests/test_saves/model_simulation",
+    "savefile": f"./tests/test_saves/model_simulation/{MODEL_ID}_model_variables.csv",
+    "visualisation": "./tests/test_saves/model_simulation/visualisation_output",
 }
 
 

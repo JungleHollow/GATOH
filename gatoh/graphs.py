@@ -41,6 +41,7 @@ class GenerationParam(TypedDict):
     m: int
     p: float
     sbm_sizes: int
+    ensure_complete: bool
 
 
 class GraphNode:
@@ -221,6 +222,7 @@ class Graph:
             "p": 0.25,
             "m": 3,
             "sbm_sizes": 10,
+            "ensure_complete": True
         }
         self.pending_edge_changes: dict[str, EdgeChanges] = {}
 
@@ -394,25 +396,18 @@ class Graph:
         graph_edges: list[tuple[int, int, GraphEdge]] = []
         from_nodes: list[int] = edges["from_node"]
         to_nodes: list[int] = edges["to_node"]
-        weightings: list[float] | None = None
-        rw_params: list[tuple[float, float]] | None = None
-
-        if "weighting" in edges.keys():
-            weightings = edges["weighting"]
-        if "rw_param" in edges.keys():
-            rw_params = edges["rw_param"]
+        weightings: list[float] | None = edges.get("weighting")
+        rw_params: list[tuple[float, float]] | None = edges.get("rw_param")
 
         # Used in case that explicit hierarchy names are set per edge (in the case of the mixed-hierarchy base graph in the model for example)
-        names: list[str] | None = None
-        if "name" in edges.keys():
-            names = edges["name"]
+        names: list[str] | None = edges.get("name")
 
         # Declare the data type of 'edge'
         edge: GraphEdge
 
-        if weightings:
-            if names:
-                if rw_params:
+        if weightings is not None:
+            if names is not None:
+                if rw_params is not None:
                     for i in range(len(from_nodes)):
                         edge = GraphEdge(
                             names[i],
@@ -432,7 +427,7 @@ class Graph:
                         )
                         graph_edges.append((from_nodes[i], to_nodes[i], edge))
             else:
-                if rw_params:
+                if rw_params is not None:
                     for i in range(len(from_nodes)):
                         edge = GraphEdge(
                             self.name,
@@ -448,8 +443,8 @@ class Graph:
                         )
                         graph_edges.append((from_nodes[i], to_nodes[i], edge))
         else:
-            if names:
-                if rw_params:
+            if names is not None:
+                if rw_params is not None:
                     for i in range(len(from_nodes)):
                         edge = GraphEdge(
                             names[i], from_nodes[i], to_nodes[i], rw_params=rw_params[i]
@@ -460,7 +455,7 @@ class Graph:
                         edge = GraphEdge(names[i], from_nodes[i], to_nodes[i])
                         graph_edges.append((from_nodes[i], to_nodes[i], edge))
             else:
-                if rw_params:
+                if rw_params is not None:
                     for i in range(len(from_nodes)):
                         edge = GraphEdge(
                             self.name,
@@ -650,7 +645,7 @@ class Graph:
         :return: The bidirectional edge weightings between two nodes (if they exist).
         :rtype: dict[tuple[int, int], float] | None
         """
-        if not self.relationship_exists(node_1, node_2):
+        if self.relationship_exists(node_1, node_2) is None and self.relationship_exists(node_2, node_1) is None:
             return None
 
         relationships_dict: dict[tuple[int, int], float] = {}
@@ -801,7 +796,7 @@ class Graph:
         :raises UserWarning: If the edge (from_node -> to_node) does not exist in the Graph.
         """
         edge_exists: int | None = self.relationship_exists(from_node, to_node)
-        if edge_exists:
+        if edge_exists is not None:
             self.graph.remove_edge(from_node, to_node)
 
             # Check the number of relationships that each node now has
@@ -961,7 +956,7 @@ class Graph:
         """
         neighbour_nodes: list[GraphNode] = []
         agent_index: int | None = self.get_agent_index(agent)
-        if not agent_index:
+        if agent_index is None:
             if not self.suppress_warnings:
                 warnings.warn(
                     f"Input Agent does not exist in this hierarchy ({self.name})",
@@ -1050,7 +1045,6 @@ class Graph:
         :return: The final change in the Agent's opinion caused by their neighbours in this hierarchy.
         :rtype: float
         """
-        agent_hierarchy_weighting: float = agent.social_weightings[self.name]
         agent_index: int | None = self.get_agent_index(agent)
         if agent_index is None:
             if not self.suppress_warnings:
@@ -1059,6 +1053,8 @@ class Graph:
                     category=UserWarning,
                 )
             return None
+
+        agent_hierarchy_weighting: float = agent.social_weightings[self.name]
         neighbour_indices: rx.NodeIndices = self.graph.neighbors(agent_index)
 
         weighted_deltas: list[float] = []
@@ -1184,7 +1180,7 @@ class Graph:
             raw_observed_opinion: float = node.agent.opinion
             attenuated_opinion: float = beta_value_attenuation(raw_observed_opinion)
 
-            if -0.5 > attenuated_opinion > 0.5:
+            if attenuated_opinion < -0.5 or 0.5 < attenuated_opinion:
                 observed_opinions[node.agent.id] = raw_observed_opinion
 
         return observed_opinions
@@ -1220,7 +1216,7 @@ class Graph:
             attenuated_opinion: float = beta_value_attenuation(raw_observed_opinion)
 
             if (
-                -0.5 > attenuated_opinion > 0.5
+                attenuated_opinion < -0.5 or 0.5 < attenuated_opinion
             ):  # Only take values which are still relevant after attenuation (i.e. values stronger than an absolute 0.5 after attenuation)
                 observed_opinions.append(
                     raw_observed_opinion
@@ -1260,8 +1256,9 @@ class Graph:
             for j in self.graph.nodes():
                 if i.agent.id == j.agent.id:
                     continue
-                opinion_distance: float = abs(i.agent.opinion - j.agent.opinion)
-                opinion_distances[f"{i.index},{j.index}"] = opinion_distance
+                else:
+                    opinion_distance: float = abs(i.agent.opinion - j.agent.opinion)
+                    opinion_distances[f"{i.index},{j.index}"] = opinion_distance
 
         y: float = sum(opinion_distances.values()) / len(opinion_distances.values())
 

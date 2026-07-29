@@ -18,8 +18,9 @@ class TestGraphNodes(ut.TestCase):
             graph_node.agent,
             "GraphNode -- agent not being initialised correctly",
         )
-        self.assertIsNone(
-            graph_node.index,
+        self.assertNotHasAttr(
+            graph_node,
+            "index",
             "GraphNode -- Existing index attribute before any assignation",
         )
         graph_node.set_index(4)

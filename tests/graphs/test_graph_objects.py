@@ -17,7 +17,7 @@ class TestGraphObjects(ut.TestCase):
         self.agents: list[Agent] = [
             Agent(
                 f"TEST{i + 1:04}",
-                {"TestGraph", 0.5},
+                {"TestGraph": 0.5},
                 0.0,
                 True,
                 ("neutral", 0.5),
@@ -111,8 +111,9 @@ class TestGraphObjects(ut.TestCase):
             0,
             "Graph -- edge_count attribute is being updated unexpectedly",
         )
-        self.assertIsNone(
-            self.graph.graph.edges()[0].index,
+        self.assertNotHasAttr(
+            self.graph.graph.edges()[0],
+            "index",
             "Graph -- GraphEdge is being assigned an index without calling update_edge_indices()",
         )
         self.graph.update_edge_indices()
@@ -141,8 +142,9 @@ class TestGraphObjects(ut.TestCase):
             0,
             "Graph -- node_count attribute is being updated unexpectedly",
         )
-        self.assertIsNone(
-            empty_graph.graph.nodes()[0].index,
+        self.assertNotHasAttr(
+            empty_graph.graph.nodes()[0],
+            "index",
             "Graph -- GraphNode is being assigned an index without calling update_node_indices()",
         )
         empty_graph.update_node_indices()
@@ -284,8 +286,9 @@ class TestGraphObjects(ut.TestCase):
             22,
             "Graph -- remove_node() is updating the node_count attribute",
         )
-        self.assertIsNone(
-            self.graph.graph.nodes()[4],
+        self.assertNotIn(
+            4,
+            self.graph.graph.node_indices(),
             "Graph -- remove_node() is not removing the GraphNode object at the correct index",
         )
 
@@ -306,8 +309,9 @@ class TestGraphObjects(ut.TestCase):
             1,
             "Graph -- remove_edge() is updating the edge_count attribute",
         )
-        self.assertIsNone(
-            self.graph.graph.edges()[0],
+        self.assertNotIn(
+            0,
+            self.graph.graph.edge_indices(),
             "Graph -- remove_edge() is not removing the GraphEdge object with the corresponding nodes",
         )
 
@@ -327,12 +331,14 @@ class TestGraphObjects(ut.TestCase):
             2,
             "Graph -- remove_edge() is updating the edge_count attribute (bidirectional case)",
         )
-        self.assertIsNone(
-            self.graph.graph.edges()[0],
+        self.assertNotIn(
+            0,
+            self.graph.graph.edge_indices(),
             "Graph -- remove_edge() is not removing the GraphEdge object with the corresponding direction (bidirectional)",
         )
-        self.assertIsNotNone(
-            self.graph.graph.edges()[1],
+        self.assertIn(
+            1,
+            self.graph.graph.edge_indices(),
             "Graph -- remove_edge() is removing an edge between nodes in a direction that was not specified",
         )
 
@@ -487,10 +493,10 @@ class TestGraphObjects(ut.TestCase):
         """
         Test that agent_radicalisation_change() correctly changes the Agent's radicalisation.
         """
-        self.graph.graph.nodes()[0].agent.radicalisation = False
+        self.graph.graph.nodes()[0].agent.radicalised = False
         self.graph.agent_radicalisation_change(self.graph.graph.nodes()[0].agent, True)
         self.assertTrue(
-            self.graph.graph.nodes()[0].agent.radicalisation,
+            self.graph.graph.nodes()[0].agent.radicalised,
             "Graph -- agent_radicalisation_change() is not updating the Agent radicalisation correctly",
         )
 
@@ -518,8 +524,8 @@ class TestGraphObjects(ut.TestCase):
         # therefore weighted_delta = -0.1 * 0.5 * 0.5
         # = -0.025
         # No other neighbours to affect the relative weighting, so the final_change should equal -0.025
-        self.graph.graph.nodes()[13].opinion = 0.6
-        self.graph.graph.nodes()[12].opinion = 0.4
+        self.graph.graph.nodes()[13].agent.opinion = 0.6
+        self.graph.graph.nodes()[12].agent.opinion = 0.4
         edge_to_add = {
             "from_node": [13],
             "to_node": [12],
@@ -544,11 +550,11 @@ class TestGraphObjects(ut.TestCase):
         """
         Test that neighbour_influences() on a valid Agent with multiple neighbours returns the expected value.
         """
-        self.graph.graph.nodes()[13].opinion = 0.0
-        self.graph.graph.nodes()[12].opinion = 0.85
-        self.graph.graph.nodes()[4].opinion = 0.44
-        self.graph.graph.nodes()[7].opinion = -0.15
-        self.graph.graph.nodes()[21].opinion = 0.17
+        self.graph.graph.nodes()[13].agent.opinion = 0.0
+        self.graph.graph.nodes()[12].agent.opinion = 0.85
+        self.graph.graph.nodes()[4].agent.opinion = 0.44
+        self.graph.graph.nodes()[7].agent.opinion = -0.15
+        self.graph.graph.nodes()[21].agent.opinion = 0.17
         edges_to_add = {
             "from_node": [13, 13, 13, 13],
             "to_node": [12, 4, 7, 21],
@@ -602,9 +608,9 @@ class TestGraphObjects(ut.TestCase):
         # therefore weighted_delta = -0.1 * 0.5 * 0.5
         # = -0.025
         # No other neighbours to affect the relative weighting, so the final_change should equal -0.025
-        self.graph.graph.nodes()[13].opinion = 0.6
-        self.graph.graph.nodes()[12].opinion = 0.4
-        self.graph.graph.nodes()[12].radicalised = True
+        self.graph.graph.nodes()[13].agent.opinion = 0.6
+        self.graph.graph.nodes()[12].agent.opinion = 0.4
+        self.graph.graph.nodes()[12].agent.radicalised = True
         edge_to_add = {
             "from_node": [13],
             "to_node": [12],
@@ -631,13 +637,13 @@ class TestGraphObjects(ut.TestCase):
         """
         Test that neighbour_influences() on a valid Agent with multiple, partially radicalised Agents will return the correct value.
         """
-        self.graph.graph.nodes()[13].opinion = 0.0
-        self.graph.graph.nodes()[13].personality = "rational"
-        self.graph.graph.nodes()[12].opinion = 0.85
-        self.graph.graph.nodes()[12].radicalised = True
-        self.graph.graph.nodes()[4].opinion = 0.44
-        self.graph.graph.nodes()[7].opinion = -0.15
-        self.graph.graph.nodes()[21].opinion = 0.17
+        self.graph.graph.nodes()[13].agent.opinion = 0.0
+        self.graph.graph.nodes()[13].agent.personality = "rational"
+        self.graph.graph.nodes()[12].agent.opinion = 0.85
+        self.graph.graph.nodes()[12].agent.radicalised = True
+        self.graph.graph.nodes()[4].agent.opinion = 0.44
+        self.graph.graph.nodes()[7].agent.opinion = -0.15
+        self.graph.graph.nodes()[21].agent.opinion = 0.17
         edges_to_add = {
             "from_node": [13, 13, 13, 13],
             "to_node": [12, 4, 7, 21],
@@ -702,10 +708,10 @@ class TestGraphObjects(ut.TestCase):
         """
         Test that estimate_neighbour_opinions() on a valid Agent with multiple neighbours returns the expected output.
         """
-        self.graph.graph.nodes()[12].opinion = 0.1
-        self.graph.graph.nodes()[4].opinion = 0.93
-        self.graph.graph.nodes()[2].opinion = 0.44
-        self.graph.graph.nodes()[9].opinion = -0.99
+        self.graph.graph.nodes()[12].agent.opinion = 0.1
+        self.graph.graph.nodes()[4].agent.opinion = 0.93
+        self.graph.graph.nodes()[2].agent.opinion = 0.44
+        self.graph.graph.nodes()[9].agent.opinion = -0.99
         edges_to_add = {
             "from_node": [13, 13],
             "to_node": [12, 4],
@@ -773,7 +779,7 @@ class TestGraphObjects(ut.TestCase):
         """
         Test that estimate_opinion_climate() on a vaild Agent with a single neighbour will return the expected value.
         """
-        self.graph.graph.nodes()[12].opinion = 0.21
+        self.graph.graph.nodes()[12].agent.opinion = 0.21
         edge_to_add = {
             "from_node": [13],
             "to_node": [12],
@@ -798,7 +804,7 @@ class TestGraphObjects(ut.TestCase):
         """
         Test that estimate_opinion_climate() on a valid Agent with no neighbours, but strong indirect opinions will return the expected value.
         """
-        self.graph.graph.nodes()[12].opinion = 0.99
+        self.graph.graph.nodes()[12].agent.opinion = 0.99
         opinion_climate = self.graph.estimate_opinion_climate(
             self.graph.get_node(13).agent
         )
@@ -817,9 +823,9 @@ class TestGraphObjects(ut.TestCase):
         """
         Test that estimate_opinion_climate on a valid Agent with direct neighbours and a strong indirect opinion will return the expected value.
         """
-        self.graph.graph.nodes()[12].opinion = 0.99
-        self.graph.graph.nodes()[4].opinion = 0.44
-        self.graph.graph.nodes()[15].opinion = -0.12
+        self.graph.graph.nodes()[12].agent.opinion = 0.99
+        self.graph.graph.nodes()[4].agent.opinion = 0.44
+        self.graph.graph.nodes()[15].agent.opinion = -0.12
         edges_to_add = {
             "from_node": [13, 13],
             "to_node": [4, 15],
@@ -869,8 +875,8 @@ class TestGraphObjects(ut.TestCase):
         """
         simple_graph: gr.Graph = gr.Graph("SimpleGraph", (0.0, 0.0))
         agents_to_add: list[Agent] = [
-            Agent("SIMPLE1", 0.2),
-            Agent("SIMPLE2", 0.8),
+            Agent("SIMPLE1", 0.2, {"SimpleGraph": 1.0}),
+            Agent("SIMPLE2", 0.8, {"SimpleGraph": 1.0}),
         ]
         simple_graph.add_nodes(agents_to_add)
         polarisation = simple_graph.calculate_polarisation()

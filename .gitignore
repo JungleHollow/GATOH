@@ -36,3 +36,14 @@ experiments/Base/RandomWalk/__pycache__/
 experiments/Base/SocialSusceptibility/__pycache__/
 gatoh/__pycache__/
 data/CaseStudy/
+tests/__pycache__/
+tests/agents/__pycache__/
+tests/graphs/__pycache__/
+tests/model/__pycache__/
+tests/logging/__pycache__/
+tests/test_saves/agentset_persistence/
+tests/test_saves/model_creation/
+tests/test_saves/model_simulation/visualisation_output/
+tests/test_saves/model_simulation_multi/visualisation_output/
+tests/utils/__pycache__/
+tests/visualisation/__pycache__/
