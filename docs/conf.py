@@ -149,5 +149,5 @@ def avoid_duplicate_in_dispatch(app, obj, bound_method):
 
 
 def setup(app):
-    app.connect("config-inited", _get_versions)
+    # app.connect("config-inited", _get_versions)
     app.connect("autodoc-before-process-signature", avoid_duplicate_in_dispatch)
