@@ -19,8 +19,6 @@ dependencies = [
     "scipy",
     "pyyaml",
     "multimethod",
-    "pycairo",
-    "PyGObject",
     "seaborn",
 ]
 classifiers = [
