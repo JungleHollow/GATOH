@@ -121,6 +121,7 @@
     <span class="n">m</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">p</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">sbm_sizes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">ensure_complete</span><span class="p">:</span> <span class="nb">bool</span>
 
 
 <div class="viewcode-block" id="GraphNode">
@@ -330,6 +331,7 @@
             <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
             <span class="s2">&quot;m&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
             <span class="s2">&quot;sbm_sizes&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="s2">&quot;ensure_complete&quot;</span><span class="p">:</span> <span class="kc">True</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pending_edge_changes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EdgeChanges</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -529,25 +531,18 @@
         <span class="n">graph_edges</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">GraphEdge</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">from_nodes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="s2">&quot;from_node&quot;</span><span class="p">]</span>
         <span class="n">to_nodes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="s2">&quot;to_node&quot;</span><span class="p">]</span>
-        <span class="n">weightings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">rw_params</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="k">if</span> <span class="s2">&quot;weighting&quot;</span> <span class="ow">in</span> <span class="n">edges</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">weightings</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="s2">&quot;weighting&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="s2">&quot;rw_param&quot;</span> <span class="ow">in</span> <span class="n">edges</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">rw_params</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="s2">&quot;rw_param&quot;</span><span class="p">]</span>
+        <span class="n">weightings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">edges</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weighting&quot;</span><span class="p">)</span>
+        <span class="n">rw_params</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">edges</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rw_param&quot;</span><span class="p">)</span>
 
         <span class="c1"># Used in case that explicit hierarchy names are set per edge (in the case of the mixed-hierarchy base graph in the model for example)</span>
-        <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">edges</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">names</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">edges</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
 
         <span class="c1"># Declare the data type of &#39;edge&#39;</span>
         <span class="n">edge</span><span class="p">:</span> <span class="n">GraphEdge</span>
 
-        <span class="k">if</span> <span class="n">weightings</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">names</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">rw_params</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">weightings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">rw_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">from_nodes</span><span class="p">)):</span>
                         <span class="n">edge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span>
                             <span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
@@ -567,7 +562,7 @@
                         <span class="p">)</span>
                         <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">edge</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">rw_params</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">rw_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">from_nodes</span><span class="p">)):</span>
                         <span class="n">edge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
@@ -583,8 +578,8 @@
                         <span class="p">)</span>
                         <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">edge</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">names</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">rw_params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">rw_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">from_nodes</span><span class="p">)):</span>
                         <span class="n">edge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span>
                             <span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rw_params</span><span class="o">=</span><span class="n">rw_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
@@ -595,7 +590,7 @@
                         <span class="n">edge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
                         <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">edge</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">rw_params</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">rw_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">from_nodes</span><span class="p">)):</span>
                         <span class="n">edge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
@@ -794,7 +789,7 @@
 <span class="sd">        :return: The bidirectional edge weightings between two nodes (if they exist).</span>
 <span class="sd">        :rtype: dict[tuple[int, int], float] | None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationship_exists</span><span class="p">(</span><span class="n">node_1</span><span class="p">,</span> <span class="n">node_2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationship_exists</span><span class="p">(</span><span class="n">node_1</span><span class="p">,</span> <span class="n">node_2</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationship_exists</span><span class="p">(</span><span class="n">node_2</span><span class="p">,</span> <span class="n">node_1</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="n">relationships_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -963,7 +958,7 @@
 <span class="sd">        :raises UserWarning: If the edge (from_node -&gt; to_node) does not exist in the Graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">edge_exists</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationship_exists</span><span class="p">(</span><span class="n">from_node</span><span class="p">,</span> <span class="n">to_node</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">edge_exists</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">edge_exists</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">from_node</span><span class="p">,</span> <span class="n">to_node</span><span class="p">)</span>
 
             <span class="c1"># Check the number of relationships that each node now has</span>
@@ -1144,7 +1139,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">neighbour_nodes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GraphNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">agent_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_agent_index</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">agent_index</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">agent_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">suppress_warnings</span><span class="p">:</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Input Agent does not exist in this hierarchy (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
@@ -1239,7 +1234,6 @@
 <span class="sd">        :return: The final change in the Agent&#39;s opinion caused by their neighbours in this hierarchy.</span>
 <span class="sd">        :rtype: float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">agent_hierarchy_weighting</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
         <span class="n">agent_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_agent_index</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">agent_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">suppress_warnings</span><span class="p">:</span>
@@ -1248,6 +1242,8 @@
                     <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">agent_hierarchy_weighting</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
         <span class="n">neighbour_indices</span><span class="p">:</span> <span class="n">rx</span><span class="o">.</span><span class="n">NodeIndices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">agent_index</span><span class="p">)</span>
 
         <span class="n">weighted_deltas</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1379,7 +1375,7 @@
             <span class="n">raw_observed_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span>
             <span class="n">attenuated_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">beta_value_attenuation</span><span class="p">(</span><span class="n">raw_observed_opinion</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">&gt;</span> <span class="n">attenuated_opinion</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">attenuated_opinion</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">0.5</span> <span class="ow">or</span> <span class="mf">0.5</span> <span class="o">&lt;</span> <span class="n">attenuated_opinion</span><span class="p">:</span>
                 <span class="n">observed_opinions</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_observed_opinion</span>
 
         <span class="k">return</span> <span class="n">observed_opinions</span></div>
@@ -1418,7 +1414,7 @@
             <span class="n">attenuated_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">beta_value_attenuation</span><span class="p">(</span><span class="n">raw_observed_opinion</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="p">(</span>
-                <span class="o">-</span><span class="mf">0.5</span> <span class="o">&gt;</span> <span class="n">attenuated_opinion</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
+                <span class="n">attenuated_opinion</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">0.5</span> <span class="ow">or</span> <span class="mf">0.5</span> <span class="o">&lt;</span> <span class="n">attenuated_opinion</span>
             <span class="p">):</span>  <span class="c1"># Only take values which are still relevant after attenuation (i.e. values stronger than an absolute 0.5 after attenuation)</span>
                 <span class="n">observed_opinions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">raw_observed_opinion</span>
@@ -1461,8 +1457,9 @@
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">j</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                     <span class="k">continue</span>
-                <span class="n">opinion_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span> <span class="o">-</span> <span class="n">j</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span><span class="p">)</span>
-                <span class="n">opinion_distances</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">j</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">opinion_distance</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">opinion_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span> <span class="o">-</span> <span class="n">j</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span><span class="p">)</span>
+                    <span class="n">opinion_distances</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">j</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">opinion_distance</span>
 
         <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">opinion_distances</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">opinion_distances</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 

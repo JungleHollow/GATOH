@@ -21,6 +21,7 @@ dulwich==1.2.7
 executing==2.2.1
 fastjsonschema==2.21.2
 fonttools==4.63.0
+-e git+https://github.com/JungleHollow/GATOH@0e8f3fab4b15a8f0631915214221fb3cb6e247c0#egg=gatoh
 h11==0.16.0
 idna==3.18
 imagesize==2.0.0
