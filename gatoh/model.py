@@ -18,7 +18,7 @@ from matplotlib.figure import Figure
 from rustworkx.rustworkx import NoEdgeBetweenNodes
 from rustworkx import all_shortest_paths as rx_shortest_paths
 
-from gatoh.agents import Agent, AgentSet
+from gatoh.agents import Agent, AgentSet, OPINION_MAX
 from gatoh.graphs import Graph, GraphNode, GraphEdge, GraphSet
 from gatoh.logging import GATOHLogger
 from gatoh.utils import (
@@ -27,6 +27,23 @@ from gatoh.utils import (
     create_config_file,
 )
 from gatoh.visualisation import ABVisualiser
+
+
+# Define global constants to avoid using "magic numbers" throughout the code
+
+# The valid range of silencing threshold values
+MIN_SILENCING_THRESH: float = 0.0
+MAX_SILENCING_THRESH: float = 1.0
+# The valid range of negation threshold values
+MIN_NEGATION_THRESH: float = 0.0
+MAX_NEGATION_THRESH: float = 1.0
+# The valid range of radicalisation threshold values
+MIN_RADICAL_THRESH: float = 0.0
+MAX_RADICAL_THRESH: float = 1.0
+# The default divisor to use for agent subsetting in generate_graphs
+DEFAULT_SUBSETTING_DIV: int = 4
+# The absolute threshold value to use when determining 'like-minded' collective opinion changes
+LIKE_MINDED_THRESH: float = 0.05
 
 
 class ConfigData(TypedDict):
@@ -275,7 +292,7 @@ class ABModel:
         :type silencing_thresh: float
         :raises ValueError: If the silencing threshold is outside the range [0.0, 1.0].
         """
-        if 0.0 <= silencing_thresh <= 1.0:
+        if MIN_SILENCING_THRESH <= silencing_thresh <= MAX_SILENCING_THRESH:
             self.silencing_threshold = silencing_thresh
         else:
             raise ValueError(f"The silencing threshold value of {silencing_thresh} is outside the valid range of [0.0, 1.0]")
@@ -293,7 +310,7 @@ class ABModel:
         :type negation_thresh: float
         :raises ValueError: If the negation threshold is outside the range [0.0, 1.0].
         """
-        if 0.0 <= negation_thresh <= 1.0:
+        if MIN_NEGATION_THRESH <= negation_thresh <= MAX_NEGATION_THRESH:
             self.negation_threshold = negation_thresh
         else:
             raise ValueError(f"The negation threshold value of {negation_thresh} is outside the valid range of [0.0, 1.0]")
@@ -311,7 +328,7 @@ class ABModel:
         :type radical_thresh: float
         :raises ValueError: If the radicalisation threshold is outside the range [0.0, 1.0].
         """
-        if 0.0 <= radical_thresh <= 1.0:
+        if MIN_RADICAL_THRESH <= radical_thresh <= MAX_RADICAL_THRESH:
             self.radicalisation_threshold = radical_thresh
         else:
             raise ValueError(f"The radicalisation threshold value of {radical_thresh} is outside the valid range of [0.0, 1.0]")
@@ -618,7 +635,7 @@ class ABModel:
 
         for idx, hierarchy in enumerate(hierarchies):
             if agent_subsetting:
-                random_k: int = randint(len(agents) // 4, len(agents))
+                random_k: int = randint(len(agents) // DEFAULT_SUBSETTING_DIV, len(agents))
                 if type(agents) is list:
                     agent_sample = list(
                         np.random.choice(agent_array, size=random_k, replace=False)
@@ -905,10 +922,10 @@ class ABModel:
         # Account for the idea that a collection of like-minded agents will push each other towards more extreme opinions
         # even if all neighbours are already averaging around the same opinion value
         total_change: float
-        if agent.previous_opinion < 0.0 and -0.05 < collective_changes_sum < 0.0:
-            total_change = -0.05
-        elif agent.previous_opinion > 0.0 and 0.0 < collective_changes_sum < 0.05:
-            total_change = 0.05
+        if agent.previous_opinion < 0.0 and -LIKE_MINDED_THRESH < collective_changes_sum < 0.0:
+            total_change = -LIKE_MINDED_THRESH
+        elif agent.previous_opinion > 0.0 and 0.0 < collective_changes_sum < LIKE_MINDED_THRESH:
+            total_change = LIKE_MINDED_THRESH
         else:
             # The previous checks mean that a "minor" collective changes sum that is going in the opposite direction
             # to the agent's opinion will still have the effect of moving the agent towards the neighbour average
@@ -928,7 +945,7 @@ class ABModel:
 
         # Constrain to [-1, 1]
         # 100.0 and -100.0 are used as key delta values indicating that the opinion needs to be constrained
-        if agent.opinion + total_change < -1.0:
+        if agent.opinion + total_change < -OPINION_MAX:
             opinion_result = (
                 agent.id,
                 (
@@ -937,7 +954,7 @@ class ABModel:
                     all_neighbour_benefits,
                 ),
             )
-        elif agent.opinion + total_change > 1.0:
+        elif agent.opinion + total_change > OPINION_MAX:
             opinion_result = (
                 agent.id,
                 (100.0, collective_changes, all_neighbour_benefits),

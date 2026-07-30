@@ -33,6 +33,25 @@ from gatoh.utils import (
     pygraph_to_pydigraph
 )
 
+# Define global constants to avoid using "magic numbers" throughout the code
+
+# The default generation parameter "p"
+DEFAULT_P: float = 0.25
+# The default generation parameter "m"
+DEFAULT_M: int = 3
+# The default generation parameter "sbm_sizes"
+DEFAULT_SBM: int = 10
+# The maximum absolute value that agent relationship weightings can take
+MAX_RELATIONSHIP: float = 1.0
+# The value to add or subtract to an agent's opinion when (de)radicalisation occurs
+RAD_OPINION_CHANGE: float = 0.25
+# The threshold distance to use when determining stochastic relationships between radicalised agents
+RAD_DISTANCE_THRESH: float = 0.25
+# The attenuation threshold to use for indirect neighbour opinions in neighbour opinion estimation
+ATTENUATION_THRESH: float = 0.5
+# The level of compression to use across all relevant methods
+COMPRESS_LEVEL: int = 4
+
 
 class GenerationParam(TypedDict):
     """
@@ -219,9 +238,9 @@ class Graph:
         self.suppress_warnings: bool = suppress_warnings
         self.rw_params: tuple[float, float] = rw_params
         self.generation_params: GenerationParam = {  # Used for random graph generation, can be manually set by the user if desired
-            "p": 0.25,
-            "m": 3,
-            "sbm_sizes": 10,
+            "p": DEFAULT_P,
+            "m": DEFAULT_M,
+            "sbm_sizes": DEFAULT_SBM,
             "ensure_complete": True
         }
         self.pending_edge_changes: dict[str, EdgeChanges] = {}
@@ -477,7 +496,7 @@ class Graph:
         self,
         agents: list[Agent],
         method: str = "",
-        relationship_range: tuple[float, float] = (-1.0, 1.0),
+        relationship_range: tuple[float, float] = (-MAX_RELATIONSHIP, MAX_RELATIONSHIP),
         ensure_complete: bool = True,
     ) -> Self:
         """
@@ -675,7 +694,6 @@ class Graph:
         """
         from_index: int | None = self.get_agent_index(from_node)
         if from_index is None:
-            # This should never be reached and is included for type checking purposes
             return 0.0
 
         relationship_dict: dict[int, GraphEdge] = self.graph.adj_direction(from_index, False)
@@ -896,9 +914,9 @@ class Graph:
             # If the agent was deradicalised this iteration, the change delta is overriden by a moderately significant delta
             # in the direction opposite to the previously held radical opinion
             elif deradicalisation and agent_node.agent.opinion < 0.0:
-                agent_node.agent.change_opinion(0.25)
+                agent_node.agent.change_opinion(RAD_OPINION_CHANGE)
             elif deradicalisation and 0.0 < agent_node.agent.opinion:
-                agent_node.agent.change_opinion(-0.25)
+                agent_node.agent.change_opinion(-RAD_OPINION_CHANGE)
         return None
 
     def agent_radicalisation_change(self, agent: Agent, radicalisation: bool) -> None:
@@ -1102,7 +1120,7 @@ class Graph:
                     else:
                         relative_weighting = 0.5
             elif neighbour_node.agent.radicalised and agent.radicalised:
-                if distance_from_avg <= 0.25:
+                if distance_from_avg <= RAD_DISTANCE_THRESH:
                     # Both agents are radicalised towards the same opinion
                     relative_weighting = 4.0
                 else:
@@ -1144,10 +1162,10 @@ class Graph:
                 new_weighting = edge.weighting
 
             # Constrain the weighting back to [-1.0, 1.0] as needed
-            if new_weighting < -1.0:
-                new_weighting = -1.0
-            elif new_weighting > 1.0:
-                new_weighting = 1.0
+            if new_weighting < -MAX_RELATIONSHIP:
+                new_weighting = -MAX_RELATIONSHIP
+            elif new_weighting > MAX_RELATIONSHIP:
+                new_weighting = MAX_RELATIONSHIP
 
             edge.set_weighting(new_weighting)
         return None
@@ -1180,7 +1198,7 @@ class Graph:
             raw_observed_opinion: float = node.agent.opinion
             attenuated_opinion: float = beta_value_attenuation(raw_observed_opinion)
 
-            if attenuated_opinion < -0.5 or 0.5 < attenuated_opinion:
+            if attenuated_opinion < -ATTENUATION_THRESH or ATTENUATION_THRESH < attenuated_opinion:
                 observed_opinions[node.agent.id] = raw_observed_opinion
 
         return observed_opinions
@@ -1216,7 +1234,7 @@ class Graph:
             attenuated_opinion: float = beta_value_attenuation(raw_observed_opinion)
 
             if (
-                attenuated_opinion < -0.5 or 0.5 < attenuated_opinion
+                attenuated_opinion < -ATTENUATION_THRESH or ATTENUATION_THRESH < attenuated_opinion
             ):  # Only take values which are still relevant after attenuation (i.e. values stronger than an absolute 0.5 after attenuation)
                 observed_opinions.append(
                     raw_observed_opinion
@@ -1395,7 +1413,7 @@ class GraphSet:
 
         # Compress the subdirectory to minimise storage, and encapsulate all graphs into a single object
         with zipfile.ZipFile(
-            zip_path, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=4
+            zip_path, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=COMPRESS_LEVEL
         ) as subdir_zip:
             # Zip the graphml files
             for graph_path in graph_save_paths:
@@ -1490,7 +1508,7 @@ class GraphSet:
 
         # Extract all the graphml files to the uncompressed subdirectory
         with zipfile.ZipFile(
-            zip_load_path, mode="r", compression=zipfile.ZIP_DEFLATED, compresslevel=4
+            zip_load_path, mode="r", compression=zipfile.ZIP_DEFLATED, compresslevel=COMPRESS_LEVEL
         ) as subdir_zip:
             subdir_zip.extractall(path=subdirectory_path)
 

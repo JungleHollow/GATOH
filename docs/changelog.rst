@@ -33,6 +33,7 @@ New Features
 - QoL method :meth:`~gatoh.model.ABModel.add_agents_to_hierarchy`
 - Created new tests to cover the various calculation methods in :class:`~gatoh.model.ABModel`
 - QoL method :meth:`~gatoh.model.ABModel.add_relationships_to_hierarchy`
+- Defined multiple global constants throughout modules to clarify "magic numbers"
 
 Fixes
 -----

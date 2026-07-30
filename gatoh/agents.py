@@ -19,6 +19,45 @@ from gatoh.utils import draw_random_value, random_coinflip, value_rw_delta
 # Definition of all valid, existing Agent personality types
 PERSONALITIES: list[str] = ["neutral", "rational", "erratic", "impulsive", "social"]
 
+# Definition of global constants to be used instead of "magic numbers" throughout the code
+
+# The absolute threshold value to use when determining if an agent is initialised as radicalised
+RADICALISATION_INIT_THRESH: float = 0.9
+# The absolute maximum value that agent opinions can take
+OPINION_MAX: float = 1.0
+# The modifier value for ["neutral", "rational", "erratic"] agents for opinion silencing
+OPINION_SILENCING_MODIFIER: float = 0.8
+# The aggregate benefit threshold to use for deradicalisation
+DERAD_AGG_BEN_THRESH: float = 0.5
+# The opinion modifier for "erratic" agents when determining deradicalisation
+DERAD_ERRATIC_MOD: float = 1.25
+# The probabilities corresponding to radicalisation = [True, False] respectively, used for "impulsive" agents in deradicalisation
+DERAD_IMPULSIVE_PROBS: list[float] = [0.75, 0.25]
+# The threshold modifier used when checking deradicalisation in "social" agents
+DERAD_SOCIAL_THRESH_MOD: float = 0.5
+# The aggregate benefit threshold to use for radicalisation
+RAD_AGG_BEN_THRESH: float = 0.5
+# The opinion modifier for "erratic" agents when determining radicalisation
+RAD_ERRATIC_MOD: float = 1.25
+# The threshold modifier used when checking radicalisation in "impulsive" agents
+RAD_IMPULSIVE_MOD: float = 0.5
+# The probabilities corresponding to radicalisation = [True, False] respectively, used for "impulsive" agents in radicalisation
+RAD_IMPULSIVE_PROBS: list[float] = [0.25, 0.75]
+# The threshold modifier used when checking radicalisation in "social" agents
+RAD_SOCIAL_THRESH_MOD: float = 0.5
+# The absolute maximum value that agent hierarchy weightings can take
+SOCIAL_WEIGHTINGS_MAX: float = 1.0
+# The threshold used when determining silencing/de-silencing of agents in hierarchies
+SILENCING_THRESH: float = 0.999
+# The threshold used when determining if stochastic personality changes occur
+PERSONALITY_THRESH: float = 0.999
+# The threshold used when determining if stochastic benefit changes occur
+BENEFIT_THRESH: float = 0.999
+# The threshold used when determining if stochastic radicalisation changes occur
+RADICALISATION_THRESH: float = 0.999
+# The compression level to use across relevant methods
+COMPRESS_LEVEL: int = 4
+
 # Used for type-checking valid personality types wherever relevant
 class PersonalityProbs(TypedDict):
     neutral: NotRequired[float]
@@ -210,7 +249,7 @@ class Agent:
         self.opinion = draw_random_value(distribution, parameters=parameters)
 
         # If the initial opinion is very strong, the Agent is initialised as radicalised
-        if -0.9 >= self.opinion >= 0.9:
+        if self.opinion <= -RADICALISATION_INIT_THRESH or RADICALISATION_INIT_THRESH <= self.opinion:
             self.radicalised = True
 
         # Generate the Agent's susceptibility to social contagion
@@ -312,10 +351,10 @@ class Agent:
         self.opinion += opinion_delta
 
         # Constrain the opinion back to [-1.0, 1.0] as needed
-        if self.opinion < -1.0:
-            self.opinion = -1.0
-        elif self.opinion > 1.0:
-            self.opinion = 1.0
+        if self.opinion < -OPINION_MAX:
+            self.opinion = -OPINION_MAX
+        elif self.opinion > OPINION_MAX:
+            self.opinion = OPINION_MAX
         return None
 
     def change_radicalisation(self, radicalisation: bool) -> None:
@@ -422,7 +461,7 @@ class Agent:
 
         if self.personality in ["neutral", "rational", "erratic"]:
             # Cases where opinion silencing will be less influenced by the surrounding opinion climate.
-            absolute_difference = abs(estimated_opinion_climate - self.opinion) * 0.8
+            absolute_difference = abs(estimated_opinion_climate - self.opinion) * OPINION_SILENCING_MODIFIER
         elif self.personality in ["impulsive", "social"]:
             # Cases where opinion silencing will be much more influenced by the surrounding opinion climate.
             absolute_difference = abs(estimated_opinion_climate - self.opinion)
@@ -512,16 +551,16 @@ class Agent:
             case "rational":
                 # This will likely mean that the agent is more disposed towards considering tangible benefits and their own
                 # opinions when determining deradicalisation, rather than external influences
-                if absolute_opinion <= threshold and aggregate_benefit <= 0.5:
+                if absolute_opinion <= threshold and aggregate_benefit <= DERAD_AGG_BEN_THRESH:
                     self.radicalised = False
                     return not self.radicalised
-                elif absolute_opinion <= threshold and aggregate_benefit >= 0.5:
+                elif absolute_opinion <= threshold and aggregate_benefit >= DERAD_AGG_BEN_THRESH:
                     # In the case where the radicalisation threshold is not met but there is a presence of aggregate benefit, deradicalisation is treated as a coinflip
                     self.radicalised = random_coinflip("bool")
                     return not self.radicalised
             case "erratic":
                 # Deradicalisation is influenced by personal opinion to some extent, but is largely stochastically determined
-                if absolute_opinion * 1.25 <= threshold:
+                if absolute_opinion * DERAD_ERRATIC_MOD <= threshold:
                     self.radicalised = random_coinflip("bool")
                     return not self.radicalised
             case "impulsive":
@@ -532,7 +571,7 @@ class Agent:
                 elif absolute_opinion <= threshold and self.personal_benefit:
                     # The choice is stochastically determined but the presence of personal benefit affects the weighting
                     # and it is no longer an even coinflip
-                    self.radicalised = rd.choices([True, False], weights=[0.75, 0.25])[0]
+                    self.radicalised = rd.choices([True, False], weights=DERAD_IMPULSIVE_PROBS)[0]
                     return not self.radicalised
             case "social":
                 # Deradicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors
@@ -558,7 +597,7 @@ class Agent:
                         else:
                             change_directions -= 1.0
                 # If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)
-                if absolute_changes >= self.social_susceptibility * len(hierarchy_changes) // 2 and change_directions <= 0.0:
+                if absolute_changes >= self.social_susceptibility * len(hierarchy_changes) * DERAD_SOCIAL_THRESH_MOD and change_directions <= 0.0:
                     self.radicalised = False
                     return not self.radicalised
             case _:
@@ -612,28 +651,28 @@ class Agent:
             case "rational":
                 # This will likely mean that the agent is more disposed towards considering tangible benefits and their own
                 # opinions when determining radicalisation, rather than external influences
-                if absolute_opinion >= threshold and aggregate_benefit >= 0.5:
+                if absolute_opinion >= threshold and aggregate_benefit >= RAD_AGG_BEN_THRESH:
                     self.radicalised = True
                     return self.radicalised
-                elif absolute_opinion >= threshold and not aggregate_benefit >= 0.5:
+                elif absolute_opinion >= threshold and not aggregate_benefit >= RAD_AGG_BEN_THRESH:
                     # In the case where the threshold is met but there is no explicit aggregate benefit, radicalisation is treated as a coinflip
                     self.radicalised = random_coinflip("bool")
                     return self.radicalised
             case "erratic":
                 # Radicalisation is influenced by personal opinion to some extent, but is largely stochastically determined
-                if absolute_opinion * 1.25 >= threshold:
+                if absolute_opinion * RAD_ERRATIC_MOD >= threshold:
                     self.radicalised = random_coinflip("bool")
                     return self.radicalised
             case "impulsive":
                 # The agent places very strong consideration on tangible benefits over anything else
                 # (threshold / 2) as the Agent behaves impulsively and less is required for them to consider becoming radicalised
-                if absolute_opinion >= threshold / 2 and self.personal_benefit:
+                if absolute_opinion >= threshold * RAD_IMPULSIVE_MOD and self.personal_benefit:
                     self.radicalised = self.personal_benefit
                     return self.radicalised
-                elif absolute_opinion >= threshold / 2 and not self.personal_benefit:
+                elif absolute_opinion >= threshold * RAD_IMPULSIVE_MOD and not self.personal_benefit:
                     # The choice is stochastically determined but the lack of personal benefit affects the weighting
                     # and it is no longer an even coinflip
-                    self.radicalised = rd.choices([True, False], weights=[0.25, 0.75])[0]
+                    self.radicalised = rd.choices([True, False], weights=RAD_IMPULSIVE_PROBS)[0]
                     return self.radicalised
             case "social":
                 # Radicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors
@@ -659,7 +698,7 @@ class Agent:
                         else:
                             change_directions -= 1.0
                 # If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)
-                if absolute_changes >= self.social_susceptibility * len(hierarchy_changes) // 2 and change_directions >= 0.0:
+                if absolute_changes >= self.social_susceptibility * len(hierarchy_changes) * RAD_SOCIAL_THRESH_MOD and change_directions >= 0.0:
                     self.radicalised = True
                     return self.radicalised
             case _:
@@ -696,10 +735,10 @@ class Agent:
                 )
 
             # Constrain the result back to [-1, 1] if necessary
-            if rw_result < -1.0:
-                self.social_weightings[key] = -1.0
-            elif rw_result > 1.0:
-                self.social_weightings[key] = 1.0
+            if rw_result < -SOCIAL_WEIGHTINGS_MAX:
+                self.social_weightings[key] = -SOCIAL_WEIGHTINGS_MAX
+            elif rw_result > SOCIAL_WEIGHTINGS_MAX:
+                self.social_weightings[key] = SOCIAL_WEIGHTINGS_MAX
             else:
                 self.social_weightings[key] = rw_result
         return None
@@ -724,10 +763,10 @@ class Agent:
         if not rw_result:
             rw_result = value_rw_delta(self.opinion, opinion_rw[0], opinion_rw[1])
 
-        if rw_result < -1.0:
-            self.opinion = -1.0
-        elif rw_result > 1.0:
-            self.opinion = 1.0
+        if rw_result < -OPINION_MAX:
+            self.opinion = -OPINION_MAX
+        elif rw_result > OPINION_MAX:
+            self.opinion = OPINION_MAX
         else:
             self.opinion = rw_result
 
@@ -800,9 +839,9 @@ class Agent:
                         self.is_silenced[hierarchy] = True
         else:
             for hierarchy in self.is_silenced.keys():
-                if rd.random() >= 0.999 and self.is_silenced[hierarchy]:
+                if rd.random() >= SILENCING_THRESH and self.is_silenced[hierarchy]:
                     self.is_silenced[hierarchy] = False
-                elif rd.random() >= 0.999 and not self.is_silenced[hierarchy]:
+                elif rd.random() >= SILENCING_THRESH and not self.is_silenced[hierarchy]:
                     self.is_silenced[hierarchy] = True
         return None
 
@@ -842,9 +881,9 @@ class Agent:
                 personality_probs: PersonalityProbs | None = parameters.get("personality_probs")
                 if personality_thresh is not None and rd.random() >= personality_thresh:
                     self.stochastic_personality_change(personality_probs=personality_probs)
-                elif rd.random() >= 0.999:
+                elif rd.random() >= PERSONALITY_THRESH:
                     self.stochastic_personality_change(personality_probs=personality_probs)
-            elif rd.random() >= 0.999:
+            elif rd.random() >= PERSONALITY_THRESH:
                 self.stochastic_personality_change()
 
         if benefit_changes:
@@ -852,9 +891,9 @@ class Agent:
                 benefit_thresh: float | None = parameters.get("benefit_thresh")
                 if benefit_thresh is not None and rd.random() >= benefit_thresh:
                     self.stochastic_benefit_change()
-                elif rd.random() >= 0.999:
+                elif rd.random() >= BENEFIT_THRESH:
                     self.stochastic_benefit_change()
-            elif rd.random() >= 0.999:
+            elif rd.random() >= BENEFIT_THRESH:
                 self.stochastic_benefit_change()
 
         if radicalisation_changes:
@@ -862,9 +901,9 @@ class Agent:
                 radicalisation_thresh: float | None = parameters.get("radicalisation_thresh")
                 if radicalisation_thresh is not None and rd.random() >= radicalisation_thresh:
                     self.stochastic_radicalisation_change()
-                elif rd.random() >= 0.999:
+                elif rd.random() >= RADICALISATION_THRESH:
                     self.stochastic_radicalisation_change()
-            elif rd.random() >= 0.999:
+            elif rd.random() >= RADICALISATION_THRESH:
                 self.stochastic_radicalisation_change()
 
         if silencing_changes:
@@ -873,9 +912,9 @@ class Agent:
                 silencing_probs: dict[str, float] | None = parameters.get("silencing_probs")
                 if silencing_thresh is not None and rd.random() >= silencing_thresh:
                     self.stochastic_silencing_change(silencing_probs=silencing_probs)
-                elif rd.random() >= 0.999:
+                elif rd.random() >= SILENCING_THRESH:
                     self.stochastic_silencing_change(silencing_probs=silencing_probs)
-            elif rd.random() >= 0.999:
+            elif rd.random() >= SILENCING_THRESH:
                 self.stochastic_silencing_change()
 
         return None
@@ -954,7 +993,7 @@ class AgentSet:
 
         # Compress the subdirectory to minimise storage and encapsulate all the Agents into a single object
         with zipfile.ZipFile(
-            zip_path, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=4
+            zip_path, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=COMPRESS_LEVEL
         ) as subdir_zip:
             for agent_path in agent_save_paths:
                 subdir_zip.write(agent_path, arcname=f"{os.path.basename(agent_path)}")
@@ -1007,7 +1046,7 @@ class AgentSet:
 
         # Extract all the Agent pickles to the uncompressed directory
         with zipfile.ZipFile(
-            zip_load_path, mode="r", compression=zipfile.ZIP_DEFLATED, compresslevel=4
+            zip_load_path, mode="r", compression=zipfile.ZIP_DEFLATED, compresslevel=COMPRESS_LEVEL
         ) as subdir_zip:
             subdir_zip.extractall(path=subdirectory_path)
 

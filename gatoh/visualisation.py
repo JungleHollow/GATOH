@@ -18,6 +18,16 @@ if TYPE_CHECKING:
     from gatoh.graphs import Graph, GraphNode
 
 
+# Define global constants to avoid using "magic numbers" throughout the code
+
+# The agent "block size" to use for visualisations
+VIS_BLOCK_SIZE: int = 10
+# The default linewidth to use for output plots
+DEFAULT_LINEWIDTH: float = 0.5
+# The default DPI to generate visualisations with
+DEFAULT_DPI: float = 300.0
+
+
 class ABVisualiser:
     """
     The visualisations will include:
@@ -107,8 +117,8 @@ class ABVisualiser:
 
         # Determine the array size so that a (10, x) 2D array shape is always used
         array_size: int
-        if num_agents % 10 != 0:
-            array_size = num_agents + (10 - num_agents % 10)
+        if num_agents % VIS_BLOCK_SIZE != 0:
+            array_size = num_agents + (VIS_BLOCK_SIZE - num_agents % VIS_BLOCK_SIZE)
         else:
             array_size = num_agents
 
@@ -130,17 +140,17 @@ class ABVisualiser:
         colour_map: ListedColormap = ListedColormap(["green", "red"])
 
         # Reshape the arrays into 2D shapes (x, 10)
-        agent_labels = agent_labels.reshape(int(array_size / 10), 10)
-        agent_data = agent_data.reshape(int(array_size / 10), 10)
+        agent_labels = agent_labels.reshape(int(array_size / VIS_BLOCK_SIZE), VIS_BLOCK_SIZE)
+        agent_data = agent_data.reshape(int(array_size / VIS_BLOCK_SIZE), VIS_BLOCK_SIZE)
 
         fig, ax = plt.subplots()
 
-        ax = sns.heatmap(agent_data, cmap=colour_map, ax=ax, fmt="s", cbar=False, linewidth=0.5, mask=agent_data==2)
+        ax = sns.heatmap(agent_data, cmap=colour_map, ax=ax, fmt="s", cbar=False, linewidth=DEFAULT_LINEWIDTH, mask=agent_data==2)
         _ = ax.set_title(f"Visualisation of hierarchy '{hierarchy_graph.name}'")
         _ = ax.set(xlabel="Agents (ones)", ylabel="Agents (tens)")
 
         if save_graph:
-            plt.savefig(f"{self.visualisation_dir}/{hierarchy_graph.name}_graph.png", dpi=300.0)
+            plt.savefig(f"{self.visualisation_dir}/{hierarchy_graph.name}_graph.png", dpi=DEFAULT_DPI)
         if show_graph:
             plt.show()
             _ = plt.waitforbuttonpress()
@@ -201,7 +211,7 @@ class ABVisualiser:
 
         if save_graph:
             plt.savefig(
-                f"{self.visualisation_dir}/{hierarchy_graph.name}_graph.png", dpi=300.0
+                f"{self.visualisation_dir}/{hierarchy_graph.name}_graph.png", dpi=DEFAULT_DPI
             )
         if show_graph:
             plt.show()
@@ -235,8 +245,8 @@ class ABVisualiser:
 
         # Determine the array size so that a (10, x) 2D array shape is always used
         array_size: int
-        if num_agents % 10 != 0:
-            array_size = num_agents + (10 - num_agents % 10)
+        if num_agents % VIS_BLOCK_SIZE != 0:
+            array_size = num_agents + (VIS_BLOCK_SIZE - num_agents % VIS_BLOCK_SIZE)
         else:
             array_size = num_agents
 
@@ -258,12 +268,12 @@ class ABVisualiser:
         colour_map: ListedColormap = ListedColormap(["green", "red"])
 
         # Reshape the arrays into 2D shapes (x, 10)
-        agent_labels = agent_labels.reshape(int(array_size / 10), 10)
-        agent_data = agent_data.reshape(int(array_size / 10), 10)
+        agent_labels = agent_labels.reshape(int(array_size / VIS_BLOCK_SIZE), VIS_BLOCK_SIZE)
+        agent_data = agent_data.reshape(int(array_size / VIS_BLOCK_SIZE), VIS_BLOCK_SIZE)
 
         fig, ax = plt.subplots()
 
-        ax = sns.heatmap(agent_data, cmap=colour_map, ax=ax, fmt="s", cbar=False, linewidth=0.5, mask=agent_data==2)
+        ax = sns.heatmap(agent_data, cmap=colour_map, ax=ax, fmt="s", cbar=False, linewidth=DEFAULT_LINEWIDTH, mask=agent_data==2)
         if model_name is not None:
             _ = ax.set_title(f"Visualisation of model {model_name} at iteration {current_iteration}")
         else:
@@ -275,7 +285,7 @@ class ABVisualiser:
             # Ensure that the model_runtime subdirectory exists
             if not os.path.exists(f"{self.visualisation_dir}/model_runtime"):
                 os.mkdir(f"{self.visualisation_dir}/model_runtime")
-            plt.savefig(f"{self.visualisation_dir}/model_runtime/iteration_{current_iteration}.png", dpi=300.0)
+            plt.savefig(f"{self.visualisation_dir}/model_runtime/iteration_{current_iteration}.png", dpi=DEFAULT_DPI)
 
         plt.close(fig)
 
@@ -333,7 +343,7 @@ class ABVisualiser:
                 os.mkdir(f"{self.visualisation_dir}/model_runtime")
             plt.savefig(
                 f"{self.visualisation_dir}/model_runtime/iteration_{current_iteration}.png",
-                dpi=300.0,
+                dpi=DEFAULT_DPI,
             )
 
         plt.close(fig)
