@@ -67,8 +67,7 @@ class LoggerDevStats:
         :param memory_usage: The memory usage value that is being checked (in bytes).
         :type memory_usage: int
         """
-        if memory_usage > self.peak_memory_usage:
-            self.peak_memory_usage = memory_usage
+        self.peak_memory_usage = max(memory_usage, self.peak_memory_usage)
         self.log_function_call("LoggerDevStats.record_peak_mem_usage")
         return None
 
@@ -79,7 +78,7 @@ class LoggerDevStats:
         :param function_name: The name of the function that was called.
         :type function_name: str
         """
-        if function_name not in self.function_calls.keys():
+        if function_name not in self.function_calls:
             self.function_calls[function_name] = 1
         else:
             self.function_calls[function_name] += 1
@@ -370,7 +369,7 @@ class LoggerVariables:
         output_string: str = (
             "Hierarchy Name\tLayer Interdependence\tLayer Polarisation\n"
         )
-        for hierarchy in self.layer_interdependences.keys():
+        for hierarchy in self.layer_interdependences:
             interdepence: float = self.layer_interdependences[hierarchy][
                 self.current_iteration - 1
             ]
@@ -419,10 +418,10 @@ class LoggerVariables:
             "radicalisation_logodds",
         ]
 
-        for key in self.layer_interdependences.keys():
+        for key in self.layer_interdependences:
             attribute_names.append(f"layer_interdependences_{key}")
 
-        for key in self.layer_polarisations.keys():
+        for key in self.layer_polarisations:
             attribute_names.append(f"layer_polarisations_{key}")
 
         return attribute_names
@@ -615,7 +614,7 @@ class GATOHLogger:
                 }
 
                 # Append interdependences and polarisations in the same loop as the headers should handle ordering automatically
-                for hierarchy in self.variables.layer_interdependences.keys():
+                for hierarchy in self.variables.layer_interdependences:
                     row_dict[f"layer_interdependences_{hierarchy}"] = (
                         f"{self.variables.layer_interdependences[hierarchy][i]}"
                     )

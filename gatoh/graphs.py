@@ -260,7 +260,7 @@ class Graph:
         """
         for key, value in params.items():
             if (
-                key not in self.generation_params.keys()
+                key not in self.generation_params
             ):  # Skip any invalid parameters which have been passed
                 warnings.warn(
                     f"WARNING: Invalid graph generation parameter ({key}) specified when trying to modify parameter values.",
@@ -315,7 +315,7 @@ class Graph:
         rx.write_graphml(self.graph, path)
 
         if not os.path.exists(path):
-            raise EnvironmentError(f"Failed to write graph {self.name} to path: {path}")
+            raise OSError(f"Failed to write graph {self.name} to path: {path}")
 
         return None
 
@@ -1029,9 +1029,7 @@ class Graph:
             while formation_counter > 0:
                 form_from: int = randint(0, self.node_count - 1)
                 form_to: int = randint(0, self.node_count - 1)
-                if form_from == form_to:
-                    continue
-                elif self.relationship_exists(form_from, form_to):
+                if form_from == form_to or self.relationship_exists(form_from, form_to):
                     continue
 
                 new_edge: dict[str, list[Any]] = {

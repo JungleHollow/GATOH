@@ -12,8 +12,6 @@ from copy import deepcopy
 from shutil import rmtree
 from typing import NotRequired, TypeVar, TypedDict, override
 
-from numpy.core.numeric import absolute
-
 from gatoh.utils import draw_random_value, random_coinflip, value_rw_delta
 
 # Definition of all valid, existing Agent personality types
@@ -155,7 +153,7 @@ class Agent:
             for arg in args:
                 if isinstance(arg, dict):
                     self.add_attribute("social_weightings", value=arg)
-                    for hierarchy in self.social_weightings.keys():
+                    for hierarchy in self.social_weightings:
                         self.is_silenced[hierarchy] = False
                 elif isinstance(arg, float):
                     self.add_attribute("opinion", value=arg)
@@ -301,7 +299,7 @@ class Agent:
                 "Either explicit `value` or distribution and valid distribution parameters are expected when adding Agent attributes."
             )
 
-        if not overwrite and name in self.__dict__.keys():
+        if not overwrite and name in self.__dict__:
             # Raise a warning but do not change any attributes or crash the model if overwriting an existing attribute whilst explicitly passing overwrite = False
             warnings.warn(
                 f"WARNING: Attempting to overwrite an existing Agent attribute ({name}) without meaning to.",
@@ -720,7 +718,7 @@ class Agent:
             rw_result: float | None = None
 
             if self.rw_distributions:
-                if key in self.rw_distributions.keys():
+                if key in self.rw_distributions:
                     rw_result = value_rw_delta(
                         self.social_weightings[key],
                         self.rw_distributions[key][0],
@@ -788,7 +786,10 @@ class Agent:
             personality_flags: list[str] = list(personality_probs.keys())
             personality_p: list[float] = []
             for value in personality_probs.values():
-                personality_p.append(value)
+                if isinstance(value, float):
+                    personality_p.append(value)
+                else:
+                    raise TypeError(f"A non-float probability was supplied in personality_probs when trying to determine a stochastic personality change in agent {self.id}")
             chosen_personality = rd.choices(personality_flags, weights=personality_p, k=1)
             self.personality = chosen_personality[0]
         return None
@@ -829,7 +830,7 @@ class Agent:
         """
         if silencing_probs is not None:
             for hierarchy, threshold in silencing_probs.items():
-                if hierarchy not in self.is_silenced.keys():
+                if hierarchy not in self.is_silenced:
                     # Just skip any invalid hierarchy keys
                     continue
                 elif rd.random() >= threshold:
@@ -838,7 +839,7 @@ class Agent:
                     else:
                         self.is_silenced[hierarchy] = True
         else:
-            for hierarchy in self.is_silenced.keys():
+            for hierarchy in self.is_silenced:
                 if rd.random() >= SILENCING_THRESH and self.is_silenced[hierarchy]:
                     self.is_silenced[hierarchy] = False
                 elif rd.random() >= SILENCING_THRESH and not self.is_silenced[hierarchy]:
@@ -879,9 +880,7 @@ class Agent:
             if parameters is not None:
                 personality_thresh: float | None = parameters.get("personality_thresh")
                 personality_probs: PersonalityProbs | None = parameters.get("personality_probs")
-                if personality_thresh is not None and rd.random() >= personality_thresh:
-                    self.stochastic_personality_change(personality_probs=personality_probs)
-                elif rd.random() >= PERSONALITY_THRESH:
+                if (personality_thresh is not None and rd.random() >= personality_thresh) or rd.random() >= PERSONALITY_THRESH:
                     self.stochastic_personality_change(personality_probs=personality_probs)
             elif rd.random() >= PERSONALITY_THRESH:
                 self.stochastic_personality_change()
@@ -889,9 +888,7 @@ class Agent:
         if benefit_changes:
             if parameters is not None:
                 benefit_thresh: float | None = parameters.get("benefit_thresh")
-                if benefit_thresh is not None and rd.random() >= benefit_thresh:
-                    self.stochastic_benefit_change()
-                elif rd.random() >= BENEFIT_THRESH:
+                if (benefit_thresh is not None and rd.random() >= benefit_thresh) or rd.random() >= BENEFIT_THRESH:
                     self.stochastic_benefit_change()
             elif rd.random() >= BENEFIT_THRESH:
                 self.stochastic_benefit_change()
@@ -899,9 +896,7 @@ class Agent:
         if radicalisation_changes:
             if parameters is not None:
                 radicalisation_thresh: float | None = parameters.get("radicalisation_thresh")
-                if radicalisation_thresh is not None and rd.random() >= radicalisation_thresh:
-                    self.stochastic_radicalisation_change()
-                elif rd.random() >= RADICALISATION_THRESH:
+                if (radicalisation_thresh is not None and rd.random() >= radicalisation_thresh) or rd.random() >= RADICALISATION_THRESH:
                     self.stochastic_radicalisation_change()
             elif rd.random() >= RADICALISATION_THRESH:
                 self.stochastic_radicalisation_change()
@@ -910,9 +905,7 @@ class Agent:
             if parameters is not None:
                 silencing_thresh: float | None  = parameters.get("silencing_thresh")
                 silencing_probs: dict[str, float] | None = parameters.get("silencing_probs")
-                if silencing_thresh is not None and rd.random() >= silencing_thresh:
-                    self.stochastic_silencing_change(silencing_probs=silencing_probs)
-                elif rd.random() >= SILENCING_THRESH:
+                if (silencing_thresh is not None and rd.random() >= silencing_thresh) or rd.random() >= SILENCING_THRESH:
                     self.stochastic_silencing_change(silencing_probs=silencing_probs)
             elif rd.random() >= SILENCING_THRESH:
                 self.stochastic_silencing_change()

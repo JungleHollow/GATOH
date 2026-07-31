@@ -558,9 +558,9 @@ def plot_graph(
     :type horizontal_name: str, optional
     :raises NotImplementedError: If the input plot_type is invalid or not currently supported.
     """
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
 
-    for key in x_vals.keys():
+    for key in x_vals:
         current_x: list[int | float] = x_vals[key]
         current_y: list[int | float] = y_vals[key]
 

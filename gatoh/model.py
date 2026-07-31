@@ -728,7 +728,7 @@ class ABModel:
         """
         for idx, agent in enumerate(agents):
             if not isinstance(agent, Agent):
-                raise ValueError(f"The object at index {idx} of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph '{hierarchy}'")
+                raise TypeError(f"The object at index {idx} of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph '{hierarchy}'")
         hierarchy_to_extend: Graph | None = self.graphs.get_hierarchy(hierarchy)
         if hierarchy_to_extend is None:
             raise KeyError(f"The specified hierarchy '{hierarchy}' does not exist in the GraphSet -- cannot add agents to it")
@@ -754,8 +754,8 @@ class ABModel:
         :raises KeyError: If the specified hierarchy does not exist in the graph set.
         :raises ValueError: If any required key is missing, or the information is of a mismatching data type.
         """
-        if "to_node" not in relationships.keys() or "from_node" not in relationships.keys():
-            raise ValueError(f"The relationships information is missing one of the required 'from_node' or 'to_node' keys")
+        if "to_node" not in relationships or "from_node" not in relationships:
+            raise ValueError("The relationships information is missing one of the required 'from_node' or 'to_node' keys")
         specified_hierarchy: Graph | None = self.graphs.get_hierarchy(hierarchy)
         if specified_hierarchy is None:
             raise KeyError(f"The specified hierarchy '{hierarchy}' does not exist in the GraphSet -- cannot add relationships to it")
@@ -1266,7 +1266,7 @@ class ABModel:
         layers_polarisation: dict[str, float] = {}
 
         if worker_pool is None:
-            for hierarchy in self.hierarchy_information.keys():
+            for hierarchy in self.hierarchy_information:
                 layers_polarisation[hierarchy] = self.graphs.calculate_polarisation(
                     hierarchy
                 )
@@ -1406,7 +1406,7 @@ class ABModel:
         """
         interdependence_results: list[tuple[str, float]] = []
         if worker_pool is None:
-            for hierarchy in self.hierarchy_information.keys():
+            for hierarchy in self.hierarchy_information:
                 interdependence_result: float = self.calculate_interdependence(self.graphs.get_index(hierarchy))
                 interdependence_results.append((hierarchy, interdependence_result))
         else:
@@ -1472,14 +1472,14 @@ class ABModel:
         interdep_numerator: float = 0.0
         # Get the sum of all the estimated opinion values, only for the layer of interest (a)
         oc_a: dict[str, dict[str, float]] = observed_opinions_all[layer_of_interest]
-        for _, oc_a_i in oc_a.items():
+        for oc_a_i in oc_a.values():
             for oc_val in oc_a_i.values():
                 interdep_numerator += abs(oc_val)
 
         interdep_denominator: float = 0.0
         # Get the sum of all the estimated opinion values for all layers (k)
-        for _, oc_k in observed_opinions_all.items():
-            for _, oc_k_i in oc_k.items():
+        for oc_k in observed_opinions_all.values():
+            for oc_k_i in oc_k.values():
                 for oc_val in oc_k_i.values():
                     interdep_denominator += abs(oc_val)
 
@@ -1497,7 +1497,7 @@ class ABModel:
         edges within the model's base graph.
         """
         for hierarchy in self.graphs:
-            for _, edge in hierarchy.graph.edge_index_map().items():
+            for edge in hierarchy.graph.edge_index_map().values():
                 graph_edge: GraphEdge = deepcopy(edge[2])
 
                 # Get the index of the Agent objects within the model's AgentSet (not the graph's node set)
@@ -1592,7 +1592,7 @@ class ABModel:
             "name": [],
         }
 
-        for _, edge in graph.graph.edge_index_map().items():
+        for edge in graph.graph.edge_index_map().values():
             graph_edge: GraphEdge = deepcopy(edge[2])
 
             # Get the index of the Agent objects within the model's AgentSet (not the graph's node set)
