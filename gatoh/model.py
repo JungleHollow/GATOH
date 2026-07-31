@@ -3,6 +3,7 @@ from __future__ import annotations
 import gc
 import os
 from copy import deepcopy
+from collections.abc import Callable
 from datetime import datetime
 from multiprocessing.pool import Pool
 from random import choices, randint
@@ -25,6 +26,8 @@ from gatoh.utils import (
     EdgeChanges,
     YamlLoader,
     create_config_file,
+    linear_link,
+    multiplicative_link,
 )
 from gatoh.visualisation import ABVisualiser
 
@@ -44,7 +47,11 @@ MAX_RADICAL_THRESH: float = 1.0
 DEFAULT_SUBSETTING_DIV: int = 4
 # The absolute threshold value to use when determining 'like-minded' collective opinion changes
 LIKE_MINDED_THRESH: float = 0.05
-
+# A mapping of strings to link functions used for model parameter scaling
+LINK_FUNCTIONS: dict[str, Callable] = {
+    "linear": linear_link,
+    "multiplicative": multiplicative_link,
+}
 
 class ConfigData(TypedDict):
     """
@@ -79,10 +86,16 @@ class ABModel:
     :type iterations: int, optional
     :param silencing_threshold: A threshold that, when surpassed by agents, will cause them to cease expressing their opinions in a given hierarchy.
     :type silencing_threshold: float, optional
+    :param silencing_link: The link function to apply to the silencing threshold, and the link value to use.
+    :type silencing_link: tuple[str, float], optional
     :param negation_threshold: A threshold that, when surpassed by agents, will cause their opinion to become its additive inverse.
     :type negation_threshold: float, optional
+    :param negation_link: The link function to apply to the negation threshold, and the link value to use.
+    :type negation_link: tuple[str, float], optional
     :param radicalisation_threshold: A threshold that determines how strong of an absolute opinion an agent must hold before they begin to consider becoming radicalised.
     :type radicalisation_threshold: float, optional
+    :param radicalisation_link: The link function to apply to the radicalisation threshold, and the link value to use.
+    :type radicalisation_link: tuple[str, float], optional
     :param suppress_warnings: A flag indicating if non-critical runtime warnings should be suppressed.
     :type suppress_warnings: bool, optional
     :param print_interval: The iteration interval at which the model's logger should be printing detailed variable reports.
@@ -114,8 +127,11 @@ class ABModel:
         agent_opinion_rw: tuple[float, float] = (0.0, 0.1),
         iterations: int = 100,
         silencing_threshold: float = 0.95,
+        silencing_link: tuple[str, float] = ("", 0.0),
         negation_threshold: float = 0.999,
+        negation_link: tuple[str, float] = ("", 0.0),
         radicalisation_threshold: float = 0.99,
+        radicalisation_link: tuple[str, float] = ("", 0.0),
         suppress_warnings: bool = False,
         print_interval: int = 10,
         debug: bool = False,
@@ -178,8 +194,19 @@ class ABModel:
         self.max_iterations: int = iterations
 
         self.silencing_threshold: float = silencing_threshold
+        self.silencing_link: tuple[str, float] = silencing_link
+        if self.silencing_link[0] != "" and self.silencing_link[0] not in LINK_FUNCTIONS:
+            raise KeyError(f"Link function '{self.silencing_link[0]}' is not a valid supported link function")
+
         self.negation_threshold: float = negation_threshold
+        self.negation_link: tuple[str, float] = negation_link
+        if self.negation_link[0] != "" and self.negation_link[0] not in LINK_FUNCTIONS:
+            raise KeyError(f"Link function '{self.negation_link[0]}' is not a valid supported link function")
+
         self.radicalisation_threshold: float = radicalisation_threshold
+        self.radicalisation_link: tuple[str, float] = radicalisation_link
+        if self.radicalisation_link[0] != "" and self.radicalisation_link[0] not in LINK_FUNCTIONS:
+            raise KeyError(f"Link function '{self.radicalisation_link[0]}' is not a valid supported link function")
 
         self.suppress_warnings: bool = suppress_warnings
 
@@ -824,6 +851,8 @@ class ABModel:
                 self.logger.new_iteration(init=True)
             else:
                 self.logger.new_iteration()
+                # Only apply link functions if it is not the first iteration
+                self.apply_link_functions()
 
             # Get and print the formatted debug string if appropriate
             if self.debug:
@@ -1070,6 +1099,18 @@ class ABModel:
                             self.logger.log_function_call("Graph.agent_opinion_change")
         if self.debug:
             self.logger.log_function_call("ABModel.iteration_opinion_changes")
+        return None
+
+    def apply_link_functions(self) -> None:
+        """
+        Apply all relevant parameter link functions as needed.
+        """
+        if self.silencing_link[0] != "":
+            self.silencing_threshold = LINK_FUNCTIONS[self.silencing_link[0]](self.silencing_threshold, self.silencing_link[1])
+        if self.negation_link[0] != "":
+            self.negation_threshold = LINK_FUNCTIONS[self.negation_link[0]](self.negation_threshold, self.negation_link[1])
+        if self.radicalisation_link[0] != "":
+            self.radicalisation_threshold = LINK_FUNCTIONS[self.radicalisation_link[0]](self.radicalisation_threshold, self.radicalisation_link[1])
         return None
 
     def step(self) -> None:

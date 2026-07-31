@@ -351,6 +351,54 @@ def beta_value_attenuation(input_value: float, a: float = 0.9, b: float = 0.9) -
     return attenuated_opinion
 
 
+def linear_link(input_param: float, link_val: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
+    """
+    Utility function that performs constant linear scaling on an input parameter.
+
+    This function is primarily intended to be used as a type of 'link' function for ABModel parameters throughout iterations.
+
+    :param input_param: The input model parameter that is being scaled.
+    :type input_param: float
+    :param link_val: The constant value by which to increase or decrease the input parameter by.
+    :type link_val: float
+    :param minimum: The minimum valid value that the input parameter may take.
+    :type minimum: float, optional
+    :param maximum: The maximum valid value that the input parameter may take.
+    :type maximum: float, optional
+    :return: The input parameter after the link function has been applied.
+    :rtype: float
+    """
+    if input_param + link_val < minimum:
+        return minimum
+    elif input_param + link_val > maximum:
+        return maximum
+    return input_param + link_val
+
+
+def multiplicative_link(input_param: float, link_val: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
+    """
+    Utility function that performs a multiplicative scaling on an input parameter.
+
+    This function is primarily intended to be used as a type of 'link' function for ABModel parameters throughout iterations.
+
+    :param input_param: The input model parameter that is being scaled.
+    :type input_param: float
+    :param link_val: The factor by which to multiply the input parameter with.
+    :type link_val: float
+    :param minimum: The minimum valid value that the input parameter may take.
+    :type minimum: float, optional
+    :param maximum: The maximum valid value that the input parameter may take.
+    :type maximum: float, optional
+    :return: The input parameter after the link function has been applied.
+    :rtype: float
+    """
+    if input_param * link_val < minimum:
+        return minimum
+    elif input_param * link_val > maximum:
+        return maximum
+    return input_param * link_val
+
+
 # ========== Random Generation Utils ==========
 
 
