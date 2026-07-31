@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import tracemalloc
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -219,6 +220,8 @@ class LoggerVariables:
     radicalisation_logodds: list[float] = field(default_factory=list)
     # The current iteration that the simulation is at
     current_iteration: int = 0
+    # Space for any dynamically tracked model parameters to be stored
+    model_parameters: dict[str, list] = field(default_factory=dict)
 
     def __init__(self, max_iterations: int, hierarchies: list[str]) -> None:
         """
@@ -233,6 +236,7 @@ class LoggerVariables:
         self.silenced_agents = [0 for _ in range(self.max_iterations)]
         self.negated_agents = [0 for _ in range(self.max_iterations)]
         self.radicalisation_logodds = [0.0 for _ in range(self.max_iterations)]
+        self.model_parameters = {}
 
         self.layer_interdependences = {}
         self.layer_polarisations = {}
@@ -335,6 +339,19 @@ class LoggerVariables:
             )
         return None
 
+    def store_model_parameters(self, model_parameters: dict[str, Any] | None = None) -> None:
+        """
+        A setter function that simplifies the storing of the model's tracked parameters at each iteration.
+
+        :param model_parameters: A <parameter : value> mapping for the tracked model parameters to be logged.
+        :type model_parameters: dict[str, Any], optional
+        """
+        # It is assumed that the model parameters will always exist in self.model_parameters by the time this function is being called...
+        if model_parameters is not None:
+            for model_parameter, value in model_parameters.items():
+                self.model_parameters[model_parameter][self.current_iteration - 1] = value
+        return None
+
     def new_iteration(self, init: bool = False) -> None:
         """
         Increment the current_iteration counter and then copy all the values from the previous iteration to their respective list indexes for the new iteration.
@@ -380,6 +397,20 @@ class LoggerVariables:
             output_string += hierarchy_string
         return output_string
 
+    def current_model_params_repr(self) -> str:
+        """
+        Extract all the explicitly tracked model parameters for the current iteration and format them into a substring to be appended to the main iteration output.
+
+        :return: A formatted text representation containing all the tracked model parameters for the current model iteration.
+        :rtype: str
+        """
+        output_string: str = ""
+        if len(self.model_parameters) > 0:
+            output_string += "Model Parameter\tValue\n"
+            for parameter, value in self.model_parameters.items():
+                output_string += f"{parameter}\t{value}\n"
+        return output_string
+
     def current_iteration_repr(self) -> str:
         """
         Extract all variable information for the current iteration and format it into a string to be printed to the terminal.
@@ -398,6 +429,8 @@ class LoggerVariables:
                 \n\n**** Layer statistics ****\n\n"""
             + self.current_layers_repr()
         )
+        if len(self.model_parameters) > 0:
+            formatted_string += f"\n\n**** Model parameters ****\n\n{self.current_model_params_repr()}"
         return formatted_string
 
     def get_fieldnames(self) -> list[str]:
@@ -423,6 +456,9 @@ class LoggerVariables:
 
         for key in self.layer_polarisations:
             attribute_names.append(f"layer_polarisations_{key}")
+
+        for key in self.model_parameters:
+            attribute_names.append(f"{key}")
 
         return attribute_names
 
@@ -493,12 +529,26 @@ class GATOHLogger:
             self.log_function_call("GATOHLogger.new_iteration")
         return None
 
+    def track_model_parameters(self, parameters: list[str]) -> None:
+        """
+        A utility function that adds new model parameters to be tracked to the logger variables.
+
+        :param parameters: The names of the model parameters to be tracked.
+        :type parameters: list[str]
+        """
+        for parameter in parameters:
+            self.variables.model_parameters.setdefault(parameter, [0 for _ in  range(self.variables.max_iterations)])
+        if self.debug:
+            self.log_function_call("GATOHLogger.track_model_parameters")
+        return None
+
     def iteration(
         self,
         aggregate_opinion: float,
         radicalisation_logodds: float,
         layer_interdependences: dict[str, float],
         layer_polarisations: dict[str, float],
+        model_parameters: dict[str, Any] | None = None,
     ) -> None:
         """
         Store all relevant model variables and states based on the level of logging that has been specified.
@@ -511,11 +561,14 @@ class GATOHLogger:
         :type layer_interdependences: dict[str, float]
         :param layers_polarisation: A <hierarchy : value> mapping containing the calculated polarisation for each hierarchy in the model at the end of this iteration.
         :type layers_polarisation: dict[str, float]
+        :param model_parameters: A <parameter : value> mapping containing a tracked model parameter's value at the end of this iteration.
+        :type model_parameters: dict[str, Any], optional
         """
         self.variables.store_aggregate_opinion(aggregate_opinion)
         self.variables.store_radicalisation_logodds(radicalisation_logodds)
         self.variables.store_layer_interdependences(layer_interdependences)
         self.variables.store_layer_polarisations(layer_polarisations)
+        self.variables.store_model_parameters(model_parameters)
 
         if self.debug:
             self.log_function_call("LoggerVariables.store_aggregate_opinion")
@@ -621,6 +674,10 @@ class GATOHLogger:
                     row_dict[f"layer_polarisations_{hierarchy}"] = (
                         f"{self.variables.layer_polarisations[hierarchy][i]}"
                     )
+
+                # Append the explicitly tracked model parameters in the same loop as the headers should handle ordering automatically
+                for model_parameter in self.variables.model_parameters:
+                    row_dict[model_parameter] = f"{self.variables.model_parameters[model_parameter][i]}"
 
                 csv_writer.writerow(row_dict)
 

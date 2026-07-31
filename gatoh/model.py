@@ -112,6 +112,8 @@ class ABModel:
     :type checkpointing: bool, optional
     :param init_graphs: A flag indicating if empty graphs should be initialised with the input hierarchy information.
     :type init_graphs: bool, optional
+    :param parameters_to_track: The names of initial model parameters that should be tracked and recorded by the logger.
+    :type parameters_to_track: list[str], optional
     :param save_dir: The path to a directory in which all of this model's non-logger data should be saved to.
     :type save_dir: str, optional
     :param data_file: The path to which the logger's data should be saved to after iterations are run.
@@ -140,6 +142,7 @@ class ABModel:
         vis_aggregation_method: str = "median",
         checkpointing: bool = True,
         init_graphs: bool = False,
+        parameters_to_track: list[str] | None = None,
         save_dir: str = "",
         data_file: str = "",
         model_id: str = "",
@@ -209,6 +212,10 @@ class ABModel:
             raise KeyError(f"Link function '{self.radicalisation_link[0]}' is not a valid supported link function")
 
         self.suppress_warnings: bool = suppress_warnings
+
+        self.parameters_to_track: list[str] | None = parameters_to_track
+        if self.parameters_to_track is not None:
+            self.logger.track_model_parameters(self.parameters_to_track)
 
         self.checkpointing: bool = checkpointing
         self.save_dir: str = save_dir
@@ -434,6 +441,28 @@ class ABModel:
         self.model_id = model_id
         if self.debug:
             self.logger.log_function_call("ABModel.set_model_id")
+        return None
+
+    def track_model_parameters(self, parameters: list[str]) -> None:
+        """
+        Note specific model parameters that should be tracked by the logger, and included in the logger's output file.
+
+        :param parameters: The names of the parameters to track (these should be identical to their names within the model object).
+        :type parameters: list[str]
+        """
+        for parameter in parameters:
+            if not isinstance(parameter, str):
+                raise TypeError("One or more parameters to track have not been provided as strings")
+            elif parameter not in self.__dict__:
+                raise KeyError(f"The parameter '{parameter}' does not exist in the ABModel object")
+        # If no parameter has raised an error:
+        if self.parameters_to_track is None:
+            self.parameters_to_track = parameters
+        else:
+            self.parameters_to_track.extend(parameters)
+        self.logger.track_model_parameters(parameters)
+        if self.debug:
+            self.logger.log_function_call("ABModel.track_model_parameters")
         return None
 
     def save_model(self) -> None:
@@ -1238,15 +1267,33 @@ class ABModel:
 
         layers_polarisation: dict[str, float] = self.calculate_layers_polarisation(worker_pool=worker_pool)
 
+        tracked_parameters: dict[str, Any] | None = self.get_tracked_parameters()
+
         self.logger.iteration(
             aggregate_opinion,
             radicalisation_logodds,
             layer_interdependences,
             layers_polarisation,
+            model_parameters=tracked_parameters,
         )
         if self.debug:
             self.logger.log_function_call("ABModel.logger_iteration")
         return None
+
+    def get_tracked_parameters(self) -> dict[str, Any] | None:
+        """
+        A getter function that checks for any explicitly tracked model parameters, and forms a return accordingly.
+
+        :return: A <parameter : value> mapping for this iteration for each tracked model parameter.
+        :rtype: dict[str, Any]
+        """
+        if self.parameters_to_track is None or len(self.parameters_to_track) == 0:
+            return None
+        else:
+            output_dict: dict[str, Any] = {}
+            for parameter in self.parameters_to_track:
+                output_dict[parameter] = self.__dict__.get(parameter)
+            return output_dict
 
     def calculate_aggregate_opinion(self) -> float:
         """
