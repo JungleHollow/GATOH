@@ -13,8 +13,8 @@ import sys
 project = "gatoh"
 copyright = "2025, Manuel Munizaga Sepúlveda"
 author = "Manuel Munizaga Sepúlveda"
-version = "2026.07.0"
-release = "2026.07.0"
+version = "2026.08.0"
+release = "2026.08.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

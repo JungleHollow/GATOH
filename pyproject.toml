@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gatoh"
-version = "2026.07.0"
+version = "2026.08.0"
 authors = [
     { name="Manuel Munizaga Sepulveda", email="manuel.chile@yahoo.com" },
 ]
@@ -44,7 +44,7 @@ dev = [
 find = {}
 
 [tool.bumpver]
-current_version = "2026.07.0"
+current_version = "2026.08.0"
 version_pattern = "YYYY.0M.PATCH"
 commit_message = "Bump version {old_version} -> {new_version}"
 tag_message = "{new_version}"
