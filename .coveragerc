@@ -1,0 +1,20 @@
+[run]
+source = ./tests
+omit =
+    tests/__init__.py
+    tests/agents/__init__.py
+    tests/graphs/__init__.py
+    tests/logging/__init__.py
+    tests/model/__init__.py
+    tests/utils/__init__.py
+    tests/visualisation/__init__.py
+
+[report]
+omit =
+    tests/__init__.py
+    tests/agents/__init__.py
+    tests/graphs/__init__.py
+    tests/logging/__init__.py
+    tests/model/__init__.py
+    tests/utils/__init__.py
+    tests/visualisation/__init__.py
