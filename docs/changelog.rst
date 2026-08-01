@@ -4,6 +4,19 @@ Release Notes
 
 .. release-notes::
 
+2026.08.0
+==============
+
+Continued addition of new features -- mostly QoL convenience features, but some new core features.
+
+Also, ongoing bugfixes and optimisations where possible.
+
+New Features
+------------
+
+Fixes
+-----
+
 2026.07.0
 ==============
 
