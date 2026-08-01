@@ -668,6 +668,7 @@ class ABModel:
         agent_subsetting: bool = False,
         rw_params: list[tuple[float, float]] | None = None,
         individual_methods: dict[str, str] | None = None,
+        ensure_connected: dict[str, bool] | None = None,
     ) -> None:
         """
         Randomly generates graphs for the given social hierarchy names using the specified method.
@@ -685,19 +686,27 @@ class ABModel:
         :type rw_params: list[tuple[float, float]], optional
         :param individual_methods: A <hierarchy : generation method> mapping indicating the per-hierarchy generation methods that should be used.
         :type individual_methods: dict[str, str], optional
+        :param ensure_connected: A <hierarchy : flag> mapping indicating if the graphs generated per hierarchy should be fully connected or not where relevant.
+        :type ensure_connected: dict[str, bool], optional
         """
         agent_array: np.ndarray = np.array(agents)
         agent_sample: list[Agent] = []
 
+        # Done this way to prevent memory leaks from initiating the empty dict in the function parameters
+        if ensure_connected is None:
+            ensure_connected: dict[str, bool] = {}
+
         for idx, hierarchy in enumerate(hierarchies):
             if agent_subsetting:
                 random_k: int = randint(len(agents) // DEFAULT_SUBSETTING_DIV, len(agents))
-                if type(agents) is list:
+                if isinstance(agents, list):
                     agent_sample = list(
                         np.random.choice(agent_array, size=random_k, replace=False)
                     )
-                elif type(agents) is AgentSet:
+                elif isinstance(agents, AgentSet):
                     agent_sample = agents.sample(random_k)
+            else:
+                agent_sample = agents
 
             hierarchy_rw_param: tuple[float, float] = (0.0, 0.1)
             if rw_params:
@@ -707,13 +716,15 @@ class ABModel:
                 hierarchy, hierarchy_rw_param, suppress_warnings=self.suppress_warnings
             )
 
+            # Use the flag if it exists, or assume True in all other cases (not ensuring graph completeness should only be valid in niche, explicit usecases)
+            ensure_complete: bool = ensure_connected.get(hierarchy) if ensure_connected.get(hierarchy) is not None else True
             if individual_methods is not None:
                 hierarchy_graph = hierarchy_graph.generate_graph(
-                    agent_sample, method=individual_methods[hierarchy]
+                    agent_sample, method=individual_methods[hierarchy], ensure_complete=ensure_complete
                 )
             else:
                 hierarchy_graph = hierarchy_graph.generate_graph(
-                    agent_sample, method=method
+                    agent_sample, method=method, ensure_complete=ensure_complete
                 )
 
             _ = self.add_graph(hierarchy_graph)

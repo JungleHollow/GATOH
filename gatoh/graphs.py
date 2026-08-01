@@ -416,7 +416,7 @@ class Graph:
         from_nodes: list[int] = edges["from_node"]
         to_nodes: list[int] = edges["to_node"]
         weightings: list[float] | None = edges.get("weighting")
-        rw_params: list[tuple[float, float]] | None = edges.get("rw_param")
+        rw_params: list[tuple[float, float] | None] | None = edges.get("rw_param")
 
         # Used in case that explicit hierarchy names are set per edge (in the case of the mixed-hierarchy base graph in the model for example)
         names: list[str] | None = edges.get("name")
@@ -455,6 +455,7 @@ class Graph:
                             weighting=weightings[i],
                             rw_params=rw_params[i],
                         )
+                        graph_edges.append((from_nodes[i], to_nodes[i], edge))
                 else:
                     for i in range(len(from_nodes)):
                         edge = GraphEdge(
@@ -547,9 +548,9 @@ class Graph:
                         n, k, self.generation_params["p"]
                     )
                 else:
-                    generated_graph = watts_strogatz_graph(
+                    generated_graph = pygraph_to_pydigraph(watts_strogatz_graph(
                         n, k, self.generation_params["p"]
-                    )
+                    ))
 
                 # Explicitly set the generation method again to mark the method that has been used (for clarity)
                 self.generation_method = "small-world"
@@ -624,6 +625,9 @@ class Graph:
             graph_edge: GraphEdge = GraphEdge(
                 self.name, edge[0], edge[1], weighting=generated_value
             )
+
+            # Set the graph edge's index
+            graph_edge.set_index(index)
 
             self.graph.update_edge_by_index(
                 index, graph_edge
