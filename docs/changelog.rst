@@ -14,8 +14,13 @@ Also, ongoing bugfixes and optimisations where possible.
 New Features
 ------------
 
+- Added the ability to explicitly define if generated graphs should be complete from within :meth:`~gatoh.model.ABModel.generate_graphs`
+
 Fixes
 -----
+
+- Fixed the test cases in :mod:`test_model_multiprocessed.py` and :mod:`test_model_simulation.py` (All 151 existing test cases up to 01/08/2026 are working correctly)
+- Fixed a specific :meth:`~gatoh.graphs.Graph.add_edges` case in which edges were not being added to the graph
 
 2026.07.0
 ==============
