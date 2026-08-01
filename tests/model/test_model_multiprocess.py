@@ -4,6 +4,7 @@ import os
 import unittest as ut
 from multiprocessing import Pool
 from typing import override
+from shutil import rmtree
 
 import gatoh.agents as agt
 import gatoh.graphs as gr
@@ -17,23 +18,27 @@ HIERARCHY_RW_DISTRIB: dict[str, tuple[float, float]] = {
     "C": (0.0, 0.4),
     "D": (0.0, 0.05),
 }
+ROOTDIR: str = "./tests/test_saves/model_simulation_multi"
 SAVEPATHS: dict[str, str] = {
-    "savedir": "./tests/test_saves/model_simulation_multi",
-    "savefile": f"./tests/test_saves/model_simulation_multi/{MODEL_ID}_model_variables.csv",
-    "visualisation": "./tests/test_saves/model_simulation_multi/visualisation_output",
+    "savedir": f"{ROOTDIR}/model_save",
+    "savefile": f"{ROOTDIR}/model_save/{MODEL_ID}_model_variables.csv",
+    "visualisation": f"{ROOTDIR}/visualisation_output",
 }
 
 
 class TestModelSimulationMulti(ut.TestCase):
-    @classmethod
     @override
-    def setUpClass(cls) -> None:
-        # Ensure that the save directory exists
-        if not os.path.exists(SAVEPATHS["savedir"]):
+    def setUp(self) -> None:
+        # Ensure that the root directory exists
+        if not os.path.exists(ROOTDIR):
+            os.mkdir(ROOTDIR)
+        # Reset the save dir
+        if os.path.exists(SAVEPATHS["savedir"]):
+            rmtree(SAVEPATHS["savedir"])
             os.mkdir(SAVEPATHS["savedir"])
         # The multiprocessing worker pool
-        cls._worker_pool = Pool()
-        cls._model: md.ABModel = md.ABModel(
+        self.worker_pool = Pool()
+        self.model: md.ABModel = md.ABModel(
             HIERARCHY_NAMES,
             list(HIERARCHY_RW_DISTRIB.values()),
             suppress_warnings=True,
@@ -44,7 +49,7 @@ class TestModelSimulationMulti(ut.TestCase):
             model_id=MODEL_ID,
         )
         # Randomly generate 10 Agents for use in the simulation
-        cls._model.generate_agents(
+        self.model.generate_agents(
             "TEST",  # id_base
             {  # personality_probs
                 "social": 0.4,
@@ -54,27 +59,29 @@ class TestModelSimulationMulti(ut.TestCase):
             number=10,
         )
         # Genertate a graph for "A" with assurance of full agent membership
-        cls._model.generate_graphs(
+        self.model.generate_graphs(
             [HIERARCHY_NAMES[0]],
-            cls._model.agents,
+            self.model.agents,
             rw_params=[HIERARCHY_RW_DISTRIB[HIERARCHY_NAMES[0]]],
+            ensure_connected={HIERARCHY_NAMES[0]: False},
         )
         # Generate graphs for the remaining hierarchies using agent subsetting
-        cls._model.generate_graphs(
+        self.model.generate_graphs(
             HIERARCHY_NAMES[1:],
-            cls._model.agents,
+            self.model.agents,
             agent_subsetting=True,
             rw_params=list(HIERARCHY_RW_DISTRIB.values())[1:],
+            ensure_connected={hierarchy: False for hierarchy in HIERARCHY_NAMES[1:]},
         )
 
     def test_iterate(self) -> None:
         """
         Test function that checks if the ABModel with a multiprocessing worker pool is iterating correctly during runtime.
         """
-        self._model.iterate(worker_pool=self._worker_pool)
+        self.model.iterate(worker_pool=self.worker_pool)
         self.assertEqual(
-            self._model.current_iteration,
-            40,
+            self.model.current_iteration,
+            10,
             "The ABModel is not incrementing its current_iteration attribute correctly in the iterate function with multiprocessing"
         )
         logger_data_saved: bool = os.path.exists(SAVEPATHS["savefile"])
@@ -87,15 +94,17 @@ class TestModelSimulationMulti(ut.TestCase):
         """
         Test function that checks if the ABModel with multiprocessing will save itself appropriately.
         """
-        self._model.save_model()
+        self.model.save_model()
         save_dir_exists: bool = os.path.exists(SAVEPATHS["savedir"])
         self.assertTrue(
             save_dir_exists,
             "The ABModel's save_model function did not create the correct save directory after running with multiprocessing",
         )
-        savedir_filelist: list[str] = list(os.walk(self._model.save_dir))[0][2]
+        savedir_filelist: list[str] = list(os.walk(self.model.save_dir))[0][2]
         graphml_exists: bool = False
         yaml_exists: bool = False
+        agentset_exists: bool = False
+        graphset_exists: bool = False
         unexpected_file_written: bool = False
         for file in savedir_filelist:
             filename, file_extension = os.path.splitext(file)
@@ -114,6 +123,16 @@ class TestModelSimulationMulti(ut.TestCase):
                         "The ABModel's save_model function did not save the config file with the correct prefix after running with multiprocessing",
                     )
                     yaml_exists = True
+                case ".zip":
+                    self.assertStartsWith(
+                        filename,
+                        ("_agentset", "_graphset"),
+                        "The ABModel's save_model function did not create the agentset or graphset zipfiles with the correct names after running with multiprocessing",
+                    )
+                    if filename == "_agentset":
+                        agentset_exists = True
+                    elif filename == "_graphset":
+                        graphset_exists = True
                 case _:
                     unexpected_file_written = True
         self.assertTrue(
@@ -124,13 +143,20 @@ class TestModelSimulationMulti(ut.TestCase):
             yaml_exists,
             "The ABModel's save_model function did not create a model YAML config file after running with multiprocessing",
         )
+        self.assertTrue(
+            agentset_exists,
+            "The ABModel's save_model function did not create an agentset zipfile after running with multiprocessing",
+        )
+        self.assertTrue(
+            graphset_exists,
+            "The ABModel's save_model function did not create a graphset zipfile after running with multiprocessing",
+        )
         self.assertFalse(
             unexpected_file_written,
             "The ABModel's save_model function wrote an unexpected file to the save directory after running with multiprocessing",
         )
 
-    @classmethod
     @override
-    def tearDownClass(cls) -> None:
-        del cls._model
-        del cls._worker_pool
+    def tearDown(self) -> None:
+        del self.model
+        self.worker_pool.close()

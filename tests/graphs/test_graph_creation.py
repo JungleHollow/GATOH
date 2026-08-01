@@ -99,8 +99,9 @@ class TestGraphCreation(ut.TestCase):
             4,
             "Graph -- keyworded add_edges() is not creating the appropriate number of GraphEdges",
         )
-        self.assertTrue(
+        self.assertEqual(
             self.graph.relationship_exists(13, 12),
+            0,
             "Graph -- keyworded add_edges() is not creating the GraphEdges between the appropriate nodes",
         )
         edge_object = self.graph.graph.edges()[0]

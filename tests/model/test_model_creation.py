@@ -600,7 +600,7 @@ class TestModelCreation(ut.TestCase):
             "IMPOSTOR",
             agt.Agent("TEST_AGENT_4"),
         ]
-        with self.assertRaises(ValueError, msg=f"The object at index 2 of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph '{HIERARCHY_NAMES[0]}'") as cm:
+        with self.assertRaises(TypeError, msg=f"The object at index 2 of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph '{HIERARCHY_NAMES[0]}'") as cm:
             self.model.add_agents_to_hierarchy(invalid_agents, HIERARCHY_NAMES[0])
 
     def test_add_agents_to_hierarchy_nonhierarchy(self) -> None:

@@ -887,21 +887,21 @@ class TestGraphObjects(ut.TestCase):
         )
         # Worked example:
         # ---
-        # distance (SIMPLE1 -> SIMPLE2) = 0.6
-        # distance (SIMPLE2 -> SIMPLE1) = -0.6
-        # average of all distances (y) = sum(distances) / len(distances) = 0.0
+        # |distance (SIMPLE1 -> SIMPLE2)| = 0.6
+        # |distance (SIMPLE2 -> SIMPLE1)| = 0.6
+        # average of all distances (y) = sum(distances) / len(distances) = 0.6
         # ---
         # square_distance = (distance - y) ** 2
-        # therefore square distance (SIMPLE1 -> SIMPLE2) = (0.6 - 0.0) ** 2 = 0.36
-        #   square distance (SIMPLE2 -> SIMPLE1) = (-0.6 - 0.0) ** 2 = 0.36
-        # and Sum of Squares (SoS) = sum(square_distances) = 0.72
+        # therefore square distance (SIMPLE1 -> SIMPLE2) = (0.6 - 0.6) ** 2 = 0.0
+        #   square distance (SIMPLE2 -> SIMPLE1) = (0.6 - 0.6) ** 2 = 0.0
+        # and Sum of Squares (SoS) = sum(square_distances) = 0.0
         # ---
         # polarisation_measure = SoS / (K * (K - 1)) where K is node_count
-        #   = 0.72 / (2 * (2 - 1))
-        #   = 0.36
+        #   = 0.0 / (2 * (2 - 1))
+        #   = 0.0
         self.assertEqual(
             polarisation,
-            0.36,
+            0.0,
             "Graph -- calculate_polarisation() on a populated Graph (simple case) is not calculating the correct value",
         )
 
