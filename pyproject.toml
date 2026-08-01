@@ -37,7 +37,8 @@ dev = [
     "bumpver",
     "sphinx",
     "scipy-stubs",
-    "typing-extensions"
+    "typing-extensions",
+    "coverage",
 ]
 
 [tool.setuptools.packages]
