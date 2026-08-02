@@ -207,6 +207,14 @@ class Agent:
         :return: The generated Agent object.
         :rtype: Agent
         """
+        # Check that the required parameters are of the correct data type
+        if not isinstance(id, str) or not isinstance(index, int) or not isinstance(hierarchies, list):
+            raise TypeError("One or more of the required parameters 'id', 'index', or 'hierarchies' are not of the appropriate data type")
+        # Additional check for the objects within hierarchies
+        for hierarchy in hierarchies:
+            if not isinstance(hierarchy, str):
+                raise TypeError("One or more of the hierarchy names input to Agent.generate_agent are not valid strings")
+
         # Begin by setting crucial information
         self.id = id
         self.index = index
@@ -294,7 +302,7 @@ class Agent:
         :raises ValueError: If no valid value or distribution parameters are input, the attribute cannot be added.
         :raises UserWarning: If overwrite is explicitly False but the attribute is existing, a warning is raised without completing the operation.
         """
-        if value is None and not (distribution and parameters):
+        if value is None and distribution is None:
             raise ValueError(
                 "Either explicit `value` or distribution and valid distribution parameters are expected when adding Agent attributes."
             )
@@ -309,7 +317,7 @@ class Agent:
             if value is not None:
                 # Assume a given explicit value always overrides (mean, sdev)
                 self.__dict__[name] = value
-            elif distribution and parameters:
+            elif distribution is not None:
                 self.__dict__[name] = draw_random_value(
                     distribution, parameters=parameters
                 )
