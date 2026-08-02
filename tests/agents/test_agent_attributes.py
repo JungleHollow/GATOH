@@ -357,3 +357,116 @@ class TestAgentAttributes(ut.TestCase):
             attribute,
             "Agent -- get_attribute() on a non-existing attribute is not returning None",
         )
+
+    def test_store_previous_opinion(self) -> None:
+        """
+        Test that store_previous_opinion() is working as intended.
+        """
+        new_agent: agt.Agent = agt.Agent(0.44)
+        new_agent.store_previous_opinion()
+        self.assertAlmostEqual(
+            new_agent.previous_opinion,
+            0.44,
+            5,
+            "Agent -- store_previous_opinion() is not storing the agent's current opinion into its previous_opinion correctly",
+        )
+
+    def test_change_opinion(self) -> None:
+        """
+        Test that change_opinion() is working as intended.
+        """
+        new_agent: agt.Agent = agt.Agent(0.1)
+        new_agent.change_opinion(0.1)
+        self.assertAlmostEqual(
+            new_agent.opinion,
+            0.2,
+            5,
+            "Agent -- change_opinion() is not changing the agent's current opinion correctly",
+        )
+
+    def test_change_opinion_constrained(self) -> None:
+        """
+        Test that change_opinion() will constrain the final opinion value to the correct range.
+        """
+        new_agent: agt.Agent = agt.Agent(-0.8)
+        new_agent.change_opinion(-999999.9)
+        self.assertAlmostEqual(
+            new_agent.opinion,
+            -agt.OPINION_MAX,
+            5,
+            "Agent -- change_opinion() is not constraining the agent's current opinion to the appropriate range",
+        )
+
+    def test_change_radicalisation(self) -> None:
+        """
+        Test that change_radicalisation() is working as intended.
+        """
+        empty_agent: agt.Agent = agt.Agent()
+        empty_agent.change_radicalisation(True)
+        self.assertTrue(
+            empty_agent.radicalised,
+            "Agent -- change_radicalisation() is not changing the agent's radicalised attribute",
+        )
+
+    def test_change_rw_distribution_new(self) -> None:
+        """
+        Test that change_rw_distribution() with an unseen input hierarchy will correctly initialise it in the agent's rw_distributions.
+        """
+        empty_agent: agt.Agent = agt.Agent()
+        empty_agent.change_rw_distribution("foo", (0.13, 0.12))
+        self.assertIsNotNone(
+            empty_agent.rw_distributions,
+            "Agent -- a valid change_rw_distribution() call on an agent without rw_distributions did not create a rw_distributions attribute",
+        )
+        self.assertIn(
+            "foo",
+            empty_agent.rw_distributions,
+            "Agent -- change_rw_distribution() with an unseen hierarchy did not add the hierarchy as a key in rw_distributions",
+        )
+        self.assertEqual(
+            empty_agent.rw_distributions["foo"],
+            (0.13, 0.12),
+            "Agent -- change_rw_distribution() with an unseen hierarchy did not store the rw distribution tuple for that hierarchy correctly",
+        )
+
+    def test_change_rw_distribution_existing(self) -> None:
+        """
+        Test that change_rw_distribution() with an existing hierarchy will correctly update it in the agent's rw_distributions.
+        """
+        new_agent: agt.Agent = agt.Agent()
+        new_agent.rw_distributions = {"foo": (0.0, 0.1)}
+        new_agent.change_rw_distribution("foo", (0.13, 0.12))
+        self.assertEqual(
+            new_agent.rw_distributions["foo"],
+            (0.13, 0.12),
+            "Agent -- change_rw_distribution() with an existing hierarchy did not correctly update the hierarchy's rw distribution",
+        )
+
+    def test_change_opinion_rw_new(self) -> None:
+        """
+        Test that change_opinion_rw() on an agent without an existing opinion_rw attribute will correctly initialise it.
+        """
+        empty_agent: agt.Agent = agt.Agent()
+        empty_agent.change_opinion_rw((0.13, 0.12))
+        self.assertIsNotNone(
+            empty_agent.opinion_rw,
+            "Agent -- change_opinion_rw() on an agent without an existing opinion_rw did not create an opinion_rw attribute",
+        )
+        self.assertEqual(
+            empty_agent.opinion_rw,
+            (0.13, 0.12),
+            "Agent -- change_opinion_rw() on an agent without an existing opinion_rw did not store the opinion_rw value correctly",
+        )
+
+    def test_change_opinion_rw(self) -> None:
+        """
+        Test that change_opinion_rw() on an agent with an existing opinion_rw attribute will correctly update it.
+        """
+        new_agent: agt.Agent = agt.Agent()
+        new_agent.opinion_rw = (0.0, 0.1)
+        new_agent.change_opinion_rw((0.13, 0.12))
+        self.assertEqual(
+            new_agent.opinion_rw,
+            (0.13, 0.12),
+            "Agent -- change_opinion_rw() on an agent with an existing opinion_rw did not correctly update it",
+        )
