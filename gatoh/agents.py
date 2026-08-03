@@ -501,6 +501,10 @@ class Agent:
         :return: A flag indicating if the Agent's opinion experienced a total negation.
         :rtype: bool
         """
+        # Check for hierarchy validity
+        if hierarchy not in self.social_weightings:
+            raise KeyError(f"The hierarchy '{hierarchy}' does not exist in the agent's social_weightings")
+
         # It is assumed that a radicalised Agent will never experience a total opinion reversal regardless of the perceived opinion climate
         if self.radicalised:
             return False
