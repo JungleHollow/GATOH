@@ -17,6 +17,7 @@ New Features
 - Added the ability to explicitly define if generated graphs should be complete from within :meth:`~gatoh.model.ABModel.generate_graphs`
 - Started using :mod:`coverage` to track the coverage of tests across the library modules
 - Finished the test cases for :class:`~gatoh.agents.Agent` creation and attributes
+- Added input parameter data type checks to various methods in :class:`~gatoh.agents.Agent`
 
 Fixes
 -----
