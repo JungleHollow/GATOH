@@ -201,3 +201,184 @@ class TestAgentObjects(ut.TestCase):
             5,
             "Agent -- opinion_silencing is not calculating and reporting the correct absolute difference value (no threshold - false)",
         )
+
+    def test_opinion_silencing_true(self) -> None:
+        """
+        Test that opinion_silencing() with a silencing_threshold will correctly report that silencing should occur.
+        """
+        est_op_climate: float = 0.69
+        silencing_threshold: float = 0.01
+        opinion_silencing: tuple[bool, float] = self.agent.opinion_silencing(est_op_climate, silencing_threshold=silencing_threshold)
+        # Worked example:
+        #   1. An explicit silencing_threshold of 0.01 was passed
+        #   2. The agent's personality is "social", so the absolute difference is calculated as abs(estimated opinion climate - agent opinion)
+        #   3. Therefore: absolute_difference = abs(0.69 - 0.44) = abs(0.25) = 0.25
+        #   4. 0.25 is greater than the threshold of 0.01, so silencing will occur
+        self.assertIsInstance(
+            opinion_silencing,
+            tuple,
+            "Agent -- opinion_silencing is not returning a tuple as the result (threshold - true)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[0],
+            bool,
+            "Agent -- the first argument returned by opinion_silencing is not a boolean (threshold - true)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[1],
+            float,
+            "Agent -- the second argument returned by opinion_silencing is not a float (threshold - true)",
+        )
+        self.assertTrue(
+            opinion_silencing[0],
+            "Agent -- opinion_silencing is not correctly flagging when silencing should have ocurred (threshold - true)",
+        )
+        self.assertAlmostEqual(
+            opinion_silencing[1],
+            0.25,
+            5,
+            "Agent -- opinion_silencing is not calculating and reporting the correct absolute difference value (threshold - true)",
+        )
+
+    def test_opinion_silencing_false(self) -> None:
+        """
+        Test that opinion_silencing() with a silencing_threshold will correctly report that silencing should not occur.
+        """
+        est_op_climate: float = -0.8
+        silencing_threshold: float = 1.99
+        opinion_silencing: tuple[bool, float] = self.agent.opinion_silencing(est_op_climate, silencing_threshold=silencing_threshold)
+        # Worked example:
+        #   1. An explicit silencing_threshold of 1.99 was passed
+        #   2. The agent's personality is "social", so the absolute difference is calculated as abs(estimated opinion climate - agent opinion)
+        #   3. Therefore: absolute_difference = abs(-0.8 - 0.44) = abs(-1.24) = 1.24
+        #   4. 1.24 is smaller than the threshold of 1.99, so silencing will not occur
+        self.assertIsInstance(
+            opinion_silencing,
+            tuple,
+            "Agent -- opinion_silencing is not returning a tuple as the result (threshold - false)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[0],
+            bool,
+            "Agent -- the first argument returned by opinion_silencing is not a boolean (threshold - false)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[1],
+            float,
+            "Agent -- the second argument returned by opinion_silencing is not a float (threshold - false)",
+        )
+        self.assertFalse(
+            opinion_silencing[0],
+            "Agent -- opinion_silencing is not correctly flagging when silencing should not occur (threshold - false)",
+        )
+        self.assertAlmostEqual(
+            opinion_silencing[1],
+            1.24,
+            5,
+            "Agent -- opinion_silencing is not calculating and reporting the correct absolute difference value (threshold - false)",
+        )
+
+    def test_opinion_silencing_radicalised(self) -> None:
+        """
+        Test that opinion_silencing() on a radicalised agent will return the expected result.
+        """
+        est_op_climate: float = -0.99
+        silencing_threshold: float = 0.01,
+        self.agent.change_radicalisation(True)
+        opinion_silencing: tuple[bool, float] = self.agent.opinion_silencing(est_op_climate, silencing_threshold=silencing_threshold)
+        self.assertIsInstance(
+            opinion_silencing,
+            tuple,
+            "Agent -- opinion_silencing is not returning a tuple as the result (radicalised)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[0],
+            bool,
+            "Agent -- the first argument returned by opinion_silencing is not a boolean (radicalised)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[1],
+            float,
+            "Agent -- the second argument returned by opinion_silencing is not a float (radicalised)",
+        )
+        self.assertFalse(
+            opinion_silencing[0],
+            "Agent -- opinion_silencing is not correctly flagging when silencing should not occur (radicalised)",
+        )
+        self.assertAlmostEqual(
+            opinion_silencing[1],
+            0.0,
+            5,
+            "Agent -- opinion_silencing is not reporting an absolute difference of 0.0 (radicalised)",
+        )
+
+    def test_opinion_negation_invalid(self) -> None:
+        """
+        Test that opinion_negation() with an unseen hierarchy will raise the expected error.
+        """
+        abs_difference: float = 0.0
+        thresh: float = 0.0
+        with self.assertRaises(KeyError, msg="The hierarchy 'foo' does not exist in the agent's social_weightings") as cm:
+            opinion_negation: bool = self.agent.opinion_negation("foo", abs_difference, thresh)
+
+    def test_opinion_negation_false(self) -> None:
+        """
+        Test that opinion_negation() will correctly report that negation should not occur.
+        """
+        abs_difference: float = 0.03
+        thresh: float = 1.99
+        opinion_negation: bool = self.agent.opinion_negation("A", abs_difference, thresh)
+        # Worked example:
+        #   1. negation_strength is initialised as the reported absolute difference (0.03)
+        #   2. Agent personality is "social", so negation_strength is modified by /= social_susceptibility * social_weightings[hierarchy]
+        #   3. Therefore, negation_strength = 0.03 / (0.75 * 0.2) = 0.03 / 0.15 = 0.2
+        #   4. The negation_strength of 0.2 is not above the threshold of 1.99, so negation does not occur
+        self.assertIsInstance(
+            opinion_negation,
+            bool,
+            "Agent -- opinion_negation is not returning a boolean result (negation=false)",
+        )
+        self.assertFalse(
+            opinion_negation,
+            "Agent -- opinion_negation is not correctly reporting that negation should not occur",
+        )
+
+    def test_opinion_negation_true(self) -> None:
+        """
+        Test that opinion_negation() will correctly report that negation should occur.
+        """
+        abs_difference: float = 1.47
+        thresh: float = 6.9
+        opinion_negation: bool = self.agent.opinion_negation("A", abs_difference, thresh)
+        # Worked example:
+        #   1. negation_strength is initialised as the reported absolute difference (1.47)
+        #   2. Agent personality is "social", so negation_strength is modified by /= social_susceptibility * social_weightings[hierarchy]
+        #   3. Therefore, negation_strength = 1.47 / (0.75 * 0.2) = 1.47 / 0.15 = 9.8
+        #   4. The negation_strength of 9.8 is above the threshold of 6.9, so negation does occur
+        self.assertIsInstance(
+            opinion_negation,
+            bool,
+            "Agent -- opinion_negation is not returning a boolean result (negation=true)",
+        )
+        self.assertTrue(
+            opinion_negation,
+            "Agent -- opinion_negation is not correctly reporting that negation should occur",
+        )
+
+    def test_opinion_negation_radicalised(self) -> None:
+        """
+        Test that opinion_negation() on a radicalised agent will correctly report that negation does not occur.
+        """
+        abs_difference: float = 1.47
+        thresh: float = 6.9
+        self.agent.change_radicalisation(True)
+        opinion_negation: bool = self.agent.opinion_negation("A", abs_difference, thresh)
+        self.assertIsInstance(
+            opinion_negation,
+            bool,
+            "Agent -- opinion_negation is not returning a boolean result (radicalised)",
+        )
+        self.assertFalse(
+            opinion_negation,
+            "Agent -- opinion_negation on a radicalised agent is not reporting that negation will not occur",
+        )
