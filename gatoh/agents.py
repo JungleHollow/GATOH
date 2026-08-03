@@ -430,7 +430,18 @@ class Agent:
         :type opinion_silence: dict[str, bool]
         :param negation_ocurred: A flag indicating if opinion negation has ocurred in the current iteration.
         :type negation_ocurred: bool
+        :raises TypeError: If either of the input parameters are of the incorrect data type.
+        :raises KeyError: If a non-existent hierarchy is included in the keys for opinion_silenced.
         """
+        # Type checking
+        if not isinstance(opinion_silenced, dict) or not isinstance(negation_ocurred, bool):
+            raise TypeError("opinion_silenced must be a <string : boolean> dictionary -- the input is of an incorrect data type")
+        elif not isinstance(negation_ocurred, bool):
+            raise TypeError("negation_ocurred must be a boolean -- the input value is not of the correct data type")
+        # Hierarchy existence checking
+        for hierarchy in opinion_silenced:
+            if hierarchy not in self.rw_distributions:
+                raise KeyError(f"Hierarchy '{hierarchy}' has been passed in opinion_silenced, but does not exist in the agent's rw_distributions")
         self.is_silenced = opinion_silenced  # Update is_silenced
         if negation_ocurred:
             self.opinion *= -1.0  # Invert the Agent's current opinion
