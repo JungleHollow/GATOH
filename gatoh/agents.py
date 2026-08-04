@@ -543,9 +543,26 @@ class Agent:
         :type neighbour_benefits: list[bool]
         :param threshold: The deradicalisation threshold that has been defined at the global level in the model.
         :type threshold: float
+        :raises TypeError: If any of the input parameters contains an invalid data type.
         :return: A flag indicating if the agent has deradicalised or not.
         :rtype: bool
         """
+        # Initial data type check
+        if not isinstance(hierarchy_changes, list):
+            raise TypeError("hierarchy_changes must be a list")
+        if not isinstance(neighbour_benefits, list):
+            raise TypeError("neighbour_benefits must be a list")
+        if not isinstance(threshold, float):
+            raise TypeError("threshold must be a float")
+
+        # Data type check for items within lists
+        for hierarchy_change in hierarchy_changes:
+            if not isinstance(hierarchy_change, float):
+                raise TypeError("One or more of the items in hierarchy_changes is of an invalid data type -- all must be floats")
+        for neighbour_benefit in neighbour_benefits:
+            if not isinstance(neighbour_benefit, bool):
+                raise TypeError("One or more of the items in neighbour_benefits is of an invalid data type -- all must be booleans")
+
         # If the Agent is not radicalised, always return False (the Agent cannot 'deradicalise')
         if not self.radicalised:
             return False
@@ -645,6 +662,22 @@ class Agent:
         :return: A flag indicating if the Agent has become radicalised or not.
         :rtype: bool
         """
+        # Initial data type check
+        if not isinstance(hierarchy_changes, list):
+            raise TypeError("hierarchy_changes must be a list")
+        if not isinstance(neighbour_benefits, list):
+            raise TypeError("neighbour_benefits must be a list")
+        if not isinstance(threshold, float):
+            raise TypeError("threshold must be a float")
+
+        # Data type checks for items within lists
+        for hierarchy_change in hierarchy_changes:
+            if not isinstance(hierarchy_change, float):
+                raise TypeError("One or more of the items in hierarchy_changes is of an invalid data type -- all must be floats")
+        for neighbour_benefit in neighbour_benefits:
+            if not isinstance(neighbour_benefit, bool):
+                raise TypeError("One or more of the items in neighbour_benefits is of an invalid data type -- all must be booleans")
+
         # If the Agent is already radicalised, always return False (as the Agent cannot become 'radicalised' again)
         if self.radicalised:
             return False
