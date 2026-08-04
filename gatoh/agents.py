@@ -353,7 +353,11 @@ class Agent:
 
         :param opinion_delta: The delta value by which to shift the Agent's current opinion.
         :type opinion_delta: float
+        :raises TypeError: If opinion_delta is not a float.
         """
+        if not isinstance(opinion_delta, float):
+            raise TypeError("opinion_delta must be a float")
+
         self.opinion += opinion_delta
 
         # Constrain the opinion back to [-1.0, 1.0] as needed
@@ -369,7 +373,10 @@ class Agent:
 
         :param radicalisation: The radicalisation flag to set.
         :type radicalisation: bool
+        :raises TypeError: If radicalisation is not a boolean.
         """
+        if not isinstance(radicalisation, bool):
+            raise TypeError("radicalisation must be a boolean")
         self.radicalised = radicalisation
         return None
 
@@ -383,7 +390,13 @@ class Agent:
         :type hierarchy: str
         :param parameters: The new (mean, var) for the random walk's gaussian distribution.
         :type parameters: tuple[float, float]
+        :raises TypeError: If either of the inputs contain invalid data types.
         """
+        if not isinstance(hierarchy, str):
+            raise TypeError("hierarchy must be a string")
+        if not isinstance(parameters, tuple) or not isinstance(parameters[0], float) or not isinstance(parameters[1], float):
+            raise TypeError("parameters must be a (float, float) tuple")
+
         # Assume that if this function is being called, rw_distributions should be initialised if not already
         if not self.rw_distributions:
             self.rw_distributions = {}
@@ -397,8 +410,24 @@ class Agent:
 
         :param rw_params: The new (mean, var) for the random walk's gaussian distribution.
         :type rw_params: tuple[float, float]
+        :raises TypeError: If rw_params is not a (float, float) tuple.
         """
+        if not isinstance(rw_params, tuple) or not isinstance(rw_params[0], float) or not isinstance(rw_params[1], float):
+            raise TypeError("rw_params must be a (float, float) tuple")
         self.opinion_rw = rw_params
+        return None
+
+    def set_benefit(self, personal_benefit: bool) -> None:
+        """
+        A setter method that changes the Agent's personal_benefit parameter.
+
+        :param personal_benefit: A flag indicating if there is personal benefit for the agent in believing the contagion.
+        :type personal_benefit: bool
+        :raises TypeError: If personal_benefit is not a boolean.
+        """
+        if not isinstance(personal_benefit, bool):
+            raise TypeError("personal_benefit must be a boolean")
+        self.personal_benefit = personal_benefit
         return None
 
     def step(
@@ -659,6 +688,7 @@ class Agent:
         :type neighbour_benefits: list[bool]
         :param threshold: The radicalisation threshold that has been defined at the global level in the model.
         :type threshold: float
+        :raises TypeError: If any of the input parameters contains an invalid data type.
         :return: A flag indicating if the Agent has become radicalised or not.
         :rtype: bool
         """
@@ -769,8 +799,25 @@ class Agent:
 
         :param rw_distributions: A mapping specifying the global random walk distributions defined for each hierarchy in the model.
         :type rw_distributions: dict[str, tuple[float, float]]
+        :raises TypeError: If the input parameter contains an invalid data type.
+        :raises KeyError: If a non-existent hierarchy key is passed in the input dictionary.
         """
+        # Initial data type check
+        if not isinstance(rw_distributions, dict):
+            raise TypeError("rw_distributions must be a dictionary")
+
+        # Data type checks for the values in rw_distributions
+        for item in rw_distributions.items():
+            if not isinstance(item, tuple):
+                raise TypeError("One or more items in rw_distributions is of an invalid data type -- all must be tuples")
+            if not isinstance(item[0], float) or not isinstance(item[1], float):
+                raise TypeError("One or more tuples in rw_distributions contain invalid data types -- all must be tuples with two float items")
+
         for key, value in rw_distributions.items():
+            # Check the validity of the keys
+            if key not in self.social_weightings:
+                raise KeyError("One or more hierarchy keys in rw_distributions are not present in the agent's social_weightings")
+
             rw_result: float | None = None
 
             if self.rw_distributions:
@@ -782,7 +829,7 @@ class Agent:
                     )
 
             if (
-                not rw_result
+                rw_result is None
             ):  # No explicit rw distribution was found; use the input ones instead
                 rw_result = value_rw_delta(
                     self.social_weightings[key], value[0], value[1]
@@ -806,7 +853,14 @@ class Agent:
 
         :param opinion_rw: A (mean, variance) pair which parametrises the Gaussian distribution used for stochastic opinion shift.
         :type opinion_rw: tuple[float, float]
+        :raises TypeError: If the input contains any invalid data types.
         """
+        # Data type checks
+        if not isinstance(opinion_rw, tuple):
+            raise TypeError("opinion_rw must be a tuple")
+        if not isinstance(opinion_rw[0], float) or not isinstance(opinion_rw[1], float):
+            raise TypeError("One or both of the values in opinion_rw are invalid data types -- both must be floats")
+
         rw_result: float | None = None
 
         if self.opinion_rw:
@@ -841,11 +895,13 @@ class Agent:
         else:
             personality_flags: list[str] = list(personality_probs.keys())
             personality_p: list[float] = []
-            for value in personality_probs.values():
+            for key, value in personality_probs.items():
                 if isinstance(value, float):
                     personality_p.append(value)
                 else:
                     raise TypeError(f"A non-float probability was supplied in personality_probs when trying to determine a stochastic personality change in agent {self.id}")
+                if key not in PERSONALITIES:
+                    raise KeyError(f"An unsupported personality was specified in personality_probs when trying to determine a stochastic personality change in agent {self.id}")
             chosen_personality = rd.choices(personality_flags, weights=personality_p, k=1)
             self.personality = chosen_personality[0]
         return None
