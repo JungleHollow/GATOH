@@ -658,3 +658,198 @@ class TestAgentObjects(ut.TestCase):
             self.agent.radicalised,
             "Agent -- a valid call to radicalisation in which radicalisation did not occur has set the agent's radicalised attribute to True",
         )
+
+    def test_evolve_hierarchies_invalid_input(self) -> None:
+        """
+        Test that evolve_hierarchies() with an invalid rw_distributions data type will produce the expected error.
+        """
+        rw_distribs_invalid: list[tuple[float, float]] = [(0.0, 0.1)]
+        with self.assertRaises(TypeError, msg="rw_distributions must be a dictionary") as cm:
+            self.agent.evolve_hierarchies(rw_distribs_invalid)
+
+    def test_evolve_hierarchies_invalid_item(self) -> None:
+        """
+        Test that evolve_hierarchies() with a rw_distributions dict containing an item of an invalid data type will produce the expected error.
+        """
+        rw_distribs_invalid: dict[str, list[float]] = {"A": [0.0, 0.1]}
+        with self.assertRaises(TypeError, msg="One or more items in rw_distributions is of an invalid data type -- all must be tuples") as cm:
+            self.agent.evolve_hierarchies(rw_distribs_invalid)
+
+    def test_evolve_hierarchies_invalid_item_value(self) -> None:
+        """
+        Test that evolve_hierarchies() with a rw_distributions dict containing valid tuple items with some invalid data type within them will produce the expected error.
+        """
+        rw_distribs_invalid: dict[str, tuple[float, str]] = {"A": (0.0, "0.1")}
+        with self.assertRaises(TypeError, msg="One or more tuples in rw_distributions contain invalid data types -- all must be tuples with two float items") as cm:
+            self.agent.evolve_hierarchies(rw_distribs_invalid)
+
+    def test_evolve_hierarchies_invalid_hierarchy(self) -> None:
+        """
+        Test that evolve_hierarchies() with a non-existent hierarchy in the rw_distributions keys will produce the expected error.
+        """
+        rw_distribs_invalid: dict[str, tuple[float, float]] = {"foobar": (0.13, 0.12)}
+        with self.assertRaises(KeyError, msg="One or more hierarchy keys in rw_distributions are not present in the agent's social_weightings") as cm:
+            self.agent.evolve_hierarchies(rw_distribs_invalid)
+
+    def test_evolve_hierarchies(self) -> None:
+        """
+        Test that a valid call to evolve_hierarchies() is working as intended.
+        """
+        rw_distribs: dict[str, tuple[float, float]] = {"A": (0.0, 0.5)}
+        self.agent.evolve_hierarchies(rw_distribs)
+        self.assertIsInstance(
+            self.agent.social_weightings["A"],
+            float,
+            "Agent -- a valid call to evolve_hierarchies is causing a non-float value to be set for a social weighting",
+        )
+        self.assertTrue(
+            (self.agent.social_weightings["A"] >= -agt.SOCIAL_WEIGHTINGS_MAX) and (self.agent.social_weightings["A"] <= agt.SOCIAL_WEIGHTINGS_MAX),
+            "Agent -- a valid call to evolve_hierarchies is not producing social_weightings values in the valid range",
+        )
+        self.assertNotAlmostEqual(
+            self.agent.social_weightings["A"],
+            0.2,
+            5,
+            "Agent -- a valid call to evolve_hierarchies is not changing the social_weighting value of the hierarchies correctly",
+        )
+
+    def test_stochastic_opinion_invalid(self) -> None:
+        """
+        Test that a call to stochastic_opinion() with an opinion_rw of an invalid data type will produce the expected error.
+        """
+        invalid_opinion_rw: list[float] = [0.0, 0.1]
+        with self.assertRaises(TypeError, msg="opinion_rw must be a tuple") as cm:
+            self.agent.stochastic_opinion(invalid_opinion_rw)
+
+    def test_stochastic_opinion_invalid_value(self) -> None:
+        """
+        Test that a call to stochastic_opinion() with an opinion_rw tuple containing an invalid data type will produce the expected error.
+        """
+        invalid_opinion_rw: tuple[float, str] = (0.0, "0.1")
+        with self.assertRaises(TypeError, msg="One or both of the values in opinion_rw are invalid data types -- both must be floats") as cm:
+            self.agent.stochastic_opinion(invalid_opinion_rw)
+
+    def test_stochastic_opinion(self) -> None:
+        """
+        Test that a valid call to stochastic_opinion() is working as intended.
+        """
+        opinion_rw: tuple[float, float] = (0.0, 0.5)
+        self.agent.stochastic_opinion(opinion_rw)
+        self.assertIsInstance(
+            self.agent.opinion,
+            float,
+            "Agent -- a valid call to stochastic_opinion is causing a non-float value to be set for the agent's opinion",
+        )
+        self.assertTrue(
+            (self.agent.opinion >= -agt.OPINION_MAX) and (self.agent.opinion <= agt.OPINION_MAX),
+            "Agent -- a valid call to stochastic_opinion is not producing an opinion value in the valid range",
+        )
+        self.assertNotAlmostEqual(
+            self.agent.opinion,
+            0.44,
+            5,
+            "Agent -- a valid call to stochastic_opinion is not changing the agent's opinion value correctly",
+        )
+
+    def test_stochastic_personality_change_invalid_prob(self) -> None:
+        """
+        Test that a call to stochastic_personality_change() with an invalid probability value will produce the expected error.
+        """
+        personalities_p_invalid: dict[str, float] = {"neutral": "half", "rational": "half"}
+        with self.assertRaises(TypeError, msg=f"A non-float probability was supplied in personality_probs when trying to determine a stochastic personality change in agent {self.agent.id}") as cm:
+            self.agent.stochastic_personality_change(personality_probs=personalities_p_invalid)
+
+    def test_stochastic_personality_change_invalid_personality(self) -> None:
+        """
+        Test that a call to stochastic_personality_change() with an unsupported personality specified will produce the expected error.
+        """
+        personalities_p_invalid: dict[str, float] = {"neutral": 0.9, "rare": 0.1}
+        with self.assertRaises(KeyError, msg=f"An unsupported personality was specified in personality_probs when trying to determine a stochastic personality change in agent {self.agent.id}") as cm:
+            self.agent.stochastic_personality_change(personality_probs=personalities_p_invalid)
+
+    def test_stochastic_personality_change(self) -> None:
+        """
+        Test that stochastic_personality_change() is working as intended.
+        """
+        self.agent.stochastic_personality_change()
+        self.assertIn(
+            self.agent.personality,
+            agt.PERSONALITIES,
+            "Agent -- a valid call to stochastic_personality_change without explicit probabilities is not drawing a valid personality type",
+        )
+
+    def test_stochastic_personality_change_probs(self) -> None:
+        """
+        Test that stochastic_personality_change() with explicit probabilities is working as intended.
+        """
+        personalities_p: dict[str, float] = {"neutral": 0.4, "impulsive": 0.4, "rational": 0.2}
+        self.agent.stochastic_personality_change(personality_probs=personalities_p)
+        self.assertIn(
+            self.agent.personality,
+            personalities_p.keys(),
+            "Agent -- a valid call to stochastic_personality_change with explicit probabilities is not drawing a specified personality type",
+        )
+
+    def test_stochastic_benefit_change_false(self) -> None:
+        """
+        Test that stochastic_benefit_change() when personal_benefit was False will result in a personal_benefit of True.
+        """
+        self.agent.set_benefit(False)
+        self.agent.stochastic_benefit_change()
+        self.assertIsInstance(
+            self.agent.personal_benefit,
+            bool,
+            "Agent -- stochastic_benefit_change set the personal_benefit attribute to a non-boolean value",
+        )
+        self.assertTrue(
+            self.agent.personal_benefit,
+            "Agent -- stochastic_benefit_change when the initial personal_benefit was False did not result in a final value of True",
+        )
+
+    def test_stochastic_benefit_change_true(self) -> None:
+        """
+        Test that stochastic_benefit_change() when personal_benefit was True will result in a personal_benefit of False.
+        """
+        self.agent.set_benefit(True)
+        self.agent.stochastic_benefit_change()
+        self.assertIsInstance(
+            self.agent.personal_benefit,
+            bool,
+            "Agent -- stochastic_benefit_change set the personal_benefit attribute to a non-boolean value",
+        )
+        self.assertFalse(
+            self.agent.personal_benefit,
+            "Agent -- stochastic_benefit_change when the initial personal_benefit was True did not result in a final value of False",
+        )
+
+    def test_stochastic_radicalisation_change_false(self) -> None:
+        """
+        Test that stochastic_radicalisation_change() when radicalised was False will result in a radicalised of True.
+        """
+        self.agent.change_radicalisation(False)
+        self.agent.stochastic_radicalisation_change()
+        self.assertIsInstance(
+            self.agent.radicalised,
+            bool,
+            "Agent -- stochastic_radicalisation_change set the radicalised attribute to a non-boolean value",
+        )
+        self.assertTrue(
+            self.agent.radicalised,
+            "Agent -- stochastic_radicalisation_change when the initial radicalised was False did not result in a final value of True",
+        )
+
+    def test_stochastic_radicalisation_change_true(self) -> None:
+        """
+        Test that stochastic_radicalisation_change() when radicalised was True will result in a radicalised of False.
+        """
+        self.agent.change_radicalisation(True)
+        self.agent.stochastic_radicalisation_change()
+        self.assertIsInstance(
+            self.agent.radicalised,
+            bool,
+            "Agent -- stochastic_radicalisation_change set the radicalised attribute to a non-boolean value",
+        )
+        self.assertFalse(
+            self.agent.radicalised,
+            "Agent -- stochastic_radicalisation_change when the initial radicalised was True did not result in a final value of False",
+        )
