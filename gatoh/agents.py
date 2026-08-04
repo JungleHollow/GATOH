@@ -459,18 +459,25 @@ class Agent:
         :type opinion_silence: dict[str, bool]
         :param negation_ocurred: A flag indicating if opinion negation has ocurred in the current iteration.
         :type negation_ocurred: bool
+        :raises RuntimeError: If the agent has not yet been initialised in a valid manner.
         :raises TypeError: If either of the input parameters are of the incorrect data type.
         :raises KeyError: If a non-existent hierarchy is included in the keys for opinion_silenced.
         """
+        # Check that the agent has been initialised
+        if not hasattr(self, "opinion"):
+            raise RuntimeError("The agent for which an update is being attempted has not yet been initialised")
+
         # Type checking
         if not isinstance(opinion_silenced, dict) or not isinstance(negation_ocurred, bool):
             raise TypeError("opinion_silenced must be a <string : boolean> dictionary -- the input is of an incorrect data type")
         elif not isinstance(negation_ocurred, bool):
             raise TypeError("negation_ocurred must be a boolean -- the input value is not of the correct data type")
+
         # Hierarchy existence checking
         for hierarchy in opinion_silenced:
             if hierarchy not in self.rw_distributions:
                 raise KeyError(f"Hierarchy '{hierarchy}' has been passed in opinion_silenced, but does not exist in the agent's rw_distributions")
+
         self.is_silenced = opinion_silenced  # Update is_silenced
         if negation_ocurred:
             self.opinion *= -1.0  # Invert the Agent's current opinion
@@ -490,9 +497,21 @@ class Agent:
         :type estimated_opinion_climate: float
         :param silencing_threshold: A hierarchy or global silencing threshold that must be surpassed for silencing to occur.
         :type silencing_threshold: float, optional
+        :raises RuntimeError: If opinion silencing is being called before the agent has been initialised appropriately.
+        :raises TypeError: If the input parameters contain any invalid data types.
         :return: A pair of values indicating if silencing occurs, and the absolute difference between the perceived opinion climate and the Agent's own opinion, respectively.
         :rtype: tuple[bool, float]
         """
+        # Check that the agent has been initialised
+        if not hasattr(self, "opinion"):
+            raise RuntimeError("The agent for which opinion silencing is being determined has not yet been initialised")
+
+        # Type checking
+        if not isinstance(estimated_opinion_climate, float):
+            raise TypeError("estimated_opinion_climate must be a float")
+        if silencing_threshold is not None and not isinstance(silencing_threshold, float):
+            raise TypeError("silencing_threshold must either be a float or None")
+
         # It is assumed that a radicalised Agent will never silence themselves regardless of the perceived opinion climate
         if self.radicalised:
             return False, 0.0
@@ -527,9 +546,24 @@ class Agent:
         :type absolute_difference: float
         :param threshold: A global model threshold that has been specified for this effect to occur.
         :type threshold: float
+        :raises RuntimeError: If the agent has not yet been initialised appropriately.
+        :raises TypeError: If the input parameters contain any invalid data types.
+        :raises KeyError: If a non-existent hierarchy is passed as an input.
         :return: A flag indicating if the Agent's opinion experienced a total negation.
         :rtype: bool
         """
+        # Check that the agent is initialised
+        if not hasattr(self, "social_susceptibility"):
+            raise RuntimeError("The agent for which opinion negation is being determined has not yet been initialised")
+
+        # Type checking
+        if not isinstance(hierarchy, str):
+            raise TypeError("hierarchy must be a string")
+        if not isinstance(absolute_difference, float):
+            raise TypeError("absolute_difference must be a float")
+        if not isinstance(threshold, float):
+            raise TypeError("threshold must be a float")
+
         # Check for hierarchy validity
         if hierarchy not in self.social_weightings:
             raise KeyError(f"The hierarchy '{hierarchy}' does not exist in the agent's social_weightings")
@@ -572,10 +606,15 @@ class Agent:
         :type neighbour_benefits: list[bool]
         :param threshold: The deradicalisation threshold that has been defined at the global level in the model.
         :type threshold: float
+        :raises RuntimeError: If the agent has not yet been initialised appropriately.
         :raises TypeError: If any of the input parameters contains an invalid data type.
         :return: A flag indicating if the agent has deradicalised or not.
         :rtype: bool
         """
+        # Check that the agent is initialised
+        if not hasattr(self, "opinion") or not hasattr(self, "personal_benefit") or not hasattr(self, "social_susceptibility"):
+            raise RuntimeError("The agent for which deradicalisation is being determined has not yet been initialised")
+
         # Initial data type check
         if not isinstance(hierarchy_changes, list):
             raise TypeError("hierarchy_changes must be a list")
@@ -688,10 +727,15 @@ class Agent:
         :type neighbour_benefits: list[bool]
         :param threshold: The radicalisation threshold that has been defined at the global level in the model.
         :type threshold: float
+        :raises RuntimeError: If the agent has not yet been initialised appropriately.
         :raises TypeError: If any of the input parameters contains an invalid data type.
         :return: A flag indicating if the Agent has become radicalised or not.
         :rtype: bool
         """
+        # Check that the agent is initialised
+        if not hasattr(self, "opinion") or not hasattr(self, "personal_benefit") or not hasattr(self, "social_susceptibility"):
+            raise RuntimeError("The agent for which radicalisation is being determined has not yet been initialised")
+
         # Initial data type check
         if not isinstance(hierarchy_changes, list):
             raise TypeError("hierarchy_changes must be a list")
@@ -853,8 +897,13 @@ class Agent:
 
         :param opinion_rw: A (mean, variance) pair which parametrises the Gaussian distribution used for stochastic opinion shift.
         :type opinion_rw: tuple[float, float]
+        :raises RuntimeError: If the agent has not yet been initialised appropriately.
         :raises TypeError: If the input contains any invalid data types.
         """
+        # Check that the agent is initialised
+        if not hasattr(self, "opinion"):
+            raise RuntimeError("The agent for which the stochastic opinion is being determined has not yet been initialised")
+
         # Data type checks
         if not isinstance(opinion_rw, tuple):
             raise TypeError("opinion_rw must be a tuple")
@@ -911,7 +960,13 @@ class Agent:
         Calls to this function are primarily meant to originate from :meth:`~gatoh.agents.Agent.life_events`.
 
         Will flip the value of the agent's personal benefit attribute when called.
+
+        :raises RuntimeError: If the agent has not yet been initialised appropriately.
         """
+        # Check that the agent has been initialised
+        if not hasattr(self, "personal_benefit"):
+            raise RuntimeError("The agent for which a stochastic benefit change is being determined has not yet been initialised")
+
         if self.personal_benefit:
             self.personal_benefit = False
         else:
