@@ -3,6 +3,8 @@ from __future__ import annotations
 import unittest as ut
 from typing import override
 
+from pandas.core.ops import invalid
+
 import gatoh.agents as agt
 
 
@@ -381,4 +383,278 @@ class TestAgentObjects(ut.TestCase):
         self.assertFalse(
             opinion_negation,
             "Agent -- opinion_negation on a radicalised agent is not reporting that negation will not occur",
+        )
+
+    def test_deradicalisation_nonradicalised(self) -> None:
+        """
+        Test that a valid deradicalisation() call on a non-radicalised agent will correctly report that deradicalisation cannot occur.
+        """
+        hier_changes: list[float] = [0.99]
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        thresh: float = 0.01
+        deradicalisation: bool = self.agent.deradicalisation(hier_changes, neighbour_benefits, thresh)
+        self.assertIsInstance(
+            deradicalisation,
+            bool,
+            "Agent -- a valid call to deradicalisation did not return a boolean result (nonradicalised)",
+        )
+        self.assertFalse(
+            deradicalisation,
+            "Agent -- a valid call to deradicalisation with a nonradicalised agent did not return False",
+        )
+
+    def test_deradicalisation_invalid_changes(self) -> None:
+        """
+        Test that a call to deradicalisation() with an invalid hierarchy_changes data type will produce the expected error.
+        """
+        self.agent.change_radicalisation(True)
+        invalid_changes: dict[str, float] = {"A": 0.99}
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        thresh: float = 0.01
+        with self.assertRaises(TypeError, msg="hierarchy_changes must be a list") as cm:
+            deradicalisation: bool = self.agent.deradicalisation(invalid_changes, neighbour_benefits, thresh)
+
+    def test_deradicalisation_invalid_changes_value(self) -> None:
+        """
+        Test that a call to deradicalisation() with a hierarchy_changes list containing an invalid value will produce the expected error.
+        """
+        self.agent.change_radicalisation(True)
+        invalid_changes: list[float] = [0.13, "0.12"]
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        thresh: float = 0.01
+        with self.assertRaises(TypeError, msg="One or more of the items in hierarchy_changes is of an invalid data type -- all must be floats") as cm:
+            deradicalisation: bool = self.agent.deradicalisation(invalid_changes, neighbour_benefits, thresh)
+
+    def test_deradicalisation_invalid_benefits(self) -> None:
+        """
+        Test that a call to deradicalisation() with an invalid neighbour_benefits data type will produce the expected error.
+        """
+        self.agent.change_radicalisation(True)
+        hier_changes: list[float] = [0.99]
+        invalid_benefits: dict[str, bool] = {"foo": True, "bar": True, "foobar": True, "barfoo": False}
+        thresh: float = 0.01
+        with self.assertRaises(TypeError, msg="neighbour_benefits must be a list") as cm:
+            deradicalisation: bool = self.agent.deradicalisation(hier_changes, invalid_benefits, thresh)
+
+    def test_deradicalisation_invalid_benefits_value(self) -> None:
+        """
+        Test that a call to deradicalisation() with a neighbour_benefits list containing an invalid value will produce the expected error.
+        """
+        self.agent.change_radicalisation(True)
+        hier_changes: list[float] = [0.99]
+        invalid_benefits: list[bool] = [True, True, "True", False]
+        thresh: float = 0.01
+        with self.assertRaises(TypeError, msg="One or more of the items in neighbour_benefits is of an invalid data type -- all must be boolean") as cm:
+            deradicalisation: bool = self.agent.deradicalisation(hier_changes, invalid_benefits, thresh)
+
+    def test_deradicalisation_invalid_thresh(self) -> None:
+        """
+        Test that a call to deradicalisation() with an invalid threshold data type will produce the expected error.
+        """
+        self.agent.change_radicalisation(True)
+        hier_changes: list[float] = [0.99]
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        invalid_thresh: str = "0.99"
+        with self.assertRaises(TypeError, msg="threshold must be a float") as cm:
+            deradicalisation: bool = self.agent.deradicalisation(hier_changes, neighbour_benefits, invalid_thresh)
+
+    def test_deradicalisation_true(self) -> None:
+        """
+        Test that a valid call to deradicalisation() will correctly report that deradicalisation has ocurred.
+        """
+        self.agent.change_radicalisation(True)
+        hier_changes: list[float] = [-0.99]
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        thresh: float = 0.01
+        deradicalisation: bool = self.agent.deradicalisation(hier_changes, neighbour_benefits, thresh)
+        # Worked example:
+        #   1. The agent's absolute opinion is abs(0.44) = 0.44
+        #   2. Aggregate benefit = count(neighbour_benefits == True) / len(neighbour_benefits) = 3 / 4 = 0.75
+        #   3. The agent's personality is "social", so the following process is used to determine deradicalisation:
+        #       3.1. For each change in hierarchy_changes, determine the absolute change, and if the change agrees with the agent's opinion
+        #       3.2. The absolute change is abs(-0.99) = 0.99; 0.44 and -0.99 are not of the same sign (i.e. the change disagrees with the agent's opinion)
+        #       3.3. If the absolute change is greater than the agent's social_susceptibility, and the change disagrees with the opinion, immediately flag deradicalisation
+        #   4. In this case, the absolute change (0.99) is greater than social_suceptibility (0.75), and the change and opinion are not of the same sign (i.e. not in agreeance)
+        #   5. Therefore, deradicalisation will occur
+        self.assertIsInstance(
+            deradicalisation,
+            bool,
+            "Agent -- a valid call to deradicalisation is not returning a boolean result (deradicalisation=true)",
+        )
+        self.assertTrue(
+            deradicalisation,
+            "Agent -- a valid call to deradicalisation is not correctly reporting that deradicalisation has ocurred",
+        )
+        self.assertFalse(
+            self.agent.radicalised,
+            "Agent -- a valid call to deradicalisation in which deradicalisation has ocurred did not set the agent's radicalised attribute to False",
+        )
+
+    def test_deradicalisation_false(self) -> None:
+        """
+        Test that a valid call to deradicalisation() will correctly report that deradicalisation has not ocurred.
+        """
+        self.agent.change_radicalisation(True)
+        hier_changes: list[float] = [0.99]
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        thresh: float = 0.01
+        deradicalisation: bool = self.agent.deradicalisation(hier_changes, neighbour_benefits, thresh)
+        # Worked example:
+        #   1. The agent's absolute opinion is abs(0.44) = 0.44
+        #   2. Aggregate benefit = count(neighbour_benefits == True) / len(neighbour_benefits) = 3 / 4 = 0.75
+        #   3. The agent's personality is "social", so the following process is used to determine deradicalisation:
+        #       3.1. For each change in hierarchy_changes, determine the absolute change, and if the change agrees with the agent's opinion
+        #       3.2. The absolute change is abs(0.99) = 0.99; 0.44 and 0.99 are of the same sign (i.e. the change agrees with the agent's opinion)
+        #       3.3. The absolute change is greater than the threshold, but there is agreeance, so instead the absolute change is summed to a total,
+        #             and the sign of the change is summed to a total (+ 1.0 for agreeance, - 1.0 for non-agreeance)
+        #   4. No immediate deradicalisation was flagged, so instead the following check is made:
+        #       (sum_changes >=social_susceptibility * len(hierarchy_changes) * SOCIAL_THRESHOLD_MODIFIER) and (total_sign <= 0.0)
+        #   5. Following: (0.99 >= 0.75 * 1 * 0.5) and (1.0 <= 0) = True and False = False
+        #   6. Therefore, deradicalisation will not occur
+        self.assertIsInstance(
+            deradicalisation,
+            bool,
+            "Agent -- a valid call to deradicalisation is not returning a boolean result (deradicalisation=false)",
+        )
+        self.assertFalse(
+            deradicalisation,
+            "Agent -- a valid call to deradicalisation is not correctly reporting that deradicalisation does not occur",
+        )
+        self.assertTrue(
+            self.agent.radicalised,
+            "Agent -- a valid call to deradicalisation in which deradicalisation did not occur has set the agent's radicalised attribute to False",
+        )
+
+    def test_radicalisation_radicalised(self) -> None:
+        """
+        Test that a valid radicalisation() call on a radicalised agent will correctly report that radicalisation cannot occur.
+        """
+        self.agent.change_radicalisation(True)
+        hier_changes: list[float] = [0.99]
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        thresh: float = 0.01
+        radicalisation: bool = self.agent.radicalisation(hier_changes, neighbour_benefits, thresh)
+        self.assertIsInstance(
+            radicalisation,
+            bool,
+            "Agent -- a valid call to radicalisation did not return a boolean result (radicalised)",
+        )
+        self.assertFalse(
+            radicalisation,
+            "Agent -- a valid call to radicalisation on a radicalised agent did not return False",
+        )
+
+    def test_radicalisation_invalid_changes(self) -> None:
+        """
+        Test that a call to radicalisation() with an invalid hierarchy_changes data type will produce the expected error.
+        """
+        invalid_changes: dict[str, float] = {"A": 0.99}
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        thresh: float = 0.01
+        with self.assertRaises(TypeError, msg="hierarchy_changes must be a list") as cm:
+            radicalisation: bool = self.agent.radicalisation(invalid_changes, neighbour_benefits, thresh)
+
+    def test_radicalisation_invalid_changes_value(self) -> None:
+        """
+        Test that a call to radicalisation() with a hierarchy_changes list containing an invalid value will produce the expected error.
+        """
+        invalid_changes: list[float] = [0.13, "0.12"]
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        thresh: float = 0.01
+        with self.assertRaises(TypeError, msg="One or more of the items in hierarchy_changes is of an invalid data type -- all must be floats") as cm:
+            radicalisation: bool = self.agent.radicalisation(invalid_changes, neighbour_benefits, thresh)
+
+    def test_radicalisation_invalid_benefits(self) -> None:
+        """
+        Test that a call to radicalisation() with an invalid neighbour_benefits data type will produce the expected error.
+        """
+        hier_changes: list[float] = [0.99]
+        invalid_benefits: dict[str, bool] = {"foo": True, "bar": True, "foobar": True, "barfoo": False}
+        thresh: float = 0.01
+        with self.assertRaises(TypeError, msg="neighbour_benefits must be a list") as cm:
+            radicalisation: bool = self.agent.radicalisation(hier_changes, invalid_benefits, thresh)
+
+    def test_radicalisation_invalid_benefits_value(self) -> None:
+        """
+        Test that a call to radicalisation() with a neighbour_benefits list containing an invalid value will produce the expected error.
+        """
+        hier_changes: list[float] = [0.99]
+        invalid_benefits: list[bool] = [True, True, "True", False]
+        thresh: float = 0.01
+        with self.assertRaises(TypeError, msg="One or more of the items in neighbour_benefits is of an invalid data type -- all must be booleans") as cm:
+            radicalisation: bool = self.agent.radicalisation(hier_changes, invalid_benefits, thresh)
+
+    def test_radicalisation_invalid_thresh(self) -> None:
+        """
+        Test that a call to radicalisation() with an invalid threshold data type will produce the expected error.
+        """
+        hier_changes: list[float] = [0.99]
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        thresh: str = "0.01"
+        with self.assertRaises(TypeError, msg="threshold must be a float") as cm:
+            radicalisation: bool = self.agent.radicalisation(hier_changes, neighbour_benefits, thresh)
+
+    def test_radicalisation_true(self) -> None:
+        """
+        Test that a valid call to radicalisation() will correctly report that radicalisation occurs.
+        """
+        hier_changes: list[float] = [0.99]
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        thresh: float = 0.01
+        radicalisation: bool = self.agent.radicalisation(hier_changes, neighbour_benefits, thresh)
+        # Worked example:
+        #   1. The agent's absolute opinion is abs(0.44) = 0.44
+        #   2. Aggregate benefit = count(neighbour_benefits == True) / len(neighbour_benefits) = 3 / 4 = 0.75
+        #   3. The agent's personality is "social", so the following process is used to determine radicalisation:
+        #       3.1. For each change in hierarchy_changes, determine the absolute change, and if the change agrees with the agent's opinion
+        #       3.2. The absolute change is abs(0.99) = 0.99; 0.44 and 0.99 are of the same sign (i.e. the change agrees with the agent's opinion)
+        #       3.3. If the absolute change is greater than the agent's social_susceptibility, and the change agrees with the opinion, immediately flag radicalisation
+        #   4. In this case, the absolute change (0.99) is greater than social_susceptibility (0.75), and the change and opinion are of the same sign (i.e. in agreeance)
+        #   5. Therefore, radicalisation will occur
+        self.assertIsInstance(
+            radicalisation,
+            bool,
+            "Agent -- a valid call to radicalisation is not returning a boolean result (radicalisation=true)",
+        )
+        self.assertTrue(
+            radicalisation,
+            "Agent -- a valid call to radicalisation is not correctly reporting that radicalisation has ocurred",
+        )
+        self.assertTrue(
+            self.agent.radicalised,
+            "Agent -- a valid call to radicalisation in which radicalisation has ocurred did not set the agent's radicalised attribute to True",
+        )
+
+    def test_radicalisation_false(self) -> None:
+        """
+        Test that a valid call to radicalisation() will correctly report that radicalisation has not ocurred.
+        """
+        hier_changes: list[float] = [-0.99]
+        neighbour_benefits: list[bool] = [True, True, True, False]
+        thresh: float = 0.01
+        radicalisation: bool = self.agent.radicalisation(hier_changes, neighbour_benefits, thresh)
+        # Worked example:
+        #   1. The agent's absolute opinionis abs(0.44) = 0.44
+        #   2. Aggregate benefit = count(neighbour_benefits == True) / len(neighbour_benefits) = 3 / 4 = 0.75
+        #   3. The agent's personality is "social", so the following process is used to determine radicalisation:
+        #       3.1. For each change in hierarchy_changes, determine the absolute change, and if the change agrees with the agent's opinion
+        #       3.2. The absolute change is abs(-0.99) = 0.99; 0.44 and -0.99 are not of the same sign (i.e. the change does not agree with the agent's opinion)
+        #       3.3. The absolute change is greater than the threshold, but there is no agreeance, so instead the absolute change is summed to a total,
+        #             and the sign of the change is summed to a total (+ 1.0 for agreeance, -1.0 for non-agreeance)
+        #   4. No immediate radicalisation was flagged, so instead the following check is made:
+        #       (sum_changes >= social_susceptibility * len(hierarchy_changes) * SOCIAL_THRESHOLD_MODIFIER) and (total_sign >= 0.0)
+        #   5. Following: (0.99 >= 0.75 * 1 * 0.5) and (-1.0 >= 0.0) = True and False = False
+        #   6. Therefore, radicalisation will not occur
+        self.assertIsInstance(
+            radicalisation,
+            bool,
+            "Agent -- a valid call to radicalisation is not returning a boolean result (radicalisation=false)",
+        )
+        self.assertFalse(
+            radicalisation,
+            "Agent -- a valid call to radicalisation is not correctly reporting that radicalisation does not occur",
+        )
+        self.assertFalse(
+            self.agent.radicalised,
+            "Agent -- a valid call to radicalisation in which radicalisation did not occur has set the agent's radicalised attribute to True",
         )
