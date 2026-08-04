@@ -371,6 +371,14 @@ class TestAgentAttributes(ut.TestCase):
             "Agent -- store_previous_opinion() is not storing the agent's current opinion into its previous_opinion correctly",
         )
 
+    def test_change_opinion_dtype(self) -> None:
+        """
+        Test that change_opinion() with an invalid data type will produce the expected error.
+        """
+        new_agent: agt.Agent = agt.Agent(0.1)
+        with self.assertRaises(TypeError, msg="opinion_delta must be a float") as cm:
+            new_agent.change_opinion("0.2")
+
     def test_change_opinion(self) -> None:
         """
         Test that change_opinion() is working as intended.
@@ -397,6 +405,14 @@ class TestAgentAttributes(ut.TestCase):
             "Agent -- change_opinion() is not constraining the agent's current opinion to the appropriate range",
         )
 
+    def test_change_radicalisation_dtype(self) -> None:
+        """
+        Test that change_radicalisation() with an incorrect data type will produce the expected error.
+        """
+        empty_agent: agt.Agent = agt.Agent()
+        with self.assertRaises(TypeError, msg="radicalisation must be a boolean") as cm:
+            empty_agent.change_radicalisation("True")
+
     def test_change_radicalisation(self) -> None:
         """
         Test that change_radicalisation() is working as intended.
@@ -407,6 +423,22 @@ class TestAgentAttributes(ut.TestCase):
             empty_agent.radicalised,
             "Agent -- change_radicalisation() is not changing the agent's radicalised attribute",
         )
+
+    def test_change_rw_distribution_hierarchy_dtype(self) -> None:
+        """
+        Test that change_rw_distribution() with a hierarchy parameter of incorrect data type will produce the expected error.
+        """
+        empty_agent: agt.Agent = agt.Agent()
+        with self.assertRaises(TypeError, msg="hierarchy must be a string") as cm:
+            empty_agent.change_rw_distribution(3, (0.13, 0.12))
+
+    def test_change_rw_distribution_parameters_dtype(self) -> None:
+        """
+        Test that change_rw_distribution() with a parameters input of incorrect data type will produce the expected error.
+        """
+        empty_agent: agt.Agent = agt.Agent()
+        with self.assertRaises(TypeError, msg="parameters must be a (float, float) tuple") as cm:
+            empty_agent.change_rw_distribution("foo", (0.0, "0.1"))
 
     def test_change_rw_distribution_new(self) -> None:
         """
@@ -442,6 +474,14 @@ class TestAgentAttributes(ut.TestCase):
             "Agent -- change_rw_distribution() with an existing hierarchy did not correctly update the hierarchy's rw distribution",
         )
 
+    def test_change_opinion_rw_dtype(self) -> None:
+        """
+        Test that change_opinion_rw() with an invalid data type will produce the expected error.
+        """
+        empty_agent: agt.Agent = agt.Agent()
+        with self.assertRaises(TypeError, msg="rw_params must be a (float, float) tuple") as cm:
+            empty_agent.change_opinion_rw((0.13, "0.12"))
+
     def test_change_opinion_rw_new(self) -> None:
         """
         Test that change_opinion_rw() on an agent without an existing opinion_rw attribute will correctly initialise it.
@@ -469,4 +509,23 @@ class TestAgentAttributes(ut.TestCase):
             new_agent.opinion_rw,
             (0.13, 0.12),
             "Agent -- change_opinion_rw() on an agent with an existing opinion_rw did not correctly update it",
+        )
+
+    def test_set_benefit_dtype(self) -> None:
+        """
+        Test that set_benefit() with an invalid data type will produce the expected error.
+        """
+        new_agent: agt.Agent = agt.Agent(True)  # Initial personal_benefit = True
+        with self.assertRaises(TypeError, msg="personal_benefit must be a boolean") as cm:
+            new_agent.set_benefit("True")
+
+    def test_set_benefit(self) -> None:
+        """
+        Test that set_benefit() is working as intended.
+        """
+        new_agent: agt.Agent = agt.Agent(True)  # Initial personal_benefit = True
+        new_agent.set_benefit(False)
+        self.assertFalse(
+            new_agent.personal_benefit,
+            "Agent -- set_benefit() is not correctly updating the agent's personal_benefit value",
         )
