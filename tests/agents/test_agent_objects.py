@@ -3,8 +3,6 @@ from __future__ import annotations
 import unittest as ut
 from typing import override
 
-from pandas.core.ops import invalid
-
 import gatoh.agents as agt
 
 
@@ -129,6 +127,23 @@ class TestAgentObjects(ut.TestCase):
             5,
             "Agent -- update with both silencing and negation ocurring is not causing the agent's opinion to invert",
         )
+
+    def test_opinion_silencing_invalid_op_clim(self) -> None:
+        """
+        Test that opinion_silencing() with an invalid estimated_opinion_climate data type will raise the expected error.
+        """
+        est_op_clim_invalid: str = "bad"
+        with self.assertRaises(TypeError, msg="estimated_opinion_climate must be a float") as cm:
+            opinion_silencing: tuple[bool, float] = self.agent.opinion_silencing(est_op_clim_invalid)
+
+    def test_opinion_silencing_invalid_thresh(self) -> None:
+        """
+        Test that opinion_silencing() with an invalid silencing_threshold data type will raise the expected error.
+        """
+        est_op_clim: float = 0.69
+        silencing_thresh: str = "low"
+        with self.assertRaises(TypeError, msg="silencing_threshold must either be a float or None") as cm:
+            opinion_silencing: tuple[bool, float] = self.agent.opinion_silencing(est_op_clim, silencing_thresh)
 
     def test_opinion_silencing_true_no_threshold(self) -> None:
         """
@@ -314,7 +329,37 @@ class TestAgentObjects(ut.TestCase):
             "Agent -- opinion_silencing is not reporting an absolute difference of 0.0 (radicalised)",
         )
 
-    def test_opinion_negation_invalid(self) -> None:
+    def test_opinion_negation_hier_dtype(self) -> None:
+        """
+        Test that opinion_negation() with a hierarchy of invalid data type will raise the expected error.
+        """
+        hier: str = 3
+        abs_diff: float = 0.13
+        thresh: float = 0.12
+        with self.assertRaises(TypeError, msg="hierarchy must be a string") as cm:
+            opinion_negation: bool = self.agent.opinion_negation(hier, abs_diff, thresh)
+
+    def test_opinion_negation_diff_dtype(self) -> None:
+        """
+        Test that opinion_negation() with an absolute_difference of invalid data type will raise the expected error.
+        """
+        hier: str = "A"
+        abs_diff: float = "0.13"
+        thresh: float = 0.12
+        with self.assertRaises(TypeError, msg="absolute_difference must be a float") as cm:
+            opinion_negation: bool = self.agent.opinion_negation(hier, abs_diff, thresh)
+
+    def test_opinion_negation_thresh_dtype(self) -> None:
+        """
+        Test that opinion_negation() with a threshold of invalid data type will raise the expected error.
+        """
+        hier: str = "A"
+        abs_diff: float = 0.13
+        thresh: float = "0.12"
+        with self.assertRaises(TypeError, msg="threshold must be a float") as cm:
+            opinion_negation: bool = self.agent.opinion_negation(hier, abs_diff, thresh)
+
+    def test_opinion_negation_invalid_hier(self) -> None:
         """
         Test that opinion_negation() with an unseen hierarchy will raise the expected error.
         """
@@ -853,3 +898,7 @@ class TestAgentObjects(ut.TestCase):
             self.agent.radicalised,
             "Agent -- stochastic_radicalisation_change when the initial radicalised was True did not result in a final value of False",
         )
+
+    @override
+    def tearDown(self) -> None:
+        del self.agent
