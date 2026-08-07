@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Release Notes &mdash; gatoh 2026.07.0</title>
+  <title>Release Notes &mdash; gatoh 2026.08.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/jupyter-sphinx.css?v=572af1d6" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=5d2ae42f"></script>
+      <script src="_static/documentation_options.js?v=eb394bab"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/thebelab-helper.js"></script>
@@ -53,20 +53,25 @@
 <li class="toctree-l1"><a class="reference internal" href="dev/index.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">2026.07.0</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">2026.08.0</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#new-features">New Features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fixes">Fixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">2026.07.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">New Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Fixes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#breaking-changes">Breaking Changes</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#alpha">0.2.0-alpha</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id2">New Features</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id3">Fixes</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">0.1.0-alpha</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id5">New Features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id6">Fixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">0.1.0-alpha</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id8">New Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Fixes</a></li>
 </ul>
 </li>
 </ul>
@@ -100,12 +105,34 @@
   <section id="release-notes">
 <h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading"></a></h1>
 <section id="id1">
-<h2>2026.07.0<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<h2>2026.08.0<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p>Continued addition of new features – mostly QoL convenience features, but some new core features.</p>
+<p>Also, ongoing bugfixes and optimisations where possible.</p>
+<section id="new-features">
+<h3>New Features<a class="headerlink" href="#new-features" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Added the ability to explicitly define if generated graphs should be complete from within <a class="reference internal" href="apiref/gatoh.model.ABModel.generate_graphs.html#gatoh.model.ABModel.generate_graphs" title="gatoh.model.ABModel.generate_graphs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generate_graphs()</span></code></a></p></li>
+<li><p>Started using <code class="xref py py-mod docutils literal notranslate"><span class="pre">coverage</span></code> to track the coverage of tests across the library modules</p></li>
+<li><p>Finished the test cases for <a class="reference internal" href="apiref/gatoh.agents.Agent.html#gatoh.agents.Agent" title="gatoh.agents.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a> creation and attributes</p></li>
+<li><p>Added input parameter data type checks to various methods in <a class="reference internal" href="apiref/gatoh.agents.Agent.html#gatoh.agents.Agent" title="gatoh.agents.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a></p></li>
+<li><p>Finished the test cases for :class:’~gatoh.agents.Agent’ populated and empty objects</p></li>
+</ul>
+</section>
+<section id="fixes">
+<h3>Fixes<a class="headerlink" href="#fixes" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Fixed the test cases in <code class="xref py py-mod docutils literal notranslate"><span class="pre">test_model_multiprocessed.py</span></code> and <code class="xref py py-mod docutils literal notranslate"><span class="pre">test_model_simulation.py</span></code> (All 151 existing test cases up to 01/08/2026 are working correctly)</p></li>
+<li><p>Fixed a specific <a class="reference internal" href="apiref/gatoh.graphs.Graph.add_edges.html#gatoh.graphs.Graph.add_edges" title="gatoh.graphs.Graph.add_edges"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_edges()</span></code></a> case in which edges were not being added to the graph</p></li>
+</ul>
+</section>
+</section>
+<section id="id2">
+<h2>2026.07.0<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
 <p>GATOH changes from a semantic to a calendar versioning scheme with this release for simplicity of version control.</p>
 <p>This version involves a large number of logistic or ‘housekeeping’ changes in preparation for an official release
 as a PyPI package.</p>
-<section id="new-features">
-<h3>New Features<a class="headerlink" href="#new-features" title="Link to this heading"></a></h3>
+<section id="id3">
+<h3>New Features<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Changed from semantic to calendar versioning</p></li>
 <li><p>Changed the layout of the package modules to simplify import statements</p></li>
@@ -125,10 +152,13 @@ is currently stable (<a class="reference internal" href="apiref/gatoh.model.ABMo
 <li><p>QoL method <code class="xref py py-meth docutils literal notranslate"><span class="pre">add_agents_to_hierarchy()</span></code></p></li>
 <li><p>Created new tests to cover the various calculation methods in <a class="reference internal" href="apiref/gatoh.model.ABModel.html#gatoh.model.ABModel" title="gatoh.model.ABModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABModel</span></code></a></p></li>
 <li><p>QoL method <code class="xref py py-meth docutils literal notranslate"><span class="pre">add_relationships_to_hierarchy()</span></code></p></li>
+<li><p>Defined multiple global constants throughout modules to clarify “magic numbers”</p></li>
+<li><p>Prototype for ability to add “link functions” to model parameters</p></li>
+<li><p>Prototype for the ability to track specific model parameters throughout iterations within the <a class="reference internal" href="apiref/gatoh.logging.GATOHLogger.html#gatoh.logging.GATOHLogger" title="gatoh.logging.GATOHLogger"><code class="xref py py-class docutils literal notranslate"><span class="pre">GATOHLogger</span></code></a></p></li>
 </ul>
 </section>
-<section id="fixes">
-<h3>Fixes<a class="headerlink" href="#fixes" title="Link to this heading"></a></h3>
+<section id="id4">
+<h3>Fixes<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Fixed all the existing imports across scripts to reflect the module restructuring</p></li>
 <li><p>Fixed all the code references in the existing documentation</p></li>
@@ -149,8 +179,8 @@ This is due to the simplification from gatoh.X.X.x to gatoh.X.x imports.</p></li
 <h2>0.2.0-alpha<a class="headerlink" href="#alpha" title="Link to this heading"></a></h2>
 <p>This release involves the optimisation of core package functionality to reduce
 model runtimes and simplify the modelling process.</p>
-<section id="id2">
-<h3>New Features<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<section id="id5">
+<h3>New Features<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>A new way of tracking changes and updating models’ base graphs, composed of the following:</p>
 <ul>
@@ -177,8 +207,8 @@ model runtimes and simplify the modelling process.</p>
 <li><p>Implemented a custom visualisation system and started using this (previously the one provided by rustworkx was used)</p></li>
 </ul>
 </section>
-<section id="id3">
-<h3>Fixes<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<section id="id6">
+<h3>Fixes<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Added edge case handling for division by zero errors in <code class="xref py py-class docutils literal notranslate"><span class="pre">ABModel</span></code></p></li>
 <li><p>Corrected the object that was being passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">rustworkx.visualization.mpl_draw()</span></code> in <code class="xref py py-meth docutils literal notranslate"><span class="pre">visualise_hierarchy()</span></code></p></li>
@@ -194,13 +224,13 @@ for the planned case study experiment</p></li>
 </ul>
 </section>
 </section>
-<section id="id4">
-<h2>0.1.0-alpha<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<section id="id7">
+<h2>0.1.0-alpha<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
 <p>This is the first official release of GATOH.</p>
 <p>The main purpose of this release is to start preparing the code and its
 supplementary materials for publication as a proper package.</p>
-<section id="id5">
-<h3>New Features<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<section id="id8">
+<h3>New Features<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Start of the creation of documentation material. This includes:</p>
 <ul>
@@ -241,8 +271,8 @@ social networks.</p></li>
 <li><p>Publication of the package code to Zenodo</p></li>
 </ul>
 </section>
-<section id="id6">
-<h3>Fixes<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<section id="id9">
+<h3>Fixes<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Fixed the way that <code class="xref py py-meth docutils literal notranslate"><span class="pre">radicalisation()</span></code> was determining agent
 radicalisation for “rational” personality types. Now, the function should properly use the

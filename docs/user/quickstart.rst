@@ -2,128 +2,88 @@
 GATOH Quickstart
 ================
 
-.. currentmodule:: gatoh
+The Generalised Agent Transformation of Opinions in Hierarchies, or GATOH, framework is an agent-based modeling library
+for Python. It is designed to provide a highly flexible and generalisable framework that can define and simulate a wide
+variety of agent-based models centered on opinion dynamics.
 
-.. testsetup::
+----------------
+Installing GATOH
+----------------
 
-    >>> import gatoh
-    >>> import sys
+GATOH has been primarily developed and tested on a x86_64 Linux system, but support for 64 bit Windows has also been
+confirmed. The different methods for installing GATOH are outlined below:
 
-Prerequisites
-=============
+.. tabs::
 
-A basic knowledge of Python is assumed. For further reference, see the `Python tutorial <https://docs.python.org/tutorial/>`__.
+   .. group-tab:: From source
 
-To work the examples, you'll need the :abbr:`GATOH (Generalised Agent Transformation of Opinions in Hierarchies)` framework and its included dependencies installed.
+      #. Ensure that Python >=3.14 is installed on your system.
+      #. Clone the library's code from the git repository: :code:`git clone https://github.com/JungleHollow/GATOH`.
+      #. If needed, create a virtual environment to install the library to.
+      #. From the target python environment, simply install GATOH using pip as normal, but specify the path to the GATOH directory rather than the package name: :code:`python -m pip install <path to GATOH directory>`.
+      #. At this point, all required dependencies will be installed alongside GATOH, and you can begin using the library.
 
-**Learner Profile**
+   .. group-tab:: PyPi
 
-This is a quick overview of agent-based modelling, and its implementation in :abbr:`GATOH (Generalised Agent Transformation of Opinions in Hierarchies)`. It demonstrates how agents are defined, and how they
-interact with each other and their environment to produce emergent behaviours. If you are looking for a basic introduction to :abbr:`ABM (Agent-Based Modelling)` principles in the
-:abbr:`GATOH (Generalised Agent Transformation of Opinions in Hierarchies)` framework, then this article may be of use to you.
+      #. Ensure that Python >= 3.14 is installed on your system.
+      #. ...
 
-**Learning Objectives**
+      **Work in progress**
 
-After reading, you should be able to:
+-----------
+Using GATOH
+-----------
 
-- Understand what an "agent" is, and how they are defined;
-- Understand the basic process of :abbr:`ABM (Agent-Based Modelling)` from start to finish;
-- Understand the different use-cases for :abbr:`ABM (Agent-Based Modelling)`.
+Once you have installed GATOH, you can use it by importing gatoh in your python scripts. Almost all functions and classes in GATOH are
+currently organised into their own submodules, meaning that these will need to be imported and used accordingly. Below is a simple
+example of what very basic GATOH usage could look like:
 
-.. _quickstart.the-basics:
+.. code-block:: python
 
-The Basics
-==========
+   from gatoh.model import ABModel
+   from gatoh.utils import plot_graph
 
-To start with, the fundamental modelling method that :abbr:`GATOH (Generalised Agent Transformation of Opinions in Hierarchies)` is based around is that of :abbr:`ABM (Agent-Based Modelling)`. The implementation of
-:abbr:`ABMs (Agent-Based Models)` can be approached in a variety of ways depending on the nature of the scenario that they are simulating. The scenario must be
-properly defined -- and there must be a clear idea of the type of behaviours that emerge from the scenario, as well as who or what
-produces those behaviours. It is also important to consider the environment in the scenario, and whether or not it has a significant
-impact on the emergent behaviours.
+   HIERARCHIES = ["Religious", "Neighbours", "Family", "Friends"]
+   HIERARCHY_RW = {
+       "Religious": (0.0, 0.3),
+       "Neighbours": (0.0, 0.2),
+       "Family": (0.0, 0.01),
+       "Friends": (0.0, 0.1),
+   }
 
-:abbr:`GATOH (Generalised Agent Transformation of Opinions in Hierarchies)` is primarily designed with sociological or anthropological simulations in mind. The simplest general scenario that is intended
-to be modelled with :abbr:`GATOH (Generalised Agent Transformation of Opinions in Hierarchies)` is that of social contagion in some community or social network; with the emergent behaviour in this scenario
-being the spread of some idea or belief between the people who live in the community. But, social interactions between community members
-are not simple, and are heavily influenced by a number of factors -- primarily the different social hierarchies that exist in the
-community, that agents may or may not belong to.
+   model = ABModel(
+       HIERARCHIES,
+       HIERARCHY_RW,
+       iterations=50,
+       model_id="TEST_MODEL",
+   )
+   model.generate_agents(
+       "TEST",
+       {
+           "neutral": 0.4,
+           "social": 0.4,
+           "impulsive": 0.2,
+       },
+       number=20,
+   )
+   model.generate_graphs(
+       HIERARCHIES,
+       model.agents,
+       method="blockmodel",
+       agent_subsetting=True,
+   )
 
-In the next sections, we will explore the different components that make up a :abbr:`GATOH (Generalised Agent Transformation of Opinions in Hierarchies)` model, and the ways that they interact with
-each other.
+   model.iterate()
 
----------------------
-Agent-Based Modelling
----------------------
+   x_vals = {"iterations": [i for i in range(50)]}
+   y_vals = {"aggregate_opinions": model.logger.variables.aggregate_opinions}
 
-:abbr:`ABM (Agent-Based Modelling)` is a computational modelling strategy that has grown in popularity in recent years as computer
-hardware has become more powerful.
+   plot_graph(
+       x_vals,
+       y_vals,
+       ...
+   )
 
-The first :abbr:`ABMs (Agent-Based Models)` were simple, cell-based systems, where each cell represented a single agent. The most famous
-example of these types of :abbr:`ABMs (Agent-Based Models)` is Conway's Game of Life\ :cite:p:`Conway1970` . In this rudimentary
-:abbr:`ABM (Agent-Based Model)`, simple rules are defined which determine how and when each cell 'comes to life' or 'dies' based
-on the cell's current state, and the state of its immediate neighbours. From these simple rules, relatively complex behaviours can emerge.
-In the depiction below, we can see some examples of the behaviours that can emerge from such a simple system:
-
-.. parsed-literal::
-
-                Conway's Game of Life (1970):
-    ================================================================
-     Still life patterns:   ⫼          Oscillators:
-    ================================================================
-    ┌─╥─╥─╥─┐   ┌─╥─╥─╥─┐   ⫼
-    │ ║ ║ ║ │   │ ║ ║ ║ │   ⫼   ┌─╥─╥─┐   ┌─╥─╥─┐   ┌─╥─╥─┐
-    ╞═╬═╬═╬═╡   ╞═╬═╬═╬═╡   ⫼   │ ║ ║ │   │ ║█║ │   │ ║ ║ │
-    │ ║█║█║ │   │ ║█║█║ │   ⫼   ╞═╬═╬═╡   ╞═╬═╬═╡   ╞═╬═╬═╡
-    ╞═╬═╬═╬═╡ → ╞═╬═╬═╬═╡   ⫼   │█║█║█│ → │ ║█║ │ → │█║█║█│ →   ⦁⦁⦁
-    │ ║█║█║ │   │ ║█║█║ │   ⫼   ╞═╬═╬═╡   ╞═╬═╬═╡   ╞═╬═╬═╡
-    ╞═╬═╬═╬═╡   ╞═╬═╬═╬═╡   ⫼   │ ║ ║ │   │ ║█║ │   │ ║ ║ │
-    │ ║ ║ ║ │   │ ║ ║ ║ │   ⫼   └─╨─╨─┘   └─╨─╨─┘   └─╨─╨─┘
-    └─╨─╨─╨─┘   └─╨─╨─╨─┘   ⫼
-    ================================================================
-
-Whilst it was revolutionary at its time of creation, the Game of Life was developed in a context where computers were still in their infancy,
-and they were still basically just a step above calculators. To give an example, the Cray-1 -- a 5.5 ton supercomputer released in 1976 -- had
-a processor capable of running 80 million operations per second, and had 8.4 megabytes of memory available.
-
-Now, in 2026, the newest consumer :abbr:`CPUs (Computer Processing Units)` are capable of performing around 5 billion operations per second, and they
-have more memory available in just their L3 cache than 20 Cray-1 supercomputers would have had collectively in the 1970s(!). Considering this,
-it is easy to see how :abbr:`ABMs (Agent-Based Models)` would have started evolving past these simple 2-dimensional, binary cells in the following
-decades.
-
-Now it is possible to model extremely complex systems such as the spread of global pandemics, or the nature of peak-hour traffic in a large city.
-Although :abbr:`ABM (Agent-Based Modelling)` can be applied to many use-cases, there is still some care that must be taken when creating such models.
-
-Each area of interest has very specific characterisations, rules, and interactions, which must all be appropriately quantified and defined for the model
-to be representative of real life. Using the examples of global pandemics and car traffic, we can see that models for these scenarios would have inherently
-different approaches. A model that simulates a global pandemic might treat interactions between agents as the driving force that spreads the 'emergent behaviour'
-(as interactions between agents would enable viral transmissions), whereas the 'interaction' between agents in a traffic model would in itself be the emergent
-behaviour (as the 'interaction' of a large number of agents would imply that traffic has built up).
-
-------
-Agents
-------
-
-**Definition:** An agent is an entity that is capable of acting without external input, and can interact with other agents and the environment
-around it.
-
-One of the core objects of the :abbr:`GATOH (Generalised Agent Transformation of Opinions in Hierarchies)` framework is the "Agent". In the :abbr:`GATOH (Generalised Agent Transformation of Opinions in Hierarchies)`
-framework, an Agent represents an "average" person that lives in some community, and interacts with their neighbours in different social contexts.
-
----------------
-Social Networks
----------------
-
-.. note::
-
-  For the context of :abbr:`GATOH (Generalised Agent Transformation of Opinions in Hierarchies)`, "social network" refers to a network of people that interact with each other socially, *not* a social media
-  platform.
-
-------
-Graphs
-------
-
------------------
-Multilayer Graphs
------------------
-
-
-.. bibliography::
+You can refer to the :doc:`Basic tutorial <./basics>` for more information on how to use GATOH,
+or the :doc:`Absolute beginner's guide <./abs_beginners>` for an in-depth explanation of agent-based
+modeling and the GATOH framework.

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.agents.Agent.opinion_silencing &mdash; gatoh 2026.07.0</title>
+  <title>gatoh.agents.Agent.opinion_silencing &mdash; gatoh 2026.08.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -15,7 +15,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=5d2ae42f"></script>
+      <script src="../_static/documentation_options.js?v=eb394bab"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/thebelab-helper.js"></script>
@@ -144,11 +144,17 @@
 <li><p><strong>silencing_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – A hierarchy or global silencing threshold that must be surpassed for silencing to occur.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A pair of values indicating if silencing occurs, and the absolute difference between the perceived opinion climate and the Agent’s own opinion, respectively.</p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RuntimeError</strong> – If opinion silencing is being called before the agent has been initialised appropriately.</p></li>
+<li><p><strong>TypeError</strong> – If the input parameters contain any invalid data types.</p></li>
+</ul>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple[bool, float]</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A pair of values indicating if silencing occurs, and the absolute difference between the perceived opinion climate and the Agent’s own opinion, respectively.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[bool, float]</p>
 </dd>
 </dl>
 </dd></dl>

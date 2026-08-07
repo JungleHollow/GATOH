@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.visualisation &mdash; gatoh 2026.07.0</title>
+  <title>gatoh.visualisation &mdash; gatoh 2026.08.0</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=5d2ae42f"></script>
+      <script src="../../_static/documentation_options.js?v=eb394bab"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/thebelab-helper.js"></script>
@@ -96,6 +96,16 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.graphs</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">GraphNode</span>
+
+
+<span class="c1"># Define global constants to avoid using &quot;magic numbers&quot; throughout the code</span>
+
+<span class="c1"># The agent &quot;block size&quot; to use for visualisations</span>
+<span class="n">VIS_BLOCK_SIZE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="c1"># The default linewidth to use for output plots</span>
+<span class="n">DEFAULT_LINEWIDTH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="c1"># The default DPI to generate visualisations with</span>
+<span class="n">DEFAULT_DPI</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">300.0</span>
 
 
 <div class="viewcode-block" id="ABVisualiser">
@@ -197,8 +207,8 @@
 
         <span class="c1"># Determine the array size so that a (10, x) 2D array shape is always used</span>
         <span class="n">array_size</span><span class="p">:</span> <span class="nb">int</span>
-        <span class="k">if</span> <span class="n">num_agents</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">array_size</span> <span class="o">=</span> <span class="n">num_agents</span> <span class="o">+</span> <span class="p">(</span><span class="mi">10</span> <span class="o">-</span> <span class="n">num_agents</span> <span class="o">%</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_agents</span> <span class="o">%</span> <span class="n">VIS_BLOCK_SIZE</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">array_size</span> <span class="o">=</span> <span class="n">num_agents</span> <span class="o">+</span> <span class="p">(</span><span class="n">VIS_BLOCK_SIZE</span> <span class="o">-</span> <span class="n">num_agents</span> <span class="o">%</span> <span class="n">VIS_BLOCK_SIZE</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">array_size</span> <span class="o">=</span> <span class="n">num_agents</span>
 
@@ -220,17 +230,17 @@
         <span class="n">colour_map</span><span class="p">:</span> <span class="n">ListedColormap</span> <span class="o">=</span> <span class="n">ListedColormap</span><span class="p">([</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">])</span>
 
         <span class="c1"># Reshape the arrays into 2D shapes (x, 10)</span>
-        <span class="n">agent_labels</span> <span class="o">=</span> <span class="n">agent_labels</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">array_size</span> <span class="o">/</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span>
-        <span class="n">agent_data</span> <span class="o">=</span> <span class="n">agent_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">array_size</span> <span class="o">/</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">agent_labels</span> <span class="o">=</span> <span class="n">agent_labels</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">array_size</span> <span class="o">/</span> <span class="n">VIS_BLOCK_SIZE</span><span class="p">),</span> <span class="n">VIS_BLOCK_SIZE</span><span class="p">)</span>
+        <span class="n">agent_data</span> <span class="o">=</span> <span class="n">agent_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">array_size</span> <span class="o">/</span> <span class="n">VIS_BLOCK_SIZE</span><span class="p">),</span> <span class="n">VIS_BLOCK_SIZE</span><span class="p">)</span>
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
 
-        <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">agent_data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">colour_map</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="n">cbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">agent_data</span><span class="o">==</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">agent_data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">colour_map</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="n">cbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">DEFAULT_LINEWIDTH</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">agent_data</span><span class="o">==</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Visualisation of hierarchy &#39;</span><span class="si">{</span><span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Agents (ones)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Agents (tens)&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">save_graph</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_graph.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mf">300.0</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_graph.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">DEFAULT_DPI</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">show_graph</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
             <span class="n">_</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">waitforbuttonpress</span><span class="p">()</span>
@@ -294,7 +304,7 @@
 
         <span class="k">if</span> <span class="n">save_graph</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_graph.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mf">300.0</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_graph.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">DEFAULT_DPI</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">show_graph</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -331,8 +341,8 @@
 
         <span class="c1"># Determine the array size so that a (10, x) 2D array shape is always used</span>
         <span class="n">array_size</span><span class="p">:</span> <span class="nb">int</span>
-        <span class="k">if</span> <span class="n">num_agents</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">array_size</span> <span class="o">=</span> <span class="n">num_agents</span> <span class="o">+</span> <span class="p">(</span><span class="mi">10</span> <span class="o">-</span> <span class="n">num_agents</span> <span class="o">%</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_agents</span> <span class="o">%</span> <span class="n">VIS_BLOCK_SIZE</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">array_size</span> <span class="o">=</span> <span class="n">num_agents</span> <span class="o">+</span> <span class="p">(</span><span class="n">VIS_BLOCK_SIZE</span> <span class="o">-</span> <span class="n">num_agents</span> <span class="o">%</span> <span class="n">VIS_BLOCK_SIZE</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">array_size</span> <span class="o">=</span> <span class="n">num_agents</span>
 
@@ -354,12 +364,12 @@
         <span class="n">colour_map</span><span class="p">:</span> <span class="n">ListedColormap</span> <span class="o">=</span> <span class="n">ListedColormap</span><span class="p">([</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">])</span>
 
         <span class="c1"># Reshape the arrays into 2D shapes (x, 10)</span>
-        <span class="n">agent_labels</span> <span class="o">=</span> <span class="n">agent_labels</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">array_size</span> <span class="o">/</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span>
-        <span class="n">agent_data</span> <span class="o">=</span> <span class="n">agent_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">array_size</span> <span class="o">/</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">agent_labels</span> <span class="o">=</span> <span class="n">agent_labels</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">array_size</span> <span class="o">/</span> <span class="n">VIS_BLOCK_SIZE</span><span class="p">),</span> <span class="n">VIS_BLOCK_SIZE</span><span class="p">)</span>
+        <span class="n">agent_data</span> <span class="o">=</span> <span class="n">agent_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">array_size</span> <span class="o">/</span> <span class="n">VIS_BLOCK_SIZE</span><span class="p">),</span> <span class="n">VIS_BLOCK_SIZE</span><span class="p">)</span>
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
 
-        <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">agent_data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">colour_map</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="n">cbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">agent_data</span><span class="o">==</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">agent_data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">colour_map</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="n">cbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">DEFAULT_LINEWIDTH</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">agent_data</span><span class="o">==</span><span class="mi">2</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">model_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">_</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Visualisation of model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -371,7 +381,7 @@
             <span class="c1"># Ensure that the model_runtime subdirectory exists</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="si">}</span><span class="s2">/model_runtime&quot;</span><span class="p">):</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="si">}</span><span class="s2">/model_runtime&quot;</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="si">}</span><span class="s2">/model_runtime/iteration_</span><span class="si">{</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mf">300.0</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="si">}</span><span class="s2">/model_runtime/iteration_</span><span class="si">{</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">DEFAULT_DPI</span><span class="p">)</span>
 
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
 
@@ -432,7 +442,7 @@
                 <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="si">}</span><span class="s2">/model_runtime&quot;</span><span class="p">)</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">visualisation_dir</span><span class="si">}</span><span class="s2">/model_runtime/iteration_</span><span class="si">{</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">,</span>
-                <span class="n">dpi</span><span class="o">=</span><span class="mf">300.0</span><span class="p">,</span>
+                <span class="n">dpi</span><span class="o">=</span><span class="n">DEFAULT_DPI</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>

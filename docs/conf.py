@@ -32,6 +32,7 @@ extensions = [
     "sphinxemoji.sphinxemoji",
     "sphinx_reredirects",
     "sphinxcontrib.bibtex",
+    "sphinx_tabs.tabs",
 ]
 
 bibtex_bibfiles = [

@@ -18,6 +18,7 @@ New Features
 - Started using :mod:`coverage` to track the coverage of tests across the library modules
 - Finished the test cases for :class:`~gatoh.agents.Agent` creation and attributes
 - Added input parameter data type checks to various methods in :class:`~gatoh.agents.Agent`
+- Finished the test cases for :class:'~gatoh.agents.Agent' populated and empty objects
 
 Fixes
 -----

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.graphs &mdash; gatoh 2026.07.0</title>
+  <title>gatoh.graphs &mdash; gatoh 2026.08.0</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=5d2ae42f"></script>
+      <script src="../../_static/documentation_options.js?v=eb394bab"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/thebelab-helper.js"></script>
@@ -112,6 +112,25 @@
     <span class="n">watts_strogatz_graph</span><span class="p">,</span>
     <span class="n">pygraph_to_pydigraph</span>
 <span class="p">)</span>
+
+<span class="c1"># Define global constants to avoid using &quot;magic numbers&quot; throughout the code</span>
+
+<span class="c1"># The default generation parameter &quot;p&quot;</span>
+<span class="n">DEFAULT_P</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span>
+<span class="c1"># The default generation parameter &quot;m&quot;</span>
+<span class="n">DEFAULT_M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="c1"># The default generation parameter &quot;sbm_sizes&quot;</span>
+<span class="n">DEFAULT_SBM</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="c1"># The maximum absolute value that agent relationship weightings can take</span>
+<span class="n">MAX_RELATIONSHIP</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="c1"># The value to add or subtract to an agent&#39;s opinion when (de)radicalisation occurs</span>
+<span class="n">RAD_OPINION_CHANGE</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span>
+<span class="c1"># The threshold distance to use when determining stochastic relationships between radicalised agents</span>
+<span class="n">RAD_DISTANCE_THRESH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span>
+<span class="c1"># The attenuation threshold to use for indirect neighbour opinions in neighbour opinion estimation</span>
+<span class="n">ATTENUATION_THRESH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="c1"># The level of compression to use across all relevant methods</span>
+<span class="n">COMPRESS_LEVEL</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">GenerationParam</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
@@ -328,9 +347,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">suppress_warnings</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">suppress_warnings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rw_params</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">rw_params</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">generation_params</span><span class="p">:</span> <span class="n">GenerationParam</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># Used for random graph generation, can be manually set by the user if desired</span>
-            <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-            <span class="s2">&quot;m&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-            <span class="s2">&quot;sbm_sizes&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="n">DEFAULT_P</span><span class="p">,</span>
+            <span class="s2">&quot;m&quot;</span><span class="p">:</span> <span class="n">DEFAULT_M</span><span class="p">,</span>
+            <span class="s2">&quot;sbm_sizes&quot;</span><span class="p">:</span> <span class="n">DEFAULT_SBM</span><span class="p">,</span>
             <span class="s2">&quot;ensure_complete&quot;</span><span class="p">:</span> <span class="kc">True</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pending_edge_changes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EdgeChanges</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -352,7 +371,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="p">(</span>
-                <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_params</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_params</span>
             <span class="p">):</span>  <span class="c1"># Skip any invalid parameters which have been passed</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;WARNING: Invalid graph generation parameter (</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">) specified when trying to modify parameter values.&quot;</span><span class="p">,</span>
@@ -413,7 +432,7 @@
         <span class="n">rx</span><span class="o">.</span><span class="n">write_graphml</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">EnvironmentError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write graph </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to path: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write graph </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to path: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">None</span></div>
 
@@ -532,7 +551,7 @@
         <span class="n">from_nodes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="s2">&quot;from_node&quot;</span><span class="p">]</span>
         <span class="n">to_nodes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="s2">&quot;to_node&quot;</span><span class="p">]</span>
         <span class="n">weightings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">edges</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weighting&quot;</span><span class="p">)</span>
-        <span class="n">rw_params</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">edges</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rw_param&quot;</span><span class="p">)</span>
+        <span class="n">rw_params</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">edges</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rw_param&quot;</span><span class="p">)</span>
 
         <span class="c1"># Used in case that explicit hierarchy names are set per edge (in the case of the mixed-hierarchy base graph in the model for example)</span>
         <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">edges</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
@@ -571,6 +590,7 @@
                             <span class="n">weighting</span><span class="o">=</span><span class="n">weightings</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                             <span class="n">rw_params</span><span class="o">=</span><span class="n">rw_params</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                         <span class="p">)</span>
+                        <span class="n">graph_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">from_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">edge</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">from_nodes</span><span class="p">)):</span>
                         <span class="n">edge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span>
@@ -615,7 +635,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">],</span>
         <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-        <span class="n">relationship_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+        <span class="n">relationship_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">MAX_RELATIONSHIP</span><span class="p">,</span> <span class="n">MAX_RELATIONSHIP</span><span class="p">),</span>
         <span class="n">ensure_complete</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -666,9 +686,9 @@
                         <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_params</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">]</span>
                     <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">generated_graph</span> <span class="o">=</span> <span class="n">watts_strogatz_graph</span><span class="p">(</span>
+                    <span class="n">generated_graph</span> <span class="o">=</span> <span class="n">pygraph_to_pydigraph</span><span class="p">(</span><span class="n">watts_strogatz_graph</span><span class="p">(</span>
                         <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_params</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">]</span>
-                    <span class="p">)</span>
+                    <span class="p">))</span>
 
                 <span class="c1"># Explicitly set the generation method again to mark the method that has been used (for clarity)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">generation_method</span> <span class="o">=</span> <span class="s2">&quot;small-world&quot;</span>
@@ -743,6 +763,9 @@
             <span class="n">graph_edge</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="n">GraphEdge</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">weighting</span><span class="o">=</span><span class="n">generated_value</span>
             <span class="p">)</span>
+
+            <span class="c1"># Set the graph edge&#39;s index</span>
+            <span class="n">graph_edge</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update_edge_by_index</span><span class="p">(</span>
                 <span class="n">index</span><span class="p">,</span> <span class="n">graph_edge</span>
@@ -822,7 +845,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">from_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_agent_index</span><span class="p">(</span><span class="n">from_node</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">from_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># This should never be reached and is included for type checking purposes</span>
             <span class="k">return</span> <span class="mf">0.0</span>
 
         <span class="n">relationship_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">GraphEdge</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">adj_direction</span><span class="p">(</span><span class="n">from_index</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -1067,9 +1089,9 @@
             <span class="c1"># If the agent was deradicalised this iteration, the change delta is overriden by a moderately significant delta</span>
             <span class="c1"># in the direction opposite to the previously held radical opinion</span>
             <span class="k">elif</span> <span class="n">deradicalisation</span> <span class="ow">and</span> <span class="n">agent_node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
-                <span class="n">agent_node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">change_opinion</span><span class="p">(</span><span class="mf">0.25</span><span class="p">)</span>
+                <span class="n">agent_node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">change_opinion</span><span class="p">(</span><span class="n">RAD_OPINION_CHANGE</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">deradicalisation</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">agent_node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span><span class="p">:</span>
-                <span class="n">agent_node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">change_opinion</span><span class="p">(</span><span class="o">-</span><span class="mf">0.25</span><span class="p">)</span>
+                <span class="n">agent_node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">change_opinion</span><span class="p">(</span><span class="o">-</span><span class="n">RAD_OPINION_CHANGE</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -1198,9 +1220,7 @@
             <span class="k">while</span> <span class="n">formation_counter</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">form_from</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
                 <span class="n">form_to</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">form_from</span> <span class="o">==</span> <span class="n">form_to</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationship_exists</span><span class="p">(</span><span class="n">form_from</span><span class="p">,</span> <span class="n">form_to</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">form_from</span> <span class="o">==</span> <span class="n">form_to</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationship_exists</span><span class="p">(</span><span class="n">form_from</span><span class="p">,</span> <span class="n">form_to</span><span class="p">):</span>
                     <span class="k">continue</span>
 
                 <span class="n">new_edge</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -1291,7 +1311,7 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">relative_weighting</span> <span class="o">=</span> <span class="mf">0.5</span>
             <span class="k">elif</span> <span class="n">neighbour_node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">radicalised</span> <span class="ow">and</span> <span class="n">agent</span><span class="o">.</span><span class="n">radicalised</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">distance_from_avg</span> <span class="o">&lt;=</span> <span class="mf">0.25</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">distance_from_avg</span> <span class="o">&lt;=</span> <span class="n">RAD_DISTANCE_THRESH</span><span class="p">:</span>
                     <span class="c1"># Both agents are radicalised towards the same opinion</span>
                     <span class="n">relative_weighting</span> <span class="o">=</span> <span class="mf">4.0</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -1336,10 +1356,10 @@
                 <span class="n">new_weighting</span> <span class="o">=</span> <span class="n">edge</span><span class="o">.</span><span class="n">weighting</span>
 
             <span class="c1"># Constrain the weighting back to [-1.0, 1.0] as needed</span>
-            <span class="k">if</span> <span class="n">new_weighting</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">:</span>
-                <span class="n">new_weighting</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
-            <span class="k">elif</span> <span class="n">new_weighting</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
-                <span class="n">new_weighting</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="k">if</span> <span class="n">new_weighting</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">MAX_RELATIONSHIP</span><span class="p">:</span>
+                <span class="n">new_weighting</span> <span class="o">=</span> <span class="o">-</span><span class="n">MAX_RELATIONSHIP</span>
+            <span class="k">elif</span> <span class="n">new_weighting</span> <span class="o">&gt;</span> <span class="n">MAX_RELATIONSHIP</span><span class="p">:</span>
+                <span class="n">new_weighting</span> <span class="o">=</span> <span class="n">MAX_RELATIONSHIP</span>
 
             <span class="n">edge</span><span class="o">.</span><span class="n">set_weighting</span><span class="p">(</span><span class="n">new_weighting</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
@@ -1375,7 +1395,7 @@
             <span class="n">raw_observed_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">opinion</span>
             <span class="n">attenuated_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">beta_value_attenuation</span><span class="p">(</span><span class="n">raw_observed_opinion</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">attenuated_opinion</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">0.5</span> <span class="ow">or</span> <span class="mf">0.5</span> <span class="o">&lt;</span> <span class="n">attenuated_opinion</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">attenuated_opinion</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">ATTENUATION_THRESH</span> <span class="ow">or</span> <span class="n">ATTENUATION_THRESH</span> <span class="o">&lt;</span> <span class="n">attenuated_opinion</span><span class="p">:</span>
                 <span class="n">observed_opinions</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_observed_opinion</span>
 
         <span class="k">return</span> <span class="n">observed_opinions</span></div>
@@ -1414,7 +1434,7 @@
             <span class="n">attenuated_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">beta_value_attenuation</span><span class="p">(</span><span class="n">raw_observed_opinion</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="p">(</span>
-                <span class="n">attenuated_opinion</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">0.5</span> <span class="ow">or</span> <span class="mf">0.5</span> <span class="o">&lt;</span> <span class="n">attenuated_opinion</span>
+                <span class="n">attenuated_opinion</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">ATTENUATION_THRESH</span> <span class="ow">or</span> <span class="n">ATTENUATION_THRESH</span> <span class="o">&lt;</span> <span class="n">attenuated_opinion</span>
             <span class="p">):</span>  <span class="c1"># Only take values which are still relevant after attenuation (i.e. values stronger than an absolute 0.5 after attenuation)</span>
                 <span class="n">observed_opinions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">raw_observed_opinion</span>
@@ -1602,7 +1622,7 @@
 
         <span class="c1"># Compress the subdirectory to minimise storage, and encapsulate all graphs into a single object</span>
         <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span>
-            <span class="n">zip_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="mi">4</span>
+            <span class="n">zip_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="n">COMPRESS_LEVEL</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">subdir_zip</span><span class="p">:</span>
             <span class="c1"># Zip the graphml files</span>
             <span class="k">for</span> <span class="n">graph_path</span> <span class="ow">in</span> <span class="n">graph_save_paths</span><span class="p">:</span>
@@ -1706,7 +1726,7 @@
 
         <span class="c1"># Extract all the graphml files to the uncompressed subdirectory</span>
         <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span>
-            <span class="n">zip_load_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="mi">4</span>
+            <span class="n">zip_load_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="n">COMPRESS_LEVEL</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">subdir_zip</span><span class="p">:</span>
             <span class="n">subdir_zip</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">subdirectory_path</span><span class="p">)</span>
 

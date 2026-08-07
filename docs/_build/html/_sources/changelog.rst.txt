@@ -4,6 +4,28 @@ Release Notes
 
 .. release-notes::
 
+2026.08.0
+==============
+
+Continued addition of new features -- mostly QoL convenience features, but some new core features.
+
+Also, ongoing bugfixes and optimisations where possible.
+
+New Features
+------------
+
+- Added the ability to explicitly define if generated graphs should be complete from within :meth:`~gatoh.model.ABModel.generate_graphs`
+- Started using :mod:`coverage` to track the coverage of tests across the library modules
+- Finished the test cases for :class:`~gatoh.agents.Agent` creation and attributes
+- Added input parameter data type checks to various methods in :class:`~gatoh.agents.Agent`
+- Finished the test cases for :class:'~gatoh.agents.Agent' populated and empty objects
+
+Fixes
+-----
+
+- Fixed the test cases in :mod:`test_model_multiprocessed.py` and :mod:`test_model_simulation.py` (All 151 existing test cases up to 01/08/2026 are working correctly)
+- Fixed a specific :meth:`~gatoh.graphs.Graph.add_edges` case in which edges were not being added to the graph
+
 2026.07.0
 ==============
 
@@ -33,6 +55,9 @@ New Features
 - QoL method :meth:`~gatoh.model.ABModel.add_agents_to_hierarchy`
 - Created new tests to cover the various calculation methods in :class:`~gatoh.model.ABModel`
 - QoL method :meth:`~gatoh.model.ABModel.add_relationships_to_hierarchy`
+- Defined multiple global constants throughout modules to clarify "magic numbers"
+- Prototype for ability to add "link functions" to model parameters
+- Prototype for the ability to track specific model parameters throughout iterations within the :class:`~gatoh.logging.GATOHLogger`
 
 Fixes
 -----

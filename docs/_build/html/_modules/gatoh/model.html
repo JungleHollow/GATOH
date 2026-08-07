@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.model &mdash; gatoh 2026.07.0</title>
+  <title>gatoh.model &mdash; gatoh 2026.08.0</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=5d2ae42f"></script>
+      <script src="../../_static/documentation_options.js?v=eb394bab"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/thebelab-helper.js"></script>
@@ -83,6 +83,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing.pool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="kn">import</span> <span class="n">choices</span><span class="p">,</span> <span class="n">randint</span>
@@ -98,16 +99,39 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rustworkx.rustworkx</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoEdgeBetweenNodes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rustworkx</span><span class="w"> </span><span class="kn">import</span> <span class="n">all_shortest_paths</span> <span class="k">as</span> <span class="n">rx_shortest_paths</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">AgentSet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">AgentSet</span><span class="p">,</span> <span class="n">OPINION_MAX</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.graphs</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">GraphNode</span><span class="p">,</span> <span class="n">GraphEdge</span><span class="p">,</span> <span class="n">GraphSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">GATOHLogger</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">EdgeChanges</span><span class="p">,</span>
     <span class="n">YamlLoader</span><span class="p">,</span>
     <span class="n">create_config_file</span><span class="p">,</span>
+    <span class="n">linear_link</span><span class="p">,</span>
+    <span class="n">multiplicative_link</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.visualisation</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABVisualiser</span>
 
+
+<span class="c1"># Define global constants to avoid using &quot;magic numbers&quot; throughout the code</span>
+
+<span class="c1"># The valid range of silencing threshold values</span>
+<span class="n">MIN_SILENCING_THRESH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">MAX_SILENCING_THRESH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="c1"># The valid range of negation threshold values</span>
+<span class="n">MIN_NEGATION_THRESH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">MAX_NEGATION_THRESH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="c1"># The valid range of radicalisation threshold values</span>
+<span class="n">MIN_RADICAL_THRESH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">MAX_RADICAL_THRESH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="c1"># The default divisor to use for agent subsetting in generate_graphs</span>
+<span class="n">DEFAULT_SUBSETTING_DIV</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="c1"># The absolute threshold value to use when determining &#39;like-minded&#39; collective opinion changes</span>
+<span class="n">LIKE_MINDED_THRESH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="c1"># A mapping of strings to link functions used for model parameter scaling</span>
+<span class="n">LINK_FUNCTIONS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="n">linear_link</span><span class="p">,</span>
+    <span class="s2">&quot;multiplicative&quot;</span><span class="p">:</span> <span class="n">multiplicative_link</span><span class="p">,</span>
+<span class="p">}</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ConfigData</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -144,10 +168,16 @@
 <span class="sd">    :type iterations: int, optional</span>
 <span class="sd">    :param silencing_threshold: A threshold that, when surpassed by agents, will cause them to cease expressing their opinions in a given hierarchy.</span>
 <span class="sd">    :type silencing_threshold: float, optional</span>
+<span class="sd">    :param silencing_link: The link function to apply to the silencing threshold, and the link value to use.</span>
+<span class="sd">    :type silencing_link: tuple[str, float], optional</span>
 <span class="sd">    :param negation_threshold: A threshold that, when surpassed by agents, will cause their opinion to become its additive inverse.</span>
 <span class="sd">    :type negation_threshold: float, optional</span>
+<span class="sd">    :param negation_link: The link function to apply to the negation threshold, and the link value to use.</span>
+<span class="sd">    :type negation_link: tuple[str, float], optional</span>
 <span class="sd">    :param radicalisation_threshold: A threshold that determines how strong of an absolute opinion an agent must hold before they begin to consider becoming radicalised.</span>
 <span class="sd">    :type radicalisation_threshold: float, optional</span>
+<span class="sd">    :param radicalisation_link: The link function to apply to the radicalisation threshold, and the link value to use.</span>
+<span class="sd">    :type radicalisation_link: tuple[str, float], optional</span>
 <span class="sd">    :param suppress_warnings: A flag indicating if non-critical runtime warnings should be suppressed.</span>
 <span class="sd">    :type suppress_warnings: bool, optional</span>
 <span class="sd">    :param print_interval: The iteration interval at which the model&#39;s logger should be printing detailed variable reports.</span>
@@ -164,6 +194,8 @@
 <span class="sd">    :type checkpointing: bool, optional</span>
 <span class="sd">    :param init_graphs: A flag indicating if empty graphs should be initialised with the input hierarchy information.</span>
 <span class="sd">    :type init_graphs: bool, optional</span>
+<span class="sd">    :param parameters_to_track: The names of initial model parameters that should be tracked and recorded by the logger.</span>
+<span class="sd">    :type parameters_to_track: list[str], optional</span>
 <span class="sd">    :param save_dir: The path to a directory in which all of this model&#39;s non-logger data should be saved to.</span>
 <span class="sd">    :type save_dir: str, optional</span>
 <span class="sd">    :param data_file: The path to which the logger&#39;s data should be saved to after iterations are run.</span>
@@ -179,8 +211,11 @@
         <span class="n">agent_opinion_rw</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
         <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
         <span class="n">silencing_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
+        <span class="n">silencing_link</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
         <span class="n">negation_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.999</span><span class="p">,</span>
+        <span class="n">negation_link</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
         <span class="n">radicalisation_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span><span class="p">,</span>
+        <span class="n">radicalisation_link</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
         <span class="n">suppress_warnings</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">print_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
         <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -189,6 +224,7 @@
         <span class="n">vis_aggregation_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;median&quot;</span><span class="p">,</span>
         <span class="n">checkpointing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">init_graphs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">parameters_to_track</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
         <span class="n">data_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
         <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
@@ -243,10 +279,25 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">iterations</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">silencing_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">silencing_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">silencing_link</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">silencing_link</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">silencing_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">silencing_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">LINK_FUNCTIONS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Link function &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">silencing_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39; is not a valid supported link function&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">negation_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">negation_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">negation_link</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">negation_link</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">negation_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">negation_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">LINK_FUNCTIONS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Link function &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">negation_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39; is not a valid supported link function&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">radicalisation_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_link</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">radicalisation_link</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">LINK_FUNCTIONS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Link function &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39; is not a valid supported link function&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">suppress_warnings</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">suppress_warnings</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters_to_track</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">parameters_to_track</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters_to_track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">track_model_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters_to_track</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">checkpointing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">checkpointing</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">save_dir</span>
@@ -357,7 +408,7 @@
 <span class="sd">        :type silencing_thresh: float</span>
 <span class="sd">        :raises ValueError: If the silencing threshold is outside the range [0.0, 1.0].</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">silencing_thresh</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">MIN_SILENCING_THRESH</span> <span class="o">&lt;=</span> <span class="n">silencing_thresh</span> <span class="o">&lt;=</span> <span class="n">MAX_SILENCING_THRESH</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">silencing_threshold</span> <span class="o">=</span> <span class="n">silencing_thresh</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The silencing threshold value of </span><span class="si">{</span><span class="n">silencing_thresh</span><span class="si">}</span><span class="s2"> is outside the valid range of [0.0, 1.0]&quot;</span><span class="p">)</span>
@@ -375,7 +426,7 @@
 <span class="sd">        :type negation_thresh: float</span>
 <span class="sd">        :raises ValueError: If the negation threshold is outside the range [0.0, 1.0].</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">negation_thresh</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">MIN_NEGATION_THRESH</span> <span class="o">&lt;=</span> <span class="n">negation_thresh</span> <span class="o">&lt;=</span> <span class="n">MAX_NEGATION_THRESH</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">negation_threshold</span> <span class="o">=</span> <span class="n">negation_thresh</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The negation threshold value of </span><span class="si">{</span><span class="n">negation_thresh</span><span class="si">}</span><span class="s2"> is outside the valid range of [0.0, 1.0]&quot;</span><span class="p">)</span>
@@ -393,7 +444,7 @@
 <span class="sd">        :type radical_thresh: float</span>
 <span class="sd">        :raises ValueError: If the radicalisation threshold is outside the range [0.0, 1.0].</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">radical_thresh</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">MIN_RADICAL_THRESH</span> <span class="o">&lt;=</span> <span class="n">radical_thresh</span> <span class="o">&lt;=</span> <span class="n">MAX_RADICAL_THRESH</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_threshold</span> <span class="o">=</span> <span class="n">radical_thresh</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The radicalisation threshold value of </span><span class="si">{</span><span class="n">radical_thresh</span><span class="si">}</span><span class="s2"> is outside the valid range of [0.0, 1.0]&quot;</span><span class="p">)</span>
@@ -472,6 +523,28 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span> <span class="o">=</span> <span class="n">model_id</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.set_model_id&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">track_model_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Note specific model parameters that should be tracked by the logger, and included in the logger&#39;s output file.</span>
+
+<span class="sd">        :param parameters: The names of the parameters to track (these should be identical to their names within the model object).</span>
+<span class="sd">        :type parameters: list[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;One or more parameters to track have not been provided as strings&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">parameter</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The parameter &#39;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">&#39; does not exist in the ABModel object&quot;</span><span class="p">)</span>
+        <span class="c1"># If no parameter has raised an error:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters_to_track</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters_to_track</span> <span class="o">=</span> <span class="n">parameters</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters_to_track</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">track_model_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.track_model_parameters&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="ABModel.save_model">
@@ -691,6 +764,7 @@
         <span class="n">agent_subsetting</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">rw_params</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">individual_methods</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ensure_connected</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Randomly generates graphs for the given social hierarchy names using the specified method.</span>
@@ -708,19 +782,27 @@
 <span class="sd">        :type rw_params: list[tuple[float, float]], optional</span>
 <span class="sd">        :param individual_methods: A &lt;hierarchy : generation method&gt; mapping indicating the per-hierarchy generation methods that should be used.</span>
 <span class="sd">        :type individual_methods: dict[str, str], optional</span>
+<span class="sd">        :param ensure_connected: A &lt;hierarchy : flag&gt; mapping indicating if the graphs generated per hierarchy should be fully connected or not where relevant.</span>
+<span class="sd">        :type ensure_connected: dict[str, bool], optional</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">agent_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">agents</span><span class="p">)</span>
         <span class="n">agent_sample</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
+        <span class="c1"># Done this way to prevent memory leaks from initiating the empty dict in the function parameters</span>
+        <span class="k">if</span> <span class="n">ensure_connected</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ensure_connected</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">hierarchies</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">agent_subsetting</span><span class="p">:</span>
-                <span class="n">random_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">agents</span><span class="p">)</span> <span class="o">//</span> <span class="mi">4</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">agents</span><span class="p">))</span>
-                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">agents</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+                <span class="n">random_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">agents</span><span class="p">)</span> <span class="o">//</span> <span class="n">DEFAULT_SUBSETTING_DIV</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">agents</span><span class="p">))</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">agents</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                     <span class="n">agent_sample</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
                         <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">agent_array</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">random_k</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                     <span class="p">)</span>
-                <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">agents</span><span class="p">)</span> <span class="ow">is</span> <span class="n">AgentSet</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">agents</span><span class="p">,</span> <span class="n">AgentSet</span><span class="p">):</span>
                     <span class="n">agent_sample</span> <span class="o">=</span> <span class="n">agents</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">random_k</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">agent_sample</span> <span class="o">=</span> <span class="n">agents</span>
 
             <span class="n">hierarchy_rw_param</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">rw_params</span><span class="p">:</span>
@@ -730,13 +812,15 @@
                 <span class="n">hierarchy</span><span class="p">,</span> <span class="n">hierarchy_rw_param</span><span class="p">,</span> <span class="n">suppress_warnings</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">suppress_warnings</span>
             <span class="p">)</span>
 
+            <span class="c1"># Use the flag if it exists, or assume True in all other cases (not ensuring graph completeness should only be valid in niche, explicit usecases)</span>
+            <span class="n">ensure_complete</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">ensure_connected</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span> <span class="k">if</span> <span class="n">ensure_connected</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="n">individual_methods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">hierarchy_graph</span> <span class="o">=</span> <span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">generate_graph</span><span class="p">(</span>
-                    <span class="n">agent_sample</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">individual_methods</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span>
+                    <span class="n">agent_sample</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">individual_methods</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">],</span> <span class="n">ensure_complete</span><span class="o">=</span><span class="n">ensure_complete</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">hierarchy_graph</span> <span class="o">=</span> <span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">generate_graph</span><span class="p">(</span>
-                    <span class="n">agent_sample</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span>
+                    <span class="n">agent_sample</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">ensure_complete</span><span class="o">=</span><span class="n">ensure_complete</span>
                 <span class="p">)</span>
 
             <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_graph</span><span class="p">(</span><span class="n">hierarchy_graph</span><span class="p">)</span>
@@ -814,7 +898,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">agent</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">agents</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">Agent</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The object at index </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph &#39;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The object at index </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> of the input iterable is not a valid Agent object -- cannot add it to the hierarchy graph &#39;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
         <span class="n">hierarchy_to_extend</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">get_hierarchy</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">hierarchy_to_extend</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The specified hierarchy &#39;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&#39; does not exist in the GraphSet -- cannot add agents to it&quot;</span><span class="p">)</span>
@@ -840,8 +924,8 @@
 <span class="sd">        :raises KeyError: If the specified hierarchy does not exist in the graph set.</span>
 <span class="sd">        :raises ValueError: If any required key is missing, or the information is of a mismatching data type.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="s2">&quot;to_node&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">relationships</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;from_node&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">relationships</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The relationships information is missing one of the required &#39;from_node&#39; or &#39;to_node&#39; keys&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;to_node&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">relationships</span> <span class="ow">or</span> <span class="s2">&quot;from_node&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">relationships</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The relationships information is missing one of the required &#39;from_node&#39; or &#39;to_node&#39; keys&quot;</span><span class="p">)</span>
         <span class="n">specified_hierarchy</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">get_hierarchy</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">specified_hierarchy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The specified hierarchy &#39;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&#39; does not exist in the GraphSet -- cannot add relationships to it&quot;</span><span class="p">)</span>
@@ -915,6 +999,8 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">new_iteration</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">new_iteration</span><span class="p">()</span>
+                <span class="c1"># Only apply link functions if it is not the first iteration</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">apply_link_functions</span><span class="p">()</span>
 
             <span class="c1"># Get and print the formatted debug string if appropriate</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
@@ -1016,10 +1102,10 @@
         <span class="c1"># Account for the idea that a collection of like-minded agents will push each other towards more extreme opinions</span>
         <span class="c1"># even if all neighbours are already averaging around the same opinion value</span>
         <span class="n">total_change</span><span class="p">:</span> <span class="nb">float</span>
-        <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">previous_opinion</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="o">-</span><span class="mf">0.05</span> <span class="o">&lt;</span> <span class="n">collective_changes_sum</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="n">total_change</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.05</span>
-        <span class="k">elif</span> <span class="n">agent</span><span class="o">.</span><span class="n">previous_opinion</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">collective_changes_sum</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span>
-            <span class="n">total_change</span> <span class="o">=</span> <span class="mf">0.05</span>
+        <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">previous_opinion</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="o">-</span><span class="n">LIKE_MINDED_THRESH</span> <span class="o">&lt;</span> <span class="n">collective_changes_sum</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">total_change</span> <span class="o">=</span> <span class="o">-</span><span class="n">LIKE_MINDED_THRESH</span>
+        <span class="k">elif</span> <span class="n">agent</span><span class="o">.</span><span class="n">previous_opinion</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">collective_changes_sum</span> <span class="o">&lt;</span> <span class="n">LIKE_MINDED_THRESH</span><span class="p">:</span>
+            <span class="n">total_change</span> <span class="o">=</span> <span class="n">LIKE_MINDED_THRESH</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># The previous checks mean that a &quot;minor&quot; collective changes sum that is going in the opposite direction</span>
             <span class="c1"># to the agent&#39;s opinion will still have the effect of moving the agent towards the neighbour average</span>
@@ -1039,7 +1125,7 @@
 
         <span class="c1"># Constrain to [-1, 1]</span>
         <span class="c1"># 100.0 and -100.0 are used as key delta values indicating that the opinion needs to be constrained</span>
-        <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">opinion</span> <span class="o">+</span> <span class="n">total_change</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">opinion</span> <span class="o">+</span> <span class="n">total_change</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">OPINION_MAX</span><span class="p">:</span>
             <span class="n">opinion_result</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                 <span class="p">(</span>
@@ -1048,7 +1134,7 @@
                     <span class="n">all_neighbour_benefits</span><span class="p">,</span>
                 <span class="p">),</span>
             <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">agent</span><span class="o">.</span><span class="n">opinion</span> <span class="o">+</span> <span class="n">total_change</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">agent</span><span class="o">.</span><span class="n">opinion</span> <span class="o">+</span> <span class="n">total_change</span> <span class="o">&gt;</span> <span class="n">OPINION_MAX</span><span class="p">:</span>
             <span class="n">opinion_result</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                 <span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">collective_changes</span><span class="p">,</span> <span class="n">all_neighbour_benefits</span><span class="p">),</span>
@@ -1169,6 +1255,18 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.iteration_opinion_changes&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_link_functions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply all relevant parameter link functions as needed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">silencing_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">silencing_threshold</span> <span class="o">=</span> <span class="n">LINK_FUNCTIONS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">silencing_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]](</span><span class="bp">self</span><span class="o">.</span><span class="n">silencing_threshold</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">silencing_link</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">negation_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">negation_threshold</span> <span class="o">=</span> <span class="n">LINK_FUNCTIONS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">negation_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]](</span><span class="bp">self</span><span class="o">.</span><span class="n">negation_threshold</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">negation_link</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_threshold</span> <span class="o">=</span> <span class="n">LINK_FUNCTIONS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]](</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_threshold</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_link</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="ABModel.step">
 <a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.step.html#gatoh.model.ABModel.step">[docs]</a>
@@ -1306,16 +1404,34 @@
 
         <span class="n">layers_polarisation</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_layers_polarisation</span><span class="p">(</span><span class="n">worker_pool</span><span class="o">=</span><span class="n">worker_pool</span><span class="p">)</span>
 
+        <span class="n">tracked_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tracked_parameters</span><span class="p">()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">iteration</span><span class="p">(</span>
             <span class="n">aggregate_opinion</span><span class="p">,</span>
             <span class="n">radicalisation_logodds</span><span class="p">,</span>
             <span class="n">layer_interdependences</span><span class="p">,</span>
             <span class="n">layers_polarisation</span><span class="p">,</span>
+            <span class="n">model_parameters</span><span class="o">=</span><span class="n">tracked_parameters</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.logger_iteration&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_tracked_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A getter function that checks for any explicitly tracked model parameters, and forms a return accordingly.</span>
+
+<span class="sd">        :return: A &lt;parameter : value&gt; mapping for this iteration for each tracked model parameter.</span>
+<span class="sd">        :rtype: dict[str, Any]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters_to_track</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters_to_track</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters_to_track</span><span class="p">:</span>
+                <span class="n">output_dict</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">output_dict</span>
 
 <div class="viewcode-block" id="ABModel.calculate_aggregate_opinion">
 <a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.calculate_aggregate_opinion.html#gatoh.model.ABModel.calculate_aggregate_opinion">[docs]</a>
@@ -1384,7 +1500,7 @@
         <span class="n">layers_polarisation</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">if</span> <span class="n">worker_pool</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="p">:</span>
                 <span class="n">layers_polarisation</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">calculate_polarisation</span><span class="p">(</span>
                     <span class="n">hierarchy</span>
                 <span class="p">)</span>
@@ -1533,7 +1649,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">interdependence_results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">worker_pool</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="p">:</span>
                 <span class="n">interdependence_result</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_interdependence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">))</span>
                 <span class="n">interdependence_results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">hierarchy</span><span class="p">,</span> <span class="n">interdependence_result</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1602,14 +1718,14 @@
         <span class="n">interdep_numerator</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="c1"># Get the sum of all the estimated opinion values, only for the layer of interest (a)</span>
         <span class="n">oc_a</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">observed_opinions_all</span><span class="p">[</span><span class="n">layer_of_interest</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">oc_a_i</span> <span class="ow">in</span> <span class="n">oc_a</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">oc_a_i</span> <span class="ow">in</span> <span class="n">oc_a</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">oc_val</span> <span class="ow">in</span> <span class="n">oc_a_i</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="n">interdep_numerator</span> <span class="o">+=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">oc_val</span><span class="p">)</span>
 
         <span class="n">interdep_denominator</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="c1"># Get the sum of all the estimated opinion values for all layers (k)</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">oc_k</span> <span class="ow">in</span> <span class="n">observed_opinions_all</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">oc_k_i</span> <span class="ow">in</span> <span class="n">oc_k</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">oc_k</span> <span class="ow">in</span> <span class="n">observed_opinions_all</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">oc_k_i</span> <span class="ow">in</span> <span class="n">oc_k</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="k">for</span> <span class="n">oc_val</span> <span class="ow">in</span> <span class="n">oc_k_i</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                     <span class="n">interdep_denominator</span> <span class="o">+=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">oc_val</span><span class="p">)</span>
 
@@ -1630,7 +1746,7 @@
 <span class="sd">        edges within the model&#39;s base graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_index_map</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_index_map</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="n">graph_edge</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
 
                 <span class="c1"># Get the index of the Agent objects within the model&#39;s AgentSet (not the graph&#39;s node set)</span>
@@ -1731,7 +1847,7 @@
             <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[],</span>
         <span class="p">}</span>
 
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_index_map</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_index_map</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">graph_edge</span><span class="p">:</span> <span class="n">GraphEdge</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
 
             <span class="c1"># Get the index of the Agent objects within the model&#39;s AgentSet (not the graph&#39;s node set)</span>

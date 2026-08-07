@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.logging &mdash; gatoh 2026.07.0</title>
+  <title>gatoh.logging &mdash; gatoh 2026.08.0</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=5d2ae42f"></script>
+      <script src="../../_static/documentation_options.js?v=eb394bab"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/thebelab-helper.js"></script>
@@ -83,6 +83,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tracemalloc</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
 
 <span class="nd">@dataclass</span>
@@ -147,8 +148,7 @@
 <span class="sd">        :param memory_usage: The memory usage value that is being checked (in bytes).</span>
 <span class="sd">        :type memory_usage: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">memory_usage</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">peak_memory_usage</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">peak_memory_usage</span> <span class="o">=</span> <span class="n">memory_usage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peak_memory_usage</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">memory_usage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">peak_memory_usage</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.record_peak_mem_usage&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
 
@@ -159,7 +159,7 @@
 <span class="sd">        :param function_name: The name of the function that was called.</span>
 <span class="sd">        :type function_name: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">function_calls</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">function_calls</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">function_calls</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">function_calls</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -302,6 +302,8 @@
     <span class="n">radicalisation_logodds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># The current iteration that the simulation is at</span>
     <span class="n">current_iteration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Space for any dynamically tracked model parameters to be stored</span>
+    <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -316,6 +318,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_logodds</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layer_polarisations</span> <span class="o">=</span> <span class="p">{}</span>
@@ -439,6 +442,19 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">store_model_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that simplifies the storing of the model&#39;s tracked parameters at each iteration.</span>
+
+<span class="sd">        :param model_parameters: A &lt;parameter : value&gt; mapping for the tracked model parameters to be logged.</span>
+<span class="sd">        :type model_parameters: dict[str, Any], optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># It is assumed that the model parameters will always exist in self.model_parameters by the time this function is being called...</span>
+        <span class="k">if</span> <span class="n">model_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">model_parameter</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">model_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">[</span><span class="n">model_parameter</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
 <div class="viewcode-block" id="LoggerVariables.new_iteration">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.new_iteration.html#gatoh.logging.LoggerVariables.new_iteration">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">new_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -478,7 +494,7 @@
         <span class="n">output_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;Hierarchy Name</span><span class="se">\t</span><span class="s2">Layer Interdependence</span><span class="se">\t</span><span class="s2">Layer Polarisation</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="p">)</span>
-        <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="p">:</span>
             <span class="n">interdepence</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">][</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="p">]</span>
@@ -489,6 +505,20 @@
             <span class="n">output_string</span> <span class="o">+=</span> <span class="n">hierarchy_string</span>
         <span class="k">return</span> <span class="n">output_string</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">current_model_params_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract all the explicitly tracked model parameters for the current iteration and format them into a substring to be appended to the main iteration output.</span>
+
+<span class="sd">        :return: A formatted text representation containing all the tracked model parameters for the current model iteration.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">output_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">output_string</span> <span class="o">+=</span> <span class="s2">&quot;Model Parameter</span><span class="se">\t</span><span class="s2">Value</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">for</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">output_string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">output_string</span>
 
 <div class="viewcode-block" id="LoggerVariables.current_iteration_repr">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.current_iteration_repr.html#gatoh.logging.LoggerVariables.current_iteration_repr">[docs]</a>
@@ -510,6 +540,8 @@
 <span class="s2">                </span><span class="se">\n\n</span><span class="s2">**** Layer statistics ****</span><span class="se">\n\n</span><span class="s2">&quot;&quot;&quot;</span>
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_layers_repr</span><span class="p">()</span>
         <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">formatted_string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">**** Model parameters ****</span><span class="se">\n\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_model_params_repr</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">return</span> <span class="n">formatted_string</span></div>
 
 
@@ -533,11 +565,14 @@
             <span class="s2">&quot;radicalisation_logodds&quot;</span><span class="p">,</span>
         <span class="p">]</span>
 
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="p">:</span>
             <span class="n">attribute_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;layer_interdependences_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_polarisations</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_polarisations</span><span class="p">:</span>
             <span class="n">attribute_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;layer_polarisations_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">:</span>
+            <span class="n">attribute_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">attribute_names</span></div>
 </div>
@@ -618,6 +653,19 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">track_model_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A utility function that adds new model parameters to be tracked to the logger variables.</span>
+
+<span class="sd">        :param parameters: The names of the model parameters to be tracked.</span>
+<span class="sd">        :type parameters: list[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">model_parameters</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span>  <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.track_model_parameters&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
 <div class="viewcode-block" id="GATOHLogger.iteration">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.iteration.html#gatoh.logging.GATOHLogger.iteration">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">iteration</span><span class="p">(</span>
@@ -626,6 +674,7 @@
         <span class="n">radicalisation_logodds</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">layer_interdependences</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
         <span class="n">layer_polarisations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Store all relevant model variables and states based on the level of logging that has been specified.</span>
@@ -638,11 +687,14 @@
 <span class="sd">        :type layer_interdependences: dict[str, float]</span>
 <span class="sd">        :param layers_polarisation: A &lt;hierarchy : value&gt; mapping containing the calculated polarisation for each hierarchy in the model at the end of this iteration.</span>
 <span class="sd">        :type layers_polarisation: dict[str, float]</span>
+<span class="sd">        :param model_parameters: A &lt;parameter : value&gt; mapping containing a tracked model parameter&#39;s value at the end of this iteration.</span>
+<span class="sd">        :type model_parameters: dict[str, Any], optional</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_aggregate_opinion</span><span class="p">(</span><span class="n">aggregate_opinion</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_radicalisation_logodds</span><span class="p">(</span><span class="n">radicalisation_logodds</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_interdependences</span><span class="p">(</span><span class="n">layer_interdependences</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_polarisations</span><span class="p">(</span><span class="n">layer_polarisations</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_model_parameters</span><span class="p">(</span><span class="n">model_parameters</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_aggregate_opinion&quot;</span><span class="p">)</span>
@@ -747,13 +799,17 @@
                 <span class="p">}</span>
 
                 <span class="c1"># Append interdependences and polarisations in the same loop as the headers should handle ordering automatically</span>
-                <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="p">:</span>
                     <span class="n">row_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;layer_interdependences_</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">layer_interdependences</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
                     <span class="n">row_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;layer_polarisations_</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">layer_polarisations</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
+
+                <span class="c1"># Append the explicitly tracked model parameters in the same loop as the headers should handle ordering automatically</span>
+                <span class="k">for</span> <span class="n">model_parameter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">:</span>
+                    <span class="n">row_dict</span><span class="p">[</span><span class="n">model_parameter</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">[</span><span class="n">model_parameter</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
 
                 <span class="n">csv_writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">row_dict</span><span class="p">)</span>
 
