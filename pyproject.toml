@@ -39,6 +39,14 @@ dev = [
     "scipy-stubs",
     "typing-extensions",
     "coverage",
+    "sphinx-autobuild",
+    "jupyter-sphinx",
+    "reno[sphinx]",
+    "spinxemoji",
+    "sphinx-tabs",
+    "sphinxcontrib-bibtex",
+    "sphinx-reredirects",
+    "sphinx-rtd-theme",
 ]
 
 [tool.setuptools.packages]
