@@ -20,6 +20,7 @@
       ~AgentSet.discard_index
       ~AgentSet.extract_agent_pickle
       ~AgentSet.get_agent_by_id
+      ~AgentSet.get_agent_ids
       ~AgentSet.get_index
       ~AgentSet.load_agentset
       ~AgentSet.remove

@@ -16,7 +16,9 @@
 
       ~LoggerVariables.current_iteration_repr
       ~LoggerVariables.current_layers_repr
+      ~LoggerVariables.current_model_params_repr
       ~LoggerVariables.get_fieldnames
+      ~LoggerVariables.increment_deradicalised
       ~LoggerVariables.increment_negated
       ~LoggerVariables.increment_radicalised
       ~LoggerVariables.increment_silenced
@@ -24,6 +26,7 @@
       ~LoggerVariables.store_aggregate_opinion
       ~LoggerVariables.store_layer_interdependences
       ~LoggerVariables.store_layer_polarisations
+      ~LoggerVariables.store_model_parameters
       ~LoggerVariables.store_radicalisation_logodds
 
 
@@ -34,8 +37,10 @@
    .. autoattribute:: max_iterations
    .. autoattribute:: aggregate_opinions
    .. autoattribute:: radicalised_agents
+   .. autoattribute:: deradicalised_agents
    .. autoattribute:: silenced_agents
    .. autoattribute:: negated_agents
    .. autoattribute:: layer_interdependences
    .. autoattribute:: layer_polarisations
    .. autoattribute:: radicalisation_logodds
+   .. autoattribute:: model_parameters

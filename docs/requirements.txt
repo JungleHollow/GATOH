@@ -21,7 +21,6 @@ dulwich==1.2.7
 executing==2.2.1
 fastjsonschema==2.21.2
 fonttools==4.63.0
-gatoh@git+https://github.com/JungleHollow/GATOH
 h11==0.16.0
 idna==3.18
 imagesize==2.0.0
@@ -71,7 +70,7 @@ python-dateutil==2.9.0.post0
 PyYAML==6.0.3
 pyzmq==27.1.0
 referencing==0.37.0
-reno==4.1.0
+reno[sphinx]==4.1.0
 requests==2.34.2
 roman-numerals==4.1.0
 rpds-py==2026.6.3

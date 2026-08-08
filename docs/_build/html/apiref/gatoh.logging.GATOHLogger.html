@@ -24,7 +24,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="gatoh.logging.GATOHLogger.format_non_interval_print" href="gatoh.logging.GATOHLogger.format_non_interval_print.html" />
+    <link rel="next" title="gatoh.logging.GATOHLogger.debug_iteration" href="gatoh.logging.GATOHLogger.debug_iteration.html" />
     <link rel="prev" title="&lt;no title&gt;" href="../api/logging/GATOHLogger.html" /> 
 </head>
 
@@ -59,11 +59,15 @@
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphSet.html">GraphSet</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">GATOHLogger</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#gatoh.logging.GATOHLogger"><code class="docutils literal notranslate"><span class="pre">GATOHLogger</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.GATOHLogger.debug_iteration.html">gatoh.logging.GATOHLogger.debug_iteration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.GATOHLogger.debug_iteration_print.html">gatoh.logging.GATOHLogger.debug_iteration_print</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.GATOHLogger.format_non_interval_print.html">gatoh.logging.GATOHLogger.format_non_interval_print</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.GATOHLogger.iteration.html">gatoh.logging.GATOHLogger.iteration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.GATOHLogger.iteration_print.html">gatoh.logging.GATOHLogger.iteration_print</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.GATOHLogger.log_function_call.html">gatoh.logging.GATOHLogger.log_function_call</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.GATOHLogger.new_iteration.html">gatoh.logging.GATOHLogger.new_iteration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.GATOHLogger.save_data.html">gatoh.logging.GATOHLogger.save_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.GATOHLogger.track_model_parameters.html">gatoh.logging.GATOHLogger.track_model_parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.logging.LoggerVariables.html">LoggerVariables</a></li>
@@ -139,6 +143,12 @@ both during and after simulation.</p>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.GATOHLogger.debug_iteration.html#gatoh.logging.GATOHLogger.debug_iteration" title="gatoh.logging.GATOHLogger.debug_iteration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">debug_iteration</span></code></a></p></td>
+<td><p>Store all relevant developer variables based on the level of logging that has been specified.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.GATOHLogger.debug_iteration_print.html#gatoh.logging.GATOHLogger.debug_iteration_print" title="gatoh.logging.GATOHLogger.debug_iteration_print"><code class="xref py py-obj docutils literal notranslate"><span class="pre">debug_iteration_print</span></code></a></p></td>
+<td><p>A method which formats the debug statistics for printing.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.GATOHLogger.format_non_interval_print.html#gatoh.logging.GATOHLogger.format_non_interval_print" title="gatoh.logging.GATOHLogger.format_non_interval_print"><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_non_interval_print</span></code></a></p></td>
 <td><p>Returns a formatted string to be printed out on iterations which fall outside the print interval (to still provide some feedback on iteration progress)</p></td>
 </tr>
@@ -148,11 +158,17 @@ both during and after simulation.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.GATOHLogger.iteration_print.html#gatoh.logging.GATOHLogger.iteration_print" title="gatoh.logging.GATOHLogger.iteration_print"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iteration_print</span></code></a></p></td>
 <td><p>A method which formats the model statistics at the appropriate print_interval.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.GATOHLogger.new_iteration.html#gatoh.logging.GATOHLogger.new_iteration" title="gatoh.logging.GATOHLogger.new_iteration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_iteration</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.GATOHLogger.log_function_call.html#gatoh.logging.GATOHLogger.log_function_call" title="gatoh.logging.GATOHLogger.log_function_call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_function_call</span></code></a></p></td>
+<td><p>A wrapper to the DevStats log_function_call.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.GATOHLogger.new_iteration.html#gatoh.logging.GATOHLogger.new_iteration" title="gatoh.logging.GATOHLogger.new_iteration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_iteration</span></code></a></p></td>
 <td><p>A wrapper that calls LoggerVariables new_iteration().</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.GATOHLogger.save_data.html#gatoh.logging.GATOHLogger.save_data" title="gatoh.logging.GATOHLogger.save_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_data</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.GATOHLogger.save_data.html#gatoh.logging.GATOHLogger.save_data" title="gatoh.logging.GATOHLogger.save_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_data</span></code></a></p></td>
 <td><p>Saves all logged data to the specified path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.GATOHLogger.track_model_parameters.html#gatoh.logging.GATOHLogger.track_model_parameters" title="gatoh.logging.GATOHLogger.track_model_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">track_model_parameters</span></code></a></p></td>
+<td><p>A utility function that adds new model parameters to be tracked to the logger variables.</p></td>
 </tr>
 </tbody>
 </table>
@@ -165,7 +181,7 @@ both during and after simulation.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../api/logging/GATOHLogger.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="gatoh.logging.GATOHLogger.format_non_interval_print.html" class="btn btn-neutral float-right" title="gatoh.logging.GATOHLogger.format_non_interval_print" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="gatoh.logging.GATOHLogger.debug_iteration.html" class="btn btn-neutral float-right" title="gatoh.logging.GATOHLogger.debug_iteration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

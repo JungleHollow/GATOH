@@ -58,7 +58,7 @@ master_doc = "index"
 
 # Autosummary options
 autosummary_generate = True
-autosummary_generate_overwrite = False
+autosummary_generate_overwrite = True
 autoclass_content = "both"
 
 # Intersphinx configuration

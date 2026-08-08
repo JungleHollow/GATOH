@@ -27,6 +27,7 @@
       ~GraphSet.load_graphset_multi
       ~GraphSet.load_node
       ~GraphSet.save_graphset
+      ~GraphSet.set_stochastic_rels
       ~GraphSet.write_edge_pickle
       ~GraphSet.write_node_pickle
 

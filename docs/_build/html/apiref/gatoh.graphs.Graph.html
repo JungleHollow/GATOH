@@ -78,12 +78,15 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.load_graph.html">gatoh.graphs.Graph.load_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.neighbour_influences.html">gatoh.graphs.Graph.neighbour_influences</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.node_from_agent.html">gatoh.graphs.Graph.node_from_agent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.node_relationships_count.html">gatoh.graphs.Graph.node_relationships_count</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.register_edge_change.html">gatoh.graphs.Graph.register_edge_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.relationship_exists.html">gatoh.graphs.Graph.relationship_exists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.remove_edge.html">gatoh.graphs.Graph.remove_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.remove_edge_index.html">gatoh.graphs.Graph.remove_edge_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.remove_node.html">gatoh.graphs.Graph.remove_node</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.save_graph.html">gatoh.graphs.Graph.save_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.step.html">gatoh.graphs.Graph.step</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.stochastic_relationships.html">gatoh.graphs.Graph.stochastic_relationships</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.update_edge_indices.html">gatoh.graphs.Graph.update_edge_indices</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.update_node_indices.html">gatoh.graphs.Graph.update_node_indices</a></li>
 </ul>
@@ -233,14 +236,20 @@ with respect to different social hierarchies.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.node_from_agent.html#gatoh.graphs.Graph.node_from_agent" title="gatoh.graphs.Graph.node_from_agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">node_from_agent</span></code></a></p></td>
 <td><p>Returns the GraphNode object corresponding to the given Agent object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.register_edge_change.html#gatoh.graphs.Graph.register_edge_change" title="gatoh.graphs.Graph.register_edge_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_edge_change</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.node_relationships_count.html#gatoh.graphs.Graph.node_relationships_count" title="gatoh.graphs.Graph.node_relationships_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">node_relationships_count</span></code></a></p></td>
+<td><p>Report the number of ingoing and outgoing relationships that a specific node is involved in.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.register_edge_change.html#gatoh.graphs.Graph.register_edge_change" title="gatoh.graphs.Graph.register_edge_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_edge_change</span></code></a></p></td>
 <td><p>A helper function that records a pending edge change for this graph.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.relationship_exists.html#gatoh.graphs.Graph.relationship_exists" title="gatoh.graphs.Graph.relationship_exists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">relationship_exists</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.relationship_exists.html#gatoh.graphs.Graph.relationship_exists" title="gatoh.graphs.Graph.relationship_exists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">relationship_exists</span></code></a></p></td>
 <td><p>Checks for the existence of a relationship (weighted edge) between two Agents (nodes).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.remove_edge.html#gatoh.graphs.Graph.remove_edge" title="gatoh.graphs.Graph.remove_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_edge</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.remove_edge.html#gatoh.graphs.Graph.remove_edge" title="gatoh.graphs.Graph.remove_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_edge</span></code></a></p></td>
 <td><p>Removes a single edge from the graph corresponding to the indicated directed node indices.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.remove_edge_index.html#gatoh.graphs.Graph.remove_edge_index" title="gatoh.graphs.Graph.remove_edge_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_edge_index</span></code></a></p></td>
+<td><p>Removes a single edge from the graph corresponding to the input edge index.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.remove_node.html#gatoh.graphs.Graph.remove_node" title="gatoh.graphs.Graph.remove_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_node</span></code></a></p></td>
 <td><p>Removes a node from the graph, along with any relationships involving it.</p></td>
@@ -251,10 +260,13 @@ with respect to different social hierarchies.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.step.html#gatoh.graphs.Graph.step" title="gatoh.graphs.Graph.step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code></a></p></td>
 <td><p>Step the individual Graph object:</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.update_edge_indices.html#gatoh.graphs.Graph.update_edge_indices" title="gatoh.graphs.Graph.update_edge_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_edge_indices</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.stochastic_relationships.html#gatoh.graphs.Graph.stochastic_relationships" title="gatoh.graphs.Graph.stochastic_relationships"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_relationships</span></code></a></p></td>
+<td><p>An experimental function which aims to simulate the possible formation and disintegration of relationships within a social network.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.update_edge_indices.html#gatoh.graphs.Graph.update_edge_indices" title="gatoh.graphs.Graph.update_edge_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_edge_indices</span></code></a></p></td>
 <td><p>Iterates over all the existing edges in the graph and updates their stored indices to reflect the current graph state.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.Graph.update_node_indices.html#gatoh.graphs.Graph.update_node_indices" title="gatoh.graphs.Graph.update_node_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_node_indices</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.Graph.update_node_indices.html#gatoh.graphs.Graph.update_node_indices" title="gatoh.graphs.Graph.update_node_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_node_indices</span></code></a></p></td>
 <td><p>Iterates over all the existing nodes in the graph and updates their stored indices to reflect the current graph state.</p></td>
 </tr>
 </tbody>

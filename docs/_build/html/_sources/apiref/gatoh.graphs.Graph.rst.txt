@@ -37,12 +37,15 @@
       ~Graph.load_graph
       ~Graph.neighbour_influences
       ~Graph.node_from_agent
+      ~Graph.node_relationships_count
       ~Graph.register_edge_change
       ~Graph.relationship_exists
       ~Graph.remove_edge
+      ~Graph.remove_edge_index
       ~Graph.remove_node
       ~Graph.save_graph
       ~Graph.step
+      ~Graph.stochastic_relationships
       ~Graph.update_edge_indices
       ~Graph.update_node_indices
 
