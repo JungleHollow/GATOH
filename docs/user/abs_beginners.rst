@@ -134,6 +134,20 @@ managed computationally. In some cases, this may mean a simplification (i.e. red
 in other cases this may mean having to think outside the box a bit to be able to quantify some property or behaviour that by nature isn't already quantified (e.g.
 treating the strength of a person's beliefs as a value on a scale from 0-10).
 
+.. raw:: html
+
+    <figure>
+        <img class="img-centered" src="../../_static/Schellings.gif" alt="Schelling segregation">
+        <figcaption>
+            <p>An animation of Schelling's model of segregation in action</p>
+            <p class="caption-sub">By <a href="//commons.wikimedia.org/w/index.php?title=User:Blaqdolphin&amp;action=edit&amp;redlink=1" class="new" title="User:Blaqdolphin (page does not exist)">Blaqdolphin</a> - <span class="int-own-work" lang="en">Own work</span>, <a href="https://creativecommons.org/licenses/by-sa/4.0" title="Creative Commons Attribution-Share Alike 4.0">CC BY-SA 4.0</a>, <a href="https://commons.wikimedia.org/w/index.php?curid=91228415">Link</a></p>
+        </figcaption>
+    </figure>
+
+Above, I have included a short GIF depicting the runtime of Schelling's model of segregation so that you can understand better how everything will fit together.
+As you can see, the agents start in a relatively random distribution within the community, but as more iterations happen, the community slowly becomes more
+and more segregated into distinct "tribes".
+
 ------
 Agents
 ------

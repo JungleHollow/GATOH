@@ -11,6 +11,9 @@
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
       <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.min.css?v=6e7d0de0" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/pointer.css?v=c97663ff" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -21,6 +24,8 @@
       <script src="../_static/thebelab-helper.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+      <script src="../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js?v=f0ca4bb6"></script>
+      <script src="../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js?v=12818e64"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -63,10 +68,14 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.html#gatoh.model.ABModel"><code class="docutils literal notranslate"><span class="pre">ABModel</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_agent.html">gatoh.model.ABModel.add_agent</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_agents.html">gatoh.model.ABModel.add_agents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_agents_to_hierarchy.html">gatoh.model.ABModel.add_agents_to_hierarchy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_base_graph_edges.html">gatoh.model.ABModel.add_base_graph_edges</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_graph.html">gatoh.model.ABModel.add_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_graphs.html">gatoh.model.ABModel.add_graphs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_relationships_to_hierarchy.html">gatoh.model.ABModel.add_relationships_to_hierarchy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.apply_link_functions.html">gatoh.model.ABModel.apply_link_functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.calculate_aggregate_opinion.html">gatoh.model.ABModel.calculate_aggregate_opinion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.calculate_density.html">gatoh.model.ABModel.calculate_density</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.calculate_interdependence.html">gatoh.model.ABModel.calculate_interdependence</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.calculate_interdependences.html">gatoh.model.ABModel.calculate_interdependences</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.calculate_layers_polarisation.html">gatoh.model.ABModel.calculate_layers_polarisation</a></li>
@@ -75,6 +84,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.generate_agents.html">gatoh.model.ABModel.generate_agents</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.generate_graphs.html">gatoh.model.ABModel.generate_graphs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_base_indices_from_edge.html">gatoh.model.ABModel.get_base_indices_from_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_tracked_parameters.html">gatoh.model.ABModel.get_tracked_parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.init_base_graph.html">gatoh.model.ABModel.init_base_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.iterate.html">gatoh.model.ABModel.iterate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.iteration_opinion_calculation.html">gatoh.model.ABModel.iteration_opinion_calculation</a></li>
@@ -84,9 +94,25 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.layers_polarisation_multi.html">gatoh.model.ABModel.layers_polarisation_multi</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.load_model.html">gatoh.model.ABModel.load_model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.logger_debug_iteration.html">gatoh.model.ABModel.logger_debug_iteration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.logger_iteration.html">gatoh.model.ABModel.logger_iteration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.override_current_iteration.html">gatoh.model.ABModel.override_current_iteration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.save_model.html">gatoh.model.ABModel.save_model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_agent_opinion_rw.html">gatoh.model.ABModel.set_agent_opinion_rw</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_checkpointing.html">gatoh.model.ABModel.set_checkpointing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_data_file.html">gatoh.model.ABModel.set_data_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_hierarchy_information.html">gatoh.model.ABModel.set_hierarchy_information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_max_iterations.html">gatoh.model.ABModel.set_max_iterations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_model_id.html">gatoh.model.ABModel.set_model_id</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_negation_threshold.html">gatoh.model.ABModel.set_negation_threshold</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_radicalisation_threshold.html">gatoh.model.ABModel.set_radicalisation_threshold</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_save_dir.html">gatoh.model.ABModel.set_save_dir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_silencing_threshold.html">gatoh.model.ABModel.set_silencing_threshold</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_suppress_warnings.html">gatoh.model.ABModel.set_suppress_warnings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_visualisation_dir.html">gatoh.model.ABModel.set_visualisation_dir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.set_visualise.html">gatoh.model.ABModel.set_visualise</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.step.html">gatoh.model.ABModel.step</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.track_model_parameters.html">gatoh.model.ABModel.track_model_parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.update.html">gatoh.model.ABModel.update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.update_base_graph.html">gatoh.model.ABModel.update_base_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.update_multi.html">gatoh.model.ABModel.update_multi</a></li>

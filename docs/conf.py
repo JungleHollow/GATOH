@@ -33,6 +33,7 @@ extensions = [
     "sphinx_reredirects",
     "sphinxcontrib.bibtex",
     "sphinx_tabs.tabs",
+    "sphinxcontrib.images",
 ]
 
 bibtex_bibfiles = [
@@ -93,6 +94,7 @@ else:
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
+html_css_files = ["css/custom.css"]
 html_title = f"{project} {release}"
 htmlhelp_basename = "gatoh"
 
