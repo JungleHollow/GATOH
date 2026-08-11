@@ -27,7 +27,7 @@ https://github.com/JungleHollow/GATOH
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    About GATOH <self>
    User Guide <user/index>
