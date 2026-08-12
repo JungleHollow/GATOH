@@ -1669,6 +1669,22 @@ class GraphSet:
             )
             return None
 
+    def graphs_at_indices(self, graph_indices: list[int]) -> list[Graph]:
+        """
+        A getter function to return the Graph objects stored at the given indices in the GraphSet.
+
+        :param graph_indices: The indices of the graphs to return.
+        :type graph_indices: list[int]
+        :return: The graph objects at the corresponding indices.
+        :rtype: list[Graph]
+        """
+        graphs: list[Graph] = []
+        for index in graph_indices:
+            graph: Graph | None = self.graph_at_index(index)
+            if graph is not None:
+                graphs.append(graph)
+        return graphs
+
     def get_hierarchy(self, hierarchy: str) -> Graph | None:
         """
         A getter function to return a Graph object with the given hierarchy name.
@@ -1684,6 +1700,22 @@ class GraphSet:
 
         print(f"No graph representing the social hierarchy '{hierarchy}' was found...")
         return None
+
+    def get_hierarchies(self, hierarchies: list[str]) -> list[Graph]:
+        """
+        A getter function that returns the Graph objects with the given hierarchy names.
+
+        :param hierarchies: The names of the social hierarchies represented by the Graphs to return.
+        :type hierarchies: list[str]
+        :return: The Graph objects of the specified hierarchies.
+        :rtype: list[Graph]
+        """
+        graphs: list[Graph] = []
+        for hierarchy in hierarchies:
+            graph: Graph | None = self.get_hierarchy(hierarchy)
+            if graph is not None:
+                graphs.append(graph)
+        return graphs
 
     def get_index(self, hierarchy: str) -> int:
         """
@@ -1702,6 +1734,20 @@ class GraphSet:
         raise KeyError(
             f"The social hierarchy '{hierarchy}' does not exist in the GraphSet -- cannot return an index."
         )
+
+    def get_indices(self, hierarchies: list[str]) -> list[int]:
+        """
+        A getter function that returns the indices of the given hierarchies within the GraphSet.
+
+        :param hierarchies: The names of the hierarchies that are being searched for.
+        :type hierarchies: list[str]
+        :return: The indices of the hierarchies within the GraphSet.
+        :rtype: list[int]
+        """
+        hierarchy_indices: list[int] = []
+        for hierarchy in hierarchies:
+            hierarchy_indices.append(self.get_index(hierarchy))
+        return hierarchy_indices
 
     def list_hierarchies(self, print_out: bool = False) -> list[str]:
         """
@@ -1737,6 +1783,21 @@ class GraphSet:
             if hierarchy.agent_in_graph(agent):
                 member_of.append(hierarchy.name)
         return member_of
+
+    def get_agents_hierarchies(self, agents: list[Agent]) -> dict[str, list[str]]:
+        """
+        A helper function that determines which social hierarchies multiples Agents are contained in.
+
+        :param agents: The agents for which hierarchy memberships are being determined.
+        :type agents: list[Agent]
+        :return: A <Agent ID : hierarchies> mapping of all the social hierarchies that Agents belong to.
+        :rtype: dict[str, list[str]]
+        """
+        agents_hierarchies: dict[str, list[str]] = {}
+        for agent in agents:
+            agent_hierarchies: list[str] = self.get_agent_hierarchies(agent)
+            agents_hierarchies[agent.id] = agent_hierarchies
+        return agents_hierarchies
 
     def calculate_polarisation(self, hierarchy: str) -> float:
         """
