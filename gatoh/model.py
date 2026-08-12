@@ -52,6 +52,8 @@ LINK_FUNCTIONS: dict[str, Callable] = {
     "linear": linear_link,
     "multiplicative": multiplicative_link,
 }
+# The fraction of the agents to iterate during a partial iteration
+PARTIAL_FRACTION: float = 0.2
 
 class ConfigData(TypedDict):
     """
@@ -112,6 +114,8 @@ class ABModel:
     :type checkpointing: bool, optional
     :param init_graphs: A flag indicating if empty graphs should be initialised with the input hierarchy information.
     :type init_graphs: bool, optional
+    :param partial_iterations: A flag indicating if the model's iterations should only simulate effects for a random subset of the agents.
+    :type partial_iterations: bool, optional
     :param parameters_to_track: The names of initial model parameters that should be tracked and recorded by the logger.
     :type parameters_to_track: list[str], optional
     :param save_dir: The path to a directory in which all of this model's non-logger data should be saved to.
@@ -142,6 +146,7 @@ class ABModel:
         vis_aggregation_method: str = "median",
         checkpointing: bool = True,
         init_graphs: bool = False,
+        partial_iterations: bool = False,
         parameters_to_track: list[str] | None = None,
         save_dir: str = "",
         data_file: str = "",
@@ -212,6 +217,8 @@ class ABModel:
             raise KeyError(f"Link function '{self.radicalisation_link[0]}' is not a valid supported link function")
 
         self.suppress_warnings: bool = suppress_warnings
+
+        self.partial_iterations: bool = partial_iterations
 
         self.parameters_to_track: list[str] | None = parameters_to_track
         if self.parameters_to_track is not None:
@@ -396,6 +403,18 @@ class ABModel:
             self.logger.log_function_call("ABModel.set_checkpointing")
         return None
 
+    def set_partial_iterations(self, partial_iterations: bool) -> None:
+        """
+        A setter function that changes the model's partial_iterations flag.
+
+        :param partial_iterations: A flag indicating if each of the model's iterations should only simulate a random subset of the agents.
+        :type partial_iterations: bool
+        """
+        self.partial_iterations = partial_iterations
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_partial_iterations")
+        return None
+
     def set_save_dir(self, save_dir: str, force: bool = False) -> None:
         """
         A setter function that changes the model's save directory.
@@ -511,6 +530,7 @@ class ABModel:
             "visualisation_dir": self.visualisation_dir,
             "suppress_warnings": self.suppress_warnings,
             "checkpointing": self.checkpointing,
+            "partial_iterations": self.partial_iterations,
             "save_dir": self.save_dir,
             "data_file": self.data_file,
             "model_id": self.model_id,
@@ -574,6 +594,7 @@ class ABModel:
                             self.visualisation_dir = config_data["visualisation_dir"]
                             self.suppress_warnings = config_data["suppress_warnings"]
                             self.checkpointing = config_data["checkpointing"]
+                            self.partial_iterations = config_data["partial_iterations"]
                             self.save_dir = config_data["save_dir"]
                             self.data_file = config_data["data_file"]
                             self.model_id = config_data["model_id"]
@@ -880,10 +901,24 @@ class ABModel:
 
     def iterate(self, worker_pool: Pool | None = None) -> None:
         """
-        Handles the main model iteration loop.
+        A wrapper for the model's main iteration function.
+
+        This is made to distinguish the logic of the iteration function as an entry point
+        versus the model simulation itself (in case this is needed in the future...)
 
         :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
         :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
+        """
+        self._iterate_inner(worker_pool=worker_pool, partial=self.partial_iterations)
+
+    def _iterate_inner(self, worker_pool: Pool | None, partial: bool) -> None:
+        """
+        Handles the main model iteration loop.
+
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`
+        :param partial: A flag indicating if the iteration should only simulate a fraction of the total population.
+        :type partial: bool
         """
         while self.current_iteration < self.max_iterations:
             # Initialise the logger state for the current iteration
@@ -904,13 +939,32 @@ class ABModel:
             # (this is done to prevent recursive updating of opinions during the evolution of opinions)
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
+            # Type declaration
+            partial_indices: list[int] | None = None
+            partial_agents: list[Agent]
+
+            if partial:
+                # Draw the partial indices
+                partial_indices = choices(list(range(len(self.agents))), k=int(len(self.agents)*PARTIAL_FRACTION))
+
+                # Get the corresponding agent objects
+                partial_agents = self.agents.agents_at_indices(partial_indices)
+
             # First each agent looks at its neighbours to see how their opinion will evolve this iteration
             if worker_pool is not None:
-                opinion_results = worker_pool.imap(
-                    self.iteration_opinion_calculation,
-                    self.agents,
-                    chunksize=10,
-                )
+                if partial:
+                    opinion_results = worker_pool.imap(
+                        self.iteration_opinion_calculation,
+                        self.agents.agents_at_indices(partial_indices),
+                        chunksize=10,
+                    )
+                else:
+                    opinion_results = worker_pool.imap(
+                        self.iteration_opinion_calculation,
+                        self.agents,
+                        chunksize=10,
+                    )
+
                 for opinion_result in opinion_results:
                     new_agent_opinions[opinion_result[0]] = opinion_result[1]
                     if self.debug:
@@ -920,22 +974,40 @@ class ABModel:
                 del opinion_results
                 _ = gc.collect()
             else:
-                for agent in self.agents:
-                    opinion_result = self.iteration_opinion_calculation(agent)
-                    new_agent_opinions[opinion_result[0]] = opinion_result[1]
+                if partial:
+                    for agent in partial_agents:
+                        opinion_result = self.iteration_opinion_calculation(agent)
+                        new_agent_opinions[opinion_result[0]] = opinion_result[1]
 
-                    if self.debug:
-                        self.logger.log_function_call("ABModel.iteration_opinion_calculation")
+                        if self.debug:
+                            self.logger.log_function_call("ABModel.iteration_opinion_calculation")
 
-                    # Manual garbage collection
-                    del opinion_result
-                    _ = gc.collect()
+                        # Manual garbage collection
+                        del opinion_result
+                        _ = gc.collect()
+                else:
+                    for agent in self.agents:
+                        opinion_result = self.iteration_opinion_calculation(agent)
+                        new_agent_opinions[opinion_result[0]] = opinion_result[1]
 
+                        if self.debug:
+                            self.logger.log_function_call("ABModel.iteration_opinion_calculation")
+
+                        # Manual garbage collection
+                        del opinion_result
+                        _ = gc.collect()
+
+            # new_agent_opinions will only contain information for changes that ocurred so no partial flag must be specified
             self.iteration_opinion_changes(new_agent_opinions)
-            self.step()
-            self.update()
 
-            self.logger_iteration()  # Handle the logger's iteration() calculations and call its method
+            # The model stepping is less computationally intensive, and will always be performed on the entire population
+            self.step()
+
+            # Updates are more computationally intensive, and depend on the iteration results, so they will also be partial as needed
+            self.update(worker_pool=worker_pool, partial_indices=partial_indices)
+
+            # Handle the logger's iteration() calculations and call its method
+            self.logger_iteration(worker_pool=worker_pool)
 
             # Get this iteration's print string (will be formatted appropriately based on the print interval)
             iteration_print_string: str = self.logger.iteration_print()
@@ -1176,7 +1248,7 @@ class ABModel:
             self.logger.log_function_call("ABModel.step")
         return None
 
-    def update(self, worker_pool: Pool | None = None) -> None:
+    def update(self, worker_pool: Pool | None = None, partial_indices: list[int] | None = None) -> None:
         """
         Updates the agents' internal states to match the model step. This mainly handles the construction of agents'
         perceived opinion climates within their hierarchies, and the simulation of opinion silencing behaviours depending
@@ -1184,9 +1256,15 @@ class ABModel:
 
         :param worker_pool: A pool of workers that can distribute the processing of the update function amongst themselves.
         :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
+        :param partial_indices: A collection of all the agent indices that were partially simulated in the iteration.
+        :type partial_indices: list[int], optional
         """
         if worker_pool is not None:
-            agent_updates = worker_pool.map(self.update_multi, self.agents)
+            if partial_indices is None:
+                agent_updates = worker_pool.map(self.update_multi, self.agents)
+            else:
+                partial_agents = self.agents.agents_at_indices(partial_indices)
+                agent_updates = worker_pool.map(self.update_multi, partial_agents)
 
             # Update the agent object, and the logger variables as needed
             for idx, agent_update in enumerate(agent_updates):
@@ -1195,14 +1273,24 @@ class ABModel:
                 self.logger.variables.increment_silenced(agent_update[1])
                 self.logger.variables.increment_negated(agent_update[2])
         else:
-            for agent in self.agents:
-                agent_update = self.update_multi(agent)
+            if partial_indices is None:
+                for agent in self.agents:
+                    agent_update = self.update_multi(agent)
 
-                agent.update(agent_update[0], agent_update[2])
+                    agent.update(agent_update[0], agent_update[2])
 
-                # Update the logger variables as needed
-                self.logger.variables.increment_silenced(agent_update[1])
-                self.logger.variables.increment_negated(agent_update[2])
+                    # Update the logger variables as needed
+                    self.logger.variables.increment_silenced(agent_update[1])
+                    self.logger.variables.increment_negated(agent_update[2])
+            else:
+                partial_agents = [self.agents.agent_at_index(i) for i in partial_indices]
+                for agent in partial_agents:
+                    agent_update = self.update_multi(agent)
+
+                    agent.update(agent_update[0], agent_update[2])
+
+                    self.logger.variables.increment_silenced(agent_update[1])
+                    self.logger.variables.increment_negated(agent_update[2])
 
         if self.debug:
             for _ in range(len(self.agents)):
