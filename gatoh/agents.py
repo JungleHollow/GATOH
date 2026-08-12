@@ -1355,7 +1355,29 @@ class AgentSet:
             )
             return None
 
-    def get_agent_by_id(self, id: str) -> Agent | None:
+    def agents_at_indices(self, indices: list[int]) -> list[Agent]:
+        """
+        Returns a list of all the agent objects at the specified indices.
+
+        :param indices: A list of all the indices for which the agent should be returned.
+        :type indices: list[int]
+        :raises UserWarning: If any of the input indices are out of bounds.
+        :return: All of the agent objects that correspond to the input indices.
+        :rtype: list[Agent]
+        """
+        agents_to_return: list[Agent] = []
+        for index in indices:
+            try:
+                agent: Agent = self.agents[index]
+                agents_to_return.append(agent)
+            except IndexError:
+                warnings.warn(
+                    f"WARNING: Index {index} is out of bounds for the AgentSet. Only {len(self.agents)} Agents have been created.",
+                    category=UserWarning,
+                )
+        return agents_to_return
+
+    def get_agent_by_id(self, id: str) -> Agent:
         """
         Searches the AgentSet for an Agent with the given id and returns its object if it exists.
 
@@ -1372,6 +1394,20 @@ class AgentSet:
         raise KeyError(
             f"The Agent with id '{id}' does not exist in the AgentSet -- unable to return an Agent object."
         )
+
+    def get_agents_by_ids(self, ids: list[str]) -> list[Agent]:
+        """
+        Searches the AgentSet for Agents with the given ids and returns their objects if they all exist.
+
+        :param ids: The ids that have been assigned to every Agent object at creation.
+        :type ids: list[str]
+        :return: The Agent objects with the specified ids.
+        :rtype: list[Agent]
+        """
+        agents_to_return: list[Agent] = []
+        for id in ids:
+            agents_to_return.append(self.get_agent_by_id(id))
+        return agents_to_return
 
     def get_index(self, agent: Agent) -> int:
         """
@@ -1391,6 +1427,20 @@ class AgentSet:
             f"The Agent {agent.id} does not exist in the AgentSet -- unable to return an index."
         )
 
+    def get_indices(self, agents: list[Agent]) -> list[int]:
+        """
+        Returns the indices within the AgentSet of the input Agent objects.
+
+        :param agents: The agents whose indices are being searched for.
+        :type agents: list[Agent]
+        :return: The indices of the agents within the AgentSet.
+        :rtype: list[int]
+        """
+        agent_indices: list[int] = []
+        for agent in agents:
+            agent_indices.append(self.get_index(agent))
+        return agent_indices
+
     def discard_index(self, index: int) -> bool:
         """
         Removes the Agent at the specified index in the AgentSet; does not return an error if the index is out of bounds.
@@ -1401,8 +1451,8 @@ class AgentSet:
         :rtype: bool
         """
         if 0 < index < len(self.agents):
-            left_half: list[Agent] = deepcopy(self.agents[:index])
-            right_half: list[Agent] = deepcopy(self.agents[index + 1 :])
+            left_half: list[Agent] = self.agents[:index]
+            right_half: list[Agent] = self.agents[index + 1 :]
 
             self.agents = deepcopy(left_half) + deepcopy(right_half)
             del left_half, right_half
