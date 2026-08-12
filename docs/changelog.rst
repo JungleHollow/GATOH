@@ -19,6 +19,8 @@ New Features
 - Finished the test cases for :class:`~gatoh.agents.Agent` creation and attributes
 - Added input parameter data type checks to various methods in :class:`~gatoh.agents.Agent`
 - Finished the test cases for :class:'~gatoh.agents.Agent' populated and empty objects
+- Ability to have partial agent iterations in the :class:`~gatoh.model.ABModel`
+- Additional getter methods defined for :class:`~gatoh.agents.AgentSet`
 
 Fixes
 -----
