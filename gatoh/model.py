@@ -1415,6 +1415,23 @@ class ABModel:
 
         return average_opinion
 
+    def calculate_aggregate_opinion_deviation(self) -> float:
+        """
+        Calculates the standard deviation of the aggregate network opinion by iterating over each Agent
+        in the model.
+
+        :return: The standard deviation of the aggregate network opinion.
+        :rtype: float
+        """
+        agent_opinions: list[float] = []
+
+        for agent in self.agents:
+            agent_opinions.append(agent.opinion)
+
+        standard_deviation: float = float(np.std(agent_opinions))
+
+        return standard_deviation
+
     def calculate_radicalisation_logodds(self) -> float:
         """
         Calculates the log odds of an Agent being radicalised within the model.
