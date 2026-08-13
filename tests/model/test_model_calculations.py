@@ -116,37 +116,189 @@ class TestModelCalculations(ut.TestCase):
         """
         Test that the model's calculate_aggregate_opinion method is working as intended.
         """
-        return None
+        aggregate_opinion: float = self._model.calculate_aggregate_opinion()
+        # Worked example:
+        #   aggregate_opinion = sum(agent opinions) / number of agents
+        #                     = sum([0.1, 0.55, 0.05, -0.7]) / 4
+        #                     = 0.0 / 4
+        #                     = 0.0
+        self.assertIsInstance(
+            aggregate_opinion,
+            float,
+            "ABModel -- calculate_aggregate_opinion is not returning a float value",
+        )
+        self.assertAlmostEqual(
+            aggregate_opinion,
+            0.0,
+            5,
+            "ABModel -- calculate_aggregate_opinion is not calculating the correct value",
+        )
 
     def test_calculate_aggregate_opinion_deviation(self) -> None:
         """
         Test that the model's calculate_aggregate_opinion_deviation method is working as intended.
         """
-        return None
+        aggregate_opinion_sdev: float = self._model.calculate_aggregate_opinion_deviation()
+        # Worked example:
+        #   SD(aggregate_opinion) = sqrt(avg((x - mean)^2))
+        #   mean == aggregate_opinion = 0.0
+        #   Therefore, sqrt(avg((x - 0.0)^2)) for all agent opinions x
+        #   = sqrt(avg([0.1^2, 0.55^2, 0.05^2, -0.7^2]))
+        #   = sqrt(avg([0.01, 0.3025, 0.0025, 0.49]))
+        #   = sqrt(0.20125)
+        #   = 0.448608961123
+        self.assertIsInstance(
+            aggregate_opinion_sdev,
+            float,
+            "ABModel -- calculate_aggregate_opinion_deviation is not returning a float value",
+        )
+        self.assertAlmostEqual(
+            aggregate_opinion_sdev,
+            0.448608961123,
+            5,
+            "ABModel -- calculate_aggregate_opinion_deviation is not calculating the correct value",
+        )
 
     def test_calculate_radicalisation_logodds(self) -> None:
         """
         Test that the model's calculate_radicalisation_logodds method is working as intended.
         """
-        return None
+        radicalisation_logodds: float = self._model.calculate_radicalisation_logodds()
+        # Worked example:
+        #   radicalisation_logodds = log(radicalisation_p / (1.0 - radicalisation_p))
+        #   radicalisation_p = count(radicalised) / len(agents) = 1 / 4 = 0.25
+        #   Therefore, radicalisation_logodds = log(0.25 / (1.0 - 0.25))
+        #   = log(0.25 / 0.75)
+        #   = -0.47712125472
+        self.assertIsInstance(
+            radicalisation_logodds,
+            float,
+            "ABModel -- calculate_radicalisation_logodds is not returning a float value",
+        )
+        self.assertAlmostEqual(
+            radicalisation_logodds,
+            -0.47712125472,
+            5,
+            "ABModel -- calculate_radicalisation_logodds is not calculating the correct value",
+        )
 
     def test_calculate_layers_polarisation(self) -> None:
         """
         Test that the model's calculate_layers_polarisation method is working as intended.
         """
-        return None
+        layers_polarisation: dict[str, float] = self._model.calculate_layers_polarisation()
+        # Worked example:
+        # --- Equation ---
+        #   polarisation = 1 / K(K-1) * sum((d_{ij} - y)^2) for all distances i->j in the layer where i != j
+        # --- Layer A ----
+        #   polarisation = 1/4(3) * sum((d_{ij} - 0.633333333)^2)
+        #                = 1/12 * sum(-0.18333^2, -0.58333^2, 0.16666^2, -0.18333^2, -0.13333^2,
+        #                             0.61666^2, -0.58333^2, -0.18333^2, 0.11666^2, 0.16666^2,
+        #                             0.61666^2, 0.11666^2)
+        #                = 1/12 * sum(0.03361, 0.34027, 0.02777, 0.03361, 0.01777, 0.38027,
+        #                             0.34027, 0.03361, 0.01361, 0.02777, 0.38027, 0.01361)
+        #                = 1/12 * 1.6425
+        #                = 0.136875
+        # --- Layer B ---
+        #   polarisation = 1/3(2) * sum((d_{ij} - 0.33333)^2)
+        #                = 1/6 * sum(0.11666^2, -0.28333^2, 0.11666^2, 0.16666^2, -0.28333^2, 0.16666^2)
+        #                = 1/6 * sum(0.01361, 0.08027, 0.01361, 0.02777, 0.08027, 0.02777)
+        #                = 1/6 * 0.24333
+        #                = 0.040555
+        self.assertIsInstance(
+            layers_polarisation,
+            dict,
+            "ABModel -- calculate_layers_polarisation is not returning a dictionary",
+        )
+        for hierarchy in HIERARCHY_NAMES:
+            self.assertIn(
+                hierarchy,
+                layers_polarisation.keys(),
+                "ABModel -- calculate_layers_polarisation is not calculating a value for every layer in the model",
+            )
+        self.assertAlmostEqual(
+            layers_polarisation["A"],
+            0.136875,
+            5,
+            "ABModel -- calculate_layers_polarisation is not calculating a value correctly for a layer",
+        )
+        self.assertAlmostEqual(
+            layers_polarisation["B"],
+            0.04055555,
+            5,
+            "ABModel -- calculate_layers_polarisation is not calculating a value correctly for a layer",
+        )
 
     def test_calculate_layers_polarisation_multi(self) -> None:
         """
         Test that the multiprocessed calculate_layers_polarisation is working as intended.
         """
-        return None
+        layers_polarisation: dict[str, float] = self._model.calculate_layers_polarisation(worker_pool=self._pool)
+        # Worked example:
+        # --- Equation ---
+        #   polarisation = 1 / K(K-1) * sum((d_{ij} - y)^2) for all distances i->j in the layer where i != j
+        # --- Layer A ----
+        #   polarisation = 1/4(3) * sum((d_{ij} - 0.633333333)^2)
+        #                = 1/12 * sum(-0.18333^2, -0.58333^2, 0.16666^2, -0.18333^2, -0.13333^2,
+        #                             0.61666^2, -0.58333^2, -0.18333^2, 0.11666^2, 0.16666^2,
+        #                             0.61666^2, 0.11666^2)
+        #                = 1/12 * sum(0.03361, 0.34027, 0.02777, 0.03361, 0.01777, 0.38027,
+        #                             0.34027, 0.03361, 0.01361, 0.02777, 0.38027, 0.01361)
+        #                = 1/12 * 1.6425
+        #                = 0.136875
+        # --- Layer B ---
+        #   polarisation = 1/3(2) * sum((d_{ij} - 0.33333)^2)
+        #                = 1/6 * sum(0.11666^2, -0.28333^2, 0.11666^2, 0.16666^2, -0.28333^2, 0.16666^2)
+        #                = 1/6 * sum(0.01361, 0.08027, 0.01361, 0.02777, 0.08027, 0.02777)
+        #                = 1/6 * 0.24333
+        #                = 0.040555
+        self.assertIsInstance(
+            layers_polarisation,
+            dict,
+            "ABModel -- multiprocessed calculate_layers_polarisation is not returning a dictionary",
+        )
+        for hierarchy in HIERARCHY_NAMES:
+            self.assertIn(
+                hierarchy,
+                layers_polarisation.keys(),
+                "ABModel -- multiprocessed calculate_layers_polarisation is not calculating a value for every layer in the model",
+            )
+        self.assertAlmostEqual(
+            layers_polarisation["A"],
+            0.136875,
+            5,
+            "ABModel -- multiprocessed calculate_layers_polarisation is not calculating a value correctly for a layer",
+        )
+        self.assertAlmostEqual(
+            layers_polarisation["B"],
+            0.04055555,
+            5,
+            "ABModel -- multiprocessed calculate_layers_polarisation is not calculating a value correctly for a layer",
+        )
 
     def test_calculate_density(self) -> None:
         """
         Test that the model's calculate_density method is working as intended.
         """
-        return None
+        density: float = self._model.calculate_density()
+        # Worked example:
+        #   D = l / sum((n(n-1))) for all layer graph node counts 'n'
+        #   where l is the total number of existing relationships across all layers
+        #   Therefore D = 13 / (4(3) + 3(2))
+        #               = 13 / (12 + 6)
+        #               = 13 / 18
+        #               = 0.72222
+        self.assertIsInstance(
+            density,
+            float,
+            "ABModel -- calculate_density is not returning a float value",
+        )
+        self.assertAlmostEqual(
+            density,
+            0.722222222,
+            5,
+            "ABModel -- calculate_density is not calculating the correct value",
+        )
 
     def test_calculate_navigability(self) -> None:
         """
