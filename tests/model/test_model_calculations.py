@@ -297,14 +297,42 @@ class TestModelCalculations(ut.TestCase):
             density,
             0.722222222,
             5,
-            "ABModel -- calculate_density is not calculating the correct value",
+            "ABModel -- calculate_density is not calculating the correct value"
         )
 
     def test_calculate_navigability(self) -> None:
         """
         Test that the model's calculate_navigability method is working as intended.
         """
-        return None
+        # Calculating navigability from Agent 0 in Graph A to Agent 1 in Graph A:
+        navigability: float = self._model.calculate_navigability((0, 0), (1, 0))
+        self.assertIsInstance(
+            navigability,
+            float,
+            "ABModel -- calculate_navigability is not returning a float value",
+        )
+        # Worked example:
+        # ---
+        # Navigability = -log_{2}(sum(P[p(s,t)])) for all shortest paths p(s,t) from s to t
+        # P[p(s,t)] = w(s->first node)/(out degree of s) * product(w(j -> j + 1)/(out degree of j - 1)) for all nodes
+        #   j that make up the shortest path
+        # ---
+        # A(0) -> A(1) exists as a direct path, but B(0) -> B(1) also exists, therefore:
+        #     P[p(s,t)] = w(0 -> 1) / (out degree of 0)
+        #     For A(0) -> A(1), this = 0.4 / 3
+        #     For B(0) -> B(1), this = 0.4 / 1 = 0.4
+        # ---
+        # Following, navigability = -log_{2}(sum([0.4 / 3, 0.4]))
+        #    = -log_{2}(1.6 / 3)
+        #    = log_{2}(3 / 1.6)
+        #    = log_{2}(1.875)
+        #    = 0.90689
+        self.assertAlmostEqual(
+            navigability,
+            0.90689,
+            5,
+            "ABModel -- calculate_navigabitliy is not calculating the correct value",
+        )
 
     def test_calculate_interdependences(self) -> None:
         """
