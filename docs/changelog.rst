@@ -29,6 +29,7 @@ Fixes
 - Fixed the test cases in :mod:`test_model_multiprocessed.py` and :mod:`test_model_simulation.py` (All 151 existing test cases up to 01/08/2026 are working correctly)
 - Fixed a specific :meth:`~gatoh.graphs.Graph.add_edges` case in which edges were not being added to the graph
 - Fixed the build parameters for the docs (will now always add new methods when building)
+- Fixed the :meth:`~gatoh.model.ABModel.calculate_density` to account for the bidirectional nature of relationships
 
 2026.07.0
 ==============

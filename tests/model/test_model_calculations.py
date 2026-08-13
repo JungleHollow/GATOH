@@ -318,7 +318,7 @@ class TestModelCalculations(ut.TestCase):
         #   j that make up the shortest path
         # ---
         # A(0) -> A(1) exists as a direct path, but B(0) -> B(1) also exists, therefore:
-        #     P[p(s,t)] = w(0 -> 1) / (out degree of 0)
+        #     P[p(s,t)] = w(0 -> 1) / (out degree of 0 in the layer)
         #     For A(0) -> A(1), this = 0.4 / 3
         #     For B(0) -> B(1), this = 0.4 / 1 = 0.4
         # ---
