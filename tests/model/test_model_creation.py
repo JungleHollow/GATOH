@@ -100,6 +100,10 @@ class TestModelCreation(ut.TestCase):
             self.model.checkpointing,
             "Default value for checkpointing is not being applied correctly",
         )
+        self.assertFalse(
+            self.model.partial_iterations,
+            "Default value for partial_iterations is not being applied correctly",
+        )
         self.assertEqual(
             self.model.data_file,
             "",
@@ -319,6 +323,16 @@ class TestModelCreation(ut.TestCase):
         self.assertFalse(
             self.model.checkpointing,
             "ABModel -- set_checkpointing is not updating the checkpointing flag",
+        )
+
+    def test_set_partial_iterations(self) -> None:
+        """
+        Test that set_partial_iterations is working correctly.
+        """
+        self.model.set_partial_iterations(True)
+        self.assertTrue(
+            self.model.partial_iterations,
+            "ABModel -- set_partial_iterations is not updating the partial_iterations flag",
         )
 
     def test_set_save_dir(self) -> None:
@@ -720,7 +734,7 @@ class TestModelCreation(ut.TestCase):
                 ["social", "rational", "impulsive"],
                 "The generate_agents function is creating agents with non-specified personality types",
             )
-            for hierarchy in self.model.hierarchy_information.keys():
+            for hierarchy in self.model.hierarchy_information:
                 self.assertIn(
                     hierarchy,
                     list(agent.social_weightings.keys()),

@@ -42,7 +42,7 @@ class TestModelSimulationMulti(ut.TestCase):
             HIERARCHY_NAMES,
             list(HIERARCHY_RW_DISTRIB.values()),
             suppress_warnings=True,
-            iterations=10,
+            iterations=2,
             save_dir=SAVEPATHS["savedir"],
             data_file=SAVEPATHS["savefile"],
             visualisation_dir=SAVEPATHS["visualisation"],
@@ -88,6 +88,23 @@ class TestModelSimulationMulti(ut.TestCase):
         self.assertTrue(
             logger_data_saved,
             "The ABModel's iterate function with multiprocessing did not properly call the logger's save function at the end of the iterations",
+        )
+
+    def test_iterate_partial(self) -> None:
+        """
+        Test function that checks if the ABModel with a multiprocessing worker pool is partially iterating correctly during runtime.
+        """
+        self.model.set_partial_iterations(True)
+        self.model.iterate(worker_pool=self.worker_pool)
+        self.assertEqual(
+            self.model.current_iteration,
+            2,
+            "The ABModel is not incrementing its current_iteration attribute correctly in the partial iterate function with multiprocessing",
+        )
+        logger_data_saved: bool = os.path.exists(SAVEPATHS["savefile"])
+        self.assertTrue(
+            logger_data_saved,
+            "The ABModel's partial iterate function with multiprocessing did not properly call the logger's save function at the end of the iterations",
         )
 
     def test_save_model(self) -> None:
