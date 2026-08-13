@@ -883,7 +883,7 @@ class TestGraphObjects(ut.TestCase):
         self.assertIsInstance(
             polarisation,
             float,
-            "Graph -- calculate_polarisation() on a populated Graph is not returning a float value",
+            "Graph -- calculate_polarisation() on a populated Graph is not returning a float value (simple)",
         )
         # Worked example:
         # ---
@@ -909,4 +909,53 @@ class TestGraphObjects(ut.TestCase):
         """
         Test that calculate_polarisation() on a more complex example returns the expected value.
         """
-        # TODO: Design and calculate a complex scenario to implement this test.
+        complex_graph: gr.Graph = gr.Graph("ComplexGraph", (0.0, 0.0))
+        agents_to_add: list[Agent] = [
+            Agent("CPLX0001", 0.1, {"ComplexGraph": 1.0}),
+            Agent("CPLX0002", 0.55, {"ComplexGraph": 1.0}),
+            Agent("CPLX0003", 0.05, {"ComplexGraph": 1.0}),
+            Agent("CPLX0004", -0.7, {"ComplexGraph": 1.0}),
+        ]
+        complex_graph.add_nodes(agents_to_add)
+        polarisation = complex_graph.calculate_polarisation()
+        self.assertIsInstance(
+            polarisation,
+            float,
+            "Graph -- calculate_polarisation() on a populated Graph is not returning a float value (complex)",
+        )
+        # Worked example:
+        # ---
+        # |distance (CPLX0001 -> CPLX0002)| = 0.45
+        # |distance (CPLX0001 -> CPLX0003)| = 0.05
+        # |distance (CPLX0001 -> CPLX0004)| = 0.8
+        # |distance (CPLX0002 -> CPLX0001)| = 0.45
+        # |distance (CPLX0002 -> CPLX0003)| = 0.5
+        # |distance (CPLX0002 -> CPLX0004)| = 1.25
+        # |distance (CPLX0003 -> CPLX0001)| = 0.05
+        # |distance (CPLX0003 -> CPLX0002)| = 0.5
+        # |distance (CPLX0003 -> CPLX0004)| = 0.75
+        # |distance (CPLX0004 -> CPLX0001)| = 0.8
+        # |distance (CPLX0004 -> CPLX0002)| = 1.25
+        # |distance (CPLX0004 -> CPLX0003)| = 0.75
+        # average of all distances (y) = sum(distances) / len(distances) = 0.6333333
+        # ---
+        # square_distance = (distance - y)^2
+        # therefore square distance (CPLX0001 -> CPLX0002) = (0.45 - 0.63333)^2 = -0.1833333^2 = 0.03361111111
+        # ... and so on for each distance (see below)
+        # ---
+        # polarisation = 1/(K(K - 1)) * SoS
+        #   Therefore:
+        # polarisation = 1/4(3) * sum((d_{ij} - 0.633333333)^2)
+        #              = 1/12 * sum(-0.18333^2, -0.58333^2, 0.16666^2, -0.18333^2, -0.13333^2,
+        #                             0.61666^2, -0.58333^2, -0.18333^2, 0.11666^2, 0.16666^2,
+        #                             0.61666^2, 0.11666^2)
+        #              = 1/12 * sum(0.03361, 0.34027, 0.02777, 0.03361, 0.01777, 0.38027,
+        #                             0.34027, 0.03361, 0.01361, 0.02777, 0.38027, 0.01361)
+        #              = 1/12 * 1.6425
+        #              = 0.136875
+        self.assertAlmostEqual(
+            polarisation,
+            0.136875,
+            5,
+            "Graph -- calculate_polarisation() on a populated Graph (complex case) is not calculating the correct value",
+        )
