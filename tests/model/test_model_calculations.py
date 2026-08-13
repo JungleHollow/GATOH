@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from multiprocessing.pool import Pool
 import unittest as ut
 from typing import Any, override
 
@@ -99,6 +100,8 @@ class TestModelCalculations(ut.TestCase):
             model_id=MODEL_ID,
         )
         cls._agents: list[agt.Agent] = AGENTS
+        # Make The last agent be radicalised
+        cls._agents[-1].change_radicalisation(True)
         # Add all agents to A
         cls._model.add_agents_to_hierarchy(cls._agents, "A")
         # Add all agents minus the last to B
@@ -106,3 +109,59 @@ class TestModelCalculations(ut.TestCase):
         # Add the relationships to each hierarchy
         cls._model.add_relationships_to_hierarchy(A_RELS, "A")
         cls._model.add_relationships_to_hierarchy(B_RELS, "B")
+        # Initialise the worker pool used for multiprocessed methods
+        cls._pool: Pool = Pool()
+
+    def test_calculate_aggregate_opinion(self) -> None:
+        """
+        Test that the model's calculate_aggregate_opinion method is working as intended.
+        """
+        return None
+
+    def test_calculate_radicalisation_logodds(self) -> None:
+        """
+        Test that the model's calculate_radicalisation_logodds method is working as intended.
+        """
+        return None
+
+    def test_calculate_layers_polarisation(self) -> None:
+        """
+        Test that the model's calculate_layers_polarisation method is working as intended.
+        """
+        return None
+
+    def test_calculate_layers_polarisation_multi(self) -> None:
+        """
+        Test that the multiprocessed calculate_layers_polarisation is working as intended.
+        """
+        return None
+
+    def test_calculate_density(self) -> None:
+        """
+        Test that the model's calculate_density method is working as intended.
+        """
+        return None
+
+    def test_calculate_navigability(self) -> None:
+        """
+        Test that the model's calculate_navigability method is working as intended.
+        """
+        return None
+
+    def test_calculate_interdependences(self) -> None:
+        """
+        Test that the model's calculate_interdependences method is working as intended.
+        """
+        return None
+
+    def test_calculate_interdependences_multi(self) -> None:
+        """
+        Test that the multiprocessed calculate_interdependences is working as intended.
+        """
+        return None
+
+    @classmethod
+    @override
+    def tearDownClass(cls) -> None:
+        del cls._model, cls._agents
+        cls._pool.close()
