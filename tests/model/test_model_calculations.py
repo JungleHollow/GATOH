@@ -118,6 +118,12 @@ class TestModelCalculations(ut.TestCase):
         """
         return None
 
+    def test_calculate_aggregate_opinion_deviation(self) -> None:
+        """
+        Test that the model's calculate_aggregate_opinion_deviation method is working as intended.
+        """
+        return None
+
     def test_calculate_radicalisation_logodds(self) -> None:
         """
         Test that the model's calculate_radicalisation_logodds method is working as intended.
