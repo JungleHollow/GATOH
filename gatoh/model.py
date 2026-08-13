@@ -1510,11 +1510,12 @@ class ABModel:
 
         which simply refers to the proportion of existing relationships versus the total possible relationships.
 
-        Given that gatoh is multilayer, the density calculation must instead be defined as:
+        Given that gatoh is multilayer, and bidirectional relationships can exist,
+        the density calculation must instead be defined as:
 
         .. math::
 
-            D = \frac{l}{\sum \frac{n(n-1)}{2}}
+            D = \frac{l}{\sum n(n-1)}}
 
         where the summation is the total possible relationships across all layers.
 
@@ -1526,7 +1527,7 @@ class ABModel:
         final_n: float = 0.0
 
         for hierarchy in self.graphs:
-            hierarchy_n: float = (hierarchy.node_count * (hierarchy.node_count - 1)) / 2
+            hierarchy_n: float = (hierarchy.node_count * (hierarchy.node_count - 1))
             final_n += hierarchy_n
 
         if self.debug:
