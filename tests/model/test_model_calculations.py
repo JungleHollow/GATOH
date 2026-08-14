@@ -75,12 +75,21 @@ GRAPH_B: gr.Graph = gr.Graph(
 )
 
 # Define the relationships for A
+# The "direct" neighbours that each agent sees:
+#   0 -> (1, 2, 3)
+#   1 -> (0, 3)
+#   2 -> (0, 3)
+#   3 -> (0, 1, 2)
 A_RELS: dict[str, list[Any]] = {
     "from_node": [0, 0, 0, 3, 1, 2, 1, 2, 3],
     "to_node": [1, 2, 3, 2, 3, 3, 0, 0, 0],
     "weighting": [0.4, 0.8, 0.2, 0.45, 0.75, -0.3, 0.35, 0.85, -0.1],
 }
 # Define the relationships for B
+# The "direct" neighb ours that each agent sees:
+#   0 -> (1)
+#   1 -> (0, 2)
+#   2 -> (1)
 B_RELS: dict[str, list[Any]] = {
     "from_node": [0, 2, 1, 1],
     "to_node": [1, 1, 0, 2],
@@ -338,13 +347,177 @@ class TestModelCalculations(ut.TestCase):
         """
         Test that the model's calculate_interdependences method is working as intended.
         """
-        return None
+        interdependences: list[tuple[str, float]] = self._model.calculate_interdependences()
+        self.assertIsInstance(
+            interdependences,
+            list,
+            "ABModel -- calculate_interdependences is not returning a list result",
+        )
+        # Worked example:
+        # ---
+        # Interdependence = sum(abs(estimated layer OC)) / sum(abs(estimated overall OC))
+        # No agent opinions in this model have a large enough absolute value to be detected indirectly
+        # therefore, only the opinions of direct neighbours will be included in the estimated opinion climates
+        # ---
+        # Layer A:
+        #    Direct neighbours of agents in A:
+        #       CPLX0001 = (CPLX0002, CPLX0003, CPLX0004)
+        #       CPLX0002 = (CPLX0001, CPLX0004)
+        #       CPLX0003 = (CPLX0001, CPLX0004)
+        #       CPLX0004 = (CPLX0001, CPLX0002, CPLX0003)
+        #    Therefore, estimated climates:
+        #       CPLX0001 = [0.55, 0.05, -0.7]
+        #       CPLX0002 = [0.1, -0.7]
+        #       CPLX0003 = [0.1, -0.7]
+        #       CPLX0004 = [0.1, 0.55, 0.05]
+        #    And the total absolute sum for layer A:
+        #       OC_A = 3(0.1) + 2(0.55) + 2(0.05) + 3(0.7)
+        #            = 3.6
+        # ---
+        # Layer B:
+        #   Direct neighbours of agents in B:
+        #       CPLX0001 = (CPLX0002)
+        #       CPLX0002 = (CPLX0001, CPLX0003)
+        #       CPLX0003 = (CPLX0002)
+        #   Therefore, estimated climates:
+        #       CPLX0001 = [0.55]
+        #       CPLX0002 = [0.1, 0.05]
+        #       CPLX0003 = [0.55]
+        #   And the total absolute sum for layer B:
+        #       OC_B = 2(0.55) + 0.1 + 0.05
+        #            = 1.25
+        # ---
+        # Total absolute sum of OC = 3.6 + 1.25 = 4.85
+        # Interdep_A = 3.6 / 4.85 = 0.742268041237
+        # Interdep_B = 1.25 / 4.85 = 0.257731958763
+        for interdependence in interdependences:
+            self.assertIsInstance(
+                interdependence,
+                tuple,
+                "ABModel -- one or more items in the results of calculate_interdependences is not a tuple",
+            )
+            self.assertIsInstance(
+                interdependence[0],
+                str,
+                "ABModel -- one or more of the tuples in the calculate_interdependences results does not contain a string value as its first object",
+            )
+            self.assertIsInstance(
+                interdependence[1],
+                float,
+                "ABModel -- one or more of the tuples in the calculate_interdependences results does not contain a float value as its second object",
+            )
+            self.assertIn(
+                interdependence[0],
+                HIERARCHY_NAMES,
+                "ABModel -- one or more of the items in calculate_interdependences is not reporting the correct hierarchy name",
+            )
+            match interdependence[0]:
+                case "A":
+                    self.assertAlmostEqual(
+                        interdependence[1],
+                        0.742268041237,
+                        5,
+                        "ABModel -- calculate_interdependences is not calculating the correct value for one or more hierarchies",
+                    )
+                case "B":
+                    self.assertAlmostEqual(
+                        interdependence[1],
+                        0.257731958763,
+                        5,
+                        "ABModel -- calculate_interdependences is not calculating the correct value for one or more hierarchies",
+                    )
+                case _:
+                    self.fail(
+                        "ABModel -- an uncaught, unknown hierarchy was reported in the results of calculate_interdependences",
+                    )
 
     def test_calculate_interdependences_multi(self) -> None:
         """
         Test that the multiprocessed calculate_interdependences is working as intended.
         """
-        return None
+        interdependences: list[tuple[str, float]] = self._model.calculate_interdependences(worker_pool=self._pool)
+        self.assertIsInstance(
+            interdependences,
+            list,
+            "ABModel -- multiprocessed calculate_interdependences is not returning a list result",
+        )
+        # Worked example:
+        # ---
+        # Interdependence = sum(abs(estimated layer OC)) / sum(abs(estimated overall OC))
+        # No agent opinions in this model have a large enough absolute value to be detected indirectly
+        # therefore, only the opinions of direct neighbours will be included in the estimated opinion climates
+        # ---
+        # Layer A:
+        #    Direct neighbours of agents in A:
+        #       CPLX0001 = (CPLX0002, CPLX0003, CPLX0004)
+        #       CPLX0002 = (CPLX0001, CPLX0004)
+        #       CPLX0003 = (CPLX0001, CPLX0004)
+        #       CPLX0004 = (CPLX0001, CPLX0002, CPLX0003)
+        #    Therefore, estimated climates:
+        #       CPLX0001 = [0.55, 0.05, -0.7]
+        #       CPLX0002 = [0.1, -0.7]
+        #       CPLX0003 = [0.1, -0.7]
+        #       CPLX0004 = [0.1, 0.55, 0.05]
+        #    And the total absolute sum for layer A:
+        #       OC_A = 3(0.1) + 2(0.55) + 2(0.05) + 3(0.7)
+        #            = 3.6
+        # ---
+        # Layer B:
+        #   Direct neighbours of agents in B:
+        #       CPLX0001 = (CPLX0002)
+        #       CPLX0002 = (CPLX0001, CPLX0003)
+        #       CPLX0003 = (CPLX0002)
+        #   Therefore, estimated climates:
+        #       CPLX0001 = [0.55]
+        #       CPLX0002 = [0.1, 0.05]
+        #       CPLX0003 = [0.55]
+        #   And the total absolute sum for layer B:
+        #       OC_B = 2(0.55) + 0.1 + 0.05
+        #            = 1.25
+        # ---
+        # Total absolute sum of OC = 3.6 + 1.25 = 4.85
+        # Interdep_A = 3.6 / 4.85 = 0.742268041237
+        # Interdep_B = 1.25 / 4.85 = 0.257731958763
+        for interdependence in interdependences:
+            self.assertIsInstance(
+                interdependence,
+                tuple,
+                "ABModel -- one or more items in the results of multiprocessed calculate_interdependences is not a tuple",
+            )
+            self.assertIsInstance(
+                interdependence[0],
+                str,
+                "ABModel -- one or more of the tuples in the multiprocessed calculate_interdependences results does not contain a string value as its first object",
+            )
+            self.assertIsInstance(
+                interdependence[1],
+                float,
+                "ABModel -- one or more of the tuples in the multiprocessed calculate_interdependences results does not contain a float value as its second object",
+            )
+            self.assertIn(
+                interdependence[0],
+                HIERARCHY_NAMES,
+                "ABModel -- one or more of the items in multiprocessed calculate_interdependences is not reporting the correct hierarchy name",
+            )
+            match interdependence[0]:
+                case "A":
+                    self.assertAlmostEqual(
+                        interdependence[1],
+                        0.742268041237,
+                        5,
+                        "ABModel -- multiprocessed calculate_interdependences is not calculating the correct value for one or more hierarchies",
+                    )
+                case "B":
+                    self.assertAlmostEqual(
+                        interdependence[1],
+                        0.257731958763,
+                        5,
+                        "ABModel -- multiprocessed calculate_interdependences is not calculating the correct value for one or more hierarchies",
+                    )
+                case _:
+                    self.fail(
+                        "ABModel -- an uncaught, unknown hierarchy was reported in the results of multiprocessed calculate_interdependences",
+                    )
 
     @classmethod
     @override
