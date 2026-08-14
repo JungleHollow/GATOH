@@ -779,7 +779,11 @@ class Graph:
 
         :param node: The node index to remove from the graph.
         :type node: int
+        :raises IndexError: If the node index is out of bounds.
         """
+        if node < 0 or node >= self.node_count:
+            raise IndexError(f"Trying to remove node {node} for hierarchy {self.name} with {self.node_count} existing nodes")
+
         self.graph.remove_node(node)
 
         edges_to_remove: list[tuple[int, int]] = []
@@ -798,9 +802,12 @@ class Graph:
 
         :param node_index: The index of the node that is being inspected.
         :type node_index: int
+        :raises IndexError: If the input node index is out of bounds.
         :return: The total number of relationships involving the input node.
         :rtype: int
         """
+        if node_index < 0 or node_index >= self.node_count:
+            raise IndexError(f"Trying to view the relationships count for out-of-bounds node {node_index} for hierarchy {self.name} with {self.node_count} nodes")
         ingoing_relationships: int = self.graph.in_degree(node_index)
         outgoing_relationships: int = self.graph.out_degree(node_index)
         return ingoing_relationships + outgoing_relationships
