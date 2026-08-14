@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest as ut
+from copy import deepcopy
 from typing import override
 
 import gatoh.graphs as gr
@@ -292,6 +293,47 @@ class TestGraphObjects(ut.TestCase):
             "Graph -- remove_node() is not removing the GraphNode object at the correct index",
         )
 
+    def test_remove_node_invalid(self) -> None:
+        """
+        Test that remove_node() with an invalid node index will produce the expected error.
+        """
+        with self.assertRaises(IndexError, msg="Trying to remove node 25 for hierarchy TestGraph with 22 existing nodes") as cm:
+            self.graph.remove_node(25)
+        self.assertEqual(
+            len(self.graph.graph.node_indices()),
+            22,
+            "Graph -- remove_node() with an invalid index is still removing a node object from the graph",
+        )
+
+    def test_node_relationships_count(self) -> None:
+        """
+        Test that node_relationships_count() on a valid node index which has existing relationships works correctly.
+        """
+        edges_to_add = {
+            "from_node": [13, 13, 11, 12],
+            "to_node": [12, 4, 13, 13],
+            "weighting": [1.0, 1.0, 1.0, 1.0],
+        }
+        self.graph.add_edges(edges_to_add)
+        relationships_count: int = self.graph.node_relationships_count(13)
+        self.assertIsInstance(
+            relationships_count,
+            int,
+            "Graph -- node_relationships_count() is not returning an int result",
+        )
+        self.assertEqual(
+            relationships_count,
+            4,
+            "Graph -- node_relationships_count() is not reporting the correct number of total relationships for a node",
+        )
+
+    def test_node_relationships_count_invalid(self) -> None:
+        """
+        Test that node_relationships_count() on an invalid node index will raise the expected error.
+        """
+        with self.assertRaises(IndexError, msg="Trying to view the relationships count for out-of-bounds node 1312 for hierarchy TestGraph with 22 nodes") as cm:
+            relationships_count: int = self.graph.node_relationships_count(1312)
+
     def test_remove_edge_simple(self) -> None:
         """
         Test that remove_edge() on a valid relationship works correctly.
@@ -340,6 +382,51 @@ class TestGraphObjects(ut.TestCase):
             1,
             self.graph.graph.edge_indices(),
             "Graph -- remove_edge() is removing an edge between nodes in a direction that was not specified",
+        )
+
+    def test_remove_edge_index(self) -> None:
+        """
+        Test that remove_edge_index() on a valid relationship works correctly.
+        """
+        edges_to_add = {
+            "from_node": [13, 12, 6, 6],
+            "to_node": [12, 13, 7, 9],
+            "weighting": [1.0, 1.0, 1.0, 1.0],
+        }
+        self.graph.add_edges(edges_to_add)
+        self.graph.remove_edge_index(2)
+        self.assertFalse(
+            self.graph.relationship_exists(6, 7),
+            "Graph -- remove_edge_index() is not removing the specified relationship",
+        )
+
+    def test_remove_edge_index_invalid(self) -> None:
+        """
+        Test that remove_edge_index() with an invalid index works correctly.
+        """
+        edges_to_add = {
+            "from_node": [13, 12, 6, 6],
+            "to_node": [12, 13, 7, 9],
+            "weighting": [1.0, 1.0, 1.0, 1.0],
+        }
+        self.graph.add_edges(edges_to_add)
+        with self.assertRaises(KeyError, msg="Tried to remove edge with index 1312, which is out of bounds for hierarchy graph TestGraph with 4 edges.") as cm:
+            self.graph.remove_edge_index(1312)
+        self.assertTrue(
+            self.graph.relationship_exists(13, 12),
+            "Graph -- remove_edge_index() with an invalid index removed one or more edges from the graph",
+        )
+        self.assertTrue(
+            self.graph.relationship_exists(12, 13),
+            "Graph -- remove_edge_index() with an invalid index removed one or more edges from the graph",
+        )
+        self.assertTrue(
+            self.graph.relationship_exists(6, 7),
+            "Graph -- remove_edge_index() with an invalid index removed one or more edges from the graph",
+        )
+        self.assertTrue(
+            self.graph.relationship_exists(6, 9),
+            "Graph -- remove_edge_index() with an invalid index removed one or more edges from the graph",
         )
 
     def test_agent_in_graph(self) -> None:
@@ -958,4 +1045,25 @@ class TestGraphObjects(ut.TestCase):
             0.136875,
             5,
             "Graph -- calculate_polarisation() on a populated Graph (complex case) is not calculating the correct value",
+        )
+
+    def test_in_true(self) -> None:
+        """
+        Test that the __in__() definition for the graph is working correctly when true.
+        """
+        # Deepcopy will make the object instances be different, but the __in__ override checks based on the graph name
+        valid_iterable: list[gr.Graph] = [deepcopy(self.graph)]
+        self.assertTrue(
+            self.graph in valid_iterable,
+            "Graph -- __in__() is not reporting that the specified graph exists in a valid iterable",
+        )
+
+    def test_in_false(self) -> None:
+        """
+        Test that the __in__() definition for a graph is working correctly when false.
+        """
+        invalid_iterable: list[gr.Graph] = [gr.Graph("FooBar", (0.0, 0.0))]
+        self.assertFalse(
+            self.graph in invalid_iterable,
+            "Graph -- __in__() is not reporting that the specified graph does not exist in a valid iterable",
         )

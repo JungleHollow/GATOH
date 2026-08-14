@@ -110,6 +110,13 @@ class TestGraphObjectsEmpty(ut.TestCase):
             agent_index, "Graph -- get_agent_index() on an empty Graph returns an index"
         )
 
+    def test_remove_node_empty(self) -> None:
+        """
+        Test that remove_node() on an empty Graph produces the appropriate error.
+        """
+        with self.assertRaises(IndexError, msg="Trying to remove node 4 for hierarchy TestGraph with 0 existing nodes") as cm:
+            self.graph.remove_node(4)
+
     def test_remove_edge_empty(self) -> None:
         """
         Test that remove_edge() on an empty Graph raises the appropriate warning.
