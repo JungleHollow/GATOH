@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest as ut
+import io
+import sys
 
 import gatoh.graphs as gr
 
@@ -47,4 +49,166 @@ class TestGraphSet(ut.TestCase):
         self.assertTrue(
             new_graph in graphset.graphs,
             "GraphSet -- add_graph() is not adding the graph object correctly to the graphs list",
+        )
+
+    def test_set_stochastic_rels(self) -> None:
+        """
+        Test that set_stochastic_rels is working as intended.
+        """
+        graphset: gr.GraphSet = gr.GraphSet()
+        new_graph: gr.Graph = gr.Graph("TestGraph", (0.0, 0.0))
+        graphset.add_graph(new_graph)
+        graphset.set_stochastic_rels(
+            "TestGraph",
+            True,
+            flags=(True, True),
+        )
+        self.assertTrue(
+            graphset.stochastic_relationships["TestGraph"],
+            "GraphSet -- set_stochastic_rels is not updating the stochastic relationsips flag for the specified hierarchy",
+        )
+        self.assertEqual(
+            graphset.stochastic_rels_flags["TestGraph"],
+            (True, True),
+            "GraphSet -- set_stochastic_rels is not updating the formation and disintegration flags for the specified hierarchy",
+        )
+
+    def test_set_stochastic_rels_invalid(self) -> None:
+        """
+        Test that set_stochastic_rels with an invalid hierarchy will produce the expected warning.
+        """
+        graphset: gr.GraphSet = gr.GraphSet()
+        with self.assertWarns(UserWarning, msg="WARNING: attempted to set stochastic relationships for hierarchy FooBar which does not exist in the graphset") as cm:
+            graphset.set_stochastic_rels("FooBar", True, flags=(True, True))
+        self.assertEqual(
+            graphset.stochastic_relationships,
+            {},
+            "GraphSet -- set_stochastic_rels with an invalid hierarchy is changing a flag in stochastic_relationships",
+        )
+        self.assertEqual(
+            graphset.stochastic_rels_flags,
+            {},
+            "GraphSet -- set_stochastic_rels with an invalid hierarchy is changing the flags in stochastic_rels_flags",
+        )
+
+    def test_graph_at_index_invalid(self) -> None:
+        """
+        Test that graph_at_index with an invalid index will produce the expected result.
+        """
+        graphset: gr.GraphSet = gr.GraphSet()
+        captured_output = io.StringIO()
+        # Redirect the terminal output temporarily
+        sys.stdout = captured_output
+        graph: gr.Graph | None = graphset.graph_at_index(1312)
+        # Ensure the redirect is reset
+        sys.stdout = sys.__stdout__
+        self.assertEqual(
+            captured_output.getvalue(),
+            "Index 1312 is out of bounds for the GraphSet. Only 0 social hierarchies have been created.",
+            "GraphSet -- graph_at_index with an invalid index is not printing the expected message",
+        )
+        self.assertIsNone(
+            graph,
+            "GraphSet -- graph_at_index with an invalid index is not returning None",
+        )
+
+    def test_graph_at_index(self) -> None:
+        """
+        Test that graph_at_index with a valid index will work as intended.
+        """
+        graphset: gr.GraphSet = gr.GraphSet()
+        new_graph: gr.Graph = gr.Graph("TestGraph", (0.0, 0.0))
+        graphset.add_graph(new_graph)
+        graph: gr.Graph | None = graphset.graph_at_index(0)
+        self.assertIsInstance(
+            graph,
+            gr.Graph,
+            "GraphSet -- graph_at_index with a valid index is not returning a Graph object",
+        )
+        self.assertEqual(
+            graph.name,
+            new_graph.name,
+            "GraphSet -- graph_at_index with a valid index is not returning the correct Graph object",
+        )
+
+    def test_graphs_at_indices_invalid(self) -> None:
+        """
+        Test that graphs_at_indices with all invalid indices will work as intended.
+        """
+        graphset: gr.GraphSet = gr.GraphSet()
+        new_graph: gr.Graph = gr.Graph("1", (0.0, 0.0))
+        graphset.add_graph(new_graph)
+        # Redirect the output to avoid clutterring the test outputs
+        captured_output = io.StringIO()
+        sys.stdout = captured_output
+        graphs: list[gr.Graph] = graphset.graphs_at_indices([13, 12])
+        # Ensure the redirect is reset
+        sys.stdout = sys.__stdout__
+        self.assertEqual(
+            graphs,
+            [],
+            "GraphSet -- graphs_at_indices with all invalid indices is not returning an empty list",
+        )
+
+    def test_graphs_at_indices_mixed(self) -> None:
+        """
+        Test that graphs_at_indices with a mix of valid and invalid indices will work as intended.
+        """
+        graphset: gr.GraphSet = gr.GraphSet()
+        graph_one: gr.Graph = gr.Graph("1", (0.0, 0.0))
+        graphset.add_graph(graph_one)
+        graph_two: gr.Graph = gr.Graph("2", (0.0, 0.0))
+        graphset.add_graph(graph_two)
+        # Redirect the output to avoid clutterring the test outputs
+        captured_output = io.StringIO
+        sys.stdout = captured_output
+        graphs: list[gr.Graph] = graphset.graphs_at_indices([0, 13, 1, 12])
+        # Ensure the redirect is reset
+        sys.stdout = sys.__stdout__
+        self.assertEqual(
+            len(graphs),
+            2,
+            "GraphSet -- graphs_at_indices with a mix of valid and invalid indices is not returning the expected number of graphs",
+        )
+        self.assertIn(
+            graph_one,
+            graphs,
+            "GraphSet -- graphs_at_indices with a mix of valid and invalid indices is not returning one or more valid graphs",
+        )
+        self.assertIn(
+            graph_two,
+            graphs,
+            "GraphSet -- graphs_at_indices with a mix of valid and invalid indices is not returning one or more valid graphs",
+        )
+
+    def test_graphs_at_indices(self) -> None:
+        """
+        Test that graphs_at_indices will all valid indices will work as intended.
+        """
+        graphset: gr.GraphSet = gr.GraphSet()
+        graph_objects: list[gr.Graph] = []
+        for i in range(10):
+            new_graph: gr.Graph = gr.Graph(f"{i}", (0.0, 0.0))
+            graph_objects.append(new_graph)
+            graphset.add_graph(new_graph)
+        returned_graphs: list[gr.Graph] = graphset.graphs_at_indices([9, 4, 1])
+        self.assertEqual(
+            len(returned_graphs),
+            3,
+            "GraphSet -- graphs_at_indices with all valid indices is not returning the expected number of graphs",
+        )
+        self.assertEqual(
+            returned_graphs[0].name,
+            graph_objects[9].name,
+            "GraphSet -- graphs_at_indices with all valid indices is not returning the correct graphs in order",
+        )
+        self.assertEqual(
+            returned_graphs[1].name,
+            graph_objects[4].name,
+            "GraphSet -- graphs_at_indices with all valid indices is not returning the correct graphs in order",
+        )
+        self.assertEqual(
+            returned_graphs[2].name,
+            graph_objects[1].name,
+            "GraphSet -- graphs_at_indices with all valid indices is not returning the correct graphs in order",
         )

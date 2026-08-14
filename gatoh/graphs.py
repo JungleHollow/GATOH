@@ -1657,6 +1657,11 @@ class GraphSet:
                 self.stochastic_relationships[hierarchy] = status
                 self.stochastic_rels_flags[hierarchy] = flags
                 return None
+        # If this is reached, then no valid hierarchy was found...
+        warnings.warn(
+            f"WARNING: attempted to set stochastic relationships for hierarchy {hierarchy} which does not exist in the graphset",
+            category=UserWarning
+        )
         return None
 
     def graph_at_index(self, graph_index: int) -> Graph | None:
