@@ -492,3 +492,228 @@ class TestGraphSet(ut.TestCase):
                 f"{i}",
                 "GraphSet -- one or more incorrect names are being reported by list_hierarchies (print)",
             )
+
+    def test_get_agent_hierarchies(self) -> None:
+        """
+        Test that get_agent_hierarchies is working as intended.
+        """
+        # Import agents for this test
+        import gatoh.agents as agt
+        graphset: gr.GraphSet = gr.GraphSet()
+        test_agent: agt.Agent = agt.Agent("Test")
+        graph_one: gr.Graph = gr.Graph("One", (0.0, 0.0))
+        graph_one.add_nodes([test_agent])
+        graphset.add_graph(graph_one)
+        graph_two: gr.Graph = gr.Graph("Two", (0.0, 0.0))
+        graphset.add_graph(graph_two)
+        graph_three: gr.Graph = gr.Graph("Three", (0.0, 0.0))
+        graph_three.add_nodes([test_agent])
+        graphset.add_graph(graph_three)
+        agent_hierarchies: list[str] = graphset.get_agent_hierarchies(test_agent)
+        self.assertIsInstance(
+            agent_hierarchies,
+            list,
+            "GraphSet -- get_agent_hierarchies is not returning a list result",
+        )
+        self.assertEqual(
+            len(agent_hierarchies),
+            2,
+            "GraphSet -- get_agent_hierarchies is not reporting the correct number of hierarchies for an agent",
+        )
+        self.assertEqual(
+            agent_hierarchies[0],
+            "One",
+            "GraphSet -- get_agent_hierarchies is not returning the correct hierarchy names in order",
+        )
+        self.assertEqual(
+            agent_hierarchies[1],
+            "Three",
+            "GraphSet -- get_agent_hierarchies is not returning the correct hierarchy names in order",
+        )
+
+    def test_get_agents_hierarchies(self) -> None:
+        """
+        Test that get_agents_hierarchies is working as intended.
+        """
+        # Import agents for this test
+        import gatoh.agents as agt
+        graphset: gr.GraphSet = gr.GraphSet()
+        test_agents: list[agt.Agent] = [agt.Agent("One"), agt.Agent("Two"), agt.Agent("Three")]
+        graph_one: gr.Graph = gr.Graph("One", (0.0, 0.0))
+        graph_one.add_nodes([test_agents[0], test_agents[2]])
+        graphset.add_graph(graph_one)
+        graph_two: gr.Graph = gr.Graph("Two", (0.0, 0.0))
+        graph_two.add_nodes([test_agents[2], test_agents[1]])
+        graphset.add_graph(graph_two)
+        graph_three: gr.Graph = gr.Graph("Three", (0.0, 0.0))
+        graphset.add_graph(graph_three)
+        agent_hierarchies: dict[str, list[str]] = graphset.get_agents_hierarchies(test_agents)
+        self.assertIsInstance(
+            agent_hierarchies,
+            dict,
+            "GraphSet -- get_agents_hierarchies is not returning a dictionary result",
+        )
+        self.assertEqual(
+            len(agent_hierarchies),
+            3,
+            "GraphSet -- get_agents_hierarchies is not reporting hierarchies for the correct number of agents",
+        )
+        self.assertEqual(
+            agent_hierarchies["One"],
+            ["One"],
+            "GraphSet -- get_agents_hierarchies is not reporting the correct hierarchies for one or more agents",
+        )
+        self.assertEqual(
+            agent_hierarchies["Two"],
+            ["Two"],
+            "GraphSet -- get_agents_hierarchies is not reporting the correct hierarchies for one or more agents",
+        )
+        self.assertEqual(
+            agent_hierarchies["Three"],
+            ["One", "Two"],
+            "GraphSet -- get_agents_hierarchies is not reporting the correct hierarchies for one or more agents",
+        )
+
+    def test_calculate_polarisation_invalid(self) -> None:
+        """
+        Test that calculate_polarisation with an invalid hierarchy name will produce the expected error.
+        """
+        graphset: gr.GraphSet = gr.GraphSet()
+        with self.assertRaises(ValueError, msg="Tried to calculate polarisation for an invalid hierarchy: FooBar") as cm:
+            polarisation: float = graphset.calculate_polarisation("FooBar")
+
+    def test_calculate_polarisation(self) -> None:
+        """
+        Test that calculate_polarisation with a valid hierarchy name will work as intended.
+        """
+        # Import agents for this test
+        import gatoh.agents as agt
+        graphset: gr.GraphSet = gr.GraphSet()
+        test_graph: gr.Graph = gr.Graph("Test", (0.0, 0.0))
+        agents_to_add: list[agt.Agent] = [
+            agt.Agent("One", 0.2, {"Test": 1.0}),
+            agt.Agent("Two", 0.8, {"Test": 1.0}),
+        ]
+        test_graph.add_nodes(agents_to_add)
+        graphset.add_graph(test_graph)
+        polarisation: float = graphset.calculate_polarisation("Test")
+        self.assertIsInstance(
+            polarisation,
+            float,
+            "GraphSet -- calculate_polarisation is not returning a float value",
+        )
+        # Worked example (taken from test_graph_objects.py):
+        # ---
+        # |distance (SIMPLE1 -> SIMPLE2)| = 0.6
+        # |distance (SIMPLE2 -> SIMPLE1)| = 0.6
+        # average of all distances (y) = sum(distances) / len(distances) = 0.6
+        # ---
+        # square_distance = (distance - y) ** 2
+        # therefore square distance (SIMPLE1 -> SIMPLE2) = (0.6 - 0.6) ** 2 = 0.0
+        #   square distance (SIMPLE2 -> SIMPLE1) = (0.6 - 0.6) ** 2 = 0.0
+        # and Sum of Squares (SoS) = sum(square_distances) = 0.0
+        # ---
+        # polarisation_measure = SoS / (K * (K - 1)) where K is node_count
+        #   = 0.0 / (2 * (2 - 1))
+        #   = 0.0
+        self.assertEqual(
+            polarisation,
+            0.0,
+            "GraphSet -- calculate_polarisation is not reporting the correct polarisation value for the specified hierarchy",
+        )
+
+    def test_agent_opinion_threshold(self) -> None:
+        """
+        Test that agent_opinion_threshold is working as intended.
+        """
+        # Import agents for this test
+        from gatoh.agents import Agent
+        graphset: gr.GraphSet = gr.GraphSet()
+        test_agent: Agent = Agent("Test", {"One": 0.99, "Two": 0.44, "Three": -0.91})
+        graph_one: gr.Graph = gr.Graph("One", (0.0, 0.0))
+        graph_one.add_nodes([test_agent])
+        graphset.add_graph(graph_one)
+        graph_two: gr.Graph = gr.Graph("Two", (0.0, 0.0))
+        graph_two.add_nodes([test_agent])
+        graphset.add_graph(graph_two)
+        graph_three: gr.Graph = gr.Graph("Three", (0.0, 0.0))
+        graph_three.add_nodes([test_agent])
+        graphset.add_graph(graph_three)
+        opinion_thresholds = graphset.agent_opinion_threshold(test_agent)
+        self.assertEqual(
+            len(list(opinion_thresholds)),
+            2,
+            "GraphSet -- agent_opinion_threshold is not reporting the expected number of significant hierarchies for an agent",
+        )
+        self.assertEqual(
+            list(opinion_thresholds),
+            ["One", "Three"],
+            "GraphSet -- agent_opinion_threshold is not reporting the correct significant hierarchies for an agent",
+        )
+
+    def test_agent_opinion_threshold_explicit(self) -> None:
+        """
+        Test that agent_opinion_threshold with an explicit threshold is working as intended.
+        """
+        # Import agents for this test
+        from gatoh.agents import Agent
+        graphset: gr.GraphSet = gr.GraphSet()
+        test_agent: Agent = Agent("Test", {"One": 0.99, "Two": 0.44, "Three": -0.91})
+        graph_one: gr.Graph = gr.Graph("One", (0.0, 0.0))
+        graph_one.add_nodes([test_agent])
+        graphset.add_graph(graph_one)
+        graph_two: gr.Graph = gr.Graph("Two", (0.0, 0.0))
+        graph_two.add_nodes([test_agent])
+        graphset.add_graph(graph_two)
+        graph_three: gr.Graph = gr.Graph("Three", (0.0, 0.0))
+        graph_three.add_nodes([test_agent])
+        graphset.add_graph(graph_three)
+        opinion_thresholds = graphset.agent_opinion_threshold(test_agent, threshold=0.1)
+        self.assertEqual(
+            len(list(opinion_thresholds)),
+            3,
+            "GraphSet -- agent_opinion_threshold (explicit threshold) is not reporting the expected number of significant hierarchies for an agent",
+        )
+        self.assertEqual(
+            list(opinion_thresholds),
+            ["One", "Two", "Three"],
+            "GraphSet -- agent_opinion_threshold (explicit threshold) is not reporting the correct significant hierarchies for an agent",
+        )
+
+    def test_len(self) -> None:
+        """
+        Test that the defined __len__ is working as intended.
+        """
+        graphset: gr.GraphSet = gr.GraphSet()
+        for i in range(4):
+            new_graph: gr.Graph = gr.Graph(f"{i}", (0.0, 0.0))
+            graphset.add_graph(new_graph)
+        self.assertEqual(
+            len(graphset),
+            len(graphset.graphs),
+            "GraphSet -- __len__ is not reporting len(graphset) as the length of the graphset's graphs list",
+        )
+        self.assertEqual(
+            len(graphset),
+            4,
+            "GraphSet -- __len__ is not reporting the correct size of the graphset",
+        )
+
+    def test_str_repr(self) -> None:
+        """
+        Test that the __str__ override is producing the expected text output.
+        """
+        graphset: gr.GraphSet = gr.GraphSet()
+        new_graph: gr.Graph = gr.Graph("Test", (0.0, 0.0))
+        graphset.add_graph(new_graph)
+        str_repr: str = graphset.__str__()
+        self.assertIsInstance(
+            str_repr,
+            str,
+            "GraphSet -- the __str__ override is not returning a string result",
+        )
+        self.assertEqual(
+            str_repr,
+            "GraphSet containing the graphs of the following social hierarchies:\n\n[Test]",
+            "GraphSet -- the __str__ override is not producing the expected string representation",
+        )
