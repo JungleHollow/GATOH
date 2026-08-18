@@ -42,7 +42,7 @@ dev = [
     "sphinx-autobuild",
     "jupyter-sphinx",
     "reno[sphinx]",
-    "spinxemoji",
+    "sphinxemoji",
     "sphinx-tabs",
     "sphinxcontrib-bibtex",
     "sphinx-reredirects",
