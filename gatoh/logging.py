@@ -15,6 +15,8 @@ class LoggerDevStats:
     :type max_iterations: int
     """
 
+    # The maximum iterations that the simulation will run for
+    max_iterations: int
     # Model memory usage at the start of each iteration
     current_memory_usage: list[int] = field(default_factory=list)
     # The highest reported memory usage during model runtime
@@ -99,7 +101,7 @@ class LoggerDevStats:
         :type iteration: int
         """
         # Ensure that the function name exists in functions_runtime for this iteration
-        self.functions_runtime[iteration].setdefault(function_name, 0.0)
+        _ = self.functions_runtime[iteration].setdefault(function_name, 0.0)
         self.functions_runtime[iteration][function_name] += runtime
         self.log_function_call("LoggerDevStats.log_function_runtime")
         return None
@@ -221,7 +223,7 @@ class LoggerVariables:
     # The current iteration that the simulation is at
     current_iteration: int = 0
     # Space for any dynamically tracked model parameters to be stored
-    model_parameters: dict[str, list] = field(default_factory=dict)
+    model_parameters: dict[str, list[Any]] = field(default_factory=dict)
 
     def __init__(self, max_iterations: int, hierarchies: list[str]) -> None:
         """
@@ -463,6 +465,76 @@ class LoggerVariables:
         return attribute_names
 
 
+@dataclass
+class LoggedAgents:
+    """
+    Dataclass that provides the framework used to track specific attribute of certain agents throughout model runtimes.
+
+    :param max_iterations: The maximum number of iterations that the model will run its simulation for.
+    :type max_iterations: int
+    """
+
+    # The maximum iterations that the simulation will run for
+    max_iterations: int
+    # The current iteration that the simulation is at
+    current_iteration: int = 0
+    # The dictionary that will be used to store agent opinions
+    opinions: dict[str, list[float]] = field(default_factory=dict)
+    # The dictionary that will be used to store agent previous opinions
+    previous_opinions: dict[str, list[float]] = field(default_factory=dict)
+    # The dictionary that will be used to store agent radicalisation statuses
+    radicalisations: dict[str, list[bool]] = field(default_factory=dict)
+    # The dictionary that will be used to store agent social weightings
+    social_weightings: dict[str, dict[str, list[float]]] = field(default_factory=dict)
+    # The dictionary that will be used to store agent silencing statuses
+    silencings: dict[str, dict[str, list[bool]]] = field(default_factory=dict)
+    # The dictionary that will be used to store any custom attributes
+    custom_attributes: dict[str, dict[str, list[Any]]] = field(default_factory=dict)
+
+    def __init__(self, max_iterations: int) -> None:
+        """
+        Store the number of max iterations.
+        """
+        self.max_iterations = max_iterations
+        self.current_iteration = 0
+        self.opinions = {}
+        self.previous_opinions = {}
+        self.radicalisations = {}
+        self.social_weightings = {}
+        self.silencings = {}
+        self.custom_attributes = {}
+
+    def track_attribute(self, agent_id: str, attribute_name: str, agent_hierarchies: list[str] | None = None) -> None:
+        """
+        Initialise the list to track the specified attribute for an agent.
+
+        :param agent_id: The unique ID of the agent for which the attribute is being tracked.
+        :type agent_id: str
+        :param attribute_name: The name of the parameter to be tracked.
+        :type attribute_name: str
+        :param agent_hierarchies: The names of the hierarchies that the agent belongs to.
+        :type agent_hierarchies: list[str], optional
+        :raises ValueError: If the tracked attribute is social_weightings or is_silenced and no agent_hierarchies are being passed.
+        """
+        match attribute_name:
+            case "opinion":
+                self.opinions[agent_id] = [0.0 for _ in range(self.max_iterations)]
+            case "previous_opinion":
+                self.previous_opinions[agent_id] = [0.0 for _ in range(self.max_iterations)]
+            case "radicalised":
+                self.radicalisations[agent_id] = [False for _ in range(self.max_iterations)]
+            case "social_weightings":
+                if agent_hierarchies is None:
+                    raise ValueError("Wanting to track social_weightings for an agent but no agent hierarchies were passed to the logger")
+                self.social_weightings[agent_id] = {hierarchy : [0.0 for _ in range(self.max_iterations)] for hierarchy in agent_hierarchies}
+            case "is_silenced":
+                if agent_hierarchies is None:
+                    raise ValueError("Wanting to track is_silenced for an agent but no agent hierarchies were passed to the logger")
+                self.silencings[agent_id] = {hierarchy: [False for _ in range(self.max_iterations)] for hierarchy in agent_hierarchies}
+            case _:
+                self.custom_attributes.setdefault(agent_id, {})[attribute_name] = [None for _ in range(self.max_iterations)]
+        return None
+
 class GATOHLogger:
     """
     The logging module will contain all functions related to logging and/or printing model progress and information
@@ -499,6 +571,7 @@ class GATOHLogger:
         self.write_file: bool = write_file
         self.debug: bool = debug
         self.variables: LoggerVariables = LoggerVariables(max_iterations, hierarchies)
+        self.agents: LoggedAgents = LoggedAgents(max_iterations)
         if self.debug:
             self.dev_stats: LoggerDevStats = LoggerDevStats(max_iterations)
 

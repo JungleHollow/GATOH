@@ -220,6 +220,9 @@ class ABModel:
 
         self.partial_iterations: bool = partial_iterations
 
+        # A dictionary where the different tracked parameters of agents in the model will be noted
+        self.tracked_agents: dict[str, list[str]] = {}
+
         self.parameters_to_track: list[str] | None = parameters_to_track
         if self.parameters_to_track is not None:
             self.logger.track_model_parameters(self.parameters_to_track)
@@ -911,6 +914,104 @@ class ABModel:
         """
         self._iterate_inner(worker_pool=worker_pool, partial=self.partial_iterations)
 
+    def _iterate_step(self, worker_pool: Pool | None, partial: bool) -> None:
+        """
+        Carries out all required processes for a single model iteration.
+
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`
+        :param partial: A flag indicating if the iteration should only simulate a fraction of the total population.
+        :type partial: bool
+        """
+        # Initialise a dictionary to keep track of agent opinion changes
+        # (this is done to prevent recursive updating of opinions during the evolution of opinions)
+        new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
+
+        # Type declaration
+        partial_indices: list[int] | None = None
+        partial_agents: list[Agent]
+
+        if partial:
+            # Draw the partial indices
+            partial_indices = choices(list(range(len(self.agents))), k=int(len(self.agents)*PARTIAL_FRACTION))
+
+            # Get the corresponding agent objects
+            partial_agents = self.agents.agents_at_indices(partial_indices)
+
+        # First each agent looks at its neighbours to see how their opinion will evolve this iteration
+        if worker_pool is not None:
+            if partial:
+                opinion_results = worker_pool.imap(
+                    self.iteration_opinion_calculation,
+                    self.agents.agents_at_indices(partial_indices),
+                    chunksize=10,
+                )
+            else:
+                opinion_results = worker_pool.imap(
+                    self.iteration_opinion_calculation,
+                    self.agents,
+                    chunksize=10,
+                )
+
+            for opinion_result in opinion_results:
+                new_agent_opinions[opinion_result[0]] = opinion_result[1]
+                if self.debug:
+                    self.logger.log_function_call("ABModel.iteration_opinion_calculation")
+
+            # Manual garbage collection
+            del opinion_results
+            _ = gc.collect()
+        else:
+            if partial:
+                for agent in partial_agents:
+                    opinion_result = self.iteration_opinion_calculation(agent)
+                    new_agent_opinions[opinion_result[0]] = opinion_result[1]
+
+                    if self.debug:
+                        self.logger.log_function_call("ABModel.iteration_opinion_calculation")
+
+                    # Manual garbage collection
+                    del opinion_result
+                    _ = gc.collect()
+            else:
+                for agent in self.agents:
+                    opinion_result = self.iteration_opinion_calculation(agent)
+                    new_agent_opinions[opinion_result[0]] = opinion_result[1]
+
+                    if self.debug:
+                        self.logger.log_function_call("ABModel.iteration_opinion_calculation")
+
+                    # Manual garbage collection
+                    del opinion_result
+                    _ = gc.collect()
+
+        # new_agent_opinions will only contain information for changes that ocurred so no partial flag must be specified
+        self.iteration_opinion_changes(new_agent_opinions)
+
+        # The model stepping is less computationally intensive, and will always be performed on the entire population
+        self.step()
+
+        # Updates are more computationally intensive, and depend on the iteration results, so they will also be partial as needed
+        self.update(worker_pool=worker_pool, partial_indices=partial_indices)
+
+        # Handle the logger's iteration() calculations and call its method
+        self.logger_iteration(worker_pool=worker_pool)
+
+        # Get this iteration's print string (will be formatted appropriately based on the print interval)
+        iteration_print_string: str = self.logger.iteration_print()
+        print(iteration_print_string)
+
+        if self.visualise:
+            self.visualiser.visualiser_iteration(
+                self.base_graph, self.current_iteration, model_name=self.model_id
+            )
+        if self.checkpointing:
+            self.save_model()
+
+        self.current_iteration += 1
+
+        return None
+
     def _iterate_inner(self, worker_pool: Pool | None, partial: bool) -> None:
         """
         Handles the main model iteration loop.
@@ -935,92 +1036,9 @@ class ABModel:
                 debug_print_string: str = self.logger.debug_iteration_print()
                 print(debug_print_string)
 
-            # Initialise a dictionary to keep track of agent opinion changes
-            # (this is done to prevent recursive updating of opinions during the evolution of opinions)
-            new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
+            # Perform the actual iteration processes
+            self._iterate_step(worker_pool, partial)
 
-            # Type declaration
-            partial_indices: list[int] | None = None
-            partial_agents: list[Agent]
-
-            if partial:
-                # Draw the partial indices
-                partial_indices = choices(list(range(len(self.agents))), k=int(len(self.agents)*PARTIAL_FRACTION))
-
-                # Get the corresponding agent objects
-                partial_agents = self.agents.agents_at_indices(partial_indices)
-
-            # First each agent looks at its neighbours to see how their opinion will evolve this iteration
-            if worker_pool is not None:
-                if partial:
-                    opinion_results = worker_pool.imap(
-                        self.iteration_opinion_calculation,
-                        self.agents.agents_at_indices(partial_indices),
-                        chunksize=10,
-                    )
-                else:
-                    opinion_results = worker_pool.imap(
-                        self.iteration_opinion_calculation,
-                        self.agents,
-                        chunksize=10,
-                    )
-
-                for opinion_result in opinion_results:
-                    new_agent_opinions[opinion_result[0]] = opinion_result[1]
-                    if self.debug:
-                        self.logger.log_function_call("ABModel.iteration_opinion_calculation")
-
-                # Manual garbage collection
-                del opinion_results
-                _ = gc.collect()
-            else:
-                if partial:
-                    for agent in partial_agents:
-                        opinion_result = self.iteration_opinion_calculation(agent)
-                        new_agent_opinions[opinion_result[0]] = opinion_result[1]
-
-                        if self.debug:
-                            self.logger.log_function_call("ABModel.iteration_opinion_calculation")
-
-                        # Manual garbage collection
-                        del opinion_result
-                        _ = gc.collect()
-                else:
-                    for agent in self.agents:
-                        opinion_result = self.iteration_opinion_calculation(agent)
-                        new_agent_opinions[opinion_result[0]] = opinion_result[1]
-
-                        if self.debug:
-                            self.logger.log_function_call("ABModel.iteration_opinion_calculation")
-
-                        # Manual garbage collection
-                        del opinion_result
-                        _ = gc.collect()
-
-            # new_agent_opinions will only contain information for changes that ocurred so no partial flag must be specified
-            self.iteration_opinion_changes(new_agent_opinions)
-
-            # The model stepping is less computationally intensive, and will always be performed on the entire population
-            self.step()
-
-            # Updates are more computationally intensive, and depend on the iteration results, so they will also be partial as needed
-            self.update(worker_pool=worker_pool, partial_indices=partial_indices)
-
-            # Handle the logger's iteration() calculations and call its method
-            self.logger_iteration(worker_pool=worker_pool)
-
-            # Get this iteration's print string (will be formatted appropriately based on the print interval)
-            iteration_print_string: str = self.logger.iteration_print()
-            print(iteration_print_string)
-
-            if self.visualise:
-                self.visualiser.visualiser_iteration(
-                    self.base_graph, self.current_iteration, model_name=self.model_id
-                )
-            if self.checkpointing:
-                self.save_model()
-
-            self.current_iteration += 1
         # Call the logger's save_data function which handles data persistence appropriately
         data_saved: bool = self.logger.save_data(self.data_file)
         if data_saved:
@@ -1886,4 +1904,98 @@ class ABModel:
         if self.debug:
             self.logger.log_function_call("ABModel.update_base_graph")
 
+        return None
+
+    def track_agent_opinion(self, agent_id: str) -> None:
+        """
+        Used to specify that the aggregate opinion at the current iteration of a particular agent should be logged and tracked
+        throughout the model runtime.
+
+        :param agent_id: The unique ID of the agent for which the opinion will be tracked.
+        :type agent_id: str
+        :raises KeyError: If no agent with the specified ID exists in the model's agentset.
+        """
+        if not self.agents.id_in_agentset(agent_id):
+            raise KeyError(f"Agent with ID {agent_id} does not exist in the model's agentset -- cannot track its opinion...")
+        self.tracked_agents.setdefault(agent_id, []).append("opinion")
+        self.logger.agents.track_attribute(agent_id, "opinion")
+        return None
+
+    def track_agent_previous_opinion(self, agent_id: str) -> None:
+        """
+        Used to specify that the aggregate opinion at the previous iteration of a particular agent should be logged and tracked
+        throughout the model runtime.
+
+        :param agent_id: The unique ID of the agent for which the opinion will be tracked.
+        :type agent_id: str
+        :raises KeyError: If no agent with the specified ID exists in the model's agentset.
+        """
+        if not self.agents.id_in_agentset(agent_id):
+            raise KeyError(f"Agent with ID {agent_id} does not exist in the model's agentset -- cannot track its previous opinion...")
+        self.tracked_agents.setdefault(agent_id, []).append("previous_opinion")
+        self.logger.agents.track_attribute(agent_id, "previous_opinion")
+        return None
+
+    def track_agent_radicalisation(self, agent_id: str) -> None:
+        """
+        Used to specify that the radicalisation status of a particular agent should be logged and tracked
+        throughout the model runtime.
+
+        :param agent_id: The unique ID of the agent for which the radicalisation status will be tracked.
+        :type agent_id: str
+        :raises KeyError: If no agent with the specified ID exists in the model's agentset.
+        """
+        if not self.agents.id_in_agentset(agent_id):
+            raise KeyError(f"Agent with ID {agent_id} does not exist in the model's agentset -- cannot track its radicalisation status...")
+        self.tracked_agents.setdefault(agent_id, []).append("radicalised")
+        self.logger.agents.track_attribute(agent_id, "radicalised")
+        return None
+
+    def track_agent_social_weightings(self, agent_id: str) -> None:
+        """
+        Used to specify that the social weightings of a particular agent should be logged and tracked
+        throughout the model runtime.
+
+        :param agent_id: The unique ID of the agent for which the social weightings will be tracked.
+        :type agent_id: str
+        :raises KeyError: If no agent with the specified ID exists in the model's agentset.
+        """
+        if not self.agents.id_in_agentset(agent_id):
+            raise KeyError(f"Agent with ID {agent_id} does not exist in the model's agentset -- cannot track its social weightings...")
+        self.tracked_agents.setdefault(agent_id, []).append("social_weightings")
+        self.logger.agents.track_attribute(agent_id, "social_weightings")
+        return None
+
+    def track_agent_silencing(self, agent_id: str) -> None:
+        """
+        Used to specify that the silencing status of a particular agent in its hierarchies should be
+        logged and tracked throughout the model runtime.
+
+        :param agent_id: The unique ID of the agent for which the silencing status will be tracked.
+        :type agent_id: str
+        :raises KeyError: If no agent with the specified ID exists in the model's agentset.
+        """
+        if not self.agents.id_in_agentset(agent_id):
+            raise KeyError(f"Agent with ID {agent_id} does not exist in the model's agentset -- cannot track its silencing status...")
+        self.tracked_agents.setdefault(agent_id, []).append("is_silenced")
+        self.logger.agents.track_attribute(agent_id, "is_silenced")
+        return None
+
+    def track_agent_custom_attribute(self, agent_id: str, attribute_name: str) -> None:
+        """
+        Used to specify that a custom attribute of a particular agent should be logged and tracked
+        throughout the model runtime.
+
+        :param agent_id: The unique ID of the agent for which the attribute will be tracked.
+        :type agent_id: str
+        :param attribute_name: The name of the custom attribute to be tracked.
+        :type attribute_name: str
+        :raises KeyError: If no agent with the specified ID exists in the model's agentset or no valid attribute is found.
+        """
+        if not self.agents.id_in_agentset(agent_id):
+            raise KeyError(f"Agent with ID {agent_id} does not exist in the model's agentset -- cannot track a custom attribute...")
+        elif self.agents.get_agent_by_id(agent_id).get_attribute(attribute_name) is None:
+            raise KeyError(f"Agent with ID {agent_id} does not posses a custom attribute with name {attribute_name} -- cannot track the custom attribute...")
+        self.tracked_agents.setdefault(agent_id, []).append(attribute_name)
+        self.logger.agents.track_attribute(agent_id, attribute_name)
         return None

@@ -1267,7 +1267,7 @@ class AgentSet:
         :return: A flag indicating if the Agent object is in the AgentSet.
         :rtype: bool
         """
-        return agent in self.agents
+        return self.id_in_agentset(agent.id)
 
     def __contains__(self, agent: Agent) -> bool:
         """
@@ -1278,7 +1278,7 @@ class AgentSet:
         :return: A flag indicating if the specified Agent object is in the AgentSet.
         :rtype: bool
         """
-        return self.agents.__contains__(agent)
+        return self.id_in_agentset(agent.id)
 
     def __getitem__(self, item: int | slice) -> Agent | list[Agent]:
         """
@@ -1311,6 +1311,21 @@ class AgentSet:
         for idx, agent in enumerate(self.agents):
             agent.index = idx
         return None
+
+    def id_in_agentset(self, agent_id: str) -> bool:
+        """
+        Report if an agent with the given unique ID exists in the agentset.
+
+        :param agent_id: The unique ID of the agent that is being checked for.
+        :type agent_id: str
+        :return: A flag indicating if an agent with the input ID exists in the agentset or not.
+        :rtype: bool
+        """
+        for agent in self.agents:
+            if agent.id == agent_id:
+                return True
+        return False
+
 
     def discard(self, agent: Agent) -> bool:
         """
