@@ -535,6 +535,127 @@ class LoggedAgents:
                 self.custom_attributes.setdefault(agent_id, {})[attribute_name] = [None for _ in range(self.max_iterations)]
         return None
 
+    def log_opinion(self, agent_id: str, opinion: float) -> None:
+        """
+        Log the opinion value of an agent for this iteration.
+
+        :param agent_id: The unique ID of the agent whose opinion is being logged.
+        :type agent_id: str
+        :param opinion: The agent's opinion value for the current iteration.
+        :type opinion: float
+        :raises KeyError: If the input agent has not been initialised in the opinions dict.
+        """
+        opinion_values: list[float] | None = self.opinions.get(agent_id)
+        if opinion_values is None:
+            raise KeyError(f"Attempting to log the current opinion for agent {agent_id} that has not been previously specified in the logger")
+        else:
+            opinion_values[self.current_iteration - 1] = opinion
+        return None
+
+    def log_previous_opinion(self, agent_id: str, previous_opinion: float) -> None:
+        """
+        Log the previous_opinion value of an agent for this iteration.
+
+        :param agent_id: The unique ID of the agent whose previous opinion is being logged.
+        :type agent_id: str
+        :param previous_opininion: The agent's previous_opinion value for the current iteration.
+        :type previous_opinion: float
+        :raises KeyError: If the input agent has not been initialised in the previous_opinions dict.
+        """
+        p_opinion_values: list[float] | None = self.previous_opinions.get(agent_id)
+        if p_opinion_values is None:
+            raise KeyError(f"Attempting to log the previous opinion for agent {agent_id} that has not been previously specified in the logger")
+        else:
+            p_opinion_values[self.current_iteration - 1] = previous_opinion
+        return None
+
+    def log_radicalised(self, agent_id: str, radicalised: bool) -> None:
+        """
+        Log the radicalisation status of an agent for this iteration.
+
+        :param agent_id: The unique ID of the agent whose radicalisation status is being logged.
+        :type agent_id: str
+        :param radicalised: The agent's radicalisation status for the current iteration.
+        :type radicalised: bool
+        :raises KeyError: If the input agent has not been initialised in the radicalisations dict.
+        """
+        radicalisation: list[bool] | None = self.radicalisations.get(agent_id)
+        if radicalisation is None:
+            raise KeyError(f"Attempting to log the radicalisation status for agent {agent_id} that has not been previously specified in the logger")
+        else:
+            radicalisation[self.current_iteration - 1] = radicalised
+        return None
+
+    def log_social_weightings(self, agent_id: str, social_weightings: dict[str, float]) -> None:
+        """
+        Log the social weightings of an agent for this iteration.
+
+        :param agent_id: The unique ID of the agent whose social weightings are being logged.
+        :type agent_id: str
+        :param social_weightings: The agent's social weightings for the current iteration.
+        :type social_weightings: dict[str, float]
+        :raises KeyError: If the input agent has not been initialised in the radicalisations dict or an unknown hierarchy is present.
+        """
+        weightings: dict[str, list[float]] | None = self.social_weightings.get(agent_id)
+        if weightings is None:
+            raise KeyError(f"Attempting to log the social weightings for agent {agent_id} that has not been previously specified in the logger")
+        for hierarchy, weighting in social_weightings.items():
+            weighting_values: list[float] | None = weightings.get(hierarchy)
+            if weighting_values is None:
+                raise KeyError(f"Attempting to log the social weighting for an unknown hierarchy ({hierarchy}) for agent {agent_id}")
+            else:
+                weighting_values[self.current_iteration - 1] = weighting
+        return None
+
+    def log_is_silenced(self, agent_id: str, is_silenced: dict[str, bool]) -> None:
+        """
+        Log the silencing statuses of an agent for this iteration.
+
+        :param agent_id: The unique ID of the agent whose silencing statuses are being logged.
+        :type agent_id: str
+        :param is_silenced: The agent's silencing statuses for the current iteration.
+        :type is_silenced: dict[str, bool]
+        :raises KeyError: If the input agent has not been initialised in the silencings dict or an unknown hierarchy is present.
+        """
+        silencings: dict[str, list[bool]] | None = self.silencings.get(agent_id)
+        if silencings is None:
+            raise KeyError(f"Attempting to log the silencing statuses for agent {agent_id} that has not been previously specified in the logger")
+        for hierarchy, flag in is_silenced.items():
+            silencing_flags: list[bool] | None = silencings.get(hierarchy)
+            if silencing_flags is None:
+                raise KeyError(f"Attempting to log the silencing status for an unknown hierarchy ({hierarchy}) for agent {agent_id}")
+            else:
+                silencing_flags[self.current_iteration - 1] = flag
+        return None
+
+    def log_custom_attribute(self, agent_id: str, attribute_name: str, attribute_value: Any) -> None:
+        """
+        Log a custom attribute of an agent for this iteration.
+
+        :param agent_id: The unique ID of the agent whose custom attribute is being logged.
+        :type agent_id: str
+        :param attribute_name: The name of the custom attribute.
+        :type attribute_name: str
+        :param attribute_value: The value of the custom attribute for the current iteration.
+        :type attribute_value: Any
+        :raises KeyError: If the input agent has not been initialised in the custom_attributes dict or an unknown attribute is specified.
+        """
+        custom_attributes: dict[str, list[Any]] | None = self.custom_attributes.get(agent_id)
+        if custom_attributes is None:
+            raise KeyError(f"Attempting to log a custom attribute for agent {agent_id} that has not been previously specified in the logger")
+        elif attribute_name not in custom_attributes:
+            raise KeyError(f"Attempting to log an unknown custom attribute ({attribute_name}) for agent {agent_id}")
+        else:
+            custom_attributes[attribute_name][self.current_iteration - 1] = attribute_value
+        return None
+
+    def new_iteration(self) -> None:
+        """
+        Increment the current_iteration counter.
+        """
+        self.current_iteration += 1
+        return None
+
 class GATOHLogger:
     """
     The logging module will contain all functions related to logging and/or printing model progress and information
@@ -597,6 +718,7 @@ class GATOHLogger:
         :type init: bool, optional
         """
         self.variables.new_iteration(init=init)
+        self.agents.new_iteration()
         if self.debug:
             self.dev_stats.new_iteration(init=init)
             self.log_function_call("GATOHLogger.new_iteration")
@@ -610,7 +732,7 @@ class GATOHLogger:
         :type parameters: list[str]
         """
         for parameter in parameters:
-            self.variables.model_parameters.setdefault(parameter, [0 for _ in  range(self.variables.max_iterations)])
+            _ = self.variables.model_parameters.setdefault(parameter, [0 for _ in  range(self.variables.max_iterations)])
         if self.debug:
             self.log_function_call("GATOHLogger.track_model_parameters")
         return None
