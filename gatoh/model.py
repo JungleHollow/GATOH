@@ -69,6 +69,7 @@ class ConfigData(TypedDict):
     visualisation_dir: str
     suppress_warnings: bool
     checkpointing: bool
+    partial_iterations: bool
     save_dir: str
     data_file: str
     model_id: str
@@ -727,7 +728,7 @@ class ABModel:
                     agent_sample = list(
                         np.random.choice(agent_array, size=random_k, replace=False)
                     )
-                elif isinstance(agents, AgentSet):
+                else:
                     agent_sample = agents.sample(random_k)
             else:
                 agent_sample = agents
@@ -1303,12 +1304,14 @@ class ABModel:
             else:
                 partial_agents = [self.agents.agent_at_index(i) for i in partial_indices]
                 for agent in partial_agents:
-                    agent_update = self.update_multi(agent)
+                    # Included for type checking
+                    if agent is not None:
+                        agent_update = self.update_multi(agent)
 
-                    agent.update(agent_update[0], agent_update[2])
+                        agent.update(agent_update[0], agent_update[2])
 
-                    self.logger.variables.increment_silenced(agent_update[1])
-                    self.logger.variables.increment_negated(agent_update[2])
+                        self.logger.variables.increment_silenced(agent_update[1])
+                        self.logger.variables.increment_negated(agent_update[2])
 
         if self.debug:
             for _ in range(len(self.agents)):
@@ -1871,35 +1874,33 @@ class ABModel:
                     self.logger.log_function_call("AgentSet.get_agent_by_id")
                     self.logger.log_function_call("AgentSet.get_agent_by_id")
 
-                # Included for type checking
-                if from_agent is not None and to_agent is not None:
-                    from_idx = from_agent.index
-                    to_idx = to_agent.index
+                from_idx = from_agent.index
+                to_idx = to_agent.index
 
-                    edge_indices = self.base_graph.graph.edge_indices_from_endpoints(
-                        from_idx, to_idx
+                edge_indices = self.base_graph.graph.edge_indices_from_endpoints(
+                    from_idx, to_idx
+                )
+
+                if self.debug:
+                    self.logger.log_function_call("Graph.edge_indices_from_endpoints")
+
+                for edge_index in edge_indices:
+                    edge_data: GraphEdge = (
+                        self.base_graph.graph.get_edge_data_by_index(edge_index)
                     )
-
                     if self.debug:
-                        self.logger.log_function_call("Graph.edge_indices_from_endpoints")
+                        self.logger.log_function_call("Graph.get_edge_data_by_index")
 
-                    for edge_index in edge_indices:
-                        edge_data: GraphEdge = (
-                            self.base_graph.graph.get_edge_data_by_index(edge_index)
+                    if edge_data.hierarchy != change.hierarchy:
+                        continue
+                    else:
+                        edge_data.set_weighting(change.weighting)
+                        self.base_graph.graph.update_edge_by_index(
+                            edge_index, deepcopy(edge_data)
                         )
                         if self.debug:
-                            self.logger.log_function_call("Graph.get_edge_data_by_index")
-
-                        if edge_data.hierarchy != change.hierarchy:
-                            continue
-                        else:
-                            edge_data.set_weighting(change.weighting)
-                            self.base_graph.graph.update_edge_by_index(
-                                edge_index, deepcopy(edge_data)
-                            )
-                            if self.debug:
-                                self.logger.log_function_call("GraphEdge.set_weighting")
-                                self.logger.log_function_call("Graph.update_edge_by_index")
+                            self.logger.log_function_call("GraphEdge.set_weighting")
+                            self.logger.log_function_call("Graph.update_edge_by_index")
 
         if self.debug:
             self.logger.log_function_call("ABModel.update_base_graph")
