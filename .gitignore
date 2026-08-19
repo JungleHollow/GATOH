@@ -51,3 +51,4 @@ tests/test_saves/model_simulation/
 tests/test_saves/model_simulation_multi/
 .coverage
 .zed/
+tests/test_saves/graphset_persistence/
