@@ -653,10 +653,26 @@ class LoggedAgents:
         """
         Handles all of the individual calls to log_<attribute> for every tracked agent for this iteration.
 
+        This function assumes that all relevant type and value checks have already been made.
+
         :param agent_attributes: A <agent : <attribute : value>> nested mapping containing all relevant attributes for agents which are being tracked.
         :type agent_attributes: dict[str, dict[str, Any]]
         """
-        # TODO: Implement this function
+        for agent, attributes in agent_attributes.items():
+            for attribute, value in attributes.items():
+                match attribute:
+                    case "opinion":
+                        self.log_opinion(agent, value)
+                    case "previous_opinion":
+                        self.log_previous_opinion(agent, value)
+                    case "radicalised":
+                        self.log_radicalised(agent, value)
+                    case "social_weightings":
+                        self.log_social_weightings(agent, value)
+                    case "is_silenced":
+                        self.log_is_silenced(agent, value)
+                    case _:
+                        self.log_custom_attribute(agent, attribute, value)
         return None
 
     def new_iteration(self) -> None:

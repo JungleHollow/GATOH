@@ -1407,12 +1407,16 @@ class ABModel:
         A getter function that checks for any individual agents that are being tracked over the model runtime,
         and then gathers all relevant attributes for those agents.
 
-        :return: A <agent: <attribute : value>> nested mapping containing all relevant attributes for agents which are being tracked.
+        :return: A <agent : <attribute : value>> nested mapping containing all relevant attributes for agents which are being tracked.
         :rtype: dict[str, dict[str, Any]]
         """
         agent_attributes: dict[str, dict[str, Any]] = {}
 
-        # TODO: Implement this function
+        for agent, attributes in self.tracked_agents.items():
+            agent_attributes[agent] = {}
+            agent_object: Agent = self.agents.get_agent_by_id(agent)
+            for attribute in attributes:
+                agent_attributes[agent][attribute] = agent_object.get_attribute(attribute)
 
         return agent_attributes
 
