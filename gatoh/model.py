@@ -1388,17 +1388,33 @@ class ABModel:
         layers_polarisation: dict[str, float] = self.calculate_layers_polarisation(worker_pool=worker_pool)
 
         tracked_parameters: dict[str, Any] | None = self.get_tracked_parameters()
+        tracked_agent_attributes: dict[str, dict[str, Any]] = self.get_tracked_agent_attributes()
 
         self.logger.iteration(
             aggregate_opinion,
             radicalisation_logodds,
             layer_interdependences,
             layers_polarisation,
+            tracked_agent_attributes,
             model_parameters=tracked_parameters,
         )
         if self.debug:
             self.logger.log_function_call("ABModel.logger_iteration")
         return None
+
+    def get_tracked_agent_attributes(self) -> dict[str, dict[str, Any]]:
+        """
+        A getter function that checks for any individual agents that are being tracked over the model runtime,
+        and then gathers all relevant attributes for those agents.
+
+        :return: A <agent: <attribute : value>> nested mapping containing all relevant attributes for agents which are being tracked.
+        :rtype: dict[str, dict[str, Any]]
+        """
+        agent_attributes: dict[str, dict[str, Any]] = {}
+
+        # TODO: Implement this function
+
+        return agent_attributes
 
     def get_tracked_parameters(self) -> dict[str, Any] | None:
         """

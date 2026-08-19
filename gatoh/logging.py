@@ -649,6 +649,16 @@ class LoggedAgents:
             custom_attributes[attribute_name][self.current_iteration - 1] = attribute_value
         return None
 
+    def store_agent_attributes(self, agent_attributes: dict[str, dict[str, Any]]) -> None:
+        """
+        Handles all of the individual calls to log_<attribute> for every tracked agent for this iteration.
+
+        :param agent_attributes: A <agent : <attribute : value>> nested mapping containing all relevant attributes for agents which are being tracked.
+        :type agent_attributes: dict[str, dict[str, Any]]
+        """
+        # TODO: Implement this function
+        return None
+
     def new_iteration(self) -> None:
         """
         Increment the current_iteration counter.
@@ -743,6 +753,7 @@ class GATOHLogger:
         radicalisation_logodds: float,
         layer_interdependences: dict[str, float],
         layer_polarisations: dict[str, float],
+        agent_attributes: dict[str, dict[str, Any]],
         model_parameters: dict[str, Any] | None = None,
     ) -> None:
         """
@@ -756,6 +767,8 @@ class GATOHLogger:
         :type layer_interdependences: dict[str, float]
         :param layers_polarisation: A <hierarchy : value> mapping containing the calculated polarisation for each hierarchy in the model at the end of this iteration.
         :type layers_polarisation: dict[str, float]
+        :param agent_attributes: A <agent : <attribute : value>> nested mapping containing all relevant attributes for agents which are being tracked.
+        :type agent_attributes: dict[str, dict[str, Any]]
         :param model_parameters: A <parameter : value> mapping containing a tracked model parameter's value at the end of this iteration.
         :type model_parameters: dict[str, Any], optional
         """
@@ -764,6 +777,8 @@ class GATOHLogger:
         self.variables.store_layer_interdependences(layer_interdependences)
         self.variables.store_layer_polarisations(layer_polarisations)
         self.variables.store_model_parameters(model_parameters)
+
+        self.agents.store_agent_attributes(agent_attributes)
 
         if self.debug:
             self.log_function_call("LoggerVariables.store_aggregate_opinion")
