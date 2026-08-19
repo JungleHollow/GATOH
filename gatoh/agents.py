@@ -327,9 +327,10 @@ class Agent:
         """
         Return any existing or dynamically added attribute held by the Agent object.
 
-        :param name: The name of the parameter to get.
+        :param name: The name of the attribute to get.
         :type name: str
-        :return: The value stored for the parameter.
+        :raises UserWarning: If the attribute does not exist.
+        :return: The value stored for the attribute.
         :rtype: Any
         """
         attribute: T | None = self.__dict__.get(name)
