@@ -22,6 +22,7 @@ New Features
 - Ability to have partial agent iterations in the :class:`~gatoh.model.ABModel`
 - Additional getter methods defined for :class:`~gatoh.agents.AgentSet`
 - Additional getter methods defined for :class:`~gatoh.graphs.GraphSet`
+- Ability to log and track specific attributes of individual agents throughout model runtimes
 
 Fixes
 -----
