@@ -12,8 +12,6 @@ from copy import deepcopy
 from shutil import rmtree
 from typing import NotRequired, TypeVar, TypedDict, override
 
-from cycler import L
-
 from gatoh.utils import draw_random_value, random_coinflip, value_rw_delta
 
 
