@@ -1108,9 +1108,6 @@ class Agent:
 class AgentSet:
     """
     An ordered collection of Agent objects that maintains consistency for the Model.
-
-    :param model: The parent model that this AgentSet is being attached to
-    :type model: ABModel
     """
 
     def __init__(self) -> None:
@@ -1119,7 +1116,7 @@ class AgentSet:
 
     def save_agentset(self, directory_path: str) -> None:
         """
-        Save the Agent objects into a compressed subdirectory representing the the saved AgentSet.
+        Save the Agent objects into a compressed subdirectory representing the saved AgentSet.
 
         :param directory_path: The path to the directory where the agentset subdirectory should be created.
         :type directory_path: str
@@ -1167,7 +1164,7 @@ class AgentSet:
 
     def write_agent_pickle(self, agent: Agent, subdirectory_path: str) -> str:
         """
-        A helper function that allows for multithreading of :meth:`~gatoh.agents.agents.AgentSet.save_agentset`.
+        A helper function that allows for multithreading of :meth:`~gatoh.agents.AgentSet.save_agentset`.
 
         :param agent: The agent that is being saved.
         :type agent: Agent
@@ -1183,10 +1180,11 @@ class AgentSet:
 
     def load_agentset(self, load_path: str) -> None:
         """
-        Loads an AgentSet that has been saved following the same process as in the save_agentset() function.
+        Loads an AgentSet that has been saved following the same process as in the :meth:`~gatoh.agents.AgentSet.save_agentset' function.
 
         :param load_path: The path to the model's overall save directory.
         :type load_path: str
+        :raises FileNotFoundError: If no valid agentset zip was found in the load path.
         """
         zip_load_path: str = f"{load_path}/_agentset.zip"
 
@@ -1227,10 +1225,10 @@ class AgentSet:
 
     def extract_agent_pickle(self, agent_pickle_name: str, subdirectory_path: str) -> Agent:
         """
-        A helper function that allows for multithreading of :meth:`~gatoh.agents.agents.AgentSet.load_agentset`.
+        A helper function that allows for multithreading of :meth:`~gatoh.agents.AgentSet.load_agentset`.
 
-        :param agent_pickle_path: The name of the pickled Agent object file.
-        :type agent_pickle_path: str
+        :param agent_pickle_name: The name of the pickled Agent object file.
+        :type agent_pickle_name: str
         :param subdirectory_path: The root path to which the pickled agent object was written.
         :type subdirectory_path: str
         :return: The unpickled agent.
