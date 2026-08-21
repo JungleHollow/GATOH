@@ -23,6 +23,7 @@ New Features
 - Additional getter methods defined for :class:`~gatoh.agents.AgentSet`
 - Additional getter methods defined for :class:`~gatoh.graphs.GraphSet`
 - Ability to log and track specific attributes of individual agents throughout model runtimes
+- **MAJOR** New module :mod:`~gatoh.groups` which adds the ability to further group agents within hierarchies, and pseudo-vectorise operations
 
 Fixes
 -----
