@@ -418,6 +418,22 @@ class Agent:
         self.opinion_rw = rw_params
         return None
 
+    def change_personality(self, personality: str) -> None:
+        """
+        A setter method that changes the Agent's personality type.
+
+        :param personality: The new personality type to assign to the Agent.
+        :type personality: str
+        :raises TypeError: If the input personality is not a string.
+        :raises ValueError: If the personality is not one of the supported types.
+        """
+        if not isinstance(personality, str):
+            raise TypeError("personality must be a string")
+        elif personality not in PERSONALITIES:
+            raise ValueError(f"The personality '{personality}' is not supported -- cannot change the Agent's personality type")
+        self.personality = personality
+        return None
+
     def set_benefit(self, personal_benefit: bool) -> None:
         """
         A setter method that changes the Agent's personal_benefit parameter.
@@ -1487,8 +1503,8 @@ class AgentSet:
         """
         for idx, agnt in enumerate(self.agents):
             if agent == agnt:
-                left_half: list[Agent] = deepcopy(self.agents[:idx])
-                right_half: list[Agent] = deepcopy(self.agents[idx + 1 :])
+                left_half: list[Agent] = self.agents[:idx]
+                right_half: list[Agent] = self.agents[idx + 1 :]
 
                 self.agents = deepcopy(left_half) + deepcopy(right_half)
                 del left_half, right_half
@@ -1510,8 +1526,8 @@ class AgentSet:
         :rtype: bool
         """
         if 0 < index < len(self.agents):
-            left_half: list[Agent] = deepcopy(self.agents[:index])
-            right_half: list[Agent] = deepcopy(self.agents[index + 1 :])
+            left_half: list[Agent] = self.agents[:index]
+            right_half: list[Agent] = self.agents[index + 1 :]
 
             self.agents = deepcopy(left_half) + deepcopy(right_half)
             del left_half, right_half
