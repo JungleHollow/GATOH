@@ -12,12 +12,19 @@ from copy import deepcopy
 from shutil import rmtree
 from typing import NotRequired, TypeVar, TypedDict, override
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from gatoh.agents import Agent
+
 from gatoh.utils import draw_random_value, random_coinflip, value_rw_delta
 
 # Definition of all valid, existing Group cohesion categories
 COHESIONS: list[str] = ["intimate", "close", "neutral", "distant", "passing"]
 
+# Definition of global constants to be used instead of "magic numbers" throughout the code
 
+# The absolute maximum value that aggregate group opinions can take
+OPINION_MAX: float = 1.0
 # The compression level to use across relevant methods
 COMPRESS_LEVEL: int = 4
 
@@ -104,11 +111,71 @@ class Group:
                 # No checking for duplicate keys; assume that explicitly added kwargs should override any args
                 self.add_attribute(key, value=value)
 
-    def generate_group(self) -> Group:
+    def generate_group(
+        self,
+        id: str,
+        index: int,
+        hierarchy: str,
+        members: list[Agent],
+        cohesion: str | None = None,
+        max_size: int | None = None,
+    ) -> Group:
         """
-        Randomly generate a Group object based on the input parameters.
+        Generate a Group object based on the input parameters.
+
+        :param id: The id that has been assigned for this specific Group object under the conditions of the model specifications.
+        :type id: str
+        :param index: The index of the Group object within the model's GroupSet.
+        :type index: int
+        :param hierarchy: The social hierarchy that the Group is being formed in.
+        :type hierarchy: str
+        :param members: The Agents that this group will be made up of.
+        :type members: list[Agent]
+        :param cohesion: A string defining what type of cohesion the group will behave according to (defaults to 'neutral' on Group __init__).
+        :type cohesion: str, optional
+        :param max_size: An explicit maximum group size to set for the generated group.
+        :type max_size: int, optional
+        :raises TypeError: If any of the required input parameters are of the incorrect data type.
+        :raises ValueError: If the input cohesion is not a supported type.
+        :return: The generated Group object.
+        :rtype: Group
         """
-        # TODO: Implement this function
+        # Check that the required parameters are of the correct data type
+        if not isinstance(id, str) or not isinstance(index, int) or not isinstance(hierarchy, str) or not isinstance(members, list):
+            raise TypeError("One or more of the required parameters 'id', 'index', 'hierarchy', or 'members' are not of the appropriate data type")
+
+        # Begin by setting crucial information
+        self.id = id
+        self.index = index
+        if cohesion is not None:
+            if cohesion not in COHESIONS:
+                raise ValueError("The specified cohesion type is not supported")
+            self.cohesion = cohesion
+
+        if max_size is not None:
+            # Assume that any value is valid (with max_size <= 0 meaning explicitly that there's no maximum)
+            self.max_size = max_size
+        else:
+            # Assume that max_size should equal the number of input members
+            self.max_size = len(members)
+
+        # Aggregate the required values, adding the member names during the process
+        opinion_sum: float = 0.0
+        radicalisation_count: int = 0
+        susceptibility_sum: float = 0.0
+
+        for agent in members:
+            self.members.append(agent.id)
+            opinion_sum += agent.opinion
+            susceptibility_sum += agent.social_susceptibility
+            if agent.radicalised:
+                radicalisation_count += 1
+
+        # Calculate the final attributes and set them
+        self.aggregate_opinion = opinion_sum / self.max_size
+        self.radicalisation_rate = radicalisation_count / self.max_size
+        self.aggregate_susceptibility = susceptibility_sum / self.max_size
+
         return self
 
     def add_attribute(
@@ -194,16 +261,31 @@ class Group:
         """
         return len(self.members)
 
-    def change_aggregate_opinion(self, opinion_delta: float) -> None:
+    def recalculate_aggregate_opinion(self, member_opinions: list[float]) -> None:
+        """
+        A setter method that will calculate a fixed aggregate opinion value from the
+        currently held opinion values of members.
+
+        :param member_opinions: The currently held opinion values of group members.
+        :type member_opinions: list[float]
+        """
+        opinion_sum: float = sum(member_opinions)
+        self.aggregate_opinion = opinion_sum / self.get_num_members()
+        return None
+
+    def change_aggregate_opinion(self, opinion_delta: float) -> float:
         """
         A setter method that changes the Group's aggregate opinion by a given delta value.
 
-        This will cause changes to the opinions of member agents to create the desired aggregate
-        opinion.
+        This will not cause changes to the opinions of member agents to create the desired aggregate
+        opinion -- It should be handled from within the parent model by using the returned
+        per-agent opinion delta value.
 
         :param opinion_delta: The delta value by which to shift the Group's aggregate opinion.
         :type opinion_delta: float
         :raises TypeError: If opinion_delta is not a float.
+        :return: The per-agent opinion_delta value that must be applied to each member.
+        :rtype: float
         """
         if not isinstance(opinion_delta, float):
             raise TypeError("opinion_delta must be a float")
@@ -212,9 +294,16 @@ class Group:
 
         per_agent_delta: float = opinion_delta / num_agents
 
-        # TODO: Finish this function
+        # Change the group's aggregate opinion in the meantime
+        self.aggregate_opinion += opinion_delta
 
-        return None
+        # Constrain the value back to the valid range
+        if self.aggregate_opinion < -OPINION_MAX:
+            self.aggregate_opinion = -OPINION_MAX
+        elif self.aggregate_opinion > OPINION_MAX:
+            self.aggregate_opinion = OPINION_MAX
+
+        return per_agent_delta
 
     def set_index(self, index: int) -> None:
         """
