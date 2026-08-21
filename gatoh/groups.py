@@ -14,26 +14,72 @@ from typing import NotRequired, TypeVar, TypedDict, override
 
 from gatoh.utils import draw_random_value, random_coinflip, value_rw_delta
 
+# Definition of all valid, existing Group cohesion categories
+COHESIONS: list[str] = ["intimate", "close", "neutral", "distant", "passing"]
+
 
 # The compression level to use across relevant methods
 COMPRESS_LEVEL: int = 4
+
+# Used for type-checking valid group cohesion types wherever relevant
+class CohesionProbs(TypedDict):
+    intimate: NotRequired[float]
+    close: NotRequired[float]
+    neutral: NotRequired[float]
+    distant: NotRequired[float]
+    passing: NotRequired[float]
+
 
 # A generic to be used in cases where variables may be any type.
 T = TypeVar("T")
 # A generic to be used for the case where a fully generic dictionary may be passed (e.g dict[S, T])
 S = TypeVar("S")
 
+def draw_cohesion() -> str:
+    """
+    A Group utility function that randomly draws a valid Group cohesion type.
+
+    :return: The string representing the drawn cohesion type.
+    :rtype: str
+    """
+    drawn_cohesion: str = rd.choice(COHESIONS)
+    return drawn_cohesion
+
 
 class Group:
     """
     A class to define Groups of Agent objects that can serve as a way of clustering hierarchies,
     and providing a pseudo-vectorisation of model operations across agents.
+
+    Supported positional arguments:
+        - <string> to set the Group's id.
+        - <int> to set the Group's maximum size.
+
+    :param id: Positional argument -- provides a unique identifier for a group.
+    :type id: str, optional
+    :param max_size: Positional argument -- the maximum number of Agents that can be members of this group.
+    :type max_size: int, optional
+    :param index: Keyword argument -- the group's index within a GroupSet.
+    :type index: int, optional
+    :param hierarchy: Keyword argument -- the social hierarchy that this group is being formed in.
+    :type hierarchy: str, optional
+    :param members: Keyword argument -- the IDs of the agents that are members of this group.
+    :type members: list[str], optional
+    :param aggregate_opinion: Keyword argument -- the aggregate opinion held by members of the group.
+    :type aggregate_opinion: float, optional
+    :param aggregate_susceptibility: Keyword argument -- the aggregate social susceptibility of group members.
+    :type aggregate_susceptibility: float, optional
+    :param cohesion: Keyword argument -- the level of cohesion that the group will act with.
+    :type cohesion: str, optional
+    :param radicalisation_rate: Keyword argument -- The proportion of agents in the group which are radicalised.
+    :type radicalisation_rate: float, optional
     """
 
     def __init__(self, *args: T, **kwargs: T) -> None:
         # Attributes declared but without initialisation will be defined by self.generate_group() in a subsequent call if no args are passed
         self.id: str
         self.index: int
+        self.max_size: int = -1
 
         self.hierarchy: str
         self.members: list[str] = []
@@ -41,6 +87,7 @@ class Group:
         self.aggregate_opinion: float
 
         self.aggregate_susceptibility: float
+        self.cohesion: str = "neutral"
         self.radicalisation_rate: float
 
         # If no args have been passed, it is assumed that self.generate_group() will be subsequently called
@@ -48,8 +95,8 @@ class Group:
             for arg in args:
                 if isinstance(arg, str):
                     self.add_attribute("id", value=arg)
-                elif isinstance(arg, float):
-                    self.add_attribute("aggregate_opinion", value=arg)
+                elif isinstance(arg, int):
+                    self.add_attribute("max_size", value=arg)
                 else:
                     pass
         if kwargs:
@@ -182,6 +229,29 @@ class Group:
         self.index = index
         return None
 
+    def set_max_size(self, max_size: int, no_limit: bool = False) -> None:
+        """
+        A setter function to change the maximum size of a Group.
+
+        :param max_size: The maximum number of agents that can be members of this group.
+        :type max_size: int
+        :param no_limit: A flag indicating if the change should remove the group's size limit.
+        :type no_limit: bool, optional
+        :raises TypeError: If the input max_size is not an integer.
+        :raises ValueError: If the input max_size is equal or less than zero.
+        """
+        if no_limit:
+            # no_limit always overrides the max_size value (even if it would otherwise be invalid)
+            self.max_size = -1
+            return None
+
+        if not isinstance(max_size, int):
+            raise TypeError("max_size must be an integer")
+        elif max_size <= 0:
+            raise ValueError("max_size must be equal or greater to 1")
+        self.max_size = max_size
+        return None
+
     def set_hierarchy(self, hierarchy: str) -> None:
         """
         A setter function to change the hierarchy that the Group belongs to.
@@ -195,28 +265,78 @@ class Group:
         self.hierarchy = hierarchy
         return None
 
-    def add_member(self, member: str) -> None:
+    def set_cohesion(self, cohesion: str) -> None:
+        """
+        A setter function to change the group's cohesion type.
+
+        :param cohesion: The new cohesion type to assign to the Group.
+        :type cohesion: str
+        :raises TypeError: If the input cohesion type is not a string.
+        :raises ValueError: If the cohesion is not one of the supported types.
+        """
+        if not isinstance(cohesion, str):
+            raise TypeError("cohesion must be a string")
+        elif cohesion not in COHESIONS:
+            raise ValueError(f"The cohesion type '{cohesion}' is not supported -- cannot change the Group's cohesion type")
+        self.cohesion = cohesion
+        return None
+
+    def group_at_capacity(self) -> bool:
+        """
+        A function that reports if the group is at its maximum capacity.
+
+        :return: A flag indicating if the group is at its maximum capacity.
+        :rtype: bool
+        """
+        if self.max_size <= 0:
+            # Values <= 0 are treated as dummy values that indicate the group has no maximum size
+            return False
+        elif len(self.members) >= self.max_size:
+            return True
+        return False
+
+    def add_member(self, member: str, force: bool = False) -> None:
         """
         Add a new member to this group (using the Agent's ID as the identifier).
 
         :param member: The ID of the Agent being added as a group member.
         :type member: str
+        :param force: A flag indicating if this call should disregard the maximum group size.
+        :type force: bool, optional
         :raises TypeError: If the input value is not a string.
+        :raises UserWarning: If the group is already at maximum capacity
         """
+        if self.group_at_capacity() and not force:
+            warnings.warn(
+                f"WARNING: Attempted to add a member to group {self.id} which is already at maximum capacity",
+                category=UserWarning,
+            )
+            return None
+
         if not isinstance(member, str):
             raise TypeError("member must be a string value")
         self.members.append(member)
         return None
 
-    def add_members(self, members: Iterable[str]) -> None:
+    def add_members(self, members: Iterable[str], force: bool = False) -> None:
         """
         Add multiple new members to this group (using the Agent IDs as the identifiers).
 
         :param members: An iterable containing the Agent IDs of the members to be added.
         :type members: Iterable[str]
+        :param force: A flag indicating if this call should disregard the maximum group size.
+        :type force: bool, optional
         :raises TypeError: If any of the input members are not string values.
+        :raises UserWarning: If the group is already at maximum capacity.
         """
         for member in members:
+            if self.group_at_capacity() and not force:
+                warnings.warn(
+                    f"WARNING: Attempted to add a member to group {self.id} which is already at maximum capacity",
+                    category=UserWarning,
+                )
+                return None
+
             if not isinstance(member, str):
                 raise TypeError("One or more members have been passed as an invalid, non-string data type")
             else:
@@ -505,7 +625,7 @@ class GroupSet:
             )
             return None
 
-    def agents_at_indices(self, indices: list[int]) -> list[Group]:
+    def groups_at_indices(self, indices: list[int]) -> list[Group]:
         """
         Returns a list of all the group objects at the specified indices.
 
@@ -556,3 +676,144 @@ class GroupSet:
         for id in ids:
             groups_to_return.append(self.get_group_by_id(id))
         return groups_to_return
+
+    def get_index(self, group: Group) -> int:
+        """
+        Returns the index within the GroupSet of the input Group object.
+
+        :param group: The group whose index is being searched for.
+        :type group: Group
+        :raises KeyError: If the input Group does not exist in the GroupSet.
+        :return: The index of the group within the GroupSet.
+        :rtype: int
+        """
+        for idx, grp in enumerate(self.groups):
+            if grp.id == group.id:
+                return idx
+
+        raise KeyError(f"The Group {group.id} does not exist in the GroupSet -- unable to return an index.")
+
+    def get_indices(self, groups: list[Group]) -> list[int]:
+        """
+        Returns the indices within the GroupSet of the input Group objects.
+
+        :param groups: The groups whose indices are being searched for.
+        :type groups: list[Group]
+        :return: The indices of the groups within the GroupSet.
+        :rtype: list[int]
+        """
+        group_indices: list[int] = []
+        for group in groups:
+            group_indices.append(self.get_index(group))
+        return group_indices
+
+    def discard_index(self, index: int) -> bool:
+        """
+        Removes the Group at the specified index in the GroupSet; does not raise an error if the index is out of bounds.
+
+        :param index: The index in the GroupSet which is to be removed.
+        :type index: int
+        :return: A flag indicating if the Group was removed successfully or not.
+        :rtype: bool
+        """
+        if 0 < index < len(self.groups):
+            left_half: list[Group] = self.groups[:index]
+            right_half: list[Group] = self.groups[index + 1 :]
+
+            self.groups = deepcopy(left_half) + deepcopy(right_half)
+            del left_half, right_half
+
+            self.update_indices()
+            return True
+        return False
+
+    def remove(self, group: Group) -> bool:
+        """
+        Removes a group from the GroupSet which matches the input group; returning an error if such a Group does not exist.
+
+        :param group: The group that should be removed from the set.
+        :type group: Group
+        :raises KeyError: If the input Group does not exist in the GroupSet.
+        :return: A flag indicating that the Group was removed successfully.
+        :rtype: bool
+        """
+        for idx, grp in enumerate(self.groups):
+            if group == grp:
+                left_half: list[Group] = self.groups[:idx]
+                right_half: list[Group] = self.groups[idx + 1 :]
+
+                self.groups = deepcopy(left_half) + deepcopy(right_half)
+                del left_half, right_half
+
+                self.update_indices()
+                return True
+        raise KeyError(f"Tried to remove a Group with id {group.id} that doesn't exist in the GroupSet")
+
+    def remove_index(self, index: int) -> bool:
+        """
+        Removes the Group at the specified index in the GroupSet; raising an error if the index is out of bounds.
+
+        :param index: The index in the GroupSet which is to be removed.
+        :type index: int
+        :raises IndexError: If the input index is out of bounds for the GroupSet.
+        :return: A flag indicating that the Group was removed successfully.
+        :rtype: bool
+        """
+        if 0 < index < len(self.groups):
+            left_half: list[Group] = self.groups[:index]
+            right_half: list[Group] = self.groups[index + 1 :]
+
+            self.groups = deepcopy(left_half) + deepcopy(right_half)
+            del left_half, right_half
+
+            self.update_indices()
+            return True
+        raise IndexError(f"Tried to remove a Group at out of bounds index {index} from the GroupSet")
+
+    def sample(self, n: int) -> list[Group]:
+        """
+        Randomly draw n groups from the GroupSet without replacement.
+
+        :param n: The number of groups to sample.
+        :type n: int
+        :return: The groups sampled from the GroupSet.
+        :rtype: list[Group]
+        """
+        sampled_groups: list[Group] = self.random.sample(self.groups, n)
+        return deepcopy(sampled_groups)
+
+    def get_num_members(self, index: int) -> int:
+        """
+        A wrapper that used the group's getter function to report the number of members of that group.
+
+        :param index: The index of the group for which the number of members is being inspected.
+        :type index: int
+        :raises IndexError: If the index is out of bounds.
+        :return: The number of agents which are members of the group at the specified index.
+        :rtype: int
+        """
+        if 0 < index < len(self.groups):
+            return self.groups[index].get_num_members()
+        raise IndexError(f"Tried to report the number of members for a group at an out-of-bounds index ({index})")
+
+    def get_group_ids(self) -> list[str]:
+        """
+        A getter function that returns the IDs of all groups contained within the group set.
+
+        :return: All of the contained groups' IDs.
+        :rtype: list[str]
+        """
+        group_ids: list[str] = []
+        for group in self.groups:
+            group_ids.append(group.id)
+        return group_ids
+
+    @override
+    def __getstate__(self) -> dict[str, list[Group] | rd.Random]:
+        """
+        Retrieve the current state of the GroupSet for serialization.
+
+        :return: A representation of the current state of the GroupSet.
+        :rtype: dict
+        """
+        return {"groups": self.groups, "random": self.random}
