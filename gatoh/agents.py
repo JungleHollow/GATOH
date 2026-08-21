@@ -204,6 +204,8 @@ class Agent:
         :type parameters: dict[str, float], optional
         :param personal_benefit: A boolean indicating if the Agent would be personally benefitted by the adoption of the 'social virus' being spread.
         :type personal_benefit: bool, optional
+        :raises TypeError: If any of the required input parameters are of the incorrect data type.
+        :raises ValueError: If the input personality is not a supported type.
         :return: The generated Agent object.
         :rtype: Agent
         """
@@ -218,7 +220,9 @@ class Agent:
         # Begin by setting crucial information
         self.id = id
         self.index = index
-        if personality:
+        if personality is not None:
+            if personality not in PERSONALITIES:
+                raise ValueError("The specified personality type is not supported")
             self.personality = personality
 
         if personal_benefit:
