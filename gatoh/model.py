@@ -21,6 +21,7 @@ from rustworkx import all_shortest_paths as rx_shortest_paths
 
 from gatoh.agents import Agent, AgentSet, OPINION_MAX
 from gatoh.graphs import Graph, GraphNode, GraphEdge, GraphSet
+from gatoh.groups import Group, GroupSet
 from gatoh.logging import GATOHLogger
 from gatoh.utils import (
     EdgeChanges,
@@ -161,6 +162,7 @@ class ABModel:
 
         self.agents: AgentSet = AgentSet()
         self.graphs: GraphSet = GraphSet()
+        self.groups: GroupSet = GroupSet()
 
         if init_graphs:
             # Ensure that the input hierarchy information always produce at least empty graphs in the graphset
@@ -504,9 +506,10 @@ class ABModel:
         # Create the save directory
         os.mkdir(self.save_dir)
 
-        # Save the AgentSet and GraphSet
+        # Save the AgentSet, GraphSet, and GroupSet
         self.agents.save_agentset(self.save_dir)
         self.graphs.save_graphset(self.save_dir)
+        self.groups.save_groupset(self.save_dir)
 
         # Save the model's base graph (uncompressed and in the root of the save directory)
         base_graph_path: str = f"{self.save_dir}/graph_base_graph.graphml"
@@ -559,6 +562,7 @@ class ABModel:
 
         graphset_exists: bool = False
         agentset_exists: bool = False
+        groupset_exists: bool = False
 
         # Recursively scan the files in load_dir
         for file_name in os.listdir(load_dir):
@@ -571,6 +575,8 @@ class ABModel:
                         agentset_exists = True
                     elif file_name == "_graphset.zip":
                         graphset_exists = True
+                    elif file_name == "_groupset.zip":
+                        groupset_exists = True
                     else:
                         # Currently unknown how/if to handle edge cases here
                         pass
@@ -620,6 +626,10 @@ class ABModel:
             self.graphs.load_graphset(load_dir, self.hierarchy_information)
             if self.debug:
                 self.logger.log_function_call("GraphSet.load_graphset")
+        if groupset_exists:
+            self.groups.load_groupset(load_dir)
+            if self.debug:
+                self.logger.log_function_call("GroupSet.load_groupset")
 
         if self.debug:
             self.logger.log_function_call("ABModel.load_model")
@@ -900,7 +910,73 @@ class ABModel:
                 parameters=parameters,
             )
         if self.debug:
-            self.logger.log_function_call("model.generate_agents")
+            self.logger.log_function_call("ABModel.generate_agents")
+        return None
+
+    def add_group(self, group: Group) -> int:
+        """
+        Add a single new Group to the model's GroupSet, returning its index within the GroupSet.
+
+        :param group: The group to add to the GroupSet.
+        :type group: Group
+        :return: The index of the newly added Group in the GroupSet.
+        :rtype: int
+        """
+        if self.debug:
+            self.logger.log_function_call("ABModel.add_group")
+            # Preemptively logging the groupset add
+            self.logger.log_function_call("GroupSet.add")
+        return self.groups.add(group)
+
+    def add_groups(self, groups: list[Group]) -> GroupSet:
+        """
+        Add new Groups to the Model's GroupSet.
+
+        :param groups: The groups to be added to the GroupSet.
+        :type groups: list[Group]
+        :return: The model's newly updated group set.
+        :rtype: GroupSet
+        """
+        for group in groups:
+            _ = self.groups.add(group)
+            if self.debug:
+                self.logger.log_function_call("GroupSet.add")
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.add_groups")
+
+        return self.groups
+
+    def generate_groups(
+        self,
+        id_base: str,
+        cohesion_probs: dict[str, float],
+        distribution: str = "gaussian",
+        parameters: dict[str, float] | None = None,
+        group_size: int = 10,
+    ) -> None:
+        """
+        Randomly generates a number of Group objects from the model's agent set.
+
+        :param id_base: a 4-character alphabetic string that serves as the base of the XXXXnnnn id for each Group.
+        :type id_base: str
+        :param cohesion_probs: A <cohesion : probability> mapping specifying the probability of a Group having any given cohesion type.
+        :type cohesion_probs: dict[str, float]
+        :param distribution: The distribution from which any random values will be drawn.
+        :type distribution: str, optional
+        :param parameters: Any explicit parameters that the distribution should use when being created.
+        :type parameters: dict[str, float], optional
+        :param group_size: The maximum size of the groups to be created.
+        :type group_size: int, optional
+        """
+        # Convert to separate lists for use in random.choices()
+        cohesions: list[str] = list(cohesion_probs.keys())
+        probabilities: list[float] = list(cohesion_probs.values())
+
+        # TODO: Finish this function
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.generate_groups")
         return None
 
     def iterate(self, worker_pool: Pool | None = None) -> None:
