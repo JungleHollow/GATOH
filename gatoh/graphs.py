@@ -10,7 +10,7 @@ import zipfile
 from collections.abc import Iterable, Iterator
 from copy import deepcopy
 from multiprocessing.pool import Pool
-from random import Random, random, randint
+from random import Random, random, randint, sample
 from shutil import rmtree
 from typing import Any, Self
 from typing import TypedDict
@@ -30,7 +30,8 @@ from gatoh.utils import (
     random_coinflip,
     value_rw_delta,
     watts_strogatz_graph,
-    pygraph_to_pydigraph
+    pygraph_to_pydigraph,
+    get_keys_by_value,
 )
 
 # Define global constants to avoid using "magic numbers" throughout the code
@@ -1296,6 +1297,134 @@ class Graph:
 
         radicalisation_measure: float = summation / (K * (K - 1))
         return radicalisation_measure
+
+    def get_betweeness_centrality(self, subgraph: rx.PyDiGraph[GraphNode, GraphEdge] | None = None) -> rx.CentralityMapping:
+        """
+        A wrapper function that makes the rustworkx :meth:`~rustworkx.digraph_betweenness_centrality`
+        function be a callable instance method for Graph.
+
+        :param subgraph: A subgraph for which to calculate the betweenness centrality rather than the full graph.
+        :type subgraph: :class:`~rustworkx.PyDiGraph`, optional
+        :return: A <Node index : centrality measure> mapping containing the betweenness centrality for each node in the graph.
+        :rtype: dict[int, float]
+        """
+        if subgraph is not None:
+            return rx.betweenness_centrality(subgraph)
+        else:
+            return rx.betweenness_centrality(self.graph)
+
+    def compute_subgraph_center(self, subgraph_mapping: rx.CentralityMapping) -> int:
+        """
+        Calculates the center of a cluster using the betweenness centrality mapping.
+
+        :param subgraph_mapping: A <Node index : centrality measure> mapping containing the betweenness centrality for each node in the graph.
+        :type subgraph_mapping: dict[int, float]
+        :return: The index of the node with the greatest centrality (the center of the cluster).
+        :rtype: int
+        """
+        center_index: int = -1
+        largest_value: float = 0.0
+        for key, value in subgraph_mapping.items():
+            if value > largest_value:
+                center_index = key
+                largest_value = value
+        return center_index
+
+    def get_dijkstra_all_pairs(self, subgraph: rx.PyDiGraph[GraphNode, GraphEdge] | None = None) -> rx.AllPairsPathLengthMapping:
+        """
+        A wrapper function that makes the rustworkx :meth:`~rustworkx.digraph_all_pairs_dijkstra_path_lengths`
+        function be a callable instance method for Graph.
+
+        :param subgraph: A subgraph for which to calculate the betweeness centrality rather than the full graph.
+        :type subgraph: :class:`~rustworkx.PyDiGraph`, optional
+        :return: A <Node index : <Node index : path length>> nested mapping outlining the path lengths of all pairs in the graph.
+        :rtype: dict[int, dict[int, float]]
+        """
+        if subgraph is not None:
+            return rx.digraph_all_pairs_dijkstra_path_lengths(subgraph, lambda x: x.weighting)
+        else:
+            return rx.digraph_all_pairs_dijkstra_path_lengths(self.graph, lambda x: x.weighting)
+
+    def cluster_nodes(self, k: int, n_iters: int = 40) -> dict[GraphNode, int]:
+        """
+        A function that will use the betweenness centrality measures of the nodes in the graph
+        to separate them into a specific number of clusters.
+
+        This function uses:
+
+            - KMeans as the main clustering algorithm
+            - Dijkstra all-pairs path lengths for the distances between nodes
+            - Betweenness centrality for the KMeans evaluation metric when determining centers
+
+        :param k: The number of clusters to separate the graph into.
+        :type k: int
+        :param n_iters: The maximum number of iterations to attempt running the KMeans algorithm for.
+        :type n_iters: int, optional
+        :return: An <Agent ID : Cluster ID> mapping that outlines the generated clusters for this graph.
+        :rtype: dict[str, str]
+        """
+        # Compute the distance matrix
+        all_pairs_lengths: rx.AllPairsPathLengthMapping = self.get_dijkstra_all_pairs()
+
+        # Randomly select k nodes as centers
+        k_nodes: list[int] = sample(self.graph.node_indices(), k=k)
+
+        current_centers: list[int] = k_nodes
+
+        cluster_dict: dict[GraphNode, int] = {}
+        stable_counter: int = 0
+
+        for i in range(n_iters):
+            print(f"KMeans iteration: {i}")
+
+            # Assign each node to its closest center
+            for node in self.graph.nodes():
+                # The distance from this node to all other nodes in the graph
+                distance_to_node: rx.PathLengthMapping = all_pairs_lengths[node.index]
+
+                # Find the distances to the current centers for the current node
+                distance_to_center: dict[int, float] = {}
+                for center in current_centers:
+                    if center in distance_to_node:
+                        distance_to_center[center] = distance_to_node[center]
+                    else:
+                        # This is done for edge cases in which hierarchy graphs may not be fully connected
+                        distance_to_center[center] = np.inf
+
+                # Find the center with the minimum distance
+                nearest_center: int = min(distance_to_center.items(), key=lambda x: x[1])[0]
+
+                # Assign this center to the node
+                cluster_dict[node] = nearest_center
+
+            # Update the centers based on the previous results
+            new_centers: list[int] = []
+            for center in current_centers:
+                # Get all the nodes with this center
+                subgraph_nodes: list[GraphNode] = get_keys_by_value(cluster_dict, center)
+
+                # Define the subgraph
+                subgraph: rx.PyDiGraph[GraphNode, GraphEdge] = self.graph.subgraph([node.index for node in subgraph_nodes])
+
+                # Calculate the center of the subgraph
+                betweenness_centrality: rx.CentralityMapping = self.get_betweeness_centrality(subgraph=subgraph)
+                center = self.compute_subgraph_center(betweenness_centrality)
+                new_centers.append(center)
+
+            # Check for convergence
+            if sorted(current_centers) == sorted(new_centers):
+                stable_counter += 1
+                if stable_counter == 3:
+                    print(f"KMeans algorithm converges with {i} iterations...")
+                    break
+
+            # Update the centers if no convergence occurred
+            current_centers = deepcopy(new_centers)
+        if stable_counter < 3:
+            print("KMeans clustering algorithm did not converge...")
+
+        print("The KMeans clustering algorithm has finished running")
+        return cluster_dict
 
     def __in__(self, iterable: Iterable[Graph]) -> bool:
         """
