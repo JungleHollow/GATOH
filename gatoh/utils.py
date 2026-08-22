@@ -44,6 +44,10 @@ DEFAULT_DPI: float = 300.0
 
 T = TypeVar("T", bool, str, int, float)
 
+# Used for generic dicts
+K = TypeVar("K")
+V = TypeVar("V")
+
 # ========== Graph utils ========== #
 
 
@@ -658,3 +662,25 @@ def plot_graph(
         plt.show()
 
     return None
+
+
+# ========== Python Utils ==========
+
+
+def get_keys_by_value(input_dict: dict[K, V], value_to_find: V) -> list[K]:
+    """
+    A utility function that returns all keys in a dictionary which have the specified
+    value.
+
+    :param input_dict: The dictionary which is being searched.
+    :type input_dict: dict[Any, Any]
+    :param value_to_find: The value that is being searched for in the dictionary.
+    :type value_to_find: Any
+    :return: A list of all keys which have the specified value in the dictionary.
+    :rtype: List[Any]
+    """
+    keys_list: list[K] = []
+    for key, value in input_dict.items():
+        if value == value_to_find:
+            keys_list.append(key)
+    return keys_list
