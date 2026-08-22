@@ -7,7 +7,9 @@ from collections.abc import Callable
 from datetime import datetime
 from multiprocessing.pool import Pool
 from random import choices, randint
+from re import L
 from shutil import rmtree
+from this import s
 from typing import Any, TypedDict
 
 import numpy as np
@@ -29,6 +31,7 @@ from gatoh.utils import (
     create_config_file,
     linear_link,
     multiplicative_link,
+    get_keys_by_value,
 )
 from gatoh.visualisation import ABVisualiser
 
@@ -71,6 +74,7 @@ class ConfigData(TypedDict):
     suppress_warnings: bool
     checkpointing: bool
     partial_iterations: bool
+    simulate_groups: bool
     save_dir: str
     data_file: str
     model_id: str
@@ -118,6 +122,8 @@ class ABModel:
     :type init_graphs: bool, optional
     :param partial_iterations: A flag indicating if the model's iterations should only simulate effects for a random subset of the agents.
     :type partial_iterations: bool, optional
+    :param simulate_groups: A flag indicating if the model's iterations will be simulating aggregate agent groups rather than individual agents.
+    :type simulate_groups: bool, optional
     :param parameters_to_track: The names of initial model parameters that should be tracked and recorded by the logger.
     :type parameters_to_track: list[str], optional
     :param save_dir: The path to a directory in which all of this model's non-logger data should be saved to.
@@ -149,6 +155,7 @@ class ABModel:
         checkpointing: bool = True,
         init_graphs: bool = False,
         partial_iterations: bool = False,
+        simulate_groups: bool = False,
         parameters_to_track: list[str] | None = None,
         save_dir: str = "",
         data_file: str = "",
@@ -231,6 +238,7 @@ class ABModel:
             self.logger.track_model_parameters(self.parameters_to_track)
 
         self.checkpointing: bool = checkpointing
+        self.simulate_groups: bool = simulate_groups
         self.save_dir: str = save_dir
         self.data_file: str = data_file
         self.model_id: str = model_id
@@ -419,6 +427,18 @@ class ABModel:
         self.partial_iterations = partial_iterations
         if self.debug:
             self.logger.log_function_call("ABModel.set_partial_iterations")
+        return None
+
+    def set_simlate_groups(self, simulate_groups: bool) -> None:
+        """
+        A setter function that changes the model's simulate_groups flag.
+
+        :param simulate_groups: A flag indicating if the model will be simulating aggregate agent groups rather than individual agents.
+        :type simulate_groups: bool
+        """
+        self.simulate_groups = simulate_groups
+        if self.debug:
+            self.logger.log_function_call("ABModel.set_simulate_groups")
         return None
 
     def set_save_dir(self, save_dir: str, force: bool = False) -> None:
@@ -951,29 +971,53 @@ class ABModel:
         self,
         id_base: str,
         cohesion_probs: dict[str, float],
-        distribution: str = "gaussian",
-        parameters: dict[str, float] | None = None,
-        group_size: int = 10,
+        n_groups: int = 10,
+        max_iters: int = 40,
     ) -> None:
         """
-        Randomly generates a number of Group objects from the model's agent set.
+        Randomly generates a number of Group objects from the model's agent and graph sets,
+        using KMeans clustering.
+
+        This function requires for both valid agents and graphs to already exist in the model.
 
         :param id_base: a 4-character alphabetic string that serves as the base of the XXXXnnnn id for each Group.
         :type id_base: str
         :param cohesion_probs: A <cohesion : probability> mapping specifying the probability of a Group having any given cohesion type.
         :type cohesion_probs: dict[str, float]
-        :param distribution: The distribution from which any random values will be drawn.
-        :type distribution: str, optional
-        :param parameters: Any explicit parameters that the distribution should use when being created.
-        :type parameters: dict[str, float], optional
-        :param group_size: The maximum size of the groups to be created.
-        :type group_size: int, optional
+        :param n_groups: The number of groups to create in each hierarchy.
+        :type n_groups: int, optional
+        :param max_iters: The maximum number of iterations that the KMeans algorithm can run for.
+        :type max_iters: int, optional
+        :raises RuntimeError: If no valid agents or graphs exist in the model.
         """
+        if len(self.agents) == 0 or len(self.graphs) == 0:
+            raise RuntimeError("Group generation requires for valid agents and graphs to exist in the model")
+
         # Convert to separate lists for use in random.choices()
         cohesions: list[str] = list(cohesion_probs.keys())
         probabilities: list[float] = list(cohesion_probs.values())
 
-        # TODO: Finish this function
+        for hierarchy in self.graphs:
+            cluster_dict: dict[GraphNode, int] = hierarchy.cluster_nodes(n_groups, n_iters=max_iters)
+
+            # For each unique cluster...
+            for value in set(cluster_dict.values()):
+                cluster_nodes: list[GraphNode] = get_keys_by_value(cluster_dict, value)
+
+                sampled_cohesion: str = choices(cohesions, weights=probabilities, k=1)[0]
+
+                # Now, create the group using all of the relevant information
+                new_group: Group = Group()
+                new_group = new_group.generate_group(
+                    f"{id_base}{len(self.groups):04}",
+                    len(self.groups),
+                    hierarchy.name,
+                    [node.agent for node in cluster_nodes],
+                    cohesion=sampled_cohesion,
+                )
+
+                # Add the group to the group set
+                _ = self.add_group(new_group)
 
         if self.debug:
             self.logger.log_function_call("ABModel.generate_groups")
@@ -989,7 +1033,10 @@ class ABModel:
         :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
         :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         """
-        self._iterate_inner(worker_pool=worker_pool, partial=self.partial_iterations)
+        if not self.simulate_groups:
+            self._iterate_inner(worker_pool=worker_pool, partial=self.partial_iterations)
+        else:
+            self._group_iterate_inner(worker_pool=worker_pool, partial=self.partial_iterations)
 
     def _iterate_step(self, worker_pool: Pool | None, partial: bool) -> None:
         """
@@ -1115,6 +1162,141 @@ class ABModel:
 
             # Perform the actual iteration processes
             self._iterate_step(worker_pool, partial)
+
+        # Call the logger's save_data function which handles data persistence appropriately
+        data_saved: bool = self.logger.save_data(self.data_file)
+        if data_saved:
+            print(
+                f"\n\nGATOH logger data was successfully written to the file at path: {self.data_file}\n\n"
+            )
+        if self.debug:
+            self.logger.log_function_call("ABModel.iterate")
+        return None
+
+    def _group_iterate_step(self, worker_pool: Pool | None, partial: bool) -> None:
+        """
+        Carries out all required processed for a single model iteration with Groups.
+
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`
+        :param partial: A flag indicating if the iteration should only simulate a fraction of the total population.
+        :type partial: bool
+        """
+        # Initialise a dictionary to keep track of group opinion changes
+        # (this is done to prevent recursive updating of opinions during the evolution of opinions)
+        new_group_opinions: dict[str, float] = {}
+
+        # Type declarations
+        partial_indices: list[int] | None = None
+        partial_groups: list[Group]
+
+        if partial:
+            # Draw the partial indices
+            partial_indices = choices(list(range(len(self.groups))), k=int(len(self.groups)*PARTIAL_FRACTION))
+
+            # Get the corresponding group objects
+            partial_groups = self.groups.groups_at_indices(partial_indices)
+
+        # First each groups looks at its neighbours to see how their opinion will evolve this iteration
+        if worker_pool is not None:
+            if partial:
+                opinion_results = worker_pool.imap(
+                    self.group_iteration_opinion_calculation,
+                    self.groups.groups_at_indices(partial_indices),
+                    chunksize=10,
+                )
+            else:
+                opinion_results = worker_pool.imap(
+                    self.group_iteration_opinion_calculation,
+                    self.groups,
+                    chunksize=10,
+                )
+
+            for opinion_result in opinion_results:
+                new_group_opinions[opinion_result[0]] = opinion_result[1]
+                if self.debug:
+                    self.logger.log_function_call("ABModel.group_iteration_opinion_calculation")
+
+            # Manual garbage collection
+            del opinion_results
+            _ = gc.collect()
+        else:
+            if partial:
+                for group in partial_groups:
+                    opinion_result = self.group_iteration_opinion_calculation(group)
+                    new_group_opinions[opinion_result[0]] = opinion_result[1]
+
+                    if self.debug:
+                        self.logger.log_function_call("ABModel.group_iteration_opinion_calculation")
+
+                    # Manual garbage collection
+                    del opinion_result
+                    _ = gc.collect()
+            else:
+                for group in self.groups:
+                    opinion_result = self.group_iteration_opinion_calculation(group)
+                    new_group_opinions[opinion_result[0]] = opinion_result[1]
+
+                    if self.debug:
+                        self.logger.log_function_call("ABModel.group_iteration_opinion_calculation")
+
+                    # Manual garbage collection
+                    del opinion_result
+                    _ = gc.collect()
+
+        # new_group_opinions will only contain information for changes that ocurred so no partial flag must be specified
+        self.group_iteration_opinion_changes(new_group_opinions)
+
+        # The model stepping is less computationally intensive, and will always be performed on the entire population
+        self.step()
+
+        # Updates are more computationally intensive, and depend on the iteration results, so they will also be partial as needed
+        self.update(worker_pool=worker_pool, partial_indices=partial_indices)
+
+        # Handle the logger's iteration() calculations and call its method
+        self.logger_iteration(worker_pool=worker_pool)
+
+        # Get this iteration's print string (will be formatted appropriately based on the print interval)
+        iteration_print_string: str = self.logger.iteration_print()
+        print(iteration_print_string)
+
+        if self.visualise:
+            self.visualiser.visualiser_iteration(
+                self.base_graph, self.current_iteration, model_name=self.model_id,
+            )
+        if self.checkpointing:
+            self.save_model()
+
+        self.current_iteration += 1
+
+        return None
+
+    def _group_iterate_inner(self, worker_pool: Pool | None, partial: bool) -> None:
+        """
+        Handles the main model iteration loop when simulating Groups instead of Agents.
+
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`
+        :param partial: A flag indicating if the iteration should only simulate a fraction of the total population.
+        :type partial: bool
+        """
+        while self.current_iteration < self.max_iterations:
+            # Initialise the logger state for the current iteration
+            if self.current_iteration == 0:
+                self.logger.new_iteration(init=True)
+            else:
+                self.logger.new_iteration()
+                # Only apply link functions if it is not the first iteration
+                self.apply_link_functions()
+
+            # Get and print the formatted debug string if appropriate
+            if self.debug:
+                self.logger_debug_iteration()
+                debug_print_string: str = self.logger.debug_iteration_print()
+                print(debug_print_string)
+
+            # Perform the actual iteration processes
+            self._group_iterate_step(worker_pool, partial)
 
         # Call the logger's save_data function which handles data persistence appropriately
         data_saved: bool = self.logger.save_data(self.data_file)
@@ -1306,6 +1488,37 @@ class ABModel:
                             self.logger.log_function_call("Graph.agent_opinion_change")
         if self.debug:
             self.logger.log_function_call("ABModel.iteration_opinion_changes")
+        return None
+
+    def group_iteration_opinion_calculation(
+        self,
+        group: Group,
+    ) -> tuple[str, float]:
+        """
+        A helper function that calculates the per-group changes to opinions for the iteration,
+        returning all necessary information for :meth:`~self.group_iteration_opinion_changes`
+        to apply the opinion changes.
+
+        This function was primarily created to allow for multiprocessing in the main :meth:`~self.group_iterate`
+        function.
+
+        :param group: The group for which the opinion changes are being calculated.
+        :type group: Group
+        :return: A <Group ID : Changes info> mapping that provides all necessary information to apply the opinion changes for a specific group.
+        :rtype: tuple[str, float]
+        """
+        # TODO: Implement this function
+        return ("", 0.0)
+
+    def group_iteration_opinion_changes(self, changes_dict: dict[str, float]) -> None:
+        """
+        A helper function for group_iterate that simply applies all group opinion changes and then
+        performs the appropriate checks.
+
+        :param changes_dict: A <group ID : opinion change information> mapping of the opinion values to apply.
+        :type changes_dict: dict[str, float]
+        """
+        # TODO: Implement this function
         return None
 
     def apply_link_functions(self) -> None:
