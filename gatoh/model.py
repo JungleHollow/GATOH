@@ -1507,7 +1507,24 @@ class ABModel:
         :return: A <Group ID : Changes info> mapping that provides all necessary information to apply the opinion changes for a specific group.
         :rtype: tuple[str, float]
         """
-        # TODO: Implement this function
+        group.previous_opinion = group.aggregate_opinion
+
+        neighbour_influences: float | None = self.group_graph.neighbour_influences(group)
+        if neighbour_influences is None:
+            neighbour_influences = 0.0
+
+        # Account for the idea that a group of like-minded agents will push each other towards more extreme opinions
+        # even if there are no meaningful neighbouring influences
+        total_change: float
+        if group.previous_opinion < 0.0 and -LIKE_MINDED_THRESH < neighbour_influences < 0.0:
+            total_change = -LIKE_MINDED_THRESH
+        elif group.previous_opinion > 0.0 and 0.0 < neighbour_influences < LIKE_MINDED_THRESH:
+            total_change = LIKE_MINDED_THRESH
+        else:
+            total_change = neighbour_influences
+
+        # TODO: Finish this function...
+
         return ("", 0.0)
 
     def group_iteration_opinion_changes(self, changes_dict: dict[str, float]) -> None:

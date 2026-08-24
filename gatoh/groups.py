@@ -80,6 +80,10 @@ class Group:
     :type cohesion: str, optional
     :param radicalisation_rate: Keyword argument -- The proportion of agents in the group which are radicalised.
     :type radicalisation_rate: float, optional
+    :param member_benefit_rate: Keyword argument -- The proportion of agents in the groups which are personally benefitted from the social contagion.
+    :type member_benefit_rate: float, optional
+    :param previous_opinion: Keyword argument -- The aggregate opinion held by the group at the immediate past iteration.
+    :type previous_opinion: float, optional
     """
 
     def __init__(self, *args: T, **kwargs: T) -> None:
@@ -92,6 +96,9 @@ class Group:
         self.members: list[str] = []
 
         self.aggregate_opinion: float
+        self.previous_opinion: float = 0.0
+
+        self.member_benefit_rate: float
 
         self.aggregate_susceptibility: float
         self.cohesion: str = "neutral"
@@ -252,6 +259,13 @@ class Group:
             )
         return attribute
 
+    def store_previous_opinion(self) -> None:
+        """
+        A setter method that stores the Group's current opinion into the previous opinion.
+        """
+        self.previous_opinion = self.aggregate_opinion
+        return None
+
     def get_num_members(self) -> int:
         """
         A getter method that reports the number of members that are contained in this Group.
@@ -268,9 +282,48 @@ class Group:
 
         :param member_opinions: The currently held opinion values of group members.
         :type member_opinions: list[float]
+        :raises ValueError: If the input list is not the same size as the group.
         """
+        if len(member_opinions) != self.get_num_members():
+            raise ValueError("The number of member opinions input does not match the number of group members")
         opinion_sum: float = sum(member_opinions)
         self.aggregate_opinion = opinion_sum / self.get_num_members()
+        return None
+
+    def recalculate_radicalisation_rate(self, member_radicalisations: list[bool]) -> None:
+        """
+        A setter method that will calculate a fixed radicalisation rate value from
+        the current radicalisation statuses of group members.
+
+        :param member_radicalisations: The current radicalisation status for each group member.
+        :type member_radicalisations: list[bool]
+        :raises ValueError: If the input list is not the same size as the group.
+        """
+        if len(member_radicalisations) != self.get_num_members():
+            raise ValueError("The number of radicalisation statuses input does not match the number of group members")
+        radical_count: int = 0
+        for radicalisation in member_radicalisations:
+            if radicalisation:
+                radical_count += 1
+        self.radicalisation_rate = float(radical_count / len(member_radicalisations))
+        return None
+
+    def recalculate_member_benefit_rate(self, member_benefits: list[bool]) -> None:
+        """
+        A setter method that will calculate a fixed member benefit rate value from
+        the current personal benefit statuses of group members.
+
+        :param member_benefits: The current personal benefit status for each group member.
+        :type member_benefits: list[bool]
+        :raises ValueError: If the input list is not the same size as the group.
+        """
+        if len(member_benefits) != self.get_num_members():
+            raise ValueError("The number of benefit statuses input does not match the number of group members")
+        benefit_count: int = 0
+        for benefit in member_benefits:
+            if benefit:
+                benefit_count += 1
+        self.member_benefit_rate = float(benefit_count / len(member_benefits))
         return None
 
     def change_aggregate_opinion(self, opinion_delta: float) -> float:
