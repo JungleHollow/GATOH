@@ -22,6 +22,7 @@ import rustworkx as rx
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from gatoh.agents import Agent
+    from gatoh.groups import Group
 
 from gatoh.utils import (
     EdgeChanges,
@@ -66,7 +67,7 @@ class GenerationParam(TypedDict):
 
 class GraphNode:
     """
-    A helper class that allows rustworx to more efficiently store information about Agents in the graph nodes.
+    A helper class that allows rustworkx to more efficiently store information about Agents in the graph nodes.
 
     :param agent: The agent that is being associated with this GraphNode.
     :type agent: Agent
@@ -99,9 +100,9 @@ class GraphNode:
 
 class GraphEdge:
     """
-    A helper class that allows rustworx to more efficiently store information about Agent relationships in the graph edges.
+    A helper class that allows rustworkx to more efficiently store information about Agent relationships in the graph edges.
     As the social hierarchies are assumed to be DiGraphs, each GraphEdge is directional, and the social weighting that Agent
-    A places on Agent B will not necessarilly be equally reciprocated.
+    A places on Agent B will not necessarily be equally reciprocated.
 
     :param hierarchy: The name of the social hierarchy that this edge belongs to.
     :type hierarchy: str
@@ -187,7 +188,7 @@ class GraphEdge:
         :return: A flag indicating if random walk parameters exist.
         :rtype: bool
         """
-        if self.rw_params:
+        if self.rw_params is not None:
             return True
         return False
 
@@ -229,7 +230,7 @@ class Graph:
         suppress_warnings: bool = False,
         dynamic_rels: bool = True,
     ) -> None:
-        # Defined as DiGraph as it is common in social networks for relationships to be unidirectional or unbalanced
+        # Defined as DiGraph as it is common in social networks for relationships to be bidirectional or unbalanced
         self.graph: rx.PyDiGraph[GraphNode, GraphEdge] = rx.PyDiGraph()
         self.node_count: int = 0
         self.edge_count: int = 0
@@ -255,7 +256,7 @@ class Graph:
         :type p: float, optional
         :param m: The number of nearest neighbours that each node is connected to initially (scale-free).
         :type m: int, optional
-        :param: sbm_sizes: The size of generated blocks (blockmodel).
+        :param sbm_sizes: The size of generated blocks (blockmodel).
         :type sbm_sizes: int, optional
         :raises UserWarning: If invalid parameter keys or data types are input to the function.
         """
@@ -301,7 +302,7 @@ class Graph:
         self.edge_count = len(self.graph.edges())
         self.name = name
 
-        if rw_params:
+        if rw_params is not None:
             self.rw_params = rw_params
 
         return None
@@ -312,6 +313,7 @@ class Graph:
 
         :param path: Path to which the Graph will be saved.
         :type path: str
+        :raises OSError: If the graph is not successfully written.
         """
         rx.write_graphml(self.graph, path)
 
@@ -379,7 +381,7 @@ class Graph:
         """
         nodes: list[GraphNode] = []
         for agent in agents:
-            agent_node = GraphNode(agent)
+            agent_node: GraphNode = GraphNode(agent)
             nodes.append(agent_node)
 
         _ = self.graph.add_nodes_from(nodes)
@@ -398,6 +400,7 @@ class Graph:
             if isinstance(graph_edge, list):
                 edge_object: GraphEdge = graph_edge[0]
                 edge_object.set_index(idx)
+                self.graph.update_edge_by_index(idx, edge_object)
             else:
                 graph_edge.set_index(idx)
                 self.graph.update_edge_by_index(idx, graph_edge)
@@ -410,8 +413,8 @@ class Graph:
 
         The parameter :attr:`edges` has been typed as :class:`~typing.Any` to simplify typechecking.
 
-        :param edges: A mapping of <key : list> where each key corresponds to (from_node, to_node, [optional] weighting, [optional] name).
-        :type edges: dict[str, list[int | float | tuple[float, float]]]
+        :param edges: A mapping of <key : list> where each key corresponds to (from_node, to_node, [optional] weighting, [optional] name, [optional] rw_param).
+        :type edges: dict[str, list[int | float | str | tuple[float, float]]]
         """
         graph_edges: list[tuple[int, int, GraphEdge]] = []
         from_nodes: list[int] = edges["from_node"]
@@ -2027,3 +2030,438 @@ class GraphSet:
         :rtype: str
         """
         return f"GraphSet containing the graphs of the following social hierarchies:\n\n{self.list_hierarchies()}"
+
+
+class GroupNode:
+    """
+    A helper class that allows rustworkx to more efficiently store information about Groups in the graph nodes.
+
+    :param group: The group that is being associated with this GroupNode.
+    :type group: Group
+    """
+
+    def __init__(self, group: Group) -> None:
+        self.index: int
+        self.group: Group = group
+
+    def set_index(self, idx: int) -> None:
+        """
+        A setter method to set the GroupNode's index value.
+
+        :param idx: The index to set for this GroupNode.
+        :type idx: int
+        """
+        self.index = idx
+        return None
+
+    @override
+    def __str__(self) -> str:
+        """
+        An override of what calling print() on a GroupNode object will output.
+
+        :return: A printable representation of the GroupNode.
+        :rtype: str
+        """
+        return f"Group ({self.group.id}) at graph node ({self.index})"
+
+
+class GroupEdge:
+    """
+    A helper class that allows rustworkx to more efficiently store information about Group relationships in the graph edges.
+    As the social hierarchies are assumed to be DiGraphs, each GroupEdge is directional, and the aggregate weighting that
+    the Agents in group A place on those in group B will not necessarily be equally reciprocated.
+
+    :param hierarchy: The name of the social hierarchy that this edge belongs to.
+    :type hierarchy: str
+    :param from_node: The index of the origin node.
+    :type from_node: int
+    :param to_node: The index of the destination node.
+    :type to_node: int
+    :param weighting: The aggregate relationship opinion value that is being assigned (range [-1, 1]).
+    :type weighting: float, optional
+    :param rw_params: The normal distribution (mean, variance) to assign for relationship-specific random walk effects.
+    :type rw_params: tuple[float, float], optional
+    """
+
+    def __init__(
+        self,
+        hierarchy: str,
+        from_node: int,
+        to_node: int,
+        weighting: float = 0.0,
+        rw_params: tuple[float, float] | None = None,
+    ) -> None:
+        self.index: int
+        self.weighting: float = weighting
+        self.from_node: int = from_node
+        self.to_node: int = to_node
+        self.hierarchy: str=  hierarchy
+        self.rw_params: tuple[float, float] | None = rw_params
+
+    def set_index(self, idx: int) -> None:
+        """
+        A setter function that changes this GroupEdge's index value.
+
+        :param idx: The index to store for this GroupEdge.
+        :type idx: int
+        """
+        self.index = idx
+        return None
+
+    def set_weighting(self, value: float) -> None:
+        """
+        A setter function that changes this GroupEdge's weighting value.
+
+        :param value: The new aggregate weighting to store for this GroupEdge.
+        :type value: float
+        """
+        self.weighting = value
+        return None
+
+    def set_rw_params(self, rw_params: tuple[float, float]) -> None:
+        """
+        A setter function that changes this GroupEdge's rw_params value.
+
+        :param rw_params: A (mean, variance) tuple specifying this relationship's unique random walk distribution.
+        :type rw_params: tuple[float, float]
+        """
+        self.rw_params = rw_params
+        return None
+
+    def update_from_node(self, idx: int) -> None:
+        """
+        A setter function that updates the from_node's index for this GroupEdge.
+
+        :param idx: The from_node's new index value to update to.
+        :type idx: int
+        """
+        self.from_node = idx
+        return None
+
+    def update_to_node(self, idx: int) -> None:
+        """
+        A setter function that updates the to_node's index for this GroupEdge.
+
+        :param idx: The to_node's new index value to update to.
+        :type idx: int
+        """
+        self.to_node = idx
+        return None
+
+    def has_rw_params(self) -> bool:
+        """
+        A function that checks if this relationship has explicit random walk parameters.
+
+        :return: A flag indicating if random walk parameters exist.
+        :rtype: bool
+        """
+        if self.rw_params is not None:
+            return True
+        return False
+
+    @override
+    def __str__(self) -> str:
+        """
+        An override of what calling print() on a GroupEdge object will output.
+
+        :return: A printable representation of this GroupEdge.
+        :rtype: str
+        """
+        return f"GroupEdge of weight ({self.weighting}) from node ({self.from_node}) to node ({self.to_node}) in the {self.hierarchy} social layer"
+
+
+class GroupGraph:
+    """
+    A class that defines a graph that will be used to collect and operate on Groups.
+
+    These Groups are generated through clustering of existing Agents, and as such, the
+    operations on Groups are representative of aggregate operations on multiple Agents.
+
+    :param rw_params: The (mean, variance) of the normal distribution used for the dynamic relationships random walk.
+    :type rw_params: tuple[float, float]
+    :param generation_method: The random graph generation method that should be used where relevant.
+    :type generation_method: str, optional
+    :param suppress_warnings: A flag indicating if non-critical warnings should be suppressed.
+    :type suppress_warnings: bool, optional
+    :param dynamic_rels: A flag indicating if dynamic relationships should be modelled for groups.
+    :type dynamic_rels: bool, optional
+    """
+
+    def __init__(
+        self,
+        rw_params: tuple[float, float],
+        generation_method: str = "",
+        suppress_warnings: bool = False,
+        dynamic_rels: bool = True,
+    ) -> None:
+        # Defined as DiGraph as it is common in social networks for relationships to be bidirectional or unbalanced
+        self.graph: rx.PyDiGraph[GroupNode, GroupEdge] = rx.PyDiGraph()
+        self.node_count: int = 0
+        self.edge_count: int = 0
+        self.generation_method: str = generation_method
+        self.dynamic_rels: bool = dynamic_rels
+        self.suppress_warnings: bool = suppress_warnings
+        self.rw_params: tuple[float, float] = rw_params
+        self.generation_params: GenerationParam = {  # Used for random graph generation, can be manually set by the user if desired
+            "p": DEFAULT_P,
+            "m": DEFAULT_M,
+            "sbm_sizes": DEFAULT_SBM,
+            "ensure_complete": True,
+        }
+        self.pending_edge_changes: dict[str, EdgeChanges] = {}
+
+    def change_generation_params(self, **params: int | float) -> None:
+        """
+        Setter function which outlines the existing generation parameters used in generate_graph()
+        and allows the user to alter them.
+
+        :param p: The probability of edge rewiring (small-world) or edge creation (random).
+        :type p: float, optional
+        :param m: The number of nearest neighbours that each node is connected to initially (scale-free).
+        :type m: int, optional
+        :param sbm_sizes: The size of generated blocks (blockmodel).
+        :type sbm_sizes: int, optional
+        :raises UserWarning: If invalid parameters keys or data types are input to the function.
+        """
+        for key, value in params.items():
+            if key not in self.generation_params:
+                # Skip any invalid parameters which have been passed
+                warnings.warn(
+                    f"WARNING: Invalid graph generation parameters ({key}) specified when trying to modify parameter value.",
+                    category=UserWarning,
+                )
+                continue
+            elif not isinstance(self.generation_params[key], type(value)):
+                # Skip altering any parameters which have been assignedf invalid data types
+                warnings.warn(
+                    f"WARNING: Invalid data type detected for the value when modifying parameter {key}.",
+                    category=UserWarning,
+                )
+                continue
+            self.generation_params[key] = value
+        return None
+
+    def load_graph(self, path: str, rw_params: tuple[float, float] | None = None) -> None:
+        """
+        Loads a GroupGraph object stored in the GraphML format from the given path.
+
+        :param path: Path to a stored group graph file.
+        :type path: str
+        :param rw_params: The mean and variance of the GroupGraph's random walk distribution.
+        :type rw_params: tuple[float, float], optional
+        """
+        graph: list[rx.PyDiGraph | rx.PyGraph] = rx.read_graphml(path)
+        if isinstance(graph[0], rx.PyDiGraph):
+            self.graph = graph[0]
+        else:
+            converted_graph: rx.PyDiGraph = pygraph_to_pydigraph(graph[0])
+            self.graph = converted_graph
+        self.node_count = len(self.graph.nodes())
+        self.edge_count = len(self.graph.edges())
+
+        if rw_params is not None:
+            self.rw_params = rw_params
+
+        return None
+
+    def save_graph(self, path: str) -> None:
+        """
+        Saves the existing GroupGraph object in the GraphML format to the given path.
+
+        :param path: Path to which the Graph will be saved.
+        :type path: str
+        :raises OSError: If the graph is not successfully written.
+        """
+        rx.write_graphml(self.graph, path)
+
+        if not os.path.exists(path):
+            raise OSError(f"Failed to write the group graph to path: {path}")
+
+        return None
+
+    def get_node(self, node_index: int) -> GroupNode | None:
+        """
+        A getter function to access GroupNode objects.
+
+        :param node_index: The index of the node to access.
+        :type node_index: int
+        :raises RuntimeWarning: If the node index is out of bounds for this GroupGraph.
+        :return: The graph node if the index was valid, or None otherwise.
+        :rtype: GroupNode | None
+        """
+        try:
+            return self.graph.nodes()[node_index]
+        except IndexError:
+            warnings.warn(
+                f"WARNING: Node with index {node_index} is out of bounds for the group graph with {self.node_count} total nodes.",
+                category=RuntimeWarning,
+            )
+            return None
+
+    def get_edge(self, edge_index: int) -> GroupEdge | None:
+        """
+        A getter function to access GroupEdge objects.
+
+        :param edge_index: The index of the edge to access.
+        :type edge_index: int
+        :raises RuntimeWarning: If the edge index is out of bounds for this GroupGraph.
+        :return: The graph edge if the index was valid, or None otherwise.
+        :rtype: GroupEdge | None
+        """
+        try:
+            return self.graph.edges()[edge_index]
+        except IndexError:
+            warnings.warn(
+                f"WARNING: Edge with index {edge_index} is out of bounds for the group graph with {self.edge_count} total edges.",
+                category=RuntimeWarning,
+            )
+            return None
+
+    def update_node_indices(self) -> None:
+        """
+        Iterates over all existing nodes in the graph and updates their stored indices to reflect the current graph state.
+
+        Will also update the graph node_count attribute.
+        """
+        for index in self.graph.node_indices():
+            self.graph[index].set_index(index)
+        self.update_edge_indices()
+        self.node_count = len(self.graph.nodes())
+        return None
+
+    def add_nodes(self, groups: Iterable[Group]) -> None:
+        """
+        Creates the appropriate GroupNodes from the given Groups, and then adds these to the graph.
+
+        :param groups: The groups that will be converted to GroupNodes and added to the graph.
+        :type groups: Iterable[Group]
+        """
+        nodes: list[GroupNode] = []
+        for group in groups:
+            group_node: GroupNode = GroupNode(group)
+            nodes.append(group_node)
+
+        _ = self.graph.add_nodes_from(nodes)
+        self.update_node_indices()
+        return None
+
+    def update_edge_indices(self) -> None:
+        """
+        Iterates over all existing edges in the graph and updates their stored indices to reflect the current graph state.
+
+        Will also update the graph edge_count attribute.
+        """
+        for idx, data in self.graph.edge_index_map().items():
+            graph_edge: GroupEdge | list[GroupEdge] = data[2]
+            # Workaround for undetermined error where a list of a single GroupEdge is added to the group graph at some point
+            if isinstance(graph_edge, list):
+                edge_object: GroupEdge = graph_edge[0]
+                edge_object.set_index(idx)
+                self.graph.update_edge_by_index(idx, edge_object)
+            else:
+                graph_edge.set_index(idx)
+                self.graph.update_edge_by_index(idx, graph_edge)
+        self.edge_count = len(self.graph.edges())
+        return None
+
+    def add_edges(self, edges: dict[str, list[Any]]) -> None:
+        """
+        Creates appropriate GroupEdges from the given dictionary and then adds these to the graph.
+
+        The parameter :attr:`edges` has been typed as :class:`~typing.Any` to simplify typechecking.
+
+        :param edges: A mapping of <key : list> where each key corresponds to (hierarchy, from_node, to_node, [optional] weighting, [optional] rw_param).
+        :type edges: dict[str, list[str | int | float | tuple[float, float]]]
+        """
+        graph_edges: list[tuple[int, int, GroupEdge]] = []
+        names: list[str] = edges["name"]
+        from_nodes: list[int] = edges["from_node"]
+        to_nodes: list[int] = edges["to_node"]
+        weightings: list[float] | None = edges.get("weighting")
+        rw_params: list[tuple[float, float]] | None = edges.get("rw_param")
+
+        # Declare the data type of 'edge'
+        edge: GroupEdge
+
+        if weightings is not None:
+            if rw_params is not None:
+                for i in range(len(from_nodes)):
+                    edge = GroupEdge(
+                        names[i],
+                        from_nodes[i],
+                        to_nodes[i],
+                        weighting=weightings[i],
+                        rw_params=rw_params[i],
+                    )
+                    graph_edges.append((from_nodes[i], to_nodes[i], edge))
+            else:
+                for i in range(len(from_nodes)):
+                    edge = GroupEdge(
+                        names[i],
+                        from_nodes[i],
+                        to_nodes[i],
+                        weighting=weightings[i],
+                    )
+                    graph_edges.append((from_nodes[i], to_nodes[i], edge))
+        else:
+            if rw_params is not None:
+                for i in range(len(from_nodes)):
+                    edge = GroupEdge(
+                        names[i],
+                        from_nodes[i],
+                        to_nodes[i],
+                        rw_params=rw_params[i],
+                    )
+                    graph_edges.append((from_nodes[i], to_nodes[i], edge))
+            else:
+                for i in range(len(from_nodes)):
+                    edge = GroupEdge(
+                        names[i],
+                        from_nodes[i],
+                        to_nodes[i],
+                    )
+                    graph_edges.append((from_nodes[i], to_nodes[i], edge))
+
+        _ = self.graph.add_edges_from(graph_edges)
+        self.update_edge_indices()
+        return None
+
+    def generate_graph(
+        self,
+        groups: list[Group],
+        method: str = "",
+        relationship_range: tuple[float, float] = (-MAX_RELATIONSHIP, MAX_RELATIONSHIP),
+        ensure_complete: bool = True,
+    ) -> Self:
+        """
+        Randomly generate edges between existing GroupGraph nodes and add them to the graph.
+
+        :param groups: The Groups that are being used as the nodes for this graph.
+        :type groups: list[Group]
+        :param method: The random generation method to use. Possible choices include: 'small-world', 'scale-free', 'random', 'blockmodel'; default to 'small-world'.
+        :type method: str, optional
+        :param relationship_range: The valid range of generated relationship strengths (at most, constrained to [-1.0, 1.0]).
+        :type relationship_range: tuple[float, float], optional
+        :param ensure_complete: A flag indicating if the generated graph should be complete or not (in the case of 'small-world').
+        :type ensure_complete: bool, optional
+        :raises ValueError: If no groups are being passed to this function.
+        :raises ValueError: If an invalid random generation method is being passed to this function.
+        :return: A reference to this GroupGraph object.
+        :rtype: GroupGraph
+        """
+        if len(groups) < 0:
+            raise ValueError("Attempting to generate random group graph without passing any valid Groups.")
+
+        if self.generation_method != "":
+            method = self.generation_method
+        elif method == "":
+            # Default to small-world if not explicit method was passed during initialisation or to this function
+            method = "small-world"
+            self.generation_method = "small-world"
+        else:
+            # Update self.generation_method with the explicit method that was passed
+            self.generation_method = method
+
+        # TODO: Finish this function
+
+        return self
