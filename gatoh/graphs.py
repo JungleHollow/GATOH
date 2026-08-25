@@ -546,7 +546,7 @@ class Graph:
                 # Watts-Strogatz
                 k: int = int(
                     np.ceil(np.log(n))
-                )  # The smallest integer which is larger than log(n) to guarantee graph connectivity
+                )  # The smallest integer which is larger than log(n) to theoretically guarantee graph connectivity
                 if ensure_complete:
                     generated_graph = connected_watts_strogatz_graph(
                         n, k, self.generation_params["p"]
@@ -721,7 +721,7 @@ class Graph:
 
         :param node_1: The index of some Agent in the graph.
         :type node_1: int
-        :param node_2: The index  of some other Agent in the graph.
+        :param node_2: The index of some other Agent in the graph.
         :type node_2: int
         :param value: The new weight to assign.
         :type value: float
@@ -758,6 +758,8 @@ class Graph:
             self.pending_edge_changes[f"{from_agent.agent.id},{to_agent.agent.id}"] = (
                 edge_change
             )
+
+        return None
 
     def get_edge_changes(self) -> dict[str, EdgeChanges]:
         """
@@ -2462,6 +2464,341 @@ class GroupGraph:
             # Update self.generation_method with the explicit method that was passed
             self.generation_method = method
 
-        # TODO: Finish this function
+        n: int = len(groups)
+
+        # Initialise an empty graph for predictable behaviour in case of assignation errors
+        generated_graph: rx.PyDiGraph = rx.PyDiGraph()
+
+        # Initialise a random generator instance for this function
+        random_gen: Random = Random()
+
+        match method:
+            case "small-world":
+                # Watts-Strogatz
+
+                # The smallest integer which is larger than log(n) to theoretically guarantee graph connectivity
+                k: int = int(np.ceil(np.log(n)))
+                if ensure_complete:
+                    generated_graph = connected_watts_strogatz_graph(
+                        n, k, self.generation_params["p"],
+                    )
+                else:
+                    generated_graph = pygraph_to_pydigraph(watts_strogatz_graph(
+                        n, k, self.generation_params["p"],
+                    ))
+
+                # Explicitly set the generation method again to mark the method that has been used (for clarity)
+                self.generation_method = "small-world"
+            case "scale-free":
+                # Barbasi-Albert
+                generated_graph = rx.directed_barabasi_albert_graph(
+                    n, self.generation_params["m"],
+                )
+                self.generation_method = "scale-free"
+            case "random":
+                # Erdos-Renyi
+                generated_graph = rx.directed_gnp_random_graph(
+                    n, self.generation_params["p"],
+                )
+                self.generation_method = "random"
+            case "blockmodel":
+                # Holland et al.
+
+                # Determine if there will be any remainder with the specified block size
+                sbm_remainder: int = n % self.generation_params["sbm_sizes"]
+
+                # Determine how many blocks will be created
+                sbm_n_blocks: int = len(groups) // self.generation_params["sbm_sizes"]
+
+                sbm_sizes: list[int] = [self.generation_params["sbm_sizes"] for _ in range(sbm_n_blocks)]
+
+                # If any agents are left over, add them all to the last block
+                sbm_sizes[-1] += sbm_remainder
+
+                # Initialise a BxB array to hold the probabilities for inter-block connections
+                sbm_probabilities: np.ndarray[tuple[int, int], np.dtype[np.float64]] = np.zeros((sbm_n_blocks, sbm_n_blocks), dtype=np.float64)
+                for i in range(sbm_probabilities.shape[0]):
+                    for j in range(sbm_probabilities.shape[1]):
+                        # Set a random probability for edge connectivity from block i to block j (directed, asymmetrical)
+                        sbm_probabilities[i, j] = random_gen.random()
+
+                # "False" to disallow existence of self loops in the graph
+                generated_graph = rx.directed_sbm_random_graph(sbm_sizes, sbm_probabilities, False)
+
+                # Manual garbage collection
+                del sbm_sizes, sbm_probabilities
+                _ = gc.collect()
+
+            case _:
+                self.generation_method = "INVALID"
+                raise ValueError(
+                    f"Attempting to generate random graph with a non-supported method ({method}).\n\nUse one of the supported methods: 'small-world', 'scale-free', 'random', or 'blockmodel'..."
+                )
+
+        graph_nodes: list[GroupNode] = []
+        for index in range(len(generated_graph.nodes())):
+            graph_node: GroupNode = GroupNode(groups[index])
+            graph_node.set_index(index)
+            graph_nodes.append(graph_node)
+        for idx, graph_node in enumerate(graph_nodes):
+            # Update all the graph nodes with the new GroupNode data objects
+            generated_graph[idx] = graph_node
+
+        # Store the generated graph as the object's "graph" attribute (with 0.0 relationship weights currently)
+        self.graph = generated_graph
+
+        for index, edge in generated_graph.edge_index_map().items():
+            # Generate a random value in the specified range (default is [-1.0, 1.0])
+            generated_value = random_gen.uniform(relationship_range[0], relationship_range[1])
+
+            # TODO: Decide if the GroupEdges really need a "name" or not...
+            graph_edge: GroupEdge = GroupEdge("", edge[0], edge[1], weighting=generated_value)
+
+            # Set the graph edge's index
+            graph_edge.set_index(index)
+
+            # Update the edge with a GroupEdge object
+            self.graph.update_edge_by_index(index, graph_edge)
+
+        # Update the node and edge counts manually as no call to update_x_indices() have been made
+        self.node_count = len(self.graph.nodes())
+        self.edge_count = len(self.graph.edges())
 
         return self
+
+    def relationship_exists(self, from_node: int, to_node: int) -> int | None:
+        """
+        Checks for the existence of a relationship (weighted edge) between two Groups (nodes).
+
+        :param from_node: The node index of the parent node.
+        :type from_node: int
+        :param to_node: The node index of the child node.
+        :type to_node: int
+        :return: The index of the edge if the relationship exists, or None otherwise.
+        :rtype: int | None
+        """
+        for edge in self.graph.edges():
+            if edge.from_node == from_node and edge.to_node == to_node:
+                return edge.index
+        return None
+
+    def get_relationships(self, node_1: int, node_2: int) -> dict[tuple[int, int], float] | None:
+        """
+        Retrieves and reports the bidirectional relationship weightings between two nodes in the GroupGraph.
+
+        :param node_1: The node index of Group 1.
+        :type node_1: int
+        :param node_2: The node index of Group 2.
+        :type node_2: int
+        :return: The bidirectional edge weightings between two nodes (if they exist).
+        :rtype: dict[tuple[int, int], float] | None
+        """
+        if self.relationship_exists(node_1, node_2) is None and self.relationship_exists(node_2, node_1) is None:
+            return None
+
+        relationships_dict: dict[tuple[int, int], float] = {}
+
+        with contextlib.suppress(KeyError):
+            relationships_dict[(node_2, node_1)] = self.graph.adj_direction(
+                node_1, True
+            )[node_2].weighting
+
+        with contextlib.suppress(KeyError):
+            relationships_dict[(node_1, node_2)] = self.graph.adj_direction(
+                node_1, False
+            )[node_2].weighting
+
+        return relationships_dict
+
+    def get_relationship(self, from_node: Group, to_node: Group) -> float:
+        """
+        Return a directed relationship from one node to another.
+
+        :param from_node: The node that the relationship originates from.
+        :type from_node: Group
+        :param to_node: The node that the relationship points to.
+        :type to_node: Group
+        :return: The weighting of the directed relationship (from_node -> to_node).
+        :rtype: float
+        """
+        from_index: int | None = self.get_group_index(from_node)
+        if from_index is None:
+            return 0.0
+
+        relationship_dict: dict[int, GroupEdge] = self.graph.adj_direction(from_index, False)
+
+        to_index: int | None = self.get_group_index(to_node)
+        if to_index is None:
+            return 0.0
+
+        graph_edge: GroupEdge = relationship_dict[to_index]
+        return graph_edge.weighting
+
+    def change_weights(self, from_node: int, to_node: int, value: float) -> None:
+        """
+        Updates the weight of the relationship between two groups in the graph.
+
+        If no relationship previously exists, a new one is created.
+
+        :param from_node: The index of some Group in the graph.
+        :type from_node: int
+        :param to_node: The index of some other Group in the graph.
+        :type to_node: int
+        :param value: The new weight to assign.
+        :type value: float
+        """
+        edge_index: int | None = self.relationship_exists(from_node, to_node)
+        updated_edge: tuple[int, int, GroupEdge] = (from_node, to_node, GroupEdge("", from_node, to_node, value))
+        if edge_index is not None:
+            self.graph.update_edge_by_index(edge_index, updated_edge[-1])
+        else:
+            _ = self.graph.add_edges_from([updated_edge])
+
+        self.update_edge_indices()
+        self.register_edge_change(from_node, to_node, value)
+        return None
+
+    def register_edge_change(self, from_node: int, to_node: int, weighting: float) -> None:
+        """
+        A helper function that records a pending edge change for this graph.
+
+        :param from_node: The index of the origin node.
+        :type from_node: int
+        :param to_node: The index of the destination node.
+        :type to_node: int
+        :param weighting: The new weighting that is being assigned to the edge.
+        :type weighting: float
+        """
+        from_group = self.get_node(from_node)
+        to_group = self.get_node(to_node)
+        # Included for type checking
+        if from_group is not None and to_group is not None:
+            edge_change: EdgeChanges = EdgeChanges("", weighting)
+            self.pending_edge_changes[f"{from_group.group.id},{to_group.group.id}"] = edge_change
+        return None
+
+    def get_edge_changes(self) -> dict[str, EdgeChanges]:
+        """
+        A getter function that returns the current register of pending edge changes for this graph,
+        and then resets the attribute to an empty entry.
+
+        :return: A <"ID1,ID2" : edge change> mapping that outlines the edge changes being made between two groups in the graph.
+        :rtype: dict[str, EdgeChanges]
+        """
+        changes_register: dict[str, EdgeChanges] = deepcopy(self.pending_edge_changes)
+
+        # Manual garbage collection
+        del self.pending_edge_changes
+        _ = gc.collect()
+
+        self.pending_edge_changes = {}
+
+        return changes_register
+
+    def remove_node(self, node: int) -> None:
+        """
+        Removes a node from the graph, along with any relationships involving it.
+
+        :param node: The node index to remove from the graph.
+        :type node: int
+        :raises IndexError: If the node index is out of bounds.
+        """
+        if node < 0 or node >= self.node_count:
+            raise IndexError(f"Trying to remove node {node} from the group graph with {self.node_count} existing nodes")
+
+        self.graph.remove_node(node)
+
+        edges_to_remove: list[tuple[int, int]] = []
+        for edge in self.graph.edges():
+            if edge.from_node == node or edge.to_node == node:
+                edges_to_remove.append((edge.from_node, edge.to_node))
+
+        for edge in edges_to_remove:
+            self.remove_edge(edge[0], edge[1])
+        # No need to update indices, as rustworkx will automatically add new nodes/edges into the largest empty index
+        return None
+
+    def node_relationships_count(self, node_index: int) -> int:
+        """
+        Report the number of ingoing and outgoing relationships that a specific node is involved in.
+
+        :param node_index: The index of the node that is being inspected.
+        :type node_index: int
+        :raises IndexError: If the input node index is out of bounds.
+        :return: The total number of relationships involving the input node.
+        :rtype: int
+        """
+        if node_index < 0 or node_index >= self.node_count:
+            raise IndexError(f"Trying to view the relationships count for out-of-bounds node {node_index} for the group graph with {self.node_count} nodes")
+        ingoing_relationships: int = self.graph.in_degree(node_index)
+        outgoing_relationships: int = self.graph.out_degree(node_index)
+        return ingoing_relationships + outgoing_relationships
+
+    def remove_edge(self, from_node: int, to_node: int) -> None:
+        """
+        Removes a single edge from the graph corresponding to the indicated directed node indices.
+
+        Throws a warning without interrupting the runtime if the edge didn't exist in the first place.
+
+        :param from_node: The parent node in the edge.
+        :type from_node: int
+        :param to_node: The child node in the edge.
+        :type to_node: int
+        :raises UserWarning: If the edge (from_node -> to_node) doesn't exist in the GroupGraph.
+        """
+        edge_exists: int | None = self.relationship_exists(from_node, to_node)
+        if edge_exists is not None:
+            self.graph.remove_edge(from_node, to_node)
+
+            # Check the number of relationships that each node now has
+            from_rels_count: int = self.node_relationships_count(from_node)
+            to_rels_count: int = self.node_relationships_count(to_node)
+
+            # If either node now has no relationships, it is removed from the graph entirely
+            if from_rels_count == 0:
+                self.remove_node(from_node)
+            if to_rels_count == 0:
+                self.remove_node(to_node)
+        else:
+            warnings.warn(
+                f"WARNING: Attempted to remove edge ({from_node} -> {to_node}) which does not exist in the group graph.",
+                category=UserWarning,
+            )
+        return None
+
+    def remove_edge_index(self, edge_index: int) -> None:
+        """
+        Removes a single edge from the graph corresponding to the input edge index.
+
+        Raises an error if the edge index is out of bounds of existing edges.
+
+        This function is meant as an extended wrapper to rustworkx :func:`remove_edge_from_index` that also handles cases
+        where nodes are left neighbourless after the edge removal.
+
+        :param edge_index: The index of the edge to remove.
+        :type edge_index: int
+        :raises KeyError: If the input edge index is out of bounds.
+        """
+        if edge_index < 0 or edge_index >= self.edge_count:
+            raise KeyError(f"Tried to remove the out-of-bounds edge {edge_index} for the group graph with {self.edge_count} existing edges")
+
+        edge_to_remove: GroupEdge | None = self.get_edge(edge_index)
+        if edge_to_remove is None:
+            # The edge index was valid but it has already been previously removed...
+            return None
+        else:
+            from_node: int = edge_to_remove.from_node
+            to_node: int = edge_to_remove.to_node
+
+            self.graph.remove_edge_from_index(edge_index)
+
+            from_rels_count: int = self.node_relationships_count(from_node)
+            to_rels_count: int = self.node_relationships_count(to_node)
+
+            # If either node now has no relationships, it is removed from the graph entirely
+            if from_rels_count == 0:
+                self.remove_node(from_node)
+            if to_rels_count == 0:
+                self.remove_node(to_node)
+
+        return None
