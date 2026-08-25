@@ -80,10 +80,14 @@ class Group:
     :type cohesion: str, optional
     :param radicalisation_rate: Keyword argument -- The proportion of agents in the group which are radicalised.
     :type radicalisation_rate: float, optional
+    :param predominant_personality: Keyword argument -- The most common personality type among members in the group.
+    :type predominant_personality: str, optional
     :param member_benefit_rate: Keyword argument -- The proportion of agents in the groups which are personally benefitted from the social contagion.
     :type member_benefit_rate: float, optional
     :param previous_opinion: Keyword argument -- The aggregate opinion held by the group at the immediate past iteration.
     :type previous_opinion: float, optional
+    :param aggregate_hierarchy_weighting: Keyword argument -- The aggregate weighting that the members of the group give to the hierarchy they are in.
+    :type aggregate_hierarchy_weighting: float, optional
     """
 
     def __init__(self, *args: T, **kwargs: T) -> None:
@@ -102,7 +106,10 @@ class Group:
 
         self.aggregate_susceptibility: float
         self.cohesion: str = "neutral"
+        self.predominant_personality: str = "neutral"
         self.radicalisation_rate: float
+
+        self.aggregate_hierarchy_weighting: float
 
         # If no args have been passed, it is assumed that self.generate_group() will be subsequently called
         if args:
@@ -170,18 +177,25 @@ class Group:
         opinion_sum: float = 0.0
         radicalisation_count: int = 0
         susceptibility_sum: float = 0.0
+        hierarchy_weighting_total: float = 0.0
+        personality_counts: dict[str, int] = {}
 
         for agent in members:
             self.members.append(agent.id)
             opinion_sum += agent.opinion
             susceptibility_sum += agent.social_susceptibility
+            hierarchy_weighting_total += agent.social_weightings[hierarchy]
             if agent.radicalised:
                 radicalisation_count += 1
+            _ = personality_counts.setdefault(agent.personality, 0)
+            personality_counts[agent.personality] += 1
 
         # Calculate the final attributes and set them
         self.aggregate_opinion = opinion_sum / self.max_size
         self.radicalisation_rate = radicalisation_count / self.max_size
         self.aggregate_susceptibility = susceptibility_sum / self.max_size
+        self.aggregate_hierarchy_weighting = hierarchy_weighting_total / self.max_size
+        self.predominant_personality = max(personality_counts, key=lambda x: personality_counts[x])
 
         return self
 
@@ -326,6 +340,40 @@ class Group:
         self.member_benefit_rate = float(benefit_count / len(member_benefits))
         return None
 
+    def recalculate_hierarchy_weighting(self, member_weightings: list[float]) -> None:
+        """
+        A setter method that will calculate a fixed member hierarchy weighting value from
+        the current hierarchy weightings assigned by each group member.
+
+        :param member_weightings: The current hierarchy weightings assigned by each group member.
+        :type member_weightings: list[float]
+        :raises ValueError: If the input list is not the same size as the group.
+        """
+        if len(member_weightings) != self.get_num_members():
+            raise ValueError("The number of hierarchy weightings input does not match the number of group members")
+        total_weighting: float = sum(member_weightings)
+        self.aggregate_hierarchy_weighting = float(total_weighting / len(member_weightings))
+        return None
+
+    def determine_predominant_personality(self, member_personalities: list[str]) -> None:
+        """
+        A setter method that will determine what the predominant personality type amongst
+        group members is.
+
+        :param member_personalities: The personality types for each group member.
+        :type member_personalities: list[str]
+        :raises ValueError: If the input list is not the same size as the group.
+        """
+        if len(member_personalities) != self.get_num_members():
+            raise ValueError("The number of personality types input does not match the number of group members")
+        personality_counts: dict[str, int] = {}
+        for personality in member_personalities:
+            _ = personality_counts.setdefault(personality, 0)
+            personality_counts[personality] += 1
+        dict_mode: str = max(personality_counts, key=lambda x: personality_counts[x])
+        self.predominant_personality = dict_mode
+        return None
+
     def change_aggregate_opinion(self, opinion_delta: float) -> float:
         """
         A setter method that changes the Group's aggregate opinion by a given delta value.
@@ -434,6 +482,19 @@ class Group:
             # Values <= 0 are treated as dummy values that indicate the group has no maximum size
             return False
         elif len(self.members) >= self.max_size:
+            return True
+        return False
+
+    def is_radicalised(self, threshold: float = 0.2) -> bool:
+        """
+        A function that reports if the group is considered to be "radicalised" as a collective.
+
+        :param threshold: The threshold that the radicalisation rate must surpass for the group to be considered radicalised.
+        :type threshold: float, optional
+        :return: A flag indicating if the group can be collectively considered to be radicalised.
+        :rtype: bool
+        """
+        if self.radicalisation_rate >= threshold:
             return True
         return False
 
