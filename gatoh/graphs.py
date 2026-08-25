@@ -889,7 +889,7 @@ class Graph:
 
     def agent_in_graph(self, agent: Agent) -> bool:
         """
-        A simple function that checks wether an Agent exists within a Graph.
+        A simple function that checks whether an Agent exists within a Graph.
 
         :param agent: the agent whose existence in the Graph is being checked for.
         :type agent: Agent
@@ -909,7 +909,7 @@ class Graph:
         :type agent: Agent
         """
         agent_node: GraphNode | None = self.node_from_agent(agent)
-        if agent_node:
+        if agent_node is not None:
             agent_node.agent.store_previous_opinion()
         return None
 
@@ -925,7 +925,7 @@ class Graph:
         :type deradicalisation: bool, optional
         """
         agent_node: GraphNode | None = self.node_from_agent(agent)
-        if agent_node:
+        if agent_node is not None:
             if not deradicalisation:
                 agent_node.agent.change_opinion(change_delta)
             # If the agent was deradicalised this iteration, the change delta is overriden by a moderately significant delta
@@ -1139,7 +1139,7 @@ class Graph:
                     # Both agents are radicalised towards the same opinion
                     relative_weighting = 4.0
                 else:
-                    # Both agent are radicalised in opposing opinions
+                    # Both agents are radicalised in opposing opinions
                     relative_weighting = 0.25
 
             weighted_deltas.append(weighted_delta)
@@ -1303,7 +1303,7 @@ class Graph:
         radicalisation_measure: float = summation / (K * (K - 1))
         return radicalisation_measure
 
-    def get_betweeness_centrality(self, subgraph: rx.PyDiGraph[GraphNode, GraphEdge] | None = None) -> rx.CentralityMapping:
+    def get_betweenness_centrality(self, subgraph: rx.PyDiGraph[GraphNode, GraphEdge] | None = None) -> rx.CentralityMapping:
         """
         A wrapper function that makes the rustworkx :meth:`~rustworkx.digraph_betweenness_centrality`
         function be a callable instance method for Graph.
@@ -1340,7 +1340,7 @@ class Graph:
         A wrapper function that makes the rustworkx :meth:`~rustworkx.digraph_all_pairs_dijkstra_path_lengths`
         function be a callable instance method for Graph.
 
-        :param subgraph: A subgraph for which to calculate the betweeness centrality rather than the full graph.
+        :param subgraph: A subgraph for which to calculate the dijkstra all pairs path lengths rather than the full graph.
         :type subgraph: :class:`~rustworkx.PyDiGraph`, optional
         :return: A <Node index : <Node index : path length>> nested mapping outlining the path lengths of all pairs in the graph.
         :rtype: dict[int, dict[int, float]]
@@ -1412,7 +1412,7 @@ class Graph:
                 subgraph: rx.PyDiGraph[GraphNode, GraphEdge] = self.graph.subgraph([node.index for node in subgraph_nodes])
 
                 # Calculate the center of the subgraph
-                betweenness_centrality: rx.CentralityMapping = self.get_betweeness_centrality(subgraph=subgraph)
+                betweenness_centrality: rx.CentralityMapping = self.get_betweenness_centrality(subgraph=subgraph)
                 center = self.compute_subgraph_center(betweenness_centrality)
                 new_centers.append(center)
 
@@ -2181,6 +2181,8 @@ class GroupGraph:
 
     :param rw_params: The (mean, variance) of the normal distribution used for the dynamic relationships random walk.
     :type rw_params: tuple[float, float]
+    :param name: The unique name that will be used to identify this GroupGraph.
+    :type name: str, optional
     :param generation_method: The random graph generation method that should be used where relevant.
     :type generation_method: str, optional
     :param suppress_warnings: A flag indicating if non-critical warnings should be suppressed.
@@ -2192,6 +2194,7 @@ class GroupGraph:
     def __init__(
         self,
         rw_params: tuple[float, float],
+        name: str = "Group",
         generation_method: str = "",
         suppress_warnings: bool = False,
         dynamic_rels: bool = True,
@@ -2211,6 +2214,7 @@ class GroupGraph:
             "ensure_complete": True,
         }
         self.pending_edge_changes: dict[str, EdgeChanges] = {}
+        self.name: str = name
 
     def change_generation_params(self, **params: int | float) -> None:
         """
@@ -2243,12 +2247,14 @@ class GroupGraph:
             self.generation_params[key] = value
         return None
 
-    def load_graph(self, path: str, rw_params: tuple[float, float] | None = None) -> None:
+    def load_graph(self, path: str, name: str = "Group", rw_params: tuple[float, float] | None = None) -> None:
         """
         Loads a GroupGraph object stored in the GraphML format from the given path.
 
         :param path: Path to a stored group graph file.
         :type path: str
+        :param name: The name that is being used to uniquely identify the group graph.
+        :type name: str, optional
         :param rw_params: The mean and variance of the GroupGraph's random walk distribution.
         :type rw_params: tuple[float, float], optional
         """
@@ -2260,6 +2266,7 @@ class GroupGraph:
             self.graph = converted_graph
         self.node_count = len(self.graph.nodes())
         self.edge_count = len(self.graph.edges())
+        self.name = name
 
         if rw_params is not None:
             self.rw_params = rw_params
@@ -2802,3 +2809,520 @@ class GroupGraph:
                 self.remove_node(to_node)
 
         return None
+
+    def group_in_graph(self, group: Group) -> bool:
+        """
+        A simple function that checks whether a Group exists within a GroupGraph.
+
+        :param group: The group whose existence in the group graph is being checked for.
+        :type group: Group
+        :return: A flag indicating if the Group exists in the GroupGraph.
+        :rtype: bool
+        """
+        for node in self.graph.nodes():
+            if group.id == node.group.id:
+                return True
+        return False
+
+    def group_previous_opinion(self, group: Group) -> None:
+        """
+        Set the specified Group's previous opinion to be equal to the current opinion (before the current opinion changes in the current iteration).
+
+        :param group: The group whose previous opinion is being set.
+        :type group: Group
+        """
+        group_node: GroupNode | None = self.node_from_group(group)
+        if group_node is not None:
+            group_node.group.store_previous_opinion()
+        return None
+
+    def group_opinion_change(self, group: Group, change_delta: float) -> None:
+        """
+        Change the specified Group's current aggregate opinion by the given delta.
+
+        :param group: The group whose aggregate opinion is being changed.
+        :type group: Group
+        :param change_delta: The value by which to change the Group's aggregate opinion.
+        :type change_delta: float
+        """
+        group_node: GroupNode | None = self.node_from_group(group)
+        if group_node is not None:
+            group_node.group.change_aggregate_opinion(change_delta)
+        return None
+
+    def node_from_group(self, group: Group) -> GroupNode | None:
+        """
+        Returns the GroupNode object corresponding to the given Group object.
+
+        :param group: The group being search for in the GroupNodes.
+        :type group: Group
+        :return: The group node corresponding to the input Group if it exists, or None otherwise.
+        :rtype: GroupNode | None
+        """
+        group_index: int | None = self.get_group_index(group)
+        if group_index is not None:
+            group_node: GroupNode | None = self.get_node(group_index)
+            return group_node
+        return None
+
+    def get_group_index(self, group: Group) -> int | None:
+        """
+        Searches for the node index in the GroupGraph which corresponds to the input Group object.
+
+        :param group: The group whose index is being searched for.
+        :type group: Group
+        :return: The group's node index within the group graph if it exists, or None otherwise.
+        :rtype: int | None
+        """
+        for idx, node in enumerate(self.graph.nodes()):
+            if group.id == node.group.id:
+                return idx
+        return None
+
+    def get_neighbours(self, group: Group) -> list[GroupNode] | None:
+        """
+        Finds all the nodes in the graph with direct relationships to the specified Group.
+
+        :param group: The group for which the neighbours are being examined.
+        :type group: Group
+        :raises UserWarning: If the input group does not exist in the graph.
+        :return: A list of the graph nodes belonging to the direct neighbours of the group.
+        :rtype: list[GroupNode]
+        """
+        neighbour_nodes: list[GroupNode] = []
+        group_index: int | None = self.get_group_index(group)
+        if group_index is None:
+            if not self.suppress_warnings:
+                warnings.warn(
+                    "Input Group does not exist in the group graph",
+                    category=UserWarning,
+                )
+            return None
+        neighbour_indices: rx.rustworkx.NodeIndices = self.graph.neighbors(group_index)
+        for index in neighbour_indices:
+            neighbour_node: GroupNode | None = self.get_node(index)
+            if neighbour_node is None:
+                # Should never be reached and is just included for type checking purposes
+                continue
+            neighbour_nodes.append(neighbour_node)
+        return neighbour_nodes
+
+    def step(self) -> None:
+        """
+        Step the individual GroupGraph object:
+            1. Handle dynamic relationships within the graph.
+        """
+        self.dynamic_relationships()
+        return None
+
+    def stochastic_relationships(
+        self,
+        formation: bool = False,
+        formation_thresh: float = 0.999,
+        formation_num: int = 1,
+        disintegration: bool = False,
+        disintegration_thresh: float = 0.999,
+        disintegration_num: int = 1,
+    ) -> None:
+        """
+        An experimental function which aims to simulate the possible formation and disintegration of relationships
+        within a social network.
+
+        :param formation: A flag indicating if the spontaneous formation of new relationships should be allowed.
+        :type formation: bool, optional
+        :param formation_thresh: The threshold that must be surpassed for spontaneous formation to occur.
+        :type formation_thresh: float, optional
+        :param formation_num: The number of new relationships to form.
+        :type formation_num: int, optional
+        :param disintegration: A flag indicating if the spontaneous disintegration of existing relationships should be allowed.
+        :type disintegration: bool, optional
+        :param disintegration_thresh: The threshold that must be surpassed for spontaneous disintegration to occur.
+        :type disintegration_thresh: float, optional
+        :param disintegration_num: The number of existing relationships to disintegrate.
+        :type disintegration_num: int, optional
+        """
+        if formation and random() >= formation_thresh:
+            formation_counter: int = formation_num
+            while formation_counter > 0:
+                form_from: int = randint(0, self.node_count - 1)
+                form_to: int = randint(0, self.node_count - 1)
+                if form_from == form_to or self.relationship_exists(form_from, form_to):
+                    continue
+
+                new_edge: dict[str, list[Any]] = {
+                    "from_node": [form_from],
+                    "to_node": [form_to],
+                    "weighting": [random()],
+                }
+                self.add_edges(new_edge)
+                formation_counter -= 1
+
+        if disintegration and random() >= disintegration_thresh:
+            disintegration_counter: int = disintegration_num
+            while disintegration_counter > 0:
+                selected_index: int = randint(0, self.edge_count - 1)
+                self.remove_edge_index(selected_index)
+                disintegration_counter -= 1
+
+        return None
+
+    def neighbour_influences(self, group: Group) -> float | None:
+        """
+        Looks at all the neighbours for a Group and uses the neighbours' own opinions plus the weight
+        of the relationships between Groups to return a final value by which the given Group's opinion
+        value will increment or decrement.
+
+        :param group: The group for which the strength of opinion change is being determined.
+        :type group: Group
+        :raises UserWarning: If the input group does not exist in the group graph.
+        :return: The final change in the Group's aggregate opinion caused by its neighbours in the group graph.
+        :rtype: float
+        """
+        group_index: int | None = self.get_group_index(group)
+        if group_index is None:
+            if not self.suppress_warnings:
+                warnings.warn(
+                    f"Input group {group.id} does not exist in the group graph",
+                    category=UserWarning,
+                )
+            return None
+
+        group_hierarchy_weighting: float = group.aggregate_hierarchy_weighting
+        self_radicalised: bool = group.is_radicalised()
+
+        neighbour_indices: rx.NodeIndices = self.graph.neighbors(group_index)
+
+        weighted_deltas: list[float] = []
+        delta_weightings: list[float] = []
+        for neighbour_index in neighbour_indices:
+            neighbour_node: GroupNode | None = self.get_node(neighbour_index)
+
+            if neighbour_node is None:
+                # This should never be reached, and is only included for type checking purposes
+                continue
+
+            relationship_strength: float = self.get_relationship(group, neighbour_node.group)
+
+            # Simple average of own and neighbour opinions
+            average_opinion: float = (group.aggregate_opinion + neighbour_node.group.aggregate_opinion) / 2.0
+
+            # The delta that must be applied to own opinion to reach the average
+            distance_from_avg: float = average_opinion - group.aggregate_opinion
+
+            # The final opinion change
+            weighted_delta: float = distance_from_avg * group_hierarchy_weighting * relationship_strength
+
+            # Account for neighbour radicalisation
+            relative_weighting: float = 1.0
+            neighbour_radicalised: bool = neighbour_node.group.is_radicalised()
+            if neighbour_radicalised and group.predominant_personality != "neutral" and not self_radicalised:
+                if group.predominant_personality in ["rational", "social"]:
+                    # "rational" or "social" groups that are not radicalised will have a generally lesser view of radical opinions
+                    relative_weighting = 0.5
+                elif group.predominant_personality == "impulsive":
+                    # "impulsive" agents will always view radical opinions more favourably
+                    relative_weighting = 2.0
+                else:
+                    # "erratic" agents act randomly
+                    erratic_coinflip: bool = random_coinflip("bool")
+                    if erratic_coinflip:
+                        relative_weighting = 2.0
+                    else:
+                        relative_weighting = 0.5
+            elif neighbour_radicalised and self_radicalised:
+                if distance_from_avg <= RAD_DISTANCE_THRESH:
+                    # Both groups are radicalised towards the same opinion
+                    relative_weighting = 4.0
+                else:
+                    # Both groups are radicalised towards opposing opinions
+                    relative_weighting = 0.25
+
+            weighted_deltas.append(weighted_delta)
+            delta_weightings.append(relative_weighting)
+
+        # Calculate the final change
+        final_change: float = 0.0
+        total_weightings: float = sum(delta_weightings)
+        for idx, weighted_delta in enumerate(weighted_deltas):
+            final_change += weighted_delta * (delta_weightings[idx] / total_weightings)
+
+        return final_change
+
+    def dynamic_relationships(self) -> None:
+        """
+        Uses the (mean, variance) passed at initialisation to draw random walk values by which each edge (relationship)
+        in the group graph will be shifted. Aims to simulate dynamic relationships between agents across timesteps
+        at the aggregate scale.
+        """
+        if not self.dynamic_rels:
+            # No need to iterate the edges...
+            return None
+
+        for edge in self.graph.edges():
+            new_weighting: float
+
+            if not edge.has_rw_params():
+                new_weighting = value_rw_delta(
+                    edge.weighting, self.rw_params[0], self.rw_params[1]
+                )
+            elif edge.rw_params is not None:
+                new_weighting = value_rw_delta(
+                    edge.weighting, edge.rw_params[0], edge.rw_params[1]
+                )
+            else:
+                # Default to not changing the weighting at all
+                new_weighting = edge.weighting
+
+            # Constrain the weighting back to [-1.0, 1.0] as needed
+            if new_weighting < -MAX_RELATIONSHIP:
+                new_weighting = -MAX_RELATIONSHIP
+            elif new_weighting > MAX_RELATIONSHIP:
+                new_weighting = MAX_RELATIONSHIP
+
+            edge.set_weighting(new_weighting)
+        return None
+
+    def estimate_neighbour_opinions(self, group: Group) -> dict[str, float]:
+        """
+        Return the individual opinion climate values perceived by the Group for each other Group in the group graph.
+
+        :param group: The group which is estimating its neighbours' opinions.
+        :type group: Group
+        :return: A <neighbour id : estimated opinion value> mapping for each opinion perceived by the group.
+        :rtype: dict[str, float]
+        """
+        observed_opinions: dict[str, float] = {}
+
+        direct_neighbours: list[GroupNode] | None = self.get_neighbours(group)
+        if direct_neighbours is not None:
+            for direct_neighbour in direct_neighbours:
+                observed_opinion: float = direct_neighbour.group.aggregate_opinion
+                observed_opinions[direct_neighbour.group.id] = observed_opinion
+        else:
+            # Set it to an empty list to simplify the 'node in direct_neighbours' check below
+            direct_neighbours = []
+
+        for node in self.graph.nodes():
+            if node.group.id == group.id or node in direct_neighbours:
+                # Only look at indirect neighbours
+                continue
+
+            raw_observed_opinion: float = node.group.aggregate_opinion
+            attenuated_opinion: float = beta_value_attenuation(raw_observed_opinion)
+
+            if attenuated_opinion < - ATTENUATION_THRESH or ATTENUATION_THRESH < attenuated_opinion:
+                observed_opinions[node.group.id] = raw_observed_opinion
+
+        return observed_opinions
+
+    def estimate_opinion_climate(self, group: Group) -> float:
+        """
+        Return the unique opinion climate perceived by the Group within the group graph.
+
+        :param group: The group which is estimating the opinion climate.
+        :type group: Group
+        :return: The group's perceived 'aggregated opinion' of the wholse social network.
+        :rtype: float
+        """
+        # The observed opinions of the group's direct neighbours, and the relevant observed opinions of indirect neighbours
+        observed_opinions: list[float] = list(self.estimate_neighbour_opinions(group).values())
+        summed_opinions: float = sum(observed_opinions)
+
+        if len(observed_opinions) >= 1:
+            # Find the average of the aggregated, relevant opinions
+            opinion_climate: float = summed_opinions / float(len(observed_opinions))
+            return opinion_climate
+        else:
+            return 0.0
+
+    def calculate_polarisation(self) -> float:
+        r"""
+        Calculates the level of opinion polarisation in this :class:`GroupGraph` based on the equation:
+
+        .. math::
+
+            \pi(k) = \frac{1}{|K|(|K| - 1)}\sum_{i \neq j}^{i \in K, j \in K}(d_{ij} - y)^{2}
+
+        where :math:`K` is the set of groups within this GroupGraph, :math:`d_{ij}` is the distance between the
+        opinions of groups :math:`i` and :math:`j:, and :math:`y` is the mean opinion distance among all groups
+        in this GroupGraph.
+
+        :return: The measure of opinion radicalisation in this social network.
+        :rtype: float
+        """
+        K: int = self.node_count
+        opinion_distances: dict[str, float] = {}
+
+        for i in self.graph.nodes():
+            for j in self.graph.nodes():
+                if i.group.id == j.group.id:
+                    continue
+                else:
+                    opinion_distance: float = abs(i.group.aggregate_opinion - j.group.aggregate_opinion)
+                    opinion_distances[f"{i.index},{j.index}"] = opinion_distance
+
+        y: float = sum(opinion_distances.values()) / len(opinion_distances.values())
+
+        summation: float = 0.0
+        for distance in opinion_distances.values():
+            square_distance: float = (distance - y) ** 2
+            summation += square_distance
+
+        radicalisation_measure: float = summation / (K * (K - 1))
+        return radicalisation_measure
+
+    def get_betweenness_centrality(self, subgraph: rx.PyDiGraph[GroupNode, GroupEdge] | None = None) -> rx.CentralityMapping:
+        """
+        A wrapper function that makes the rustworkx :meth:`~rustworkx.digraph_betweenness_centrality`
+        function be a callable instance method for GroupGraph.
+
+        :param subgraph: A subgraph for which to calculate the betweenness centrality rather than the full graph.
+        :type subgraph: :class:`~rustworkx.PyDiGraph`, optional
+        :return: A <Node index : centrality measure> mapping containing the betweenness centrality for each node in the graph.
+        :rtype: dict[int, float]
+        """
+        if subgraph is not None:
+            return rx.betweenness_centrality(subgraph)
+        else:
+            return rx.betweenness_centrality(self.graph)
+
+    def compute_subgraph_center(self, subgraph_mapping: rx.CentralityMapping) -> int:
+        """
+        Calculates the center of a cluster using the betweenness centrality mapping.
+
+        :param subgraph_mapping: A <Node index : centrality measure> mapping containing the betweenness centrality for each node in the graph.
+        :type subgraph_mapping: dict[int, float]
+        :return: The index of the node with the greatest centrality (the center of the cluster).
+        :rtype: int
+        """
+        center_index: int = -1
+        largest_value: float = 0.0
+        for key, value in subgraph_mapping.items():
+            if value > largest_value:
+                center_index = key
+                largest_value = value
+        return center_index
+
+    def get_dijkstra_all_pairs(self, subgraph: rx.PyDiGraph[GroupNode, GroupEdge] | None = None) -> rx.AllPairsPathLengthMapping:
+        """
+        A wrapper function that makes the :meth:`~rustworkx.digraph_all_pairs_dijkstra_path_lengths`
+        function be a callable instance method for GroupGraph.
+
+        :param subgraph: A subgraph for which to calculate the dijkstra all pairs path lengths rather than the full graph.
+        :type subgraph: :class:`~rustworkx.PyDiGraph`, optional
+        :return: A <Node index : <Node index : path length>> nested mapping outlining the path lengths of all pairs in the graph.
+        :rtype: dict[int, dict[int, float]]
+        """
+        if subgraph is not None:
+            return rx.digraph_all_pairs_dijkstra_path_lengths(subgraph, lambda x: x.weighting)
+        else:
+            return rx.digraph_all_pairs_dijkstra_path_lengths(self.graph, lambda x: x.weighting)
+
+    def cluster_nodes(self, k: int, n_iters: int = 40) -> dict[GroupNode, int]:
+        """
+        A function that will use the betweenness centrality measure of the nodes in the graph
+        to separate them into a specific number of clusters.
+
+        This function uses:
+
+            - KMeans as the main clustering algorithm
+            - Dijkstra all-pairs path lengths for the distances between nodes
+            - Betweenness centrality for the KMeans evaluation metric when determining centers
+
+        NOTE: This function is included for GroupGraphs for continuity in functionality from what is seen in base
+              Graphs, but its is not expected that further KMeans clustering on the already-clustered Groups will
+              be of much use in typical use cases...
+
+        :param k: The number of clusters to separate the graph into.
+        :type k: int
+        :param n_iters: The maximum number of iterations to attempt running the KMeans algorithm for.
+        :type n_iters: int, optional
+        :return: A <Group ID : Cluster ID> mapping that outlines the generated clusters for this graph.
+        :rtype: dict[str, str]
+        """
+        # Compute the distance matrix
+        all_pairs_lengths: rx.AllPairsPathLengthMapping = self.get_dijkstra_all_pairs()
+
+        # Randomly select k nodes as centers
+        k_nodes: list[int] = sample(self.graph.node_indices(), k=k)
+
+        current_centers: list[int] = k_nodes
+
+        cluster_dict: dict[GroupNode, int] = {}
+        stable_counter: int = 0
+
+        for i in range(n_iters):
+            print(f"KMeans iteration: {i}")
+
+            # Assign each node to its closest center
+            for node in self.graph.nodes():
+                # The distance from this node to all other nodes in the graph
+                distance_to_node: rx.PathLengthMapping = all_pairs_lengths[node.index]
+
+                # Find the distances to the current centers for the current node
+                distance_to_center: dict[int, float] = {}
+                for center in current_centers:
+                    if center in distance_to_node:
+                        distance_to_center[center] = distance_to_node[center]
+                    else:
+                        # This is done for edge cases in which the group graph may not be fully connected
+                        distance_to_center[center] = np.inf
+
+                # Find the center with the minimum distance
+                nearest_center: int = min(distance_to_center.items(), key=lambda x: x[1])[0]
+
+                # Assign this center to the node
+                cluster_dict[node] = nearest_center
+
+            # Update the centers based on the previous results
+            new_centers: list[int] = []
+            for center in current_centers:
+                # Get all the nodes with this center
+                subgraph_nodes: list[GroupNode] = get_keys_by_value(cluster_dict, center)
+
+                # Define the subgraph
+                subgraph: rx.PyDiGraph[GroupNode, GroupEdge] = self.graph.subgraph([node.index for node in subgraph_nodes])
+
+                # Calculate the center of the subgraph
+                betweenness_centrality: rx.CentralityMapping = self.get_betweenness_centrality(subgraph=subgraph)
+                center = self.compute_subgraph_center(betweenness_centrality)
+                new_centers.append(center)
+
+            # Check for convergence
+            if sorted(current_centers) == sorted(new_centers):
+                stable_counter += 1
+                if stable_counter == 3:
+                    print(f"KMeans algorithms converges with {i} iterations...")
+                    break
+
+            # Update the centers if no convergence occurred
+            current_centers = deepcopy(new_centers)
+        if stable_counter < 3:
+            print("KMeans clustering algorithm did not converge...")
+
+        print("The KMeans clustering algorithm has finished running")
+        return cluster_dict
+
+    def __in__(self, iterable: Iterable[GroupGraph]) -> bool:
+        """
+        Determine if the GroupGraph is contained within the Iterable of GroupGraphs.
+
+        :param iterable: The collection of group graph objects in which membership is being determined.
+        :type iterable: Iterable[GroupGraph]
+        :return: A flag indicating if this GroupGraph is contained within the iterable.
+        :rtype: bool
+        """
+        for graph in iterable:
+            if self.name == graph.name:
+                return True
+        return False
+
+    @override
+    def __str__(self) -> str:
+        """
+        An override of the GroupGraph string representation when calling print().
+
+        :return: A printable representation outlining the name and graph properties of the group graph.
+        :rtype: str
+        """
+        return f"GroupGraph with name {self.name}, {self.node_count} nodes, and {self.edge_count} edges"
