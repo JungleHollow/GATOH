@@ -1581,7 +1581,7 @@ class GraphSet:
 
     def write_node_pickle(self, graph_node: GraphNode, subdirectory_path: str, graph_name: str, idx: int) -> str:
         """
-        A helper function that allows for multithreading of :meth:`~gatoh.graphs.graphs.GraphSet.save_graphset`.
+        A helper function that allows for multithreading of :meth:`~gatoh.graphs.GraphSet.save_graphset`.
 
         :param graph_node: The graph node which is being pickled.
         :type graph_node: GraphNode
@@ -1631,6 +1631,7 @@ class GraphSet:
         :type rw_params: dict[str, tuple[float, float]]
         :param worker_pool: A pool of workers that can distribute the processing of the graphset loading amongst themselves.
         :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
+        :raises FileNotFoundError: If the input load_path does not point to a valid file.
         """
         zip_load_path: str = f"{load_path}/_graphset.zip"
 
@@ -3326,3 +3327,214 @@ class GroupGraph:
         :rtype: str
         """
         return f"GroupGraph with name {self.name}, {self.node_count} nodes, and {self.edge_count} edges"
+
+
+class GroupGraphSet:
+    """
+    A class that mainly serves as a way of providing utility functions for the singular group graph
+    that would exist in the ABModel.
+
+    :param graph: The existing GroupGraph object that should be added to the GroupGraphSet.
+    :type graph: GroupGraph, optional
+    :param stochastic_relationships: A <graph : flag> mapping indicating if stochastic formation and disintegration of relationships should be modelled.
+    :type stochastic_relationships: dict[str, bool], optional
+    :param stochastic_rels_flags: A <graph : flag> mapping providing the necessary stochastic_relationships flags per-graph.
+    :type stochastic_rels_flags: dict[str, tuple[bool, bool]], optional
+    """
+
+    def __init__(
+        self,
+        graph: GroupGraph | None = None,
+        stochastic_relationships: dict[str, bool] | None = None,
+        stochastic_rels_flags: dict[str, tuple[bool, bool]] | None = None,
+    ) -> None:
+        self.group_graph: GroupGraph
+        if graph is not None:
+            self.group_graph = graph
+        self.stochastic_relationships: dict[str, bool]
+        if stochastic_relationships is not None:
+            self.stochastic_relationships = stochastic_relationships
+        else:
+            self.stochastic_relationships = {}
+        self.stochastic_rels_flags: dict[str, tuple[bool, bool]]
+        if stochastic_rels_flags is not None:
+            self.stochastic_rels_flags = stochastic_rels_flags
+        else:
+            self.stochastic_rels_flags = {}
+
+    def save_graphset(self, directory_path: str) -> None:
+        """
+        Save the graph contained within this graphset into a compressed subdirectory.
+
+        :param directory_path: The path to the directory where the graphset subdirectory should be created.
+        :type directory_path: str
+        """
+        # Assume that the passed directory path is the base save path, not directly to the graphset subdirectory
+        subdirectory_path: str = f"{directory_path}/_groupgraphset"
+
+        if os.path.isdir(subdirectory_path):
+            # Remove the existing directory to allow for a new overwrite
+            rmtree(subdirectory_path)
+
+        # Create the _groupgraphset directory
+        os.mkdir(subdirectory_path)
+
+        graph_save_path: str = f"{subdirectory_path}/{self.group_graph.name}/graph_{self.group_graph.name}.graphml"
+        node_save_paths: list[str] = []
+        edge_save_paths: list[str] = []
+
+        # Create the graph subdirectory
+        os.mkdir(f"{subdirectory_path}/{self.group_graph.name}")
+
+        # Write the GraphML
+        self.group_graph.save_graph(graph_save_path)
+
+        # Create a nodes subdirectory
+        os.mkdir(f"{subdirectory_path}/{self.group_graph.name}/nodes")
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            saved_node_paths = {executor.submit(self.write_node_pickle, node, subdirectory_path, self.group_graph.name, node.index): node.index for node in self.group_graph.graph.nodes()}
+            for future in concurrent.futures.as_completed(saved_node_paths):
+                node_index = saved_node_paths[future]
+                try:
+                    node_save_path = future.result()
+                except Exception as exc:
+                    print(f"Failed to write a pickle for node {node_index} with exception: {exc}")
+                else:
+                    node_save_paths.append(node_save_path)
+
+        # Create an edges subdirectory
+        os.mkdir(f"{subdirectory_path}/{self.group_graph.name}/edges")
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            saved_edge_paths = {executor.submit(self.write_edge_pickle, edge, subdirectory_path, self.group_graph.name, edge.index): edge.index for edge in self.group_graph.graph.edges()}
+            for future in concurrent.futures.as_completed(saved_edge_paths):
+                edge_index = saved_edge_paths[future]
+                try:
+                    edge_save_path = future.result()
+                except Exception as exc:
+                    print(f"Failed to write a pickle for edge {edge_index} with exception: {exc}")
+                else:
+                    edge_save_paths.append(edge_save_path)
+
+        zip_path: str = f"{subdirectory_path}.zip"
+        if os.path.exists(zip_path):
+            # Remove the existing zip file to allow for a new overwrite
+            os.remove(zip_path)
+
+        # Compress the subdirectory to minimise storage, and encapsulate the graph's nodes and edges into a single object
+        with zipfile.ZipFile(zip_path, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=COMPRESS_LEVEL) as subdir_zip:
+            # Zip the graphml file
+            graph_path_components: list[str] = graph_save_path.split("/")
+            subdir_zip.write(graph_save_path, arcname=f"{graph_path_components[-2]}/{graph_path_components[-1]}")
+
+            # Zip the node pickles
+            for node_path in node_save_paths:
+                node_path_components: list[str] = node_path.split("/")
+                subdir_zip.write(node_path, arcname=f"{node_path_components[-3]}/{node_path_components[-2]}/{node_path_components[-1]}")
+
+            # Zip the edge pickles
+            for edge_path in edge_save_paths:
+                edge_path_components: list[str] = edge_path.split("/")
+                subdir_zip.write(edge_path, arcname=f"{edge_path_components[-3]}/{edge_path_components[-2]}/{edge_path_components[-1]}")
+
+        # Remove the uncompressed subdirectory if compression was successful
+        if os.path.exists(zip_path):
+            rmtree(subdirectory_path)
+
+        return None
+
+    def write_node_pickle(self, graph_node: GroupNode, subdirectory_path: str, graph_name: str, idx: int) -> str:
+        """
+        A helper function that allows multithreading of :meth:`~gaoth.graphs.GroupGraphSet.save_graphset`.
+
+        :param graph_node: The graph node which is being pickled.
+        :type graph_node: GroupNode
+        :param subdirectory_path: The subdirectory to which the pickled graph node is being written to.
+        :type subdirectory_path: str
+        :param graph_name: The unique name used to identify the parent graph.
+        :type graph_name: str
+        :param idx: The index of the node within its parent graph.
+        :type idx: int
+        :return: The path to which the node pickle was saved to.
+        :rtype: str
+        """
+        node_save_path: str = f"{subdirectory_path}/{graph_name}/nodes/node_{idx}.pkl"
+        with open(node_save_path, "wb") as node_pickle:
+            pickle.dump(graph_node, node_pickle)
+        return node_save_path
+
+    def write_edge_pickle(self, graph_edge: GroupEdge, subdirectory_path: str, graph_name: str, idx: int) -> str:
+        """
+        A helper function that allows multithreading of :meth:`~gatoh.graphs.GroupGraphSet.save_graphset`.
+
+        :param graph_edge: The graph edge which is being pickled.
+        :type graph_edge: GroupEdge
+        :param subdirectory_path: The subdirectory to which the pickled graph edge is being written to.
+        :type subdirectory_path: str
+        :param graph_name: The unique name used to identify the parent graph.
+        :type graph_name: str
+        :param idx: The index of the edge within its parent graph.
+        :type idx: int
+        :return: The path to which the edge pickle was saved to.
+        :rtype: str
+        """
+        edge_save_path: str = f"{subdirectory_path}/{graph_name}/edges/edge_{idx}.pkl"
+        with open(edge_save_path, "wb") as edge_pickle:
+            pickle.dump(graph_edge, edge_pickle)
+        return edge_save_path
+
+    def load_graphset(self, load_path: str, rw_params: tuple[float, float]) -> None:
+        """
+        Loads a GroupGraphSet that has been saved following the same process as in the save_graphset() function.
+
+        :param load_path: The path to the model's overall save directory.
+        :type load_path: str
+        :param rw_params: The (mean, variance) of the normal distribution used to draw random-walk values for the graph.
+        :type rw_params: tuple[float, float]
+        :raises FileNotFoundError: If the input load_path does not point to a valid file.
+        """
+        zip_load_path: str = f"{load_path}/_groupgraphset.zip"
+
+        if not os.path.exists(zip_load_path):
+            raise FileNotFoundError(f"No saved GroupGraphSet was found at the path: {zip_load_path}")
+
+        # The path to the uncompressed subdirectory
+        subdirectory_path: str = f"{load_path}/_groupgraphset"
+
+        # Remove any existing subdirectory with the same name to replace it with the newly loaded one
+        if os.path.isdir(subdirectory_path):
+            rmtree(subdirectory_path)
+
+        # Create the uncompressed subdirectory
+        os.mkdir(subdirectory_path)
+
+        # Extract the graphml file to the uncompressed subdirectory
+        with zipfile.ZipFile(zip_load_path, mode="r", compression=zipfile.ZIP_DEFLATED, compresslevel=COMPRESS_LEVEL) as subdir_zip:
+            subdir_zip.extractall(path=subdirectory_path)
+
+        save_dir: list[str] = list(os.walk(subdirectory_path))[0][1]
+
+        # Load and add the graph object
+        loaded_graph: GroupGraph = self._load_graphset_inner(save_dir[0], subdirectory_path, rw_params)
+        self.add_graph(loaded_graph)
+
+        # Automatically initialise stochastic relationships as False
+        # (must be explicitly enabled if so desired)
+        self.set_stochastic_rels(loaded_graph.name, False)
+
+        return None
+
+    def _load_graphset_inner(self, save_dir: str, subdirectory_path: str, rw_params: tuple[float, float]) -> GroupGraph:
+        """
+        A helper function that organises the graphset loading process into atomic processes.
+
+        :param save_dir: The path of the directory to which all of a graph's files have been saved to.
+        :type save_dir: str
+        :param subdirectory_path: The path to the subdirectory in which the graph's save directory is located.
+        :type subdirectory_path: str
+        :param rw_params: The (mean, variance) random-walk parameters for the graph that is being loaded.
+        :type rw_params: tuple[float, float]
+        :return: A loaded group graph with all included nodes and edges.
+        :rtype: GroupGraph
+        """
+        # TODO: Continue implementing from here...
+        pass
