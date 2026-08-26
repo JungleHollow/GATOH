@@ -55,6 +55,11 @@ class TestModelCreation(ut.TestCase):
             self.model.max_iterations, 99, "Max iterations not being stored correctly"
         )
         self.assertEqual(
+            self.model.silencing_threshold,
+            0.95,
+            "Default value for silencing_threshold is not being applied correctly",
+        )
+        self.assertEqual(
             self.model.negation_threshold,
             0.89,
             "Negation threshold not being stored correctly",
@@ -89,8 +94,14 @@ class TestModelCreation(ut.TestCase):
             md.GATOHLogger,
             "Model logger is not being initialised as a GATOHLogger instance",
         )
+        self.assertFalse(
+            self.model.debug,
+            "Default value for debug is not being applied correctly",
+        )
         self.assertEqual(
-            self.model.model_id, "TEST_MODEL", "Model ID not being stored correctly"
+            self.model.model_id,
+            "TEST_MODEL",
+            "Model ID not being stored correctly"
         )
         self.assertFalse(
             self.model.suppress_warnings,
@@ -103,6 +114,19 @@ class TestModelCreation(ut.TestCase):
         self.assertFalse(
             self.model.partial_iterations,
             "Default value for partial_iterations is not being applied correctly",
+        )
+        self.assertEqual(
+            self.model.tracked_agents,
+            {},
+            "Default value for tracked_agents is not being applied correctly",
+        )
+        self.assertIsNone(
+            self.model.parameters_to_track,
+            "Default value for parameters_to_track is not being applied correctly",
+        )
+        self.assertFalse(
+            self.model.simulate_groups,
+            "Default value for simulate_groups is not being applied correctly",
         )
         self.assertEqual(
             self.model.data_file,
@@ -335,6 +359,16 @@ class TestModelCreation(ut.TestCase):
             "ABModel -- set_partial_iterations is not updating the partial_iterations flag",
         )
 
+    def test_set_simulate_groups(self) -> None:
+        """
+        Test that set_simulate_groups is working correctly.
+        """
+        self.model.set_simulate_groups(True)
+        self.assertTrue(
+            self.model.simulate_groups,
+            "ABModel -- set_simulate_groups is not updating the simulate_groups flag",
+        )
+
     def test_set_save_dir(self) -> None:
         """
         Test that set_save_dir is working correctly.
@@ -395,6 +429,67 @@ class TestModelCreation(ut.TestCase):
             self.model.model_id,
             "MODEL_TEST",
             "ABModel -- set_model_id is not updating model_id correctly",
+        )
+
+    def test_track_model_parameters_type_error(self) -> None:
+        """
+        Test that track_model_parameters with an invalid data type will raise the expected error.
+        """
+        parameters = [3, "silencing_threshold", False]
+        with self.assertRaises(TypeError, msg="One or more parameters to track have not been provided as string") as cm:
+            self.model.track_model_parameters(parameters)
+        self.assertIsNone(
+            self.model.parameters_to_track,
+            "ABModel -- track_model_parameters with an incorrect data type is creating a parameters_to_track list",
+        )
+
+    def test_track_model_parameters_nonexistent(self) -> None:
+        """
+        Test that track_model_parameters with a non-existent parameter will raise the expected error.
+        """
+        parameters = ["silencing_threshold", "foobar", "radicalisation_threshold"]
+        with self.assertRaises(KeyError, msg="The parameter 'foobar' does not exist in the ABModel object") as cm:
+            self.model.track_model_parameters(parameters)
+        self.assertIsNone(
+            self.model.parameters_to_track,
+            "ABModel -- track_model_parameters with a non-existent parameter is creating a parameters_to_track list",
+        )
+
+    def test_track_model_parameters(self) -> None:
+        """
+        Test that track_model_parameters with all valid parameters is working as intended.
+        """
+        parameters = ["silencing_threshold", "radicalisation_threshold"]
+        self.model.track_model_parameters(parameters)
+        self.assertIsInstance(
+            self.model.parameters_to_track,
+            list,
+            "ABModel -- a valid track_model_parameters call is not creating a parameters list",
+        )
+        self.assertEqual(
+            self.model.parameters_to_track,
+            parameters,
+            "ABModel -- a valid track_model_parameters call is not creating the correct parameters list",
+        )
+
+    def test_track_model_parameters_multiple(self) -> None:
+        """
+        Test that repeated, valid calls to track_model_parameters are working as intended.
+        """
+        parameters_one: list[str] = ["silencing_threshold"]
+        parameters_two: list[str] = ["radicalisation_threshold", "negation_threshold"]
+        self.model.track_model_parameters(parameters_one)
+        self.model.track_model_parameters(parameters_two)
+        self.assertEqual(
+            len(self.model.parameters_to_track),
+            3,
+            "ABModel -- repeated, valid calls to track_model_parameters are not adding the correct number of parameters to track",
+        )
+        all_parameters: list[str] = parameters_one + parameters_two
+        self.assertEqual(
+            self.model.parameters_to_track,
+            all_parameters,
+            "ABModel -- repeated, valid calls to track_model_parameters are not adding the appropriate parameters to track",
         )
 
     def test_add_graph(self) -> None:

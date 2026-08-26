@@ -429,7 +429,7 @@ class ABModel:
             self.logger.log_function_call("ABModel.set_partial_iterations")
         return None
 
-    def set_simlate_groups(self, simulate_groups: bool) -> None:
+    def set_simulate_groups(self, simulate_groups: bool) -> None:
         """
         A setter function that changes the model's simulate_groups flag.
 
