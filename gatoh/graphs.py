@@ -1682,7 +1682,7 @@ class GraphSet:
 
     def load_graphset_multi(self, save_dir: str, subdirectory_path: str, rw_params: tuple[float, float]) -> Graph:
         """
-        A helper function that allows for parallel processing of Graph loading for :meth:`~gatoh.graphs.graphs.GraphSet.load_graphset`.
+        A helper function that allows for parallel processing of Graph loading for :meth:`~gatoh.graphs.GraphSet.load_graphset`.
 
         :param save_dir: The path of the directory to which all of a graph's files have been saved to.
         :type save_dir: str
@@ -1730,7 +1730,7 @@ class GraphSet:
 
     def load_node(self, node_dir: str, node_file: str) -> tuple[GraphNode, int]:
         """
-        A helper function that allows for multithreading within :meth:`~gatoh.graphs.graphs.GraphSet.load_graphset_multi`.
+        A helper function that allows for multithreading within :meth:`~gatoh.graphs.GraphSet.load_graphset_multi`.
 
         :param node_dir: The root directory where all graph nodes have been saved.
         :type node_dir: str
@@ -1746,7 +1746,7 @@ class GraphSet:
 
     def load_edge(self, edge_dir: str, edge_file: str) -> tuple[GraphEdge, int]:
         """
-        A helper function that allows for multithreading within :meth:`~gatoh.graphs.graphs.GraphSet.load_graphset_multi`.
+        A helper function that allows for multithreading within :meth:`~gatoh.graphs.GraphSet.load_graphset_multi`.
 
         :param edge_dir: The root directory where all graph edges have been saved.
         :type edge_dir: str
@@ -2825,6 +2825,21 @@ class GroupGraph:
                 return True
         return False
 
+    def get_group_hierarchy(self, group: Group) -> str:
+        """
+        A getter function that reports what specific hierarchy a Group in the group graph belongs to.
+
+        :param group: The group whose hierarchy membership is being examined.
+        :type group: Group
+        :raises ValueError: If the input Group does not exist in this graph.
+        :return: The name of the hierarchy that the group belongs to.
+        :rtype: str
+        """
+        group_node: GroupNode | None = self.node_from_group(group)
+        if group_node is None:
+            raise ValueError("The input group does not exist in the group graph -- cannot report its parent hierarchy")
+        return group_node.group.hierarchy
+
     def group_previous_opinion(self, group: Group) -> None:
         """
         Set the specified Group's previous opinion to be equal to the current opinion (before the current opinion changes in the current iteration).
@@ -2907,6 +2922,35 @@ class GroupGraph:
                 continue
             neighbour_nodes.append(neighbour_node)
         return neighbour_nodes
+
+    def hierarchy_exists(self, hierarchy: str) -> bool:
+        """
+        A simple function that checks if at least one group in the graph belongs to the specified hierarchy.
+
+        :param hierarchy: The name of the hierarchy being searched for.
+        :type hierarchy: str
+        :return: A flag indicating if the specified hierarchy exists in the graph.
+        :rtype: bool
+        """
+        for node in self.graph.nodes():
+            if node.group.hierarchy == hierarchy:
+                return True
+        return False
+
+    def get_groups_in_hierarchy(self, hierarchy: str) -> list[GroupNode]:
+        """
+        A getter function that returns all graph nodes with groups that belong to the specified hierarchy.
+
+        :param hierarchy: The name of the hierarchy that groups must be members of.
+        :type hierarchy: str
+        :return: A list of all the nodes with groups belonging to the specified hierarchy.
+        :rtype: list[GroupNode]
+        """
+        hierarchy_groups: list[GroupNode] = []
+        for node in self.graph.nodes():
+            if node.group.hierarchy == hierarchy:
+                hierarchy_groups.append(node)
+        return hierarchy_groups
 
     def step(self) -> None:
         """
@@ -3136,7 +3180,7 @@ class GroupGraph:
         else:
             return 0.0
 
-    def calculate_polarisation(self) -> float:
+    def calculate_polarisation(self, hierarchy: str = "") -> float:
         r"""
         Calculates the level of opinion polarisation in this :class:`GroupGraph` based on the equation:
 
@@ -3148,14 +3192,23 @@ class GroupGraph:
         opinions of groups :math:`i` and :math:`j:, and :math:`y` is the mean opinion distance among all groups
         in this GroupGraph.
 
+        :param hierarchy: The specific hierarchy for which group polarisation should be calculated.
+        :type hierarchy: str, optional
         :return: The measure of opinion radicalisation in this social network.
         :rtype: float
         """
         K: int = self.node_count
         opinion_distances: dict[str, float] = {}
 
-        for i in self.graph.nodes():
-            for j in self.graph.nodes():
+        group_nodes: list[GroupNode]
+
+        if hierarchy != "" and self.hierarchy_exists(hierarchy):
+            group_nodes = self.get_groups_in_hierarchy(hierarchy)
+        else:
+            group_nodes = self.graph.nodes()
+
+        for i in group_nodes:
+            for j in group_nodes:
                 if i.group.id == j.group.id:
                     continue
                 else:
@@ -3536,5 +3589,233 @@ class GroupGraphSet:
         :return: A loaded group graph with all included nodes and edges.
         :rtype: GroupGraph
         """
-        # TODO: Continue implementing from here...
-        pass
+        graph_name: str = os.path.basename(save_dir)
+
+        graphml_path: str = f"{subdirectory_path}/{graph_name}/graph_{graph_name}.graphml"
+
+        new_graph: GroupGraph = GroupGraph((0.0, 0.0))
+        new_graph.load_graph(graphml_path, graph_name, rw_params=rw_params)
+
+        node_dir: str = f"{subdirectory_path}/{graph_name}/nodes"
+        edge_dir: str = f"{subdirectory_path}/{graph_name}/edges"
+
+        node_files: list[str] = list(os.walk(node_dir))[0][2]
+        edge_files: list[str] = list(os.walk(edge_dir))[0][2]
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            loaded_nodes = {executor.submit(self.load_node, node_dir, node_file): node_file for node_file in node_files}
+            for future in concurrent.futures.as_completed(loaded_nodes):
+                node_file = loaded_nodes[future]
+                try:
+                    node_info = future.result()
+                except Exception as exc:
+                    print(f"Failed to extract the pickled node at file {node_file} for the group graph with exception: {exc}")
+                else:
+                    new_graph.graph[node_info[1]] = node_info[0]
+
+            loaded_edges = {executor.submit(self.load_edge, edge_dir, edge_file): edge_file for edge_file in edge_files}
+            for future in concurrent.futures.as_completed(loaded_edges):
+                edge_file = loaded_edges[future]
+                try:
+                    edge_info = future.result()
+                except Exception as exc:
+                    print(f"Failed to extract the pickled edge at file {edge_file} for the group graph with exception: {exc}")
+                else:
+                    new_graph.graph.update_edge_by_index(edge_info[1], edge_info[0])
+        return new_graph
+
+    def load_node(self, node_dir: str, node_file: str) -> tuple[GroupNode, int]:
+        """
+        A helper function that allows for multithreading within :meth:`~gatoh.graphs.GroupGraphSet.load_graphset_multi`.
+
+        :param node_dir: The root directory where all graph nodes have been saved.
+        :type node_dir: str
+        :param node_file: The name of the pickle file that is being loaded.
+        :type node_file: str
+        :return: The unpickled group node object and its corresponding index in the graph.
+        :rtype: tuple[GroupNode, int]
+        """
+        node_index: int = int((os.path.basename(node_file).split("_")[-1]).split(".")[0])
+        with open(f"{node_dir}/{node_file}", "rb") as node_pickle:
+            node_object: GroupNode = pickle.load(node_pickle)
+        return (node_object, node_index)
+
+    def load_edge(self, edge_dir: str, edge_file: str) -> tuple[GroupEdge, int]:
+        """
+        A helper function that allows for multithreading within :meth:`~gatoh.graphs.GroupGraphSet.load_graphset_multi`.
+
+        :param edge_dir: The root directory where all graph edges have been saved.
+        :type edge_dir: str
+        :param edge_file: The name of the pickle file that is being loaded.
+        :type edge_file: str
+        :return: The unpickled group edge object and its corresponding index in the graph.
+        :rtype: tuple[GroupEdge, int]
+        """
+        edge_index: int = int((os.path.basename(edge_file).split("_")[-1]).split(".")[0])
+        with open(f"{edge_dir}/{edge_file}", "rb") as edge_pickle:
+            edge_object: GroupEdge = pickle.load(edge_pickle)
+        return (edge_object, edge_index)
+
+    def add_graph(self, graph: GroupGraph) -> None:
+        """
+        A setter function to add a new GroupGraph object to the GroupGraphSet.
+
+        :param graph: The group graph to add to the GroupGraphSet.
+        :type graph: GroupGraph
+        """
+        self.group_graph = graph
+
+        # Automatically initialise stochastic rels for this graph as False
+        # (must be explicitly enabled if so desired)
+        self.set_stochastic_rels(graph.name, False)
+
+        return None
+
+    def group_graph_exists(self) -> bool:
+        """
+        A simple function that reports whether the group graph set's group graph exists or not.
+
+        :return: A flag indicating if the group_graph exists as a valid GroupGraph object
+        :rtype: bool
+        """
+        if self.__getattribute__("group_graph") is None:
+            return False
+        return True
+
+    def set_stochastic_rels(self, name: str, status: bool, flags: tuple[bool, bool] = (False, False)) -> None:
+        """
+        A setter function that defines whether stochastic relationships should be modelled for a specific hierarchy.
+
+        :param name: The name of the group graph for which the status is being set.
+        :type name: str
+        :param status: A flag indicating whether stochastic relationships should be modelled.
+        :type status: bool
+        :param flags: The flags that should be input to the graph's stochastic_relationships function.
+        :type flags: tuple[bool, bool], optional
+        """
+        # Only set a flag if the input name corresponds to the existing group graph
+        if self.group_graph.name == name:
+            self.stochastic_relationships[name] = status
+            self.stochastic_rels_flags[name] = flags
+            return None
+        # If this is reached, then an invalid name was passed
+        warnings.warn(
+            "WARNING: Attempted to set stochastic relationships for a group graph which does not exist in the group graphset",
+            category=UserWarning,
+        )
+        return None
+
+    def get_graph(self) -> GroupGraph | None:
+        """
+        A getter function to return the GroupGraph object stored by this GroupGraphSet.
+
+        :return: The graph object to return if it has been set, or None otherwise.
+        :rtype: GroupGraph | None
+        """
+        if not self.group_graph_exists():
+            print("No valid group graph exists -- set it by calling GroupGraphSet.add_graph()...")
+            return None
+        return self.group_graph
+
+    def list_hierarchies(self, print_out: bool = False) -> list[str]:
+        """
+        A utility function that iterates over the groups in the group graph and prints out the names of all the social hierarchies
+        that are present.
+
+        :param print_out: A flag indicating if the listed hierarchies should be printed out to the terminal.
+        :type print_out: bool, optional
+        :return: The names of all social hierarchies present amongst the groups the group graph.
+        :rtype: list[str]
+        """
+        social_hierarchies: set[str] = set()
+        for group_node in self.group_graph.graph.nodes():
+            social_hierarchies.add(group_node.group.hierarchy)
+        social_hierarchies_list: list[str] = list(social_hierarchies)
+        if print_out:
+            print(
+                f"\nSocial hierarchies present amongst the groups in the GroupGraphSet:\n\t{social_hierarchies_list}\n\n"
+            )
+        return social_hierarchies_list
+
+    def get_group_hierarchy(self, group: Group) -> str:
+        """
+        A helper function that determines which social hierarchy a Group belongs to.
+
+        :param group: The group for which hierarchy membership is being determined.
+        :type group: Group
+        :raises ValueError: If the input group does not exist in the group graph.
+        :return: The name of the social hierarchy to which the input Group belongs in.
+        :rtype: str
+        """
+        if not self.group_graph_exists():
+            raise RuntimeError("No valid group graph exists")
+        if self.group_graph.group_in_graph(group):
+            return self.group_graph.get_group_hierarchy(group)
+        raise ValueError("The input group does not exist in the group graph set's graph -- cannot report its hierarchy")
+
+    def get_groups_hierarchies(self, groups: list[Group]) -> dict[str, str]:
+        """
+        A helper function that determines which social hierarchy multiple Groups are contained in.
+
+        :param groups: The groups for which hierarchy membership is being determined.
+        :type group: list[Group]
+        :return: A <Group ID : hierarchy> mapping of the social hierarchy that each Group belongs to.
+        :rtype: dict[str, str]
+        """
+        group_hierarchies: dict[str, str] = {}
+        for group in groups:
+            group_hierarchy: str = self.get_group_hierarchy(group)
+            group_hierarchies[group.id] = group_hierarchy
+        return group_hierarchies
+
+    def calculate_polarisation(self, hierarchy: str = "") -> float:
+        """
+        A wrapper that calls the group graph's calculate_polarisation function and returns its value.
+
+        An empty string ("") will mean that the polarisation for all groups will be calculated,
+        regardless of which hierarchy they belong to.
+
+        :param hierarchy: The hierarchy for which polarisation is being calculated.
+        :type hierarchy: str, optional
+        :raises RuntimeError: If no valid group graph has been set.
+        :raises ValueError: If no groups in the group graph belong to the input hierarchy.
+        :return: The hierarchy polarisation value.
+        :rtype: float
+        """
+        if not self.group_graph_exists():
+            raise RuntimeError("No valid group graph exists")
+        elif not self.group_graph.hierarchy_exists(hierarchy):
+            raise ValueError(f"No group in the group graph belongs to the hierarchy '{hierarchy}'")
+        return self.group_graph.calculate_polarisation(hierarchy=hierarchy)
+
+    def __in__(self, graph: GroupGraph) -> bool:
+        """
+        A method defining how a GroupGraphSet checks for GroupGraph membership.
+
+        :param graph: The graph whose membership is being checked for.
+        :type graph: GroupGraph
+        :return: A flag indicating if the GroupGraph object is the one contained in self.group_graph.
+        :rtype: bool
+        """
+        return graph.name == self.group_graph.name
+
+    def __contains__(self, graph: GroupGraph) -> bool:
+        """
+        A secondary method defining how a GroupGraphSet checks for GroupGraph membership.
+
+        :param graph: The graph whose membership is being checked for.
+        :type graph: GroupGraph
+        :return: A flag indicating if the GroupGraph object is the one contained in self.group_graph.
+        :rtype: bool
+        """
+        return graph.name == self.group_graph.name
+
+    @override
+    def __str__(self) -> str:
+        """
+        An override of what calling print() on this object will output.
+
+        :return: A printable representation listing the names of the hierarchies which are present amongst the groups in the graph.
+        :rtype: str
+        """
+        return f"GroupGraphSet containing groups belonging to the following social hierarchies:\n\n{self.list_hierarchies()}"
