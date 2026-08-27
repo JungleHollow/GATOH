@@ -2121,7 +2121,6 @@ class ABModel:
         :return: The index in the AgentSet of the parent and child nodes involved in the hierarchy graph's relationship.
         :rtype: tuple[int, int]
         """
-        # Actually GraphNode objects, but must be declared as "Any" for cases where a non-existent node index is passed to the function...
         from_node: GraphNode | None = hierarchy_graph.get_node(edge.from_node)
         to_node: GraphNode | None = hierarchy_graph.get_node(edge.to_node)
 

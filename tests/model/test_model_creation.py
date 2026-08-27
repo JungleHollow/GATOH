@@ -555,6 +555,163 @@ class TestModelCreation(ut.TestCase):
             "ABModel -- get_tracked_parameters is not reporting the correct value for one or more tracked parameters",
         )
 
+    def test_track_agent_opinion_invalid(self) -> None:
+        """
+        Test that track_agent_opinion with an invalid agent will raise the expected error.
+        """
+        with self.assertRaises(KeyError) as cm:
+            self.model.track_agent_opinion("foobar")
+
+    def test_track_agent_previous_opinion_invalid(self) -> None:
+        """
+        Test that track_agent_previous_opinion with an invalid agent will raise the expected error.
+        """
+        with self.assertRaises(KeyError) as cm:
+            self.model.track_agent_previous_opinion("foobar")
+
+    def test_track_agent_radicalisation_invalid(self) -> None:
+        """
+        Test that track_agent_radicalisation with an invalid agent will raise the expected error.
+        """
+        with self.assertRaises(KeyError) as cm:
+            self.model.track_agent_radicalisation("foobar")
+
+    def test_track_agent_social_weightings_invalid(self) -> None:
+        """
+        Test that track_agent_social_weightings with an invalid agent will raise the expected error.
+        """
+        with self.assertRaises(KeyError) as cm:
+            self.model.track_agent_social_weightings("foobar")
+
+    def test_track_agent_silencing_invalid(self) -> None:
+        """
+        Test that track_agent_silencing with an invalid agent will raise the expected error.
+        """
+        with self.assertRaises(KeyError) as cm:
+            self.model.track_agent_silencing("foobar")
+
+    def test_track_agent_custom_attribute_invalid_agent(self) -> None:
+        """
+        Test that track_agent_custom_attribute with an invalid agent will raise the expected error.
+        """
+        with self.assertRaises(KeyError) as cm:
+            self.model.track_agent_custom_attribute("foobar", "foobar")
+
+    def test_track_agent_opinion(self) -> None:
+        """
+        Test that track_agent_opinion with a valid agent will work as expected.
+        """
+        _ = self.model.add_agent(agt.Agent("TEST"))
+        self.model.track_agent_opinion("TEST")
+        self.assertIn(
+            "TEST",
+            self.model.tracked_agents,
+            "ABModel -- track_agent_opinion with a valid agent is not adding the agent to tracked_agents",
+        )
+        self.assertIn(
+            "opinion",
+            self.model.tracked_agents["TEST"],
+            "ABModel -- track_agent_opinion with a valid agent is not adding 'opinion' as a tracked attribute",
+        )
+
+    def test_track_agent_previous_opinion(self) -> None:
+        """
+        Test that track_agent_previous opinion with a valid agent will work as expected.
+        """
+        _ = self.model.add_agent(agt.Agent("TEST"))
+        self.model.track_agent_previous_opinion("TEST")
+        self.assertIn(
+            "TEST",
+            self.model.tracked_agents,
+            "ABModel -- track_agent_previous_opinion with a valid agent is not adding the agent to tracked_agents",
+        )
+        self.assertIn(
+            "previous_opinion",
+            self.model.tracked_agents["TEST"],
+            "ABModel -- track_agent_previous_opinion with a valid agent is not adding 'previous_opinion' as a tracked attribute",
+        )
+
+    def test_track_agent_radicalisation(self) -> None:
+        """
+        Test that track_agent radicalisation with a valid agent will work as expected.
+        """
+        _ = self.model.add_agent(agt.Agent("TEST"))
+        self.model.track_agent_radicalisation("TEST")
+        self.assertIn(
+            "TEST",
+            self.model.tracked_agents,
+            "ABModel -- track_agent_radicalisation with a valid agent is not adding the agent to tracked_agents",
+        )
+        self.assertIn(
+            "radicalised",
+            self.model.tracked_agents["TEST"],
+            "ABModel -- track_agent_radicalisation with a valid agent is not adding 'radicalised' as a tracked attribute",
+        )
+
+    def test_track_agent_social_weightings(self) -> None:
+        """
+        Test that track_agent_social_weightings with a valid agent will work as expected.
+        """
+        _ = self.model.add_agent(agt.Agent("TEST"))
+        self.model.track_agent_social_weightings("TEST")
+        self.assertIn(
+            "TEST",
+            self.model.tracked_agents,
+            "ABModel -- track_agent_social_weightings with a valid agent is not adding the agent to tracked_agents",
+        )
+        self.assertIn(
+            "social_weightings",
+            self.model.tracked_agents["TEST"],
+            "ABModel -- track_agent_social_weightings with a valid agent is not adding 'social_weightings' as a tracked attribute",
+        )
+
+    def test_track_agent_silencing(self) -> None:
+        """
+        Test that track_agent_silencing with a valid agent will work as expected.
+        """
+        _ = self.model.add_agent(agt.Agent("TEST"))
+        self.model.track_agent_silencing("TEST")
+        self.assertIn(
+            "TEST",
+            self.model.tracked_agents,
+            "ABModel -- track_agent_silencing with a valid agent is not adding the agent to tracked_agents",
+        )
+        self.assertIn(
+            "is_silenced",
+            self.model.tracked_agents["TEST"],
+            "ABModel -- track_agent_silencing with a valid agent is not adding 'is_silenced' as a tracked attribute",
+        )
+
+    def test_track_agent_custom_attribute_invalid_attribute(self) -> None:
+        """
+        Test that track_agent_custom_attribute with a valid agent but non-existent attribute will raise the expected error.
+        """
+        _ = self.model.add_agent(agt.Agent("TEST"))
+        with self.assertRaises(KeyError) as cm:
+            self.model.track_agent_custom_attribute("TEST", "foobar")
+        self.assertNotIn(
+            "TEST",
+            self.model.tracked_agents,
+            "ABModel -- track_agent_custom_attribute with a valid agent but non-existent attribute has still added the agent to tracked_agents",
+        )
+
+    def test_track_agent_custom_attribute(self) -> None:
+        """
+        Test that track_agent_custom_attribute with a valid agent and attribute will work as intended.
+        """
+        _ = self.model.add_agent(agt.Agent("TEST", foobar=1312))
+        self.model.track_agent_custom_attribute("TEST", "foobar")
+        self.assertIn(
+            "TEST",
+            self.model.tracked_agents,
+            "ABModel -- track_agent_custom_attribute with a valid agent and attribute is not adding the agent to tracked_agents",
+        )
+        self.assertIn(
+            "foobar",
+            self.model.tracked_agents["TEST"],
+            "ABModel -- track_agent_custom_attribute with a valid agent and attribute is not adding the custom attribute as a tracked attribute",
+        )
+
     def test_get_tracked_agent_attributes_empty(self) -> None:
         """
         Test that get_tracked_agent_attributes when no agent attributes are being tracked is returning an empty dictionary.
@@ -575,7 +732,76 @@ class TestModelCreation(ut.TestCase):
         """
         Test that get_tracked_agent_attributes when some agent attributes are being tracked is working as intended.
         """
-        # TODO: Implement this test
+        agents_to_add: list[agt.Agent] = [
+            agt.Agent("AGENT0"),
+            agt.Agent("AGENT1", 0.13),
+            agt.Agent("AGENT2"),
+            agt.Agent("AGENT3", 0.12),
+        ]
+        agents_to_add[-1].radicalised = True
+        _ = self.model.add_agents(agents_to_add)
+        self.model.track_agent_opinion("AGENT3")
+        self.model.track_agent_radicalisation("AGENT3")
+        self.model.track_agent_opinion("AGENT1")
+        tracked_agt_attribs: dict[str, dict[str, Any]] = self.model.get_tracked_agent_attributes()
+        self.assertIsInstance(
+            tracked_agt_attribs,
+            dict,
+            "ABModel -- get_tracked_agent_attributes when attributes are being tracked is not returning a dictionary value",
+        )
+        self.assertEqual(
+            len(tracked_agt_attribs),
+            2,
+            "ABModel -- get_tracked_agent_attributes when attributes are being tracked is not reporting attributes for the correct number of agents",
+        )
+        for agent in ["AGENT1", "AGENT3"]:
+            self.assertIn(
+                agent,
+                tracked_agt_attribs,
+                "ABModel -- one or more agents with tracked attributes are not being reported by get_tracked_agent_attributes",
+            )
+            agt_attribs: dict[str, Any] = tracked_agt_attribs[agent]
+            if agent == "AGENT1":
+                self.assertEqual(
+                    len(agt_attribs),
+                    1,
+                    "ABModel -- one or more agents with tracked attributes are reporting an incorrect number of tracked attributes (AGENT1)",
+                )
+                self.assertIn(
+                    "opinion",
+                    agt_attribs,
+                    "ABModel -- one or more agents with tracked attributes are not tracking the correct attributes (AGENT1 opinion)",
+                )
+                self.assertEqual(
+                    agt_attribs["opinion"],
+                    0.13,
+                    "ABModel -- one or more agents with tracked attributes are reporting the incorrect value for their tracked attributes (AGENT1 opinion)",
+                )
+            else:
+                self.assertEqual(
+                    len(agt_attribs),
+                    2,
+                    "ABModel -- one or more agents with tracked attributes are reporting an incorrect number of tracked attributes (AGENT3)",
+                )
+                self.assertIn(
+                    "opinion",
+                    agt_attribs,
+                    "ABModel -- one or more agents with tracked attributes are not tracking the correct attributes (AGENT3 opinion)"
+                )
+                self.assertEqual(
+                    agt_attribs["opinion"],
+                    0.12,
+                    "ABModel -- one or more agents with tracked attributes are reporting the incorrect value for their tracked attributes (AGENT3 opinion)"
+                )
+                self.assertIn(
+                    "radicalised",
+                    agt_attribs,
+                    "ABModel -- one or more agents with tracked attributes are not tracking the correct attributes (AGENT3 radicalised)",
+                )
+                self.assertTrue(
+                    agt_attribs["radicalised"],
+                    "ABModel -- one or more agents with tracked attributes are reporting the incorrect value for their tracked attributes (AGENT3 radicalised)",
+                )
 
     def test_add_graph(self) -> None:
         """
@@ -1114,6 +1340,80 @@ class TestModelCreation(ut.TestCase):
                     "ABModel -- a valid call to generate_groups created one or more groups with agent members that do not exist in the model",
                 )
 
+    def test_init_base_graph(self) -> None:
+        """
+        Test that init_base_graph is working as intended.
+        """
+        new_agents: list[agt.Agent] = [agt.Agent(f"AGENT{i}") for i in range(4)]
+        graphs_to_add: list[gr.Graph] = [gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0])]
+        _: gr.GraphSet = self.model.add_graphs(
+            graphs_to_add, [HIERARCHY_NAMES[0]], [HIERARCHY_RW_DISTRIB[0]]
+        )
+        self.model.add_agents_to_hierarchy(new_agents, HIERARCHY_NAMES[0])
+        graph_one = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[0])
+        graph_one.add_edges(
+            {
+                "from_node": [0, 3],
+                "to_node": [1, 2],
+                "weighting": [0.13, 0.12],
+            },
+        )
+        self.model.init_base_graph()
+        self.assertEqual(
+            self.model.base_graph.edge_count,
+            2,
+            "ABModel -- init_base_graph is not creating the correct number of edges in the base graph",
+        )
+        self.assertEqual(
+            self.model.base_graph.node_count,
+            4,
+            "ABModel -- init_base_graph is not creating the correct number of nodes in the base graph",
+        )
+        self.assertIsNotNone(
+            self.model.base_graph.relationship_exists(0, 1),
+            "ABModel -- init_base_graph is not creating one or more existing hierarchy edges",
+        )
+        self.assertIsNotNone(
+            self.model.base_graph.relationship_exists(3, 2),
+            "ABModel -- init_base_graph is not creating one or more existing hierarchy edges",
+        )
+
+    def test_get_base_indices_from_edge(self) -> None:
+        """
+        Test that get_base_indices_from_edge is working as intended.
+        """
+        new_agents: list[agt.Agent] = [agt.Agent(f"AGENT{i}") for i in range(10)]
+        graphs_to_add: list[gr.Graph] = [gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0])]
+        _: gr.GraphSet = self.model.add_graphs(
+            graphs_to_add, [HIERARCHY_NAMES[0]], [HIERARCHY_RW_DISTRIB[0]]
+        )
+        self.model.add_agents_to_hierarchy(new_agents[3:7], HIERARCHY_NAMES[0])
+        graph_one = self.model.graphs.get_hierarchy(HIERARCHY_NAMES[0])
+        graph_one.add_edges(
+            {
+                "from_node": [0, 3],
+                "to_node": [1, 2],
+                "weighting": [0.13, 0.12],
+            },
+        )
+        edge_one = graph_one.get_edge(0)
+        self.model.init_base_graph()
+        base_indices: tuple[int, int] = self.model.get_base_indices_from_edge(graph_one, edge_one)
+        self.assertIsInstance(
+            base_indices,
+            tuple,
+            "ABModel -- get_base_indices_from_edge is not returning a tuple value",
+        )
+        self.assertEqual(
+            base_indices[0],
+            3,
+            "ABModel -- get_base_indices_from_edge is not reporting the correct from_node index",
+        )
+        self.assertEqual(
+            base_indices[1],
+            4,
+            "ABModel -- get_base_indices_from_edge is not reporting the correct to_node index",
+        )
 
     @override
     def tearDown(self) -> None:
