@@ -23,6 +23,7 @@ from rustworkx import all_shortest_paths as rx_shortest_paths
 
 from gatoh.agents import Agent, AgentSet, OPINION_MAX
 from gatoh.graphs import Graph, GraphNode, GraphEdge, GraphSet
+from gatoh.graphs import GroupGraph, GroupNode, GroupEdge, GroupGraphSet
 from gatoh.groups import Group, GroupSet
 from gatoh.logging import GATOHLogger
 from gatoh.utils import (
@@ -170,6 +171,7 @@ class ABModel:
         self.agents: AgentSet = AgentSet()
         self.graphs: GraphSet = GraphSet()
         self.groups: GroupSet = GroupSet()
+        self.group_graph: GroupGraphSet = GroupGraphSet()
 
         if init_graphs:
             # Ensure that the input hierarchy information always produce at least empty graphs in the graphset
@@ -558,6 +560,7 @@ class ABModel:
             "suppress_warnings": self.suppress_warnings,
             "checkpointing": self.checkpointing,
             "partial_iterations": self.partial_iterations,
+            "simulate_groups": self.simulate_groups,
             "save_dir": self.save_dir,
             "data_file": self.data_file,
             "model_id": self.model_id,
@@ -625,6 +628,7 @@ class ABModel:
                             self.suppress_warnings = config_data["suppress_warnings"]
                             self.checkpointing = config_data["checkpointing"]
                             self.partial_iterations = config_data["partial_iterations"]
+                            self.simulate_groups = config_data["simulate_groups"]
                             self.save_dir = config_data["save_dir"]
                             self.data_file = config_data["data_file"]
                             self.model_id = config_data["model_id"]
@@ -932,6 +936,15 @@ class ABModel:
         if self.debug:
             self.logger.log_function_call("ABModel.generate_agents")
         return None
+
+    def get_agent_ids(self) -> list[str]:
+        """
+        A wrapper for the AgentSet's get_agent_ids function.
+
+        :return: A list containing the unique IDs of every agent in the model's agent set.
+        :rtype: list[str]
+        """
+        return self.agents.get_agent_ids()
 
     def add_group(self, group: Group) -> int:
         """
@@ -1509,7 +1522,7 @@ class ABModel:
         """
         group.previous_opinion = group.aggregate_opinion
 
-        neighbour_influences: float | None = self.group_graph.neighbour_influences(group)
+        neighbour_influences: float | None = self.group_graph.group_graph.neighbour_influences(group)
         if neighbour_influences is None:
             neighbour_influences = 0.0
 

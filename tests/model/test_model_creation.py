@@ -8,6 +8,7 @@ from shutil import rmtree
 import gatoh.agents as agt
 import gatoh.graphs as gr
 import gatoh.model as md
+import gatoh.groups as grp
 
 HIERARCHY_NAMES: list[str] = ["Test_1", "Test_2"]
 HIERARCHY_RW_DISTRIB: list[tuple[float, float]] = [(0, 0.01), (0, 0.2)]
@@ -137,6 +138,26 @@ class TestModelCreation(ut.TestCase):
             self.model.visualisation_dir,
             "",
             "Default value for visualisation_dir is not being applied correctly",
+        )
+        self.assertIsInstance(
+            self.model.agents,
+            agt.AgentSet,
+            "Model agents is not being initialised as an AgentSet",
+        )
+        self.assertIsInstance(
+            self.model.graphs,
+            gr.GraphSet,
+            "Model graphs is not being initialised as a GraphSet",
+        )
+        self.assertIsInstance(
+            self.model.groups,
+            grp.GroupSet,
+            "Model groups is not being initialised as a GroupSet",
+        )
+        self.assertIsInstance(
+            self.model.group_graph,
+            gr.GroupGraphSet,
+            "Model group_graph is not being initialised as a GroupGraphSet",
         )
 
     def test_set_hierarchy_information(self) -> None:
@@ -491,6 +512,70 @@ class TestModelCreation(ut.TestCase):
             all_parameters,
             "ABModel -- repeated, valid calls to track_model_parameters are not adding the appropriate parameters to track",
         )
+
+    def test_get_tracked_parameters_empty(self) -> None:
+        """
+        Test that get_tracked_parameters on an empty model will return None.
+        """
+        tracked_parameters = self.model.get_tracked_parameters()
+        self.assertIsNone(
+            tracked_parameters,
+            "ABModel -- get_tracked_parameters when no parameters are being tracked did not return None",
+        )
+
+    def test_get_tracked_parameters(self) -> None:
+        """
+        Test that get_tracked_parameters is working as intended.
+        """
+        self.model.track_model_parameters(["silencing_threshold", "radicalisation_threshold", "negation_threshold"])
+        tracked_parameters = self.model.get_tracked_parameters()
+        self.assertIsInstance(
+            tracked_parameters,
+            dict,
+            "ABModel -- get_tracked_parameters when parameters are being tracked did not return a dict",
+        )
+        self.assertEqual(
+            len(tracked_parameters),
+            3,
+            "ABModel -- get_tracked_parameters is not reporting all of the tracked model parameters",
+        )
+        self.assertEqual(
+            tracked_parameters.get("silencing_threshold"),
+            0.95,
+            "ABModel -- get_tracked_parameters is not reporting the correct value for one or more tracked parameters",
+        )
+        self.assertEqual(
+            tracked_parameters.get("radicalisation_threshold"),
+            0.45,
+            "ABModel -- get_tracked_parameters is not reporting the correct value for one or more tracked parameters",
+        )
+        self.assertEqual(
+            tracked_parameters.get("negation_threshold"),
+            0.89,
+            "ABModel -- get_tracked_parameters is not reporting the correct value for one or more tracked parameters",
+        )
+
+    def test_get_tracked_agent_attributes_empty(self) -> None:
+        """
+        Test that get_tracked_agent_attributes when no agent attributes are being tracked is returning an empty dictionary.
+        """
+        tracked_agt_attribs: dict[str, dict[str, Any]] = self.model.get_tracked_agent_attributes()
+        self.assertIsInstance(
+            tracked_agt_attribs,
+            dict,
+            "ABModel -- get_tracked_agent_attributes when no attributes are being tracked is not returning a dictionary value",
+        )
+        self.assertEqual(
+            tracked_agt_attribs,
+            {},
+            "ABModel -- get_tracked_agent_attributes when no attributes are being tracked is not returning an empty dictionary",
+        )
+
+    def test_get_tracked_agent_attributes(self) -> None:
+        """
+        Test that get_tracked_agent_attributes when some agent attributes are being tracked is working as intended.
+        """
+        # TODO: Implement this test
 
     def test_add_graph(self) -> None:
         """
@@ -917,6 +1002,118 @@ class TestModelCreation(ut.TestCase):
                 "ABModel -- add_relationships_to_hierarchy added relationships to an unspecified hierarchy",
             )
         # Further checking for adding relationships to graph test_2 as in test_add_agents_to_hierarchy should not be necessary here...
+
+    def test_add_group(self) -> None:
+        """
+        Test that add_group is working as intended.
+        """
+        new_group: grp.Group = grp.Group("TEST")
+        index: int = self.model.add_group(new_group)
+        self.assertIsInstance(
+            index,
+            int,
+            "ABModel -- add_group is not returning an integer value",
+        )
+        self.assertEqual(
+            index,
+            len(self.model.groups) - 1,
+            "ABModel -- add_group is not returning the correct index for the added group",
+        )
+        self.assertIn(
+            new_group,
+            self.model.groups,
+            "ABModel -- add_group is not correctly adding the group object to the model's groupset",
+        )
+
+    def test_add_groups(self) -> None:
+        """
+        Test that add_groups is working as intended.
+        """
+        new_groups: list[grp.Group] = [grp.Group(f"TEST{i}") for i in range(10)]
+        group_set: grp.GroupSet = self.model.add_groups(new_groups)
+        self.assertIsInstance(
+            group_set,
+            grp.GroupSet,
+            "ABModel -- add_groups is not returning a reference to the GroupSet",
+        )
+        self.assertEqual(
+            len(self.model.groups),
+            10,
+            "ABModel -- add_groups is not adding the correct number of groups to the model's group set",
+        )
+        for idx, new_group in enumerate(new_groups):
+            self.assertIn(
+                new_group,
+                self.model.groups,
+                "ABModel -- add_groups is not correctly adding one or more groups to the group set",
+            )
+            self.assertEqual(
+                new_group.index,
+                idx,
+                "ABModel -- add_groups is not correctly updating one or more added groups' indices",
+            )
+
+    def test_generate_groups_invalid(self) -> None:
+        """
+        Test that generate_groups on an empty model will raise the expected error.
+        """
+        with self.assertRaises(RuntimeError, msg="Group generation requires for valid agents and graphs to exist in the model") as cm:
+            self.model.generate_groups(
+                "TEST",
+                {
+                    "close": 0.33,
+                    "neutral": 0.33,
+                    "distant": 0.33,
+                },
+            )
+
+    def test_generate_groups(self) -> None:
+        """
+        Test that generate_groups is working as intended.
+        """
+        new_agents: list[agt.Agent] = [agt.Agent(f"AGENT{i}") for i in range(20)]
+        graphs_to_add: list[gr.Graph] = [
+            gr.Graph(HIERARCHY_NAMES[0], HIERARCHY_RW_DISTRIB[0]),
+            gr.Graph(HIERARCHY_NAMES[1], HIERARCHY_RW_DISTRIB[1]),
+        ]
+        graphset: gr.GraphSet = self.model.add_graphs(
+            graphs_to_add, HIERARCHY_NAMES, HIERARCHY_RW_DISTRIB
+        )
+        self.model.add_agents_to_hierarchy(new_agents[:10], HIERARCHY_NAMES[0])
+        self.model.add_agents_to_hierarchy(new_agents[10:], HIERARCHY_NAMES[1])
+        self.model.generate_groups(
+            "GROUP",
+            {
+                "close": 0.5,
+                "distant": 0.5,
+            },
+            n_groups=2,
+            max_iters=10,
+        )
+        self.assertEqual(
+            len(self.model.groups),
+            4,
+            "ABModel -- a valid call to generate_groups did not create the expected number of groups",
+        )
+        model_agent_ids: list[str] = self.model.get_agent_ids()
+        for group in self.model.groups:
+            self.assertIn(
+                group.hierarchy,
+                HIERARCHY_NAMES,
+                "ABModel -- a valid call to generate_groups created one or more groups belonging to non-existent hierarchies",
+            )
+            self.assertIn(
+                group.cohesion,
+                ["close", "distant"],
+                "ABModel -- a valid call to generate_groups created one or more groups with cohesion types that were not specified"
+            )
+            for member in group.members:
+                self.assertIn(
+                    member,
+                    model_agent_ids,
+                    "ABModel -- a valid call to generate_groups created one or more groups with agent members that do not exist in the model",
+                )
+
 
     @override
     def tearDown(self) -> None:
