@@ -394,6 +394,56 @@ conditions have historically impacted behaviours is enough information to be abl
 We can also use these models to simulate hypothetical conditions, and then see what types of behaviours emerge from those conditions; which then allows
 us to preemptively avoid conditions leading to "negative outcomes", or foster conditions leading to "positive outcomes".
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How to tell if behaviours have emerged
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now that you've seen what emergent behaviour is and what it means in the overall scheme of :abbr:`ABM (Agent-Based Modelling)`, you may be asking yourself
+"How can I tell when emergent behaviours appear?".
+
+Given that emergent behaviours are treated as the dependant variable in your model, it is not enough to simply say that any and all outcomes of the model
+are "emergent behaviours" in and of themselves.
+
+Rather, you should be defining a model outcome as an "emergent behaviour" based on its usefulness towards explaining your dependant variable(s).
+
+And typically, emergent behaviour is easy to detect. Almost all model outcomes that can be defined as emergent behaviours will: be directly or indirectly, but
+closely related to you dependant variable(s), separate agents into distinct "behavioural groups", and have clearly detectable patterns.
+
+Using Schelling's model as an example, the emergent behaviour is clearly seen to be the formation of homogeneous group neighbourhoods. This progressive
+homogeneity is directly related to the dependant variable (segregation), separates the agents into distinct groups (the different neighbourhoods), and
+has a clearly detectable pattern (the agents start to have more and more neighbours belonging to their own group).
+
+Despite emergent behaviours typically being clear to see, it is important to not become "tunnel-visioned" into a strict preconception of what the emergent
+behaviour "should" look like. If you focus too much on what you are expecting to see, then it becomes easy to miss emergent behaviours that -- while equally
+valid -- are not what you were expecting.
+
+---------------------
+The Scientific Method
+---------------------
+
+In relation to this last point, it is worth briefly touching on the "scientific method", and the general ways in which you should be aiming to carry out
+you research.
+
+It has become increasingly common in academia to relentlessly pursue "significant" results that agree with some initial hypotheses. This is not how research
+should be carried out.
+
+It is important to have your initial hypotheses to inform you about how to design your experiments, and the approach that you want to take in your
+methodology. Your initial hypotheses will also give you a good starting point for a literature review, and the areas of past research that you should focus on.
+
+But once your experiments have been designed, you should completely forget about your hypotheses until you are analysing your results. That is to say,
+you should not start cherry-picking data points and constantly changing your model because you are not satisfied with the results you are getting.
+
+You should instead try to be as neutral as possible, and interpret the results with the least amount of bias as possible. Even if you do not agree with
+the results, that doesn't change the fact that those results reflect reality, and denying or altering those results is the same as denying the reality
+we live in.
+
+Results that directly go against your initial hypotheses, or simply do not provide strong support for them, are still valid and important results
+nonetheless. Knowing what *isn't* true is equally as useful as knowing what *is*...
+
+----------------------------
+Analysing Your Final Results
+----------------------------
+
 Beyond Traditional ABMs
 =======================
 
