@@ -1,0 +1,1197 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gatoh.groups &mdash; gatoh 2026.08.0</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../../_static/thebelab.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.min.css?v=6e7d0de0" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/pointer.css?v=c97663ff" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=209a0a29" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/thebelab-helper.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+      <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js?v=f0ca4bb6"></script>
+      <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js?v=12818e64"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            gatoh
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/index.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Release Notes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gatoh</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gatoh.groups</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gatoh.groups</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">rd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">concurrent.futures</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shutil</span><span class="w"> </span><span class="kn">import</span> <span class="n">rmtree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NotRequired</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">TypedDict</span><span class="p">,</span> <span class="n">override</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">draw_random_value</span><span class="p">,</span> <span class="n">random_coinflip</span><span class="p">,</span> <span class="n">value_rw_delta</span>
+
+<span class="c1"># Definition of all valid, existing Group cohesion categories</span>
+<span class="n">COHESIONS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;intimate&quot;</span><span class="p">,</span> <span class="s2">&quot;close&quot;</span><span class="p">,</span> <span class="s2">&quot;neutral&quot;</span><span class="p">,</span> <span class="s2">&quot;distant&quot;</span><span class="p">,</span> <span class="s2">&quot;passing&quot;</span><span class="p">]</span>
+
+<span class="c1"># Definition of global constants to be used instead of &quot;magic numbers&quot; throughout the code</span>
+
+<span class="c1"># The absolute maximum value that aggregate group opinions can take</span>
+<span class="n">OPINION_MAX</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="c1"># The compression level to use across relevant methods</span>
+<span class="n">COMPRESS_LEVEL</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+
+<span class="c1"># Used for type-checking valid group cohesion types wherever relevant</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CohesionProbs</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+    <span class="n">intimate</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">close</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">neutral</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">distant</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">passing</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+
+
+<span class="c1"># A generic to be used in cases where variables may be any type.</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="c1"># A generic to be used for the case where a fully generic dictionary may be passed (e.g dict[S, T])</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;S&quot;</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_cohesion</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Group utility function that randomly draws a valid Group cohesion type.</span>
+
+<span class="sd">    :return: The string representing the drawn cohesion type.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">drawn_cohesion</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">COHESIONS</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">drawn_cohesion</span>
+
+
+<div class="viewcode-block" id="Group">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.html#gatoh.groups.Group">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Group</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to define Groups of Agent objects that can serve as a way of clustering hierarchies,</span>
+<span class="sd">    and providing a pseudo-vectorisation of model operations across agents.</span>
+
+<span class="sd">    Supported positional arguments:</span>
+<span class="sd">        - &lt;string&gt; to set the Group&#39;s id.</span>
+<span class="sd">        - &lt;int&gt; to set the Group&#39;s maximum size.</span>
+
+<span class="sd">    :param id: Positional argument -- provides a unique identifier for a group.</span>
+<span class="sd">    :type id: str, optional</span>
+<span class="sd">    :param max_size: Positional argument -- the maximum number of Agents that can be members of this group.</span>
+<span class="sd">    :type max_size: int, optional</span>
+<span class="sd">    :param index: Keyword argument -- the group&#39;s index within a GroupSet.</span>
+<span class="sd">    :type index: int, optional</span>
+<span class="sd">    :param hierarchy: Keyword argument -- the social hierarchy that this group is being formed in.</span>
+<span class="sd">    :type hierarchy: str, optional</span>
+<span class="sd">    :param members: Keyword argument -- the IDs of the agents that are members of this group.</span>
+<span class="sd">    :type members: list[str], optional</span>
+<span class="sd">    :param aggregate_opinion: Keyword argument -- the aggregate opinion held by members of the group.</span>
+<span class="sd">    :type aggregate_opinion: float, optional</span>
+<span class="sd">    :param aggregate_susceptibility: Keyword argument -- the aggregate social susceptibility of group members.</span>
+<span class="sd">    :type aggregate_susceptibility: float, optional</span>
+<span class="sd">    :param cohesion: Keyword argument -- the level of cohesion that the group will act with.</span>
+<span class="sd">    :type cohesion: str, optional</span>
+<span class="sd">    :param radicalisation_rate: Keyword argument -- The proportion of agents in the group which are radicalised.</span>
+<span class="sd">    :type radicalisation_rate: float, optional</span>
+<span class="sd">    :param predominant_personality: Keyword argument -- The most common personality type among members in the group.</span>
+<span class="sd">    :type predominant_personality: str, optional</span>
+<span class="sd">    :param member_benefit_rate: Keyword argument -- The proportion of agents in the groups which are personally benefitted from the social contagion.</span>
+<span class="sd">    :type member_benefit_rate: float, optional</span>
+<span class="sd">    :param previous_opinion: Keyword argument -- The aggregate opinion held by the group at the immediate past iteration.</span>
+<span class="sd">    :type previous_opinion: float, optional</span>
+<span class="sd">    :param aggregate_hierarchy_weighting: Keyword argument -- The aggregate weighting that the members of the group give to the hierarchy they are in.</span>
+<span class="sd">    :type aggregate_hierarchy_weighting: float, optional</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Attributes declared but without initialisation will be defined by self.generate_group() in a subsequent call if no args are passed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinion</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">member_benefit_rate</span><span class="p">:</span> <span class="nb">float</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_susceptibility</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cohesion</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;neutral&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predominant_personality</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;neutral&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_rate</span><span class="p">:</span> <span class="nb">float</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_hierarchy_weighting</span><span class="p">:</span> <span class="nb">float</span>
+
+        <span class="c1"># If no args have been passed, it is assumed that self.generate_group() will be subsequently called</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">arg</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="s2">&quot;max_size&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">arg</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># No checking for duplicate keys; assume that explicitly added kwargs should override any args</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Group.generate_group">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.generate_group.html#gatoh.groups.Group.generate_group">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_group</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">members</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">],</span>
+        <span class="n">cohesion</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Group</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a Group object based on the input parameters.</span>
+
+<span class="sd">        :param id: The id that has been assigned for this specific Group object under the conditions of the model specifications.</span>
+<span class="sd">        :type id: str</span>
+<span class="sd">        :param index: The index of the Group object within the model&#39;s GroupSet.</span>
+<span class="sd">        :type index: int</span>
+<span class="sd">        :param hierarchy: The social hierarchy that the Group is being formed in.</span>
+<span class="sd">        :type hierarchy: str</span>
+<span class="sd">        :param members: The Agents that this group will be made up of.</span>
+<span class="sd">        :type members: list[Agent]</span>
+<span class="sd">        :param cohesion: A string defining what type of cohesion the group will behave according to (defaults to &#39;neutral&#39; on Group __init__).</span>
+<span class="sd">        :type cohesion: str, optional</span>
+<span class="sd">        :param max_size: An explicit maximum group size to set for the generated group.</span>
+<span class="sd">        :type max_size: int, optional</span>
+<span class="sd">        :raises TypeError: If any of the required input parameters are of the incorrect data type.</span>
+<span class="sd">        :raises ValueError: If the input cohesion is not a supported type.</span>
+<span class="sd">        :return: The generated Group object.</span>
+<span class="sd">        :rtype: Group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that the required parameters are of the correct data type</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;One or more of the required parameters &#39;id&#39;, &#39;index&#39;, &#39;hierarchy&#39;, or &#39;members&#39; are not of the appropriate data type&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Begin by setting crucial information</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="k">if</span> <span class="n">cohesion</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cohesion</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">COHESIONS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The specified cohesion type is not supported&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cohesion</span> <span class="o">=</span> <span class="n">cohesion</span>
+
+        <span class="k">if</span> <span class="n">max_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Assume that any value is valid (with max_size &lt;= 0 meaning explicitly that there&#39;s no maximum)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span> <span class="o">=</span> <span class="n">max_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Assume that max_size should equal the number of input members</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">members</span><span class="p">)</span>
+
+        <span class="c1"># Aggregate the required values, adding the member names during the process</span>
+        <span class="n">opinion_sum</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">radicalisation_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">susceptibility_sum</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">hierarchy_weighting_total</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">personality_counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">opinion_sum</span> <span class="o">+=</span> <span class="n">agent</span><span class="o">.</span><span class="n">opinion</span>
+            <span class="n">susceptibility_sum</span> <span class="o">+=</span> <span class="n">agent</span><span class="o">.</span><span class="n">social_susceptibility</span>
+            <span class="n">hierarchy_weighting_total</span> <span class="o">+=</span> <span class="n">agent</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">radicalised</span><span class="p">:</span>
+                <span class="n">radicalisation_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="n">personality_counts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">personality</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">personality_counts</span><span class="p">[</span><span class="n">agent</span><span class="o">.</span><span class="n">personality</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Calculate the final attributes and set them</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinion</span> <span class="o">=</span> <span class="n">opinion_sum</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_rate</span> <span class="o">=</span> <span class="n">radicalisation_count</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_susceptibility</span> <span class="o">=</span> <span class="n">susceptibility_sum</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_hierarchy_weighting</span> <span class="o">=</span> <span class="n">hierarchy_weighting_total</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predominant_personality</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">personality_counts</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">personality_counts</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Group.add_attribute">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.add_attribute.html#gatoh.groups.Group.add_attribute">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value</span><span class="p">:</span> <span class="n">T</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="n">S</span><span class="p">,</span> <span class="n">T</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">T</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Dynamically add an attribute to this Group object. If &quot;value&quot; is passed, an explicit initial value is given;</span>
+<span class="sd">        if &quot;mean&quot; and &quot;var&quot; are passed through parameters, a value is generated from a random distribution.</span>
+<span class="sd">        Supported random distributions are:</span>
+
+<span class="sd">            - &quot;gaussian&quot;</span>
+<span class="sd">            - &quot;beta&quot;</span>
+<span class="sd">            - &quot;gamma&quot;</span>
+<span class="sd">            - &quot;uniform&quot;</span>
+<span class="sd">            - &quot;levy&quot;</span>
+
+<span class="sd">        Either &quot;value&quot;, or parameters with &quot;mean&quot; and &quot;var&quot; included should be passed to this function, not both.</span>
+
+<span class="sd">        If both an explicit value and distribution parameters are input to this function, the explicit value</span>
+<span class="sd">        will always override the distribution parameters when setting the attribute.</span>
+
+<span class="sd">        :param name: The name of the attribute to be added.</span>
+<span class="sd">        :type name: str</span>
+<span class="sd">        :param value: Initial value of the attribute.</span>
+<span class="sd">        :type value: Any, optional</span>
+<span class="sd">        :param parameters: The distribution parameters that will be used with the specified distribution for parameter generation.</span>
+<span class="sd">        :type parameters: dict[str, float], optional</span>
+<span class="sd">        :param distribution: The random distribution that will be used to generate the value.</span>
+<span class="sd">        :type distribution: str, optional</span>
+<span class="sd">        :param overwrite: A flag indicating if the added attribute should override any existing attributes of the same name.</span>
+<span class="sd">        :type overwrite: bool, optional</span>
+<span class="sd">        :raises ValueError: If no valid value or distribution parameters are input, the attribute cannot be added.</span>
+<span class="sd">        :raises UserWarning: If overwrite is explicitly False but the attribute is existing, a warning is raised without completing the operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">distribution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either explicit &#39;value&#39; or distribution and valid distribution parameters are expected when adding Group attributes.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="c1"># Raise a warning but do not change any attributes or crash the model if overwriting an existing attribute when overwrite=False</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;WARNING: Attempting to overwrite an existing Group attribute (</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">) without meaning to.&quot;</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Assume a given explicit value always overrides (mean, sdev)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">elif</span> <span class="n">distribution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">draw_random_value</span><span class="p">(</span>
+                    <span class="n">distribution</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.get_attribute">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.get_attribute.html#gatoh.groups.Group.get_attribute">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return any existing or dynamically added attribute held by the Group object.</span>
+
+<span class="sd">        :param name: The name of the attribute to get.</span>
+<span class="sd">        :type name: str</span>
+<span class="sd">        :raises UserWarning: If the attribute does not exist.</span>
+<span class="sd">        :return: The value stored for the attribute.</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attribute</span><span class="p">:</span> <span class="n">T</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">attribute</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;WARNING: Attempting to get an agent attribute (</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">) which doesn&#39;t exist.&quot;</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">attribute</span></div>
+
+
+<div class="viewcode-block" id="Group.store_previous_opinion">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.store_previous_opinion.html#gatoh.groups.Group.store_previous_opinion">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">store_previous_opinion</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter method that stores the Group&#39;s current opinion into the previous opinion.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_opinion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinion</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.get_num_members">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.get_num_members.html#gatoh.groups.Group.get_num_members">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_num_members</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A getter method that reports the number of members that are contained in this Group.</span>
+
+<span class="sd">        :return: The number of agents that are members of this Group.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Group.recalculate_aggregate_opinion">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.recalculate_aggregate_opinion.html#gatoh.groups.Group.recalculate_aggregate_opinion">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">recalculate_aggregate_opinion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">member_opinions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter method that will calculate a fixed aggregate opinion value from the</span>
+<span class="sd">        currently held opinion values of members.</span>
+
+<span class="sd">        :param member_opinions: The currently held opinion values of group members.</span>
+<span class="sd">        :type member_opinions: list[float]</span>
+<span class="sd">        :raises ValueError: If the input list is not the same size as the group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">member_opinions</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_members</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of member opinions input does not match the number of group members&quot;</span><span class="p">)</span>
+        <span class="n">opinion_sum</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">member_opinions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinion</span> <span class="o">=</span> <span class="n">opinion_sum</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_members</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.recalculate_radicalisation_rate">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.recalculate_radicalisation_rate.html#gatoh.groups.Group.recalculate_radicalisation_rate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">recalculate_radicalisation_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">member_radicalisations</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter method that will calculate a fixed radicalisation rate value from</span>
+<span class="sd">        the current radicalisation statuses of group members.</span>
+
+<span class="sd">        :param member_radicalisations: The current radicalisation status for each group member.</span>
+<span class="sd">        :type member_radicalisations: list[bool]</span>
+<span class="sd">        :raises ValueError: If the input list is not the same size as the group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">member_radicalisations</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_members</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of radicalisation statuses input does not match the number of group members&quot;</span><span class="p">)</span>
+        <span class="n">radical_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">radicalisation</span> <span class="ow">in</span> <span class="n">member_radicalisations</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">radicalisation</span><span class="p">:</span>
+                <span class="n">radical_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_rate</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">radical_count</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">member_radicalisations</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.recalculate_member_benefit_rate">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.recalculate_member_benefit_rate.html#gatoh.groups.Group.recalculate_member_benefit_rate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">recalculate_member_benefit_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">member_benefits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter method that will calculate a fixed member benefit rate value from</span>
+<span class="sd">        the current personal benefit statuses of group members.</span>
+
+<span class="sd">        :param member_benefits: The current personal benefit status for each group member.</span>
+<span class="sd">        :type member_benefits: list[bool]</span>
+<span class="sd">        :raises ValueError: If the input list is not the same size as the group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">member_benefits</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_members</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of benefit statuses input does not match the number of group members&quot;</span><span class="p">)</span>
+        <span class="n">benefit_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">benefit</span> <span class="ow">in</span> <span class="n">member_benefits</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">benefit</span><span class="p">:</span>
+                <span class="n">benefit_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">member_benefit_rate</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">benefit_count</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">member_benefits</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.recalculate_hierarchy_weighting">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.recalculate_hierarchy_weighting.html#gatoh.groups.Group.recalculate_hierarchy_weighting">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">recalculate_hierarchy_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">member_weightings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter method that will calculate a fixed member hierarchy weighting value from</span>
+<span class="sd">        the current hierarchy weightings assigned by each group member.</span>
+
+<span class="sd">        :param member_weightings: The current hierarchy weightings assigned by each group member.</span>
+<span class="sd">        :type member_weightings: list[float]</span>
+<span class="sd">        :raises ValueError: If the input list is not the same size as the group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">member_weightings</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_members</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of hierarchy weightings input does not match the number of group members&quot;</span><span class="p">)</span>
+        <span class="n">total_weighting</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">member_weightings</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_hierarchy_weighting</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_weighting</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">member_weightings</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.determine_predominant_personality">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.determine_predominant_personality.html#gatoh.groups.Group.determine_predominant_personality">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">determine_predominant_personality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">member_personalities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter method that will determine what the predominant personality type amongst</span>
+<span class="sd">        group members is.</span>
+
+<span class="sd">        :param member_personalities: The personality types for each group member.</span>
+<span class="sd">        :type member_personalities: list[str]</span>
+<span class="sd">        :raises ValueError: If the input list is not the same size as the group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">member_personalities</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_members</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of personality types input does not match the number of group members&quot;</span><span class="p">)</span>
+        <span class="n">personality_counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">personality</span> <span class="ow">in</span> <span class="n">member_personalities</span><span class="p">:</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="n">personality_counts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">personality</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">personality_counts</span><span class="p">[</span><span class="n">personality</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">dict_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">personality_counts</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">personality_counts</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predominant_personality</span> <span class="o">=</span> <span class="n">dict_mode</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.change_aggregate_opinion">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.change_aggregate_opinion.html#gatoh.groups.Group.change_aggregate_opinion">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">change_aggregate_opinion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opinion_delta</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter method that changes the Group&#39;s aggregate opinion by a given delta value.</span>
+
+<span class="sd">        This will not cause changes to the opinions of member agents to create the desired aggregate</span>
+<span class="sd">        opinion -- It should be handled from within the parent model by using the returned</span>
+<span class="sd">        per-agent opinion delta value.</span>
+
+<span class="sd">        :param opinion_delta: The delta value by which to shift the Group&#39;s aggregate opinion.</span>
+<span class="sd">        :type opinion_delta: float</span>
+<span class="sd">        :raises TypeError: If opinion_delta is not a float.</span>
+<span class="sd">        :return: The per-agent opinion_delta value that must be applied to each member.</span>
+<span class="sd">        :rtype: float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">opinion_delta</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;opinion_delta must be a float&quot;</span><span class="p">)</span>
+
+        <span class="n">num_agents</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_members</span><span class="p">()</span>
+
+        <span class="n">per_agent_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">opinion_delta</span> <span class="o">/</span> <span class="n">num_agents</span>
+
+        <span class="c1"># Change the group&#39;s aggregate opinion in the meantime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinion</span> <span class="o">+=</span> <span class="n">opinion_delta</span>
+
+        <span class="c1"># Constrain the value back to the valid range</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinion</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">OPINION_MAX</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinion</span> <span class="o">=</span> <span class="o">-</span><span class="n">OPINION_MAX</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinion</span> <span class="o">&gt;</span> <span class="n">OPINION_MAX</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinion</span> <span class="o">=</span> <span class="n">OPINION_MAX</span>
+
+        <span class="k">return</span> <span class="n">per_agent_delta</span></div>
+
+
+<div class="viewcode-block" id="Group.set_index">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.set_index.html#gatoh.groups.Group.set_index">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function to change the Group&#39;s index.</span>
+
+<span class="sd">        :param index: The new index to assign to the group.</span>
+<span class="sd">        :type index: int</span>
+<span class="sd">        :raises TypeError: If the input index is not an int.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;index must be an integer&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.set_max_size">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.set_max_size.html#gatoh.groups.Group.set_max_size">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_max_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">no_limit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function to change the maximum size of a Group.</span>
+
+<span class="sd">        :param max_size: The maximum number of agents that can be members of this group.</span>
+<span class="sd">        :type max_size: int</span>
+<span class="sd">        :param no_limit: A flag indicating if the change should remove the group&#39;s size limit.</span>
+<span class="sd">        :type no_limit: bool, optional</span>
+<span class="sd">        :raises TypeError: If the input max_size is not an integer.</span>
+<span class="sd">        :raises ValueError: If the input max_size is equal or less than zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">no_limit</span><span class="p">:</span>
+            <span class="c1"># no_limit always overrides the max_size value (even if it would otherwise be invalid)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;max_size must be an integer&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">max_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_size must be equal or greater to 1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span> <span class="o">=</span> <span class="n">max_size</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.set_hierarchy">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.set_hierarchy.html#gatoh.groups.Group.set_hierarchy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_hierarchy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hierarchy</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function to change the hierarchy that the Group belongs to.</span>
+
+<span class="sd">        :param hierarchy: The name of the hierarchy that the Group will belong in.</span>
+<span class="sd">        :type hierarchy: str</span>
+<span class="sd">        :raises TypeError: If the input hierarchy name is not a string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;hierarchy must be a string&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy</span> <span class="o">=</span> <span class="n">hierarchy</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.set_cohesion">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.set_cohesion.html#gatoh.groups.Group.set_cohesion">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_cohesion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cohesion</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function to change the group&#39;s cohesion type.</span>
+
+<span class="sd">        :param cohesion: The new cohesion type to assign to the Group.</span>
+<span class="sd">        :type cohesion: str</span>
+<span class="sd">        :raises TypeError: If the input cohesion type is not a string.</span>
+<span class="sd">        :raises ValueError: If the cohesion is not one of the supported types.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cohesion</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;cohesion must be a string&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cohesion</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">COHESIONS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The cohesion type &#39;</span><span class="si">{</span><span class="n">cohesion</span><span class="si">}</span><span class="s2">&#39; is not supported -- cannot change the Group&#39;s cohesion type&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cohesion</span> <span class="o">=</span> <span class="n">cohesion</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.group_at_capacity">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.group_at_capacity.html#gatoh.groups.Group.group_at_capacity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">group_at_capacity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A function that reports if the group is at its maximum capacity.</span>
+
+<span class="sd">        :return: A flag indicating if the group is at its maximum capacity.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Values &lt;= 0 are treated as dummy values that indicate the group has no maximum size</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Group.is_radicalised">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.is_radicalised.html#gatoh.groups.Group.is_radicalised">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_radicalised</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A function that reports if the group is considered to be &quot;radicalised&quot; as a collective.</span>
+
+<span class="sd">        :param threshold: The threshold that the radicalisation rate must surpass for the group to be considered radicalised.</span>
+<span class="sd">        :type threshold: float, optional</span>
+<span class="sd">        :return: A flag indicating if the group can be collectively considered to be radicalised.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_rate</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Group.add_member">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.add_member.html#gatoh.groups.Group.add_member">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_member</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">member</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a new member to this group (using the Agent&#39;s ID as the identifier).</span>
+
+<span class="sd">        :param member: The ID of the Agent being added as a group member.</span>
+<span class="sd">        :type member: str</span>
+<span class="sd">        :param force: A flag indicating if this call should disregard the maximum group size.</span>
+<span class="sd">        :type force: bool, optional</span>
+<span class="sd">        :raises TypeError: If the input value is not a string.</span>
+<span class="sd">        :raises UserWarning: If the group is already at maximum capacity</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_at_capacity</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;WARNING: Attempted to add a member to group </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> which is already at maximum capacity&quot;</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;member must be a string value&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Group.add_members">
+<a class="viewcode-back" href="../../apiref/gatoh.groups.Group.add_members.html#gatoh.groups.Group.add_members">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_members</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">members</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add multiple new members to this group (using the Agent IDs as the identifiers).</span>
+
+<span class="sd">        :param members: An iterable containing the Agent IDs of the members to be added.</span>
+<span class="sd">        :type members: Iterable[str]</span>
+<span class="sd">        :param force: A flag indicating if this call should disregard the maximum group size.</span>
+<span class="sd">        :type force: bool, optional</span>
+<span class="sd">        :raises TypeError: If any of the input members are not string values.</span>
+<span class="sd">        :raises UserWarning: If the group is already at maximum capacity.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_at_capacity</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;WARNING: Attempted to add a member to group </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> which is already at maximum capacity&quot;</span><span class="p">,</span>
+                    <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;One or more members have been passed as an invalid, non-string data type&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__in__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterable</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Group</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine if the Group is contained within an iterable of Groups.</span>
+
+<span class="sd">        :param iterable: The Group objects in which membership is being determined.</span>
+<span class="sd">        :type iterable: Iterable[Group]</span>
+<span class="sd">        :return: A flag indicating if the Group is contained within the iterable.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">group</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        An override to what calling &#39;print()&#39; on this object will output.</span>
+
+<span class="sd">        :return: A printable representation of the Group object.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Group </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> composed of members: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="si">}</span><span class="s2">, and belonging to hierarchy </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2"> with an aggregate opinion of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinion</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">GroupSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A collection of Group objects that maintains consistency for the Model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">:</span> <span class="n">rd</span><span class="o">.</span><span class="n">Random</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">Random</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_groupset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the Group objects into a compressed subdirectory representing the saved GroupSet.</span>
+
+<span class="sd">        :param directory_path: The path to the directory where the groupset subdirectory should be created.</span>
+<span class="sd">        :type directory_path: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subdirectory_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">directory_path</span><span class="si">}</span><span class="s2">/_groupset&quot;</span>
+
+        <span class="c1"># Removes the subdirectory if it already exists to allow for a new overwrite</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">subdirectory_path</span><span class="p">):</span>
+            <span class="n">rmtree</span><span class="p">(</span><span class="n">subdirectory_path</span><span class="p">)</span>
+
+        <span class="c1"># Create the _groupset subdirectory</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">subdirectory_path</span><span class="p">)</span>
+
+        <span class="n">group_save_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">with</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ThreadPoolExecutor</span><span class="p">()</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+            <span class="n">saved_group_paths</span> <span class="o">=</span> <span class="p">{</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">write_group_pickle</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">):</span> <span class="n">group</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span><span class="n">saved_group_paths</span><span class="p">):</span>
+                <span class="n">group_id</span> <span class="o">=</span> <span class="n">saved_group_paths</span><span class="p">[</span><span class="n">future</span><span class="p">]</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">save_path</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write a pickle for group </span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2"> with exception: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">group_save_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+
+        <span class="n">zip_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">.zip&quot;</span>
+
+        <span class="c1"># Removes the zip file if it already exists to allow for a new overwrite</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">zip_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">zip_path</span><span class="p">)</span>
+
+        <span class="c1"># Compress the subdirectory to minimise storage and encapsulate all the Groups into a single object</span>
+        <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">zip_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="n">COMPRESS_LEVEL</span><span class="p">)</span> <span class="k">as</span> <span class="n">subdir_zip</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">group_path</span> <span class="ow">in</span> <span class="n">group_save_paths</span><span class="p">:</span>
+                <span class="n">subdir_zip</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">group_path</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">group_path</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Remove the uncompressed subdirectory if compression was successful</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">zip_path</span><span class="p">):</span>
+            <span class="n">rmtree</span><span class="p">(</span><span class="n">subdirectory_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_group_pickle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Group</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that allows for multithreading of :meth:`~gatoh.groups.GroupSet.save_groupset`.</span>
+
+<span class="sd">        :param group: The group that is being saved.</span>
+<span class="sd">        :type group: Group</span>
+<span class="sd">        :param subdirectory_path: The path to the subdirectory in which the groups are being saved.</span>
+<span class="sd">        :type subdirectory_path: str</span>
+<span class="sd">        :return: The path to which the group pickle was saved.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">group_save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">/_group_</span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.pkl&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">group_save_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">group_pickle</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">group_pickle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">group_save_path</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_groupset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads a GroupSet that has been saved following the same process as in the :meth:`~gatoh.groups.GroupSet.save_groupset` function.</span>
+
+<span class="sd">        :param load_path: The path to the model&#39;s overall save directory.</span>
+<span class="sd">        :type load_path: str</span>
+<span class="sd">        :raises FileNotFoundError: If no valid groupset zip was found in the load path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">zip_load_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">load_path</span><span class="si">}</span><span class="s2">/_groupset.zip&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">zip_load_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No saved GroupSet was found at the path: </span><span class="si">{</span><span class="n">zip_load_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># The path to the uncompressed groupset subdirectory</span>
+        <span class="n">subdirectory_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">load_path</span><span class="si">}</span><span class="s2">/_groupset&quot;</span>
+
+        <span class="c1"># Remove any existing subdirectory with the same name to replace it with the newly loaded one</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">subdirectory_path</span><span class="p">):</span>
+            <span class="n">rmtree</span><span class="p">(</span><span class="n">subdirectory_path</span><span class="p">)</span>
+
+        <span class="c1"># Create the uncompressed directory</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">subdirectory_path</span><span class="p">)</span>
+
+        <span class="c1"># Extract all the Group pickles to the uncompressed directory</span>
+        <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">zip_load_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="n">COMPRESS_LEVEL</span><span class="p">)</span> <span class="k">as</span> <span class="n">subdir_zip</span><span class="p">:</span>
+            <span class="n">subdir_zip</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">subdirectory_path</span><span class="p">)</span>
+
+        <span class="c1"># Unpickle each Group object and add it to the GroupSet using multithreading</span>
+        <span class="k">with</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ThreadPoolExecutor</span><span class="p">()</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+            <span class="n">group_objects</span> <span class="o">=</span> <span class="p">{</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extract_group_pickle</span><span class="p">,</span> <span class="n">group_pickle_name</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">):</span> <span class="n">group_pickle_name</span> <span class="k">for</span> <span class="n">group_pickle_name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">subdirectory_path</span><span class="p">)}</span>
+            <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span><span class="n">group_objects</span><span class="p">):</span>
+                <span class="n">group_pickle_path</span> <span class="o">=</span> <span class="n">group_objects</span><span class="p">[</span><span class="n">future</span><span class="p">]</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">group_object</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to extract the pickled Group object at path </span><span class="si">{</span><span class="n">group_pickle_path</span><span class="si">}</span><span class="s2"> with exception: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">group_object</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_group_pickle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_pickle_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Group</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that allows for multithreading of :meth:`~gatoh.groups.GroupSet.load_groupset`.</span>
+
+<span class="sd">        :param group_pickle_name: The name of the pickled Group object file.</span>
+<span class="sd">        :type group_pickle_name: str</span>
+<span class="sd">        :param subdirectory_path: The root path to which the pickled group object was written.</span>
+<span class="sd">        :type subdirectory_path: str</span>
+<span class="sd">        :return: The unpickled group.</span>
+<span class="sd">        :rtype: Group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">group_pickle_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdirectory_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">group_pickle_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">group_pickle_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">group_pickle</span><span class="p">:</span>
+            <span class="n">group_object</span><span class="p">:</span> <span class="n">Group</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">group_pickle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">group_object</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A method that defines how a GroupSet object checks its length.</span>
+
+<span class="sd">        :return: The number of groups present in the GroupSet.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Group</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A method that defines how the GroupSet iterates over its Groups.</span>
+
+<span class="sd">        :return: An iteration over all the Groups within the GroupSet.</span>
+<span class="sd">        :rtype: Iterator[Group]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__in__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A method defining how a GroupSet checks for a Group&#39;s membership.</span>
+
+<span class="sd">        :param group: The specific Groups object to check for.</span>
+<span class="sd">        :type group: Group</span>
+<span class="sd">        :return: A flag indicating if the Group object is in the GroupSet.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_in_groupset</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A secondary method defining how a GroupSet checks for a Group&#39;s membership.</span>
+
+<span class="sd">        :param group: The specific Group object to check for.</span>
+<span class="sd">        :type group: Group</span>
+<span class="sd">        :return: A flag indicating if the specified Group object is in the GroupSet.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_in_groupset</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">slice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Group</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve a Group or slice of Groups from the GroupSet.</span>
+
+<span class="sd">        :param item: The parameter for selecting the groups.</span>
+<span class="sd">        :type item: int | slice</span>
+<span class="sd">        :return: The selected group or slice of groups based on the specified item.</span>
+<span class="sd">        :rtype: Group | list[Group]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds a Group to the GroupSet.</span>
+
+<span class="sd">        :param group: The Group object to be added.</span>
+<span class="sd">        :type group: Group</span>
+<span class="sd">        :return: The index of the newly added Group.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iterate over the GroupSet and update the current Group object index values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">):</span>
+            <span class="n">group</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">idx</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">id_in_groupset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Report if a group with the given unique ID exists in the groupset.</span>
+
+<span class="sd">        :param group_id: The unique ID of the group that is being checked for.</span>
+<span class="sd">        :type group_id: str</span>
+<span class="sd">        :return: A flag indicating if an group with the input ID exists in the groupset or not.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">group</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">group_id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">discard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes a Group from the GroupSet which matches the input Group; does not return an error if the Group does not exist.</span>
+
+<span class="sd">        :param group: The Group object that should be removed from the set.</span>
+<span class="sd">        :type group: Group</span>
+<span class="sd">        :return: A flag indicating if the Group was removed successfully or not.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">grp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">group</span> <span class="o">==</span> <span class="n">grp</span><span class="p">:</span>
+                <span class="n">left_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[:</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">right_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">left_half</span><span class="p">)</span> <span class="o">+</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">right_half</span><span class="p">)</span>
+
+                <span class="c1"># Manual garbage collection</span>
+                <span class="k">del</span> <span class="n">left_half</span><span class="p">,</span> <span class="n">right_half</span>
+                <span class="n">_</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_indices</span><span class="p">()</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">group_at_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Group</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the Groups object at the given index in the GroupSet.</span>
+
+<span class="sd">        :param index: The index within the GroupSet to inspect.</span>
+<span class="sd">        :type index: int</span>
+<span class="sd">        :raises UserWarning: If the input index is out of bounds, raise a warning and return None.</span>
+<span class="sd">        :return: The Group object at the specified index.</span>
+<span class="sd">        :rtype: Group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;WARNING: Index </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> is out of bounds for the GroupSet. Only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span><span class="si">}</span><span class="s2"> Groups have been created.&quot;</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">groups_at_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of all the group objects at the specified indices.</span>
+
+<span class="sd">        :param indices: A list of all the indices for which the groups should be returned.</span>
+<span class="sd">        :type indices: list[int]</span>
+<span class="sd">        :raises UserWarning: If any of the input indices are out of bounds.</span>
+<span class="sd">        :return: All of the group objects that correspond to the input indices.</span>
+<span class="sd">        :rtype: list[Group]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">groups_to_return</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">group</span><span class="p">:</span> <span class="n">Group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                <span class="n">groups_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;WARNING: Index </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> is out of bounds for the GroupSet. Only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span><span class="si">}</span><span class="s2"> Groups have been created.&quot;</span><span class="p">,</span>
+                    <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">groups_to_return</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_group_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Group</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Searches the GroupSet for a Group with the given id and returns its object if it exists.</span>
+
+<span class="sd">        :param id: The id that was assigned to the Group object at creation.</span>
+<span class="sd">        :type id: str</span>
+<span class="sd">        :raises KeyError: If the input id does not exist in the GroupSet.</span>
+<span class="sd">        :return: The Group object with the specified id.</span>
+<span class="sd">        :rtype: Group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">group</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="nb">id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">group</span>
+
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The Group with id &#39;</span><span class="si">{</span><span class="nb">id</span><span class="si">}</span><span class="s2">&#39; does not exist in the GroupSet -- unable to return a Group object.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_groups_by_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Searches the GroupSet for Groups with the given ids and returns their objects if they all exist.</span>
+
+<span class="sd">        :param ids: The ids that have been assigned to every Group object at creation.</span>
+<span class="sd">        :type ids: list[str]</span>
+<span class="sd">        :return: The Group objects with the specified ids.</span>
+<span class="sd">        :rtype: list[Group]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">groups_to_return</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+            <span class="n">groups_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_group_by_id</span><span class="p">(</span><span class="nb">id</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">groups_to_return</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the index within the GroupSet of the input Group object.</span>
+
+<span class="sd">        :param group: The group whose index is being searched for.</span>
+<span class="sd">        :type group: Group</span>
+<span class="sd">        :raises KeyError: If the input Group does not exist in the GroupSet.</span>
+<span class="sd">        :return: The index of the group within the GroupSet.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">grp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">grp</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">group</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">idx</span>
+
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The Group </span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> does not exist in the GroupSet -- unable to return an index.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the indices within the GroupSet of the input Group objects.</span>
+
+<span class="sd">        :param groups: The groups whose indices are being searched for.</span>
+<span class="sd">        :type groups: list[Group]</span>
+<span class="sd">        :return: The indices of the groups within the GroupSet.</span>
+<span class="sd">        :rtype: list[int]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">group_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+            <span class="n">group_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="n">group</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">group_indices</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">discard_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes the Group at the specified index in the GroupSet; does not raise an error if the index is out of bounds.</span>
+
+<span class="sd">        :param index: The index in the GroupSet which is to be removed.</span>
+<span class="sd">        :type index: int</span>
+<span class="sd">        :return: A flag indicating if the Group was removed successfully or not.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">):</span>
+            <span class="n">left_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[:</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">right_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">left_half</span><span class="p">)</span> <span class="o">+</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">right_half</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">left_half</span><span class="p">,</span> <span class="n">right_half</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_indices</span><span class="p">()</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes a group from the GroupSet which matches the input group; returning an error if such a Group does not exist.</span>
+
+<span class="sd">        :param group: The group that should be removed from the set.</span>
+<span class="sd">        :type group: Group</span>
+<span class="sd">        :raises KeyError: If the input Group does not exist in the GroupSet.</span>
+<span class="sd">        :return: A flag indicating that the Group was removed successfully.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">grp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">group</span> <span class="o">==</span> <span class="n">grp</span><span class="p">:</span>
+                <span class="n">left_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[:</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">right_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">left_half</span><span class="p">)</span> <span class="o">+</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">right_half</span><span class="p">)</span>
+                <span class="k">del</span> <span class="n">left_half</span><span class="p">,</span> <span class="n">right_half</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_indices</span><span class="p">()</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tried to remove a Group with id </span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> that doesn&#39;t exist in the GroupSet&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes the Group at the specified index in the GroupSet; raising an error if the index is out of bounds.</span>
+
+<span class="sd">        :param index: The index in the GroupSet which is to be removed.</span>
+<span class="sd">        :type index: int</span>
+<span class="sd">        :raises IndexError: If the input index is out of bounds for the GroupSet.</span>
+<span class="sd">        :return: A flag indicating that the Group was removed successfully.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">):</span>
+            <span class="n">left_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[:</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">right_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">left_half</span><span class="p">)</span> <span class="o">+</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">right_half</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">left_half</span><span class="p">,</span> <span class="n">right_half</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_indices</span><span class="p">()</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tried to remove a Group at out of bounds index </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> from the GroupSet&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Randomly draw n groups from the GroupSet without replacement.</span>
+
+<span class="sd">        :param n: The number of groups to sample.</span>
+<span class="sd">        :type n: int</span>
+<span class="sd">        :return: The groups sampled from the GroupSet.</span>
+<span class="sd">        :rtype: list[Group]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sampled_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">sampled_groups</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_num_members</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A wrapper that used the group&#39;s getter function to report the number of members of that group.</span>
+
+<span class="sd">        :param index: The index of the group for which the number of members is being inspected.</span>
+<span class="sd">        :type index: int</span>
+<span class="sd">        :raises IndexError: If the index is out of bounds.</span>
+<span class="sd">        :return: The number of agents which are members of the group at the specified index.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">get_num_members</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tried to report the number of members for a group at an out-of-bounds index (</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_group_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A getter function that returns the IDs of all groups contained within the group set.</span>
+
+<span class="sd">        :return: All of the contained groups&#39; IDs.</span>
+<span class="sd">        :rtype: list[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">group_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+            <span class="n">group_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">group_ids</span>
+
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">|</span> <span class="n">rd</span><span class="o">.</span><span class="n">Random</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve the current state of the GroupSet for serialization.</span>
+
+<span class="sd">        :return: A representation of the current state of the GroupSet.</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;groups&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">}</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Manuel Munizaga Sepúlveda.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,223 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gatoh.graphs.GroupGraph.estimate_opinion_climate &mdash; gatoh 2026.08.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
+      <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.min.css?v=6e7d0de0" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/pointer.css?v=c97663ff" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=209a0a29" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/thebelab-helper.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+      <script src="../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js?v=f0ca4bb6"></script>
+      <script src="../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js?v=12818e64"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gatoh.graphs.GroupGraph.generate_graph" href="gatoh.graphs.GroupGraph.generate_graph.html" />
+    <link rel="prev" title="gatoh.graphs.GroupGraph.estimate_neighbour_opinions" href="gatoh.graphs.GroupGraph.estimate_neighbour_opinions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            gatoh
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">About GATOH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api/index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gatoh.agents.Agent.html">Agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.agents.AgentSet.html">AgentSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.Graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphNode.html">GraphNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphEdge.html">GraphEdge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphSet.html">GraphSet</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gatoh.graphs.GroupGraph.html">GroupGraph</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.html#gatoh.graphs.GroupGraph"><code class="docutils literal notranslate"><span class="pre">GroupGraph</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.add_edges.html">gatoh.graphs.GroupGraph.add_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.add_nodes.html">gatoh.graphs.GroupGraph.add_nodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.calculate_polarisation.html">gatoh.graphs.GroupGraph.calculate_polarisation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.change_generation_params.html">gatoh.graphs.GroupGraph.change_generation_params</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.change_weights.html">gatoh.graphs.GroupGraph.change_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.cluster_nodes.html">gatoh.graphs.GroupGraph.cluster_nodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.compute_subgraph_center.html">gatoh.graphs.GroupGraph.compute_subgraph_center</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.dynamic_relationships.html">gatoh.graphs.GroupGraph.dynamic_relationships</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.estimate_neighbour_opinions.html">gatoh.graphs.GroupGraph.estimate_neighbour_opinions</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gatoh.graphs.GroupGraph.estimate_opinion_climate</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.graphs.GroupGraph.estimate_opinion_climate"><code class="docutils literal notranslate"><span class="pre">GroupGraph.estimate_opinion_climate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.generate_graph.html">gatoh.graphs.GroupGraph.generate_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_betweenness_centrality.html">gatoh.graphs.GroupGraph.get_betweenness_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_dijkstra_all_pairs.html">gatoh.graphs.GroupGraph.get_dijkstra_all_pairs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_edge.html">gatoh.graphs.GroupGraph.get_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_edge_changes.html">gatoh.graphs.GroupGraph.get_edge_changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_group_hierarchy.html">gatoh.graphs.GroupGraph.get_group_hierarchy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_group_index.html">gatoh.graphs.GroupGraph.get_group_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_groups_in_hierarchy.html">gatoh.graphs.GroupGraph.get_groups_in_hierarchy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_neighbours.html">gatoh.graphs.GroupGraph.get_neighbours</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_node.html">gatoh.graphs.GroupGraph.get_node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_relationship.html">gatoh.graphs.GroupGraph.get_relationship</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_relationships.html">gatoh.graphs.GroupGraph.get_relationships</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.group_in_graph.html">gatoh.graphs.GroupGraph.group_in_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.group_opinion_change.html">gatoh.graphs.GroupGraph.group_opinion_change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.group_previous_opinion.html">gatoh.graphs.GroupGraph.group_previous_opinion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.hierarchy_exists.html">gatoh.graphs.GroupGraph.hierarchy_exists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.load_graph.html">gatoh.graphs.GroupGraph.load_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.neighbour_influences.html">gatoh.graphs.GroupGraph.neighbour_influences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.node_from_group.html">gatoh.graphs.GroupGraph.node_from_group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.node_relationships_count.html">gatoh.graphs.GroupGraph.node_relationships_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.register_edge_change.html">gatoh.graphs.GroupGraph.register_edge_change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.relationship_exists.html">gatoh.graphs.GroupGraph.relationship_exists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.remove_edge.html">gatoh.graphs.GroupGraph.remove_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.remove_edge_index.html">gatoh.graphs.GroupGraph.remove_edge_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.remove_node.html">gatoh.graphs.GroupGraph.remove_node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.save_graph.html">gatoh.graphs.GroupGraph.save_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.step.html">gatoh.graphs.GroupGraph.step</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.stochastic_relationships.html">gatoh.graphs.GroupGraph.stochastic_relationships</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.update_edge_indices.html">gatoh.graphs.GroupGraph.update_edge_indices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.update_node_indices.html">gatoh.graphs.GroupGraph.update_node_indices</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupNode.html">GroupNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupEdge.html">GroupEdge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupGraphSet.html">GroupGraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.Group.html">Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.GroupSet.html">GroupSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.logging.GATOHLogger.html">GATOHLogger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.logging.LoggerVariables.html">LoggerVariables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.model.ABModel.html">ABModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.visualisation.ABVisualiser.html">ABVisualiser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.NodeChanges.html">NodeChanges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.EdgeChanges.html">EdgeChanges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.pygraph_to_pydigraph.html">gatoh.utils.pygraph_to_pydigraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_graph.html">gatoh.utils.watts_strogatz_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_creator.html">gatoh.utils.watts_strogatz_creator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.connected_watts_strogatz_graph.html">gatoh.utils.connected_watts_strogatz_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.beta_value_attenuation.html">gatoh.utils.beta_value_attenuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.linear_link.html">gatoh.utils.linear_link</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.multiplicative_link.html">gatoh.utils.multiplicative_link</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.create_config_file.html">gatoh.utils.create_config_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.get_keys_by_value.html">gatoh.utils.get_keys_by_value</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.draw_random_value.html">gatoh.utils.draw_random_value</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.random_coinflip.html">gatoh.utils.random_coinflip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.value_rw_delta.html">gatoh.utils.value_rw_delta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.plot_graph.html">gatoh.utils.plot_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/index.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Release Notes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">gatoh</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api/index.html">GATOH API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../api/graphs/index.html">&lt;no title&gt;</a></li>
+          <li class="breadcrumb-item"><a href="../api/graphs/GroupGraph.html">&lt;no title&gt;</a></li>
+          <li class="breadcrumb-item"><a href="gatoh.graphs.GroupGraph.html">GroupGraph</a></li>
+      <li class="breadcrumb-item active">gatoh.graphs.GroupGraph.estimate_opinion_climate</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/apiref/gatoh.graphs.GroupGraph.estimate_opinion_climate.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gatoh-graphs-groupgraph-estimate-opinion-climate">
+<h1>gatoh.graphs.GroupGraph.estimate_opinion_climate<a class="headerlink" href="#gatoh-graphs-groupgraph-estimate-opinion-climate" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="gatoh.graphs.GroupGraph.estimate_opinion_climate">
+<span class="sig-prename descclassname"><span class="pre">GroupGraph.</span></span><span class="sig-name descname"><span class="pre">estimate_opinion_climate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gatoh.groups.Group.html#gatoh.groups.Group" title="gatoh.groups.Group"><span class="pre">Group</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/gatoh/graphs.html#GroupGraph.estimate_opinion_climate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.graphs.GroupGraph.estimate_opinion_climate" title="Link to this definition"></a></dt>
+<dd><p>Return the unique opinion climate perceived by the Group within the group graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>group</strong> (<a class="reference internal" href="gatoh.groups.Group.html#gatoh.groups.Group" title="gatoh.groups.Group"><em>Group</em></a>) – The group which is estimating the opinion climate.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The group’s perceived ‘aggregated opinion’ of the wholse social network.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gatoh.graphs.GroupGraph.estimate_neighbour_opinions.html" class="btn btn-neutral float-left" title="gatoh.graphs.GroupGraph.estimate_neighbour_opinions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gatoh.graphs.GroupGraph.generate_graph.html" class="btn btn-neutral float-right" title="gatoh.graphs.GroupGraph.generate_graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Manuel Munizaga Sepúlveda.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
