@@ -1644,7 +1644,7 @@ class ABModel:
 
     def update_multi(self, agent: Agent) -> tuple[dict[str, bool], bool, bool]:
         """
-        A helper function that allows for multiprocessing of the :meth:`~self.update` function.
+        A helper function that allows for multiprocessing of the :meth:`~gatoh.model.ABModel.update` function.
 
         :param agent: The agent being updated.
         :type agent: Agent
