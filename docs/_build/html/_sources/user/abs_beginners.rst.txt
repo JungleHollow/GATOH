@@ -444,6 +444,8 @@ nonetheless. Knowing what *isn't* true is equally as useful as knowing what *is*
 Analysing Your Final Results
 ----------------------------
 
+When it comes to analysing your final results, there are a number of ways that this can be done, and it depends on what your particular needs are.
+
 Beyond Traditional ABMs
 =======================
 
