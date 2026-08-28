@@ -19,6 +19,11 @@ New Features
 - Finished the test cases for :class:`~gatoh.agents.Agent` creation and attributes
 - Added input parameter data type checks to various methods in :class:`~gatoh.agents.Agent`
 - Finished the test cases for :class:'~gatoh.agents.Agent' populated and empty objects
+- Ability to have partial agent iterations in the :class:`~gatoh.model.ABModel`
+- Additional getter methods defined for :class:`~gatoh.agents.AgentSet`
+- Additional getter methods defined for :class:`~gatoh.graphs.GraphSet`
+- Ability to log and track specific attributes of individual agents throughout model runtimes
+- **MAJOR** New module :mod:`~gatoh.groups` which adds the ability to further group agents within hierarchies, and pseudo-vectorise operations
 
 Fixes
 -----
@@ -26,6 +31,7 @@ Fixes
 - Fixed the test cases in :mod:`test_model_multiprocessed.py` and :mod:`test_model_simulation.py` (All 151 existing test cases up to 01/08/2026 are working correctly)
 - Fixed a specific :meth:`~gatoh.graphs.Graph.add_edges` case in which edges were not being added to the graph
 - Fixed the build parameters for the docs (will now always add new methods when building)
+- Fixed the :meth:`~gatoh.model.ABModel.calculate_density` to account for the bidirectional nature of relationships
 
 2026.07.0
 ==============

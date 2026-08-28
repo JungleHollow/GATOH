@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.min.css?v=6e7d0de0" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/pointer.css?v=c97663ff" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=209a0a29" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -61,6 +61,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.add_attribute.html">gatoh.agents.Agent.add_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_opinion.html">gatoh.agents.Agent.change_opinion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_opinion_rw.html">gatoh.agents.Agent.change_opinion_rw</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_personality.html">gatoh.agents.Agent.change_personality</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_radicalisation.html">gatoh.agents.Agent.change_radicalisation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_rw_distribution.html">gatoh.agents.Agent.change_rw_distribution</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.deradicalisation.html">gatoh.agents.Agent.deradicalisation</a></li>
@@ -87,6 +88,12 @@
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphNode.html">GraphNode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphEdge.html">GraphEdge</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphSet.html">GraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupGraph.html">GroupGraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupNode.html">GroupNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupEdge.html">GroupEdge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupGraphSet.html">GroupGraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.Group.html">Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.GroupSet.html">GroupSet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.logging.GATOHLogger.html">GATOHLogger</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.logging.LoggerVariables.html">LoggerVariables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.model.ABModel.html">ABModel</a></li>
@@ -98,7 +105,10 @@
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_creator.html">gatoh.utils.watts_strogatz_creator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.connected_watts_strogatz_graph.html">gatoh.utils.connected_watts_strogatz_graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.beta_value_attenuation.html">gatoh.utils.beta_value_attenuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.linear_link.html">gatoh.utils.linear_link</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.multiplicative_link.html">gatoh.utils.multiplicative_link</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.create_config_file.html">gatoh.utils.create_config_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.get_keys_by_value.html">gatoh.utils.get_keys_by_value</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.draw_random_value.html">gatoh.utils.draw_random_value</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.random_coinflip.html">gatoh.utils.random_coinflip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.value_rw_delta.html">gatoh.utils.value_rw_delta</a></li>
@@ -188,61 +198,64 @@ the value given to the keyword argument will override whatever was passed as the
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.change_opinion_rw.html#gatoh.agents.Agent.change_opinion_rw" title="gatoh.agents.Agent.change_opinion_rw"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_opinion_rw</span></code></a></p></td>
 <td><p>A setter method that changes the Agent's explicit opinion random walk parameters.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.change_radicalisation.html#gatoh.agents.Agent.change_radicalisation" title="gatoh.agents.Agent.change_radicalisation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_radicalisation</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.change_personality.html#gatoh.agents.Agent.change_personality" title="gatoh.agents.Agent.change_personality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_personality</span></code></a></p></td>
+<td><p>A setter method that changes the Agent's personality type.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.change_radicalisation.html#gatoh.agents.Agent.change_radicalisation" title="gatoh.agents.Agent.change_radicalisation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_radicalisation</span></code></a></p></td>
 <td><p>A setter method that changes the Agent's radicalisation value.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.change_rw_distribution.html#gatoh.agents.Agent.change_rw_distribution" title="gatoh.agents.Agent.change_rw_distribution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_rw_distribution</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.change_rw_distribution.html#gatoh.agents.Agent.change_rw_distribution" title="gatoh.agents.Agent.change_rw_distribution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_rw_distribution</span></code></a></p></td>
 <td><p>A setter method that changes the Agent's explicit random walk parameters for a specific social hierarchy.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.deradicalisation.html#gatoh.agents.Agent.deradicalisation" title="gatoh.agents.Agent.deradicalisation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deradicalisation</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.deradicalisation.html#gatoh.agents.Agent.deradicalisation" title="gatoh.agents.Agent.deradicalisation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deradicalisation</span></code></a></p></td>
 <td><p>Uses the agent's own opinion as well as the neighbours' opinions to determine if an already radicalised agent will deradicalise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.evolve_hierarchies.html#gatoh.agents.Agent.evolve_hierarchies" title="gatoh.agents.Agent.evolve_hierarchies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evolve_hierarchies</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.evolve_hierarchies.html#gatoh.agents.Agent.evolve_hierarchies" title="gatoh.agents.Agent.evolve_hierarchies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evolve_hierarchies</span></code></a></p></td>
 <td><p>Experimental function that aims to model the constantly evolving 'intrinsic value' that Agents place on the social hierarchies that they belong in over time.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.generate_agent.html#gatoh.agents.Agent.generate_agent" title="gatoh.agents.Agent.generate_agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_agent</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.generate_agent.html#gatoh.agents.Agent.generate_agent" title="gatoh.agents.Agent.generate_agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_agent</span></code></a></p></td>
 <td><p>Randomly generate an Agent object based on the input parameters.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.get_attribute.html#gatoh.agents.Agent.get_attribute" title="gatoh.agents.Agent.get_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_attribute</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.get_attribute.html#gatoh.agents.Agent.get_attribute" title="gatoh.agents.Agent.get_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_attribute</span></code></a></p></td>
 <td><p>Return any existing or dynamically added attribute held by the Agent object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.life_events.html#gatoh.agents.Agent.life_events" title="gatoh.agents.Agent.life_events"><code class="xref py py-obj docutils literal notranslate"><span class="pre">life_events</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.life_events.html#gatoh.agents.Agent.life_events" title="gatoh.agents.Agent.life_events"><code class="xref py py-obj docutils literal notranslate"><span class="pre">life_events</span></code></a></p></td>
 <td><p>Experimental function that aims to model the ways in which Agent behaviours change according to major random life events over time.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.opinion_negation.html#gatoh.agents.Agent.opinion_negation" title="gatoh.agents.Agent.opinion_negation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">opinion_negation</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.opinion_negation.html#gatoh.agents.Agent.opinion_negation" title="gatoh.agents.Agent.opinion_negation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">opinion_negation</span></code></a></p></td>
 <td><p>Checks if the Agent has experienced sufficiently 'overwhelming' social pressure in a hierarchy leading to a complete reversal of their opinion.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.opinion_silencing.html#gatoh.agents.Agent.opinion_silencing" title="gatoh.agents.Agent.opinion_silencing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">opinion_silencing</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.opinion_silencing.html#gatoh.agents.Agent.opinion_silencing" title="gatoh.agents.Agent.opinion_silencing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">opinion_silencing</span></code></a></p></td>
 <td><p>Determines if an agent will become silenced in a given social hierarchy based on their attributes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.radicalisation.html#gatoh.agents.Agent.radicalisation" title="gatoh.agents.Agent.radicalisation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">radicalisation</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.radicalisation.html#gatoh.agents.Agent.radicalisation" title="gatoh.agents.Agent.radicalisation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">radicalisation</span></code></a></p></td>
 <td><p>Uses the agent's own opinion as well as the neighbours' opinions to determine if the agent has become radicalised in their actions.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.set_benefit.html#gatoh.agents.Agent.set_benefit" title="gatoh.agents.Agent.set_benefit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_benefit</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.set_benefit.html#gatoh.agents.Agent.set_benefit" title="gatoh.agents.Agent.set_benefit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_benefit</span></code></a></p></td>
 <td><p>A setter method that changes the Agent's personal_benefit parameter.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.step.html#gatoh.agents.Agent.step" title="gatoh.agents.Agent.step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.step.html#gatoh.agents.Agent.step" title="gatoh.agents.Agent.step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code></a></p></td>
 <td><p>Step the individual agent object:</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.stochastic_benefit_change.html#gatoh.agents.Agent.stochastic_benefit_change" title="gatoh.agents.Agent.stochastic_benefit_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_benefit_change</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.stochastic_benefit_change.html#gatoh.agents.Agent.stochastic_benefit_change" title="gatoh.agents.Agent.stochastic_benefit_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_benefit_change</span></code></a></p></td>
 <td><p>Calls to this function are primarily meant to originate from <a class="reference internal" href="gatoh.agents.Agent.life_events.html#gatoh.agents.Agent.life_events" title="gatoh.agents.Agent.life_events"><code class="xref py py-meth docutils literal notranslate"><span class="pre">life_events()</span></code></a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.stochastic_opinion.html#gatoh.agents.Agent.stochastic_opinion" title="gatoh.agents.Agent.stochastic_opinion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_opinion</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.stochastic_opinion.html#gatoh.agents.Agent.stochastic_opinion" title="gatoh.agents.Agent.stochastic_opinion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_opinion</span></code></a></p></td>
 <td><p>Determine the stochastic direction and magnitude of a shift in the Agent's opinion and apply it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.stochastic_personality_change.html#gatoh.agents.Agent.stochastic_personality_change" title="gatoh.agents.Agent.stochastic_personality_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_personality_change</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.stochastic_personality_change.html#gatoh.agents.Agent.stochastic_personality_change" title="gatoh.agents.Agent.stochastic_personality_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_personality_change</span></code></a></p></td>
 <td><p>Calls to this function are primarily meant to originate from <a class="reference internal" href="gatoh.agents.Agent.life_events.html#gatoh.agents.Agent.life_events" title="gatoh.agents.Agent.life_events"><code class="xref py py-meth docutils literal notranslate"><span class="pre">life_events()</span></code></a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.stochastic_radicalisation_change.html#gatoh.agents.Agent.stochastic_radicalisation_change" title="gatoh.agents.Agent.stochastic_radicalisation_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_radicalisation_change</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.stochastic_radicalisation_change.html#gatoh.agents.Agent.stochastic_radicalisation_change" title="gatoh.agents.Agent.stochastic_radicalisation_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_radicalisation_change</span></code></a></p></td>
 <td><p>Calls to this function are primarily meant to originate from <a class="reference internal" href="gatoh.agents.Agent.life_events.html#gatoh.agents.Agent.life_events" title="gatoh.agents.Agent.life_events"><code class="xref py py-meth docutils literal notranslate"><span class="pre">life_events()</span></code></a>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.stochastic_silencing_change.html#gatoh.agents.Agent.stochastic_silencing_change" title="gatoh.agents.Agent.stochastic_silencing_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_silencing_change</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.stochastic_silencing_change.html#gatoh.agents.Agent.stochastic_silencing_change" title="gatoh.agents.Agent.stochastic_silencing_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_silencing_change</span></code></a></p></td>
 <td><p>Calls to this function are primarily meant to originate from <a class="reference internal" href="gatoh.agents.Agent.life_events.html#gatoh.agents.Agent.life_events" title="gatoh.agents.Agent.life_events"><code class="xref py py-meth docutils literal notranslate"><span class="pre">life_events()</span></code></a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.store_previous_opinion.html#gatoh.agents.Agent.store_previous_opinion" title="gatoh.agents.Agent.store_previous_opinion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_previous_opinion</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.store_previous_opinion.html#gatoh.agents.Agent.store_previous_opinion" title="gatoh.agents.Agent.store_previous_opinion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_previous_opinion</span></code></a></p></td>
 <td><p>A setter method that stores the Agent's current opinion into the previous opinion.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.Agent.update.html#gatoh.agents.Agent.update" title="gatoh.agents.Agent.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.Agent.update.html#gatoh.agents.Agent.update" title="gatoh.agents.Agent.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code></a></p></td>
 <td><p>Updates the internal state of the agent after the model has stepped:</p></td>
 </tr>
 </tbody>

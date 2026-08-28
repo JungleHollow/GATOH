@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.min.css?v=6e7d0de0" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/pointer.css?v=c97663ff" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=209a0a29" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -30,7 +30,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="gatoh.agents.Agent.change_rw_distribution" href="gatoh.agents.Agent.change_rw_distribution.html" />
-    <link rel="prev" title="gatoh.agents.Agent.change_opinion_rw" href="gatoh.agents.Agent.change_opinion_rw.html" /> 
+    <link rel="prev" title="gatoh.agents.Agent.change_personality" href="gatoh.agents.Agent.change_personality.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -61,6 +61,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.add_attribute.html">gatoh.agents.Agent.add_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_opinion.html">gatoh.agents.Agent.change_opinion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_opinion_rw.html">gatoh.agents.Agent.change_opinion_rw</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.Agent.change_personality.html">gatoh.agents.Agent.change_personality</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">gatoh.agents.Agent.change_radicalisation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.agents.Agent.change_radicalisation"><code class="docutils literal notranslate"><span class="pre">Agent.change_radicalisation()</span></code></a></li>
 </ul>
@@ -90,6 +91,12 @@
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphNode.html">GraphNode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphEdge.html">GraphEdge</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphSet.html">GraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupGraph.html">GroupGraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupNode.html">GroupNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupEdge.html">GroupEdge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupGraphSet.html">GroupGraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.Group.html">Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.GroupSet.html">GroupSet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.logging.GATOHLogger.html">GATOHLogger</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.logging.LoggerVariables.html">LoggerVariables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.model.ABModel.html">ABModel</a></li>
@@ -101,7 +108,10 @@
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_creator.html">gatoh.utils.watts_strogatz_creator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.connected_watts_strogatz_graph.html">gatoh.utils.connected_watts_strogatz_graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.beta_value_attenuation.html">gatoh.utils.beta_value_attenuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.linear_link.html">gatoh.utils.linear_link</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.multiplicative_link.html">gatoh.utils.multiplicative_link</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.create_config_file.html">gatoh.utils.create_config_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.get_keys_by_value.html">gatoh.utils.get_keys_by_value</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.draw_random_value.html">gatoh.utils.draw_random_value</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.random_coinflip.html">gatoh.utils.random_coinflip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.value_rw_delta.html">gatoh.utils.value_rw_delta</a></li>
@@ -163,7 +173,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="gatoh.agents.Agent.change_opinion_rw.html" class="btn btn-neutral float-left" title="gatoh.agents.Agent.change_opinion_rw" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gatoh.agents.Agent.change_personality.html" class="btn btn-neutral float-left" title="gatoh.agents.Agent.change_personality" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="gatoh.agents.Agent.change_rw_distribution.html" class="btn btn-neutral float-right" title="gatoh.agents.Agent.change_rw_distribution" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

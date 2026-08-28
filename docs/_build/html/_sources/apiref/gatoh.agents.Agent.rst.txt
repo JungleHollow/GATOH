@@ -17,6 +17,7 @@
       ~Agent.add_attribute
       ~Agent.change_opinion
       ~Agent.change_opinion_rw
+      ~Agent.change_personality
       ~Agent.change_radicalisation
       ~Agent.change_rw_distribution
       ~Agent.deradicalisation

@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.min.css?v=6e7d0de0" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/pointer.css?v=c97663ff" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=209a0a29" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -29,7 +29,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="gatoh.graphs.Graph.get_edge" href="gatoh.graphs.Graph.get_edge.html" />
+    <link rel="next" title="gatoh.graphs.Graph.get_betweenness_centrality" href="gatoh.graphs.Graph.get_betweenness_centrality.html" />
     <link rel="prev" title="gatoh.graphs.Graph.generate_graph" href="gatoh.graphs.Graph.generate_graph.html" /> 
 </head>
 
@@ -69,6 +69,8 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.calculate_polarisation.html">gatoh.graphs.Graph.calculate_polarisation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.change_generation_params.html">gatoh.graphs.Graph.change_generation_params</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.change_weights.html">gatoh.graphs.Graph.change_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.cluster_nodes.html">gatoh.graphs.Graph.cluster_nodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.compute_subgraph_center.html">gatoh.graphs.Graph.compute_subgraph_center</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.dynamic_relationships.html">gatoh.graphs.Graph.dynamic_relationships</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.estimate_neighbour_opinions.html">gatoh.graphs.Graph.estimate_neighbour_opinions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.estimate_opinion_climate.html">gatoh.graphs.Graph.estimate_opinion_climate</a></li>
@@ -77,6 +79,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.graphs.Graph.get_agent_index"><code class="docutils literal notranslate"><span class="pre">Graph.get_agent_index()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_betweenness_centrality.html">gatoh.graphs.Graph.get_betweenness_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_dijkstra_all_pairs.html">gatoh.graphs.Graph.get_dijkstra_all_pairs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_edge.html">gatoh.graphs.Graph.get_edge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_edge_changes.html">gatoh.graphs.Graph.get_edge_changes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.Graph.get_neighbours.html">gatoh.graphs.Graph.get_neighbours</a></li>
@@ -102,6 +106,12 @@
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphNode.html">GraphNode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphEdge.html">GraphEdge</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphSet.html">GraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupGraph.html">GroupGraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupNode.html">GroupNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupEdge.html">GroupEdge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupGraphSet.html">GroupGraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.Group.html">Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.GroupSet.html">GroupSet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.logging.GATOHLogger.html">GATOHLogger</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.logging.LoggerVariables.html">LoggerVariables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.model.ABModel.html">ABModel</a></li>
@@ -113,7 +123,10 @@
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_creator.html">gatoh.utils.watts_strogatz_creator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.connected_watts_strogatz_graph.html">gatoh.utils.connected_watts_strogatz_graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.beta_value_attenuation.html">gatoh.utils.beta_value_attenuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.linear_link.html">gatoh.utils.linear_link</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.multiplicative_link.html">gatoh.utils.multiplicative_link</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.create_config_file.html">gatoh.utils.create_config_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.get_keys_by_value.html">gatoh.utils.get_keys_by_value</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.draw_random_value.html">gatoh.utils.draw_random_value</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.random_coinflip.html">gatoh.utils.random_coinflip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.value_rw_delta.html">gatoh.utils.value_rw_delta</a></li>
@@ -179,7 +192,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="gatoh.graphs.Graph.generate_graph.html" class="btn btn-neutral float-left" title="gatoh.graphs.Graph.generate_graph" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="gatoh.graphs.Graph.get_edge.html" class="btn btn-neutral float-right" title="gatoh.graphs.Graph.get_edge" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="gatoh.graphs.Graph.get_betweenness_centrality.html" class="btn btn-neutral float-right" title="gatoh.graphs.Graph.get_betweenness_centrality" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

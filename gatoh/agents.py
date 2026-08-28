@@ -1200,7 +1200,7 @@ class AgentSet:
 
     def load_agentset(self, load_path: str) -> None:
         """
-        Loads an AgentSet that has been saved following the same process as in the :meth:`~gatoh.agents.AgentSet.save_agentset' function.
+        Loads an AgentSet that has been saved following the same process as in the :meth:`~gatoh.agents.AgentSet.save_agentset` function.
 
         :param load_path: The path to the model's overall save directory.
         :type load_path: str

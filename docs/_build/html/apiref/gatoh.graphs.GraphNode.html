@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.min.css?v=6e7d0de0" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/pointer.css?v=c97663ff" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=209a0a29" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -66,6 +66,12 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphEdge.html">GraphEdge</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GraphSet.html">GraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupGraph.html">GroupGraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupNode.html">GroupNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupEdge.html">GroupEdge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupGraphSet.html">GroupGraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.Group.html">Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.GroupSet.html">GroupSet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.logging.GATOHLogger.html">GATOHLogger</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.logging.LoggerVariables.html">LoggerVariables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.model.ABModel.html">ABModel</a></li>
@@ -77,7 +83,10 @@
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_creator.html">gatoh.utils.watts_strogatz_creator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.connected_watts_strogatz_graph.html">gatoh.utils.connected_watts_strogatz_graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.beta_value_attenuation.html">gatoh.utils.beta_value_attenuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.linear_link.html">gatoh.utils.linear_link</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.multiplicative_link.html">gatoh.utils.multiplicative_link</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.create_config_file.html">gatoh.utils.create_config_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.get_keys_by_value.html">gatoh.utils.get_keys_by_value</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.draw_random_value.html">gatoh.utils.draw_random_value</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.random_coinflip.html">gatoh.utils.random_coinflip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.value_rw_delta.html">gatoh.utils.value_rw_delta</a></li>
@@ -122,7 +131,7 @@
 <dt class="sig sig-object py" id="gatoh.graphs.GraphNode">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">GraphNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gatoh.agents.Agent.html#gatoh.agents.Agent" title="gatoh.agents.Agent"><span class="pre">Agent</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gatoh/graphs.html#GraphNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.graphs.GraphNode" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>A helper class that allows rustworx to more efficiently store information about Agents in the graph nodes.</p>
+<p>A helper class that allows rustworkx to more efficiently store information about Agents in the graph nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>agent</strong> (<a class="reference internal" href="gatoh.agents.Agent.html#gatoh.agents.Agent" title="gatoh.agents.Agent"><em>Agent</em></a>) – The agent that is being associated with this GraphNode.</p>

@@ -23,11 +23,15 @@
       ~Graph.calculate_polarisation
       ~Graph.change_generation_params
       ~Graph.change_weights
+      ~Graph.cluster_nodes
+      ~Graph.compute_subgraph_center
       ~Graph.dynamic_relationships
       ~Graph.estimate_neighbour_opinions
       ~Graph.estimate_opinion_climate
       ~Graph.generate_graph
       ~Graph.get_agent_index
+      ~Graph.get_betweenness_centrality
+      ~Graph.get_dijkstra_all_pairs
       ~Graph.get_edge
       ~Graph.get_edge_changes
       ~Graph.get_neighbours

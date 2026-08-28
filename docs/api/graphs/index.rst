@@ -7,3 +7,7 @@
     GraphNode
     GraphEdge
     GraphSet
+    GroupGraph
+    GroupNode
+    GroupEdge
+    GroupGraphSet

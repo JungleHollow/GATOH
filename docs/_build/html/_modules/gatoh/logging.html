@@ -10,6 +10,9 @@
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
       <link rel="stylesheet" type="text/css" href="../../_static/thebelab.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.min.css?v=6e7d0de0" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/pointer.css?v=c97663ff" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=209a0a29" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
@@ -20,6 +23,8 @@
       <script src="../../_static/thebelab-helper.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+      <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js?v=f0ca4bb6"></script>
+      <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js?v=12818e64"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -95,6 +100,8 @@
 <span class="sd">    :type max_iterations: int</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="c1"># The maximum iterations that the simulation will run for</span>
+    <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span>
     <span class="c1"># Model memory usage at the start of each iteration</span>
     <span class="n">current_memory_usage</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># The highest reported memory usage during model runtime</span>
@@ -179,7 +186,7 @@
 <span class="sd">        :type iteration: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Ensure that the function name exists in functions_runtime for this iteration</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">functions_runtime</span><span class="p">[</span><span class="n">iteration</span><span class="p">]</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions_runtime</span><span class="p">[</span><span class="n">iteration</span><span class="p">]</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">functions_runtime</span><span class="p">[</span><span class="n">iteration</span><span class="p">][</span><span class="n">function_name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">runtime</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.log_function_runtime&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -303,7 +310,7 @@
     <span class="c1"># The current iteration that the simulation is at</span>
     <span class="n">current_iteration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="c1"># Space for any dynamically tracked model parameters to be stored</span>
-    <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -345,6 +352,8 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+<div class="viewcode-block" id="LoggerVariables.increment_deradicalised">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_deradicalised.html#gatoh.logging.LoggerVariables.increment_deradicalised">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">increment_deradicalised</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A simple setter function that checks the input flag and updates the deradicalisation count accordingly.</span>
@@ -354,7 +363,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
 
 <div class="viewcode-block" id="LoggerVariables.increment_silenced">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_silenced.html#gatoh.logging.LoggerVariables.increment_silenced">[docs]</a>
@@ -442,6 +452,8 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+<div class="viewcode-block" id="LoggerVariables.store_model_parameters">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.store_model_parameters.html#gatoh.logging.LoggerVariables.store_model_parameters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">store_model_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter function that simplifies the storing of the model&#39;s tracked parameters at each iteration.</span>
@@ -453,7 +465,8 @@
         <span class="k">if</span> <span class="n">model_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">model_parameter</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">model_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">[</span><span class="n">model_parameter</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
 
 <div class="viewcode-block" id="LoggerVariables.new_iteration">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.new_iteration.html#gatoh.logging.LoggerVariables.new_iteration">[docs]</a>
@@ -506,6 +519,8 @@
         <span class="k">return</span> <span class="n">output_string</span></div>
 
 
+<div class="viewcode-block" id="LoggerVariables.current_model_params_repr">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.current_model_params_repr.html#gatoh.logging.LoggerVariables.current_model_params_repr">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">current_model_params_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Extract all the explicitly tracked model parameters for the current iteration and format them into a substring to be appended to the main iteration output.</span>
@@ -518,7 +533,8 @@
             <span class="n">output_string</span> <span class="o">+=</span> <span class="s2">&quot;Model Parameter</span><span class="se">\t</span><span class="s2">Value</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="k">for</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">output_string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="k">return</span> <span class="n">output_string</span>
+        <span class="k">return</span> <span class="n">output_string</span></div>
+
 
 <div class="viewcode-block" id="LoggerVariables.current_iteration_repr">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.current_iteration_repr.html#gatoh.logging.LoggerVariables.current_iteration_repr">[docs]</a>
@@ -579,6 +595,223 @@
 
 
 
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LoggedAgents</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dataclass that provides the framework used to track specific attribute of certain agents throughout model runtimes.</span>
+
+<span class="sd">    :param max_iterations: The maximum number of iterations that the model will run its simulation for.</span>
+<span class="sd">    :type max_iterations: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># The maximum iterations that the simulation will run for</span>
+    <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="c1"># The current iteration that the simulation is at</span>
+    <span class="n">current_iteration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># The dictionary that will be used to store agent opinions</span>
+    <span class="n">opinions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The dictionary that will be used to store agent previous opinions</span>
+    <span class="n">previous_opinions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The dictionary that will be used to store agent radicalisation statuses</span>
+    <span class="n">radicalisations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The dictionary that will be used to store agent social weightings</span>
+    <span class="n">social_weightings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The dictionary that will be used to store agent silencing statuses</span>
+    <span class="n">silencings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The dictionary that will be used to store any custom attributes</span>
+    <span class="n">custom_attributes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store the number of max iterations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span> <span class="o">=</span> <span class="n">max_iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opinions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_opinions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisations</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">silencings</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">track_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">agent_hierarchies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise the list to track the specified attribute for an agent.</span>
+
+<span class="sd">        :param agent_id: The unique ID of the agent for which the attribute is being tracked.</span>
+<span class="sd">        :type agent_id: str</span>
+<span class="sd">        :param attribute_name: The name of the parameter to be tracked.</span>
+<span class="sd">        :type attribute_name: str</span>
+<span class="sd">        :param agent_hierarchies: The names of the hierarchies that the agent belongs to.</span>
+<span class="sd">        :type agent_hierarchies: list[str], optional</span>
+<span class="sd">        :raises ValueError: If the tracked attribute is social_weightings or is_silenced and no agent_hierarchies are being passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">match</span> <span class="n">attribute_name</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">&quot;opinion&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">opinions</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+            <span class="k">case</span> <span class="s2">&quot;previous_opinion&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">previous_opinions</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+            <span class="k">case</span> <span class="s2">&quot;radicalised&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">radicalisations</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+            <span class="k">case</span> <span class="s2">&quot;social_weightings&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">agent_hierarchies</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wanting to track social_weightings for an agent but no agent hierarchies were passed to the logger&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">hierarchy</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span> <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="n">agent_hierarchies</span><span class="p">}</span>
+            <span class="k">case</span> <span class="s2">&quot;is_silenced&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">agent_hierarchies</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wanting to track is_silenced for an agent but no agent hierarchies were passed to the logger&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">silencings</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">hierarchy</span><span class="p">:</span> <span class="p">[</span><span class="kc">False</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span> <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="n">agent_hierarchies</span><span class="p">}</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">custom_attributes</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">agent_id</span><span class="p">,</span> <span class="p">{})[</span><span class="n">attribute_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_opinion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">opinion</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Log the opinion value of an agent for this iteration.</span>
+
+<span class="sd">        :param agent_id: The unique ID of the agent whose opinion is being logged.</span>
+<span class="sd">        :type agent_id: str</span>
+<span class="sd">        :param opinion: The agent&#39;s opinion value for the current iteration.</span>
+<span class="sd">        :type opinion: float</span>
+<span class="sd">        :raises KeyError: If the input agent has not been initialised in the opinions dict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">opinion_values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opinions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">agent_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">opinion_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to log the current opinion for agent </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2"> that has not been previously specified in the logger&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">opinion_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">opinion</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_previous_opinion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">previous_opinion</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Log the previous_opinion value of an agent for this iteration.</span>
+
+<span class="sd">        :param agent_id: The unique ID of the agent whose previous opinion is being logged.</span>
+<span class="sd">        :type agent_id: str</span>
+<span class="sd">        :param previous_opininion: The agent&#39;s previous_opinion value for the current iteration.</span>
+<span class="sd">        :type previous_opinion: float</span>
+<span class="sd">        :raises KeyError: If the input agent has not been initialised in the previous_opinions dict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p_opinion_values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_opinions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">agent_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p_opinion_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to log the previous opinion for agent </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2"> that has not been previously specified in the logger&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p_opinion_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">previous_opinion</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_radicalised</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">radicalised</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Log the radicalisation status of an agent for this iteration.</span>
+
+<span class="sd">        :param agent_id: The unique ID of the agent whose radicalisation status is being logged.</span>
+<span class="sd">        :type agent_id: str</span>
+<span class="sd">        :param radicalised: The agent&#39;s radicalisation status for the current iteration.</span>
+<span class="sd">        :type radicalised: bool</span>
+<span class="sd">        :raises KeyError: If the input agent has not been initialised in the radicalisations dict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">radicalisation</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalisations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">agent_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">radicalisation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to log the radicalisation status for agent </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2"> that has not been previously specified in the logger&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">radicalisation</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">radicalised</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_social_weightings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">social_weightings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Log the social weightings of an agent for this iteration.</span>
+
+<span class="sd">        :param agent_id: The unique ID of the agent whose social weightings are being logged.</span>
+<span class="sd">        :type agent_id: str</span>
+<span class="sd">        :param social_weightings: The agent&#39;s social weightings for the current iteration.</span>
+<span class="sd">        :type social_weightings: dict[str, float]</span>
+<span class="sd">        :raises KeyError: If the input agent has not been initialised in the radicalisations dict or an unknown hierarchy is present.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">weightings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">agent_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">weightings</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to log the social weightings for agent </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2"> that has not been previously specified in the logger&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">hierarchy</span><span class="p">,</span> <span class="n">weighting</span> <span class="ow">in</span> <span class="n">social_weightings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">weighting_values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">weightings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">weighting_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to log the social weighting for an unknown hierarchy (</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">) for agent </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">weighting_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">weighting</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_is_silenced</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">is_silenced</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Log the silencing statuses of an agent for this iteration.</span>
+
+<span class="sd">        :param agent_id: The unique ID of the agent whose silencing statuses are being logged.</span>
+<span class="sd">        :type agent_id: str</span>
+<span class="sd">        :param is_silenced: The agent&#39;s silencing statuses for the current iteration.</span>
+<span class="sd">        :type is_silenced: dict[str, bool]</span>
+<span class="sd">        :raises KeyError: If the input agent has not been initialised in the silencings dict or an unknown hierarchy is present.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">silencings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">silencings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">agent_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">silencings</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to log the silencing statuses for agent </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2"> that has not been previously specified in the logger&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">hierarchy</span><span class="p">,</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">is_silenced</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">silencing_flags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">silencings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">silencing_flags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to log the silencing status for an unknown hierarchy (</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">) for agent </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">silencing_flags</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">flag</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_custom_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">attribute_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Log a custom attribute of an agent for this iteration.</span>
+
+<span class="sd">        :param agent_id: The unique ID of the agent whose custom attribute is being logged.</span>
+<span class="sd">        :type agent_id: str</span>
+<span class="sd">        :param attribute_name: The name of the custom attribute.</span>
+<span class="sd">        :type attribute_name: str</span>
+<span class="sd">        :param attribute_value: The value of the custom attribute for the current iteration.</span>
+<span class="sd">        :type attribute_value: Any</span>
+<span class="sd">        :raises KeyError: If the input agent has not been initialised in the custom_attributes dict or an unknown attribute is specified.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">custom_attributes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">agent_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">custom_attributes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to log a custom attribute for agent </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2"> that has not been previously specified in the logger&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">attribute_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">custom_attributes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to log an unknown custom attribute (</span><span class="si">{</span><span class="n">attribute_name</span><span class="si">}</span><span class="s2">) for agent </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">custom_attributes</span><span class="p">[</span><span class="n">attribute_name</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">attribute_value</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">store_agent_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_attributes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles all of the individual calls to log_&lt;attribute&gt; for every tracked agent for this iteration.</span>
+
+<span class="sd">        This function assumes that all relevant type and value checks have already been made.</span>
+
+<span class="sd">        :param agent_attributes: A &lt;agent : &lt;attribute : value&gt;&gt; nested mapping containing all relevant attributes for agents which are being tracked.</span>
+<span class="sd">        :type agent_attributes: dict[str, dict[str, Any]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">agent</span><span class="p">,</span> <span class="n">attributes</span> <span class="ow">in</span> <span class="n">agent_attributes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">attributes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">match</span> <span class="n">attribute</span><span class="p">:</span>
+                    <span class="k">case</span> <span class="s2">&quot;opinion&quot;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">log_opinion</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                    <span class="k">case</span> <span class="s2">&quot;previous_opinion&quot;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">log_previous_opinion</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                    <span class="k">case</span> <span class="s2">&quot;radicalised&quot;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">log_radicalised</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                    <span class="k">case</span> <span class="s2">&quot;social_weightings&quot;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">log_social_weightings</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                    <span class="k">case</span> <span class="s2">&quot;is_silenced&quot;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">log_is_silenced</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                    <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">log_custom_attribute</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">new_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Increment the current_iteration counter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
 <div class="viewcode-block" id="GATOHLogger">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.html#gatoh.logging.GATOHLogger">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GATOHLogger</span><span class="p">:</span>
@@ -617,6 +850,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">write_file</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">write_file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">debug</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span> <span class="n">LoggerVariables</span> <span class="o">=</span> <span class="n">LoggerVariables</span><span class="p">(</span><span class="n">max_iterations</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span> <span class="n">LoggedAgents</span> <span class="o">=</span> <span class="n">LoggedAgents</span><span class="p">(</span><span class="n">max_iterations</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="p">:</span> <span class="n">LoggerDevStats</span> <span class="o">=</span> <span class="n">LoggerDevStats</span><span class="p">(</span><span class="n">max_iterations</span><span class="p">)</span>
 
@@ -647,12 +881,15 @@
 <span class="sd">        :type init: bool, optional</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">new_iteration</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="n">init</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">new_iteration</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="o">.</span><span class="n">new_iteration</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="n">init</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.new_iteration&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+<div class="viewcode-block" id="GATOHLogger.track_model_parameters">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.track_model_parameters.html#gatoh.logging.GATOHLogger.track_model_parameters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">track_model_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A utility function that adds new model parameters to be tracked to the logger variables.</span>
@@ -661,10 +898,11 @@
 <span class="sd">        :type parameters: list[str]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">model_parameters</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span>  <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)])</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">model_parameters</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span>  <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.track_model_parameters&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
 
 <div class="viewcode-block" id="GATOHLogger.iteration">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.iteration.html#gatoh.logging.GATOHLogger.iteration">[docs]</a>
@@ -674,6 +912,7 @@
         <span class="n">radicalisation_logodds</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">layer_interdependences</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
         <span class="n">layer_polarisations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">agent_attributes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -687,6 +926,8 @@
 <span class="sd">        :type layer_interdependences: dict[str, float]</span>
 <span class="sd">        :param layers_polarisation: A &lt;hierarchy : value&gt; mapping containing the calculated polarisation for each hierarchy in the model at the end of this iteration.</span>
 <span class="sd">        :type layers_polarisation: dict[str, float]</span>
+<span class="sd">        :param agent_attributes: A &lt;agent : &lt;attribute : value&gt;&gt; nested mapping containing all relevant attributes for agents which are being tracked.</span>
+<span class="sd">        :type agent_attributes: dict[str, dict[str, Any]]</span>
 <span class="sd">        :param model_parameters: A &lt;parameter : value&gt; mapping containing a tracked model parameter&#39;s value at the end of this iteration.</span>
 <span class="sd">        :type model_parameters: dict[str, Any], optional</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -695,6 +936,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_interdependences</span><span class="p">(</span><span class="n">layer_interdependences</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_polarisations</span><span class="p">(</span><span class="n">layer_polarisations</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_model_parameters</span><span class="p">(</span><span class="n">model_parameters</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">store_agent_attributes</span><span class="p">(</span><span class="n">agent_attributes</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_aggregate_opinion&quot;</span><span class="p">)</span>
@@ -705,6 +948,8 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+<div class="viewcode-block" id="GATOHLogger.debug_iteration">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.debug_iteration.html#gatoh.logging.GATOHLogger.debug_iteration">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">debug_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Store all relevant developer variables based on the level of logging that has been specified.</span>
@@ -715,8 +960,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="o">.</span><span class="n">record_peak_mem_usage</span><span class="p">(</span><span class="n">peak</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.debug_iteration&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="GATOHLogger.debug_iteration_print">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.debug_iteration_print.html#gatoh.logging.GATOHLogger.debug_iteration_print">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">debug_iteration_print</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A method which formats the debug statistics for printing.</span>
@@ -730,7 +978,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerDevStats.debug_iteration_print&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">print_string</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span></div>
+
 
 <div class="viewcode-block" id="GATOHLogger.iteration_print">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.iteration_print.html#gatoh.logging.GATOHLogger.iteration_print">[docs]</a>
@@ -755,6 +1004,8 @@
             <span class="k">return</span> <span class="n">print_string</span></div>
 
 
+<div class="viewcode-block" id="GATOHLogger.log_function_call">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.log_function_call.html#gatoh.logging.GATOHLogger.log_function_call">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">log_function_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A wrapper to the DevStats log_function_call.</span>
@@ -764,7 +1015,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="n">function_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dev_stats</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GATOHLogger.log_function_call&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
 
 <div class="viewcode-block" id="GATOHLogger.save_data">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.save_data.html#gatoh.logging.GATOHLogger.save_data">[docs]</a>

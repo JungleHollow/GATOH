@@ -18,9 +18,13 @@
       ~GraphSet.agent_opinion_threshold
       ~GraphSet.calculate_polarisation
       ~GraphSet.get_agent_hierarchies
+      ~GraphSet.get_agents_hierarchies
+      ~GraphSet.get_hierarchies
       ~GraphSet.get_hierarchy
       ~GraphSet.get_index
+      ~GraphSet.get_indices
       ~GraphSet.graph_at_index
+      ~GraphSet.graphs_at_indices
       ~GraphSet.list_hierarchies
       ~GraphSet.load_edge
       ~GraphSet.load_graphset

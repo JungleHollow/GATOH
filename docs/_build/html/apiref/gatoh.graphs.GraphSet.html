@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.min.css?v=6e7d0de0" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/pointer.css?v=c97663ff" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=209a0a29" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -67,9 +67,13 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.agent_opinion_threshold.html">gatoh.graphs.GraphSet.agent_opinion_threshold</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.calculate_polarisation.html">gatoh.graphs.GraphSet.calculate_polarisation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.get_agent_hierarchies.html">gatoh.graphs.GraphSet.get_agent_hierarchies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.get_agents_hierarchies.html">gatoh.graphs.GraphSet.get_agents_hierarchies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.get_hierarchies.html">gatoh.graphs.GraphSet.get_hierarchies</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.get_hierarchy.html">gatoh.graphs.GraphSet.get_hierarchy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.get_index.html">gatoh.graphs.GraphSet.get_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.get_indices.html">gatoh.graphs.GraphSet.get_indices</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.graph_at_index.html">gatoh.graphs.GraphSet.graph_at_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.graphs_at_indices.html">gatoh.graphs.GraphSet.graphs_at_indices</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.list_hierarchies.html">gatoh.graphs.GraphSet.list_hierarchies</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.load_edge.html">gatoh.graphs.GraphSet.load_edge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.load_graphset.html">gatoh.graphs.GraphSet.load_graphset</a></li>
@@ -81,6 +85,12 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GraphSet.write_node_pickle.html">gatoh.graphs.GraphSet.write_node_pickle</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupGraph.html">GroupGraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupNode.html">GroupNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupEdge.html">GroupEdge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.graphs.GroupGraphSet.html">GroupGraphSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.Group.html">Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.groups.GroupSet.html">GroupSet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.logging.GATOHLogger.html">GATOHLogger</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.logging.LoggerVariables.html">LoggerVariables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.model.ABModel.html">ABModel</a></li>
@@ -92,7 +102,10 @@
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.watts_strogatz_creator.html">gatoh.utils.watts_strogatz_creator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.connected_watts_strogatz_graph.html">gatoh.utils.connected_watts_strogatz_graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.beta_value_attenuation.html">gatoh.utils.beta_value_attenuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.linear_link.html">gatoh.utils.linear_link</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.multiplicative_link.html">gatoh.utils.multiplicative_link</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.create_config_file.html">gatoh.utils.create_config_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gatoh.utils.get_keys_by_value.html">gatoh.utils.get_keys_by_value</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.draw_random_value.html">gatoh.utils.draw_random_value</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.random_coinflip.html">gatoh.utils.random_coinflip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gatoh.utils.value_rw_delta.html">gatoh.utils.value_rw_delta</a></li>
@@ -163,29 +176,41 @@ and provide utilities using this collection.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.get_agent_hierarchies.html#gatoh.graphs.GraphSet.get_agent_hierarchies" title="gatoh.graphs.GraphSet.get_agent_hierarchies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_agent_hierarchies</span></code></a></p></td>
 <td><p>A helper function that determines which social hierarchies an Agent is contained in.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.get_agents_hierarchies.html#gatoh.graphs.GraphSet.get_agents_hierarchies" title="gatoh.graphs.GraphSet.get_agents_hierarchies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_agents_hierarchies</span></code></a></p></td>
+<td><p>A helper function that determines which social hierarchies multiples Agents are contained in.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.get_hierarchies.html#gatoh.graphs.GraphSet.get_hierarchies" title="gatoh.graphs.GraphSet.get_hierarchies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_hierarchies</span></code></a></p></td>
+<td><p>A getter function that returns the Graph objects with the given hierarchy names.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.get_hierarchy.html#gatoh.graphs.GraphSet.get_hierarchy" title="gatoh.graphs.GraphSet.get_hierarchy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_hierarchy</span></code></a></p></td>
 <td><p>A getter function to return a Graph object with the given hierarchy name.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.get_index.html#gatoh.graphs.GraphSet.get_index" title="gatoh.graphs.GraphSet.get_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_index</span></code></a></p></td>
 <td><p>A getter function that returns the index of a given hierarchy within the GraphSet.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.graph_at_index.html#gatoh.graphs.GraphSet.graph_at_index" title="gatoh.graphs.GraphSet.graph_at_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph_at_index</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.get_indices.html#gatoh.graphs.GraphSet.get_indices" title="gatoh.graphs.GraphSet.get_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_indices</span></code></a></p></td>
+<td><p>A getter function that returns the indices of the given hierarchies within the GraphSet.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.graph_at_index.html#gatoh.graphs.GraphSet.graph_at_index" title="gatoh.graphs.GraphSet.graph_at_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph_at_index</span></code></a></p></td>
 <td><p>A getter function to return a Graph object stored at the given index in the GraphSet.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.graphs_at_indices.html#gatoh.graphs.GraphSet.graphs_at_indices" title="gatoh.graphs.GraphSet.graphs_at_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphs_at_indices</span></code></a></p></td>
+<td><p>A getter function to return the Graph objects stored at the given indices in the GraphSet.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.list_hierarchies.html#gatoh.graphs.GraphSet.list_hierarchies" title="gatoh.graphs.GraphSet.list_hierarchies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_hierarchies</span></code></a></p></td>
 <td><p>A utility function that iterates over the GraphSet and prints out the names of all the social hierarchies that are present.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.load_edge.html#gatoh.graphs.GraphSet.load_edge" title="gatoh.graphs.GraphSet.load_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_edge</span></code></a></p></td>
-<td><p>A helper function that allows for multithreading within <code class="xref py py-meth docutils literal notranslate"><span class="pre">load_graphset_multi()</span></code>.</p></td>
+<td><p>A helper function that allows for multithreading within <a class="reference internal" href="gatoh.graphs.GraphSet.load_graphset_multi.html#gatoh.graphs.GraphSet.load_graphset_multi" title="gatoh.graphs.GraphSet.load_graphset_multi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_graphset_multi()</span></code></a>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.load_graphset.html#gatoh.graphs.GraphSet.load_graphset" title="gatoh.graphs.GraphSet.load_graphset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_graphset</span></code></a></p></td>
 <td><p>Loads a GraphSet that has been saved following the same process as in the save_graphset() function.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.load_graphset_multi.html#gatoh.graphs.GraphSet.load_graphset_multi" title="gatoh.graphs.GraphSet.load_graphset_multi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_graphset_multi</span></code></a></p></td>
-<td><p>A helper function that allows for parallel processing of Graph loading for <code class="xref py py-meth docutils literal notranslate"><span class="pre">load_graphset()</span></code>.</p></td>
+<td><p>A helper function that allows for parallel processing of Graph loading for <a class="reference internal" href="gatoh.graphs.GraphSet.load_graphset.html#gatoh.graphs.GraphSet.load_graphset" title="gatoh.graphs.GraphSet.load_graphset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_graphset()</span></code></a>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.load_node.html#gatoh.graphs.GraphSet.load_node" title="gatoh.graphs.GraphSet.load_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_node</span></code></a></p></td>
-<td><p>A helper function that allows for multithreading within <code class="xref py py-meth docutils literal notranslate"><span class="pre">load_graphset_multi()</span></code>.</p></td>
+<td><p>A helper function that allows for multithreading within <a class="reference internal" href="gatoh.graphs.GraphSet.load_graphset_multi.html#gatoh.graphs.GraphSet.load_graphset_multi" title="gatoh.graphs.GraphSet.load_graphset_multi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_graphset_multi()</span></code></a>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.save_graphset.html#gatoh.graphs.GraphSet.save_graphset" title="gatoh.graphs.GraphSet.save_graphset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_graphset</span></code></a></p></td>
 <td><p>Save all of the graphs contained within this graphset into a compressed subdirectory representing the saved GraphSet.</p></td>
@@ -197,7 +222,7 @@ and provide utilities using this collection.</p>
 <td><p>A helper function that allows for multithreading of <code class="xref py py-meth docutils literal notranslate"><span class="pre">save_graphset()</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GraphSet.write_node_pickle.html#gatoh.graphs.GraphSet.write_node_pickle" title="gatoh.graphs.GraphSet.write_node_pickle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_node_pickle</span></code></a></p></td>
-<td><p>A helper function that allows for multithreading of <code class="xref py py-meth docutils literal notranslate"><span class="pre">save_graphset()</span></code>.</p></td>
+<td><p>A helper function that allows for multithreading of <a class="reference internal" href="gatoh.graphs.GraphSet.save_graphset.html#gatoh.graphs.GraphSet.save_graphset" title="gatoh.graphs.GraphSet.save_graphset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_graphset()</span></code></a>.</p></td>
 </tr>
 </tbody>
 </table>

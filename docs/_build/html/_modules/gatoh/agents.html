@@ -10,6 +10,9 @@
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
       <link rel="stylesheet" type="text/css" href="../../_static/thebelab.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.min.css?v=6e7d0de0" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/pointer.css?v=c97663ff" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=209a0a29" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
@@ -20,6 +23,8 @@
       <script src="../../_static/thebelab-helper.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+      <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js?v=f0ca4bb6"></script>
+      <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js?v=12818e64"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -288,6 +293,8 @@
 <span class="sd">        :type parameters: dict[str, float], optional</span>
 <span class="sd">        :param personal_benefit: A boolean indicating if the Agent would be personally benefitted by the adoption of the &#39;social virus&#39; being spread.</span>
 <span class="sd">        :type personal_benefit: bool, optional</span>
+<span class="sd">        :raises TypeError: If any of the required input parameters are of the incorrect data type.</span>
+<span class="sd">        :raises ValueError: If the input personality is not a supported type.</span>
 <span class="sd">        :return: The generated Agent object.</span>
 <span class="sd">        :rtype: Agent</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -302,7 +309,9 @@
         <span class="c1"># Begin by setting crucial information</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span>
-        <span class="k">if</span> <span class="n">personality</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">personality</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">personality</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">PERSONALITIES</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The specified personality type is not supported&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">personality</span> <span class="o">=</span> <span class="n">personality</span>
 
         <span class="k">if</span> <span class="n">personal_benefit</span><span class="p">:</span>
@@ -417,9 +426,10 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return any existing or dynamically added attribute held by the Agent object.</span>
 
-<span class="sd">        :param name: The name of the parameter to get.</span>
+<span class="sd">        :param name: The name of the attribute to get.</span>
 <span class="sd">        :type name: str</span>
-<span class="sd">        :return: The value stored for the parameter.</span>
+<span class="sd">        :raises UserWarning: If the attribute does not exist.</span>
+<span class="sd">        :return: The value stored for the attribute.</span>
 <span class="sd">        :rtype: Any</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">attribute</span><span class="p">:</span> <span class="n">T</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
@@ -523,6 +533,27 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+<div class="viewcode-block" id="Agent.change_personality">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.Agent.change_personality.html#gatoh.agents.Agent.change_personality">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">change_personality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">personality</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter method that changes the Agent&#39;s personality type.</span>
+
+<span class="sd">        :param personality: The new personality type to assign to the Agent.</span>
+<span class="sd">        :type personality: str</span>
+<span class="sd">        :raises TypeError: If the input personality is not a string.</span>
+<span class="sd">        :raises ValueError: If the personality is not one of the supported types.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">personality</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;personality must be a string&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">personality</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">PERSONALITIES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The personality &#39;</span><span class="si">{</span><span class="n">personality</span><span class="si">}</span><span class="s2">&#39; is not supported -- cannot change the Agent&#39;s personality type&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">personality</span> <span class="o">=</span> <span class="n">personality</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Agent.set_benefit">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.Agent.set_benefit.html#gatoh.agents.Agent.set_benefit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_benefit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">personal_benefit</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A setter method that changes the Agent&#39;s personal_benefit parameter.</span>
@@ -534,7 +565,8 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">personal_benefit</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;personal_benefit must be a boolean&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">personal_benefit</span> <span class="o">=</span> <span class="n">personal_benefit</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
 
 <div class="viewcode-block" id="Agent.step">
 <a class="viewcode-back" href="../../apiref/gatoh.agents.Agent.step.html#gatoh.agents.Agent.step">[docs]</a>
@@ -708,6 +740,8 @@
         <span class="k">return</span> <span class="n">negation_strength</span> <span class="o">&gt;</span> <span class="n">threshold</span></div>
 
 
+<div class="viewcode-block" id="Agent.deradicalisation">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.Agent.deradicalisation.html#gatoh.agents.Agent.deradicalisation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">deradicalisation</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">hierarchy_changes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
@@ -827,7 +861,8 @@
             <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
         <span class="c1"># If this is somehow reached, an error has occurred (but False is returned just in case)</span>
-        <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
 
 <div class="viewcode-block" id="Agent.radicalisation">
 <a class="viewcode-back" href="../../apiref/gatoh.agents.Agent.radicalisation.html#gatoh.agents.Agent.radicalisation">[docs]</a>
@@ -1056,6 +1091,8 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+<div class="viewcode-block" id="Agent.stochastic_personality_change">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.Agent.stochastic_personality_change.html#gatoh.agents.Agent.stochastic_personality_change">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">stochastic_personality_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">personality_probs</span><span class="p">:</span> <span class="n">PersonalityProbs</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calls to this function are primarily meant to originate from :meth:`~gatoh.agents.Agent.life_events`.</span>
@@ -1080,8 +1117,11 @@
                     <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An unsupported personality was specified in personality_probs when trying to determine a stochastic personality change in agent </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">chosen_personality</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">personality_flags</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">personality_p</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">personality</span> <span class="o">=</span> <span class="n">chosen_personality</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Agent.stochastic_benefit_change">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.Agent.stochastic_benefit_change.html#gatoh.agents.Agent.stochastic_benefit_change">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">stochastic_benefit_change</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calls to this function are primarily meant to originate from :meth:`~gatoh.agents.Agent.life_events`.</span>
@@ -1098,8 +1138,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">personal_benefit</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">personal_benefit</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Agent.stochastic_radicalisation_change">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.Agent.stochastic_radicalisation_change.html#gatoh.agents.Agent.stochastic_radicalisation_change">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">stochastic_radicalisation_change</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calls to this function are primarily meant to originate from :meth:`~gatoh.agents.Agent.life_events`.</span>
@@ -1110,8 +1153,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
+
+<div class="viewcode-block" id="Agent.stochastic_silencing_change">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.Agent.stochastic_silencing_change.html#gatoh.agents.Agent.stochastic_silencing_change">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">stochastic_silencing_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">silencing_probs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calls to this function are primarily meant to originate from :meth:`~gatoh.agents.Agent.life_events`.</span>
@@ -1138,7 +1184,8 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">is_silenced</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="k">elif</span> <span class="n">rd</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">SILENCING_THRESH</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_silenced</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">is_silenced</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
 
     <span class="k">class</span><span class="w"> </span><span class="nc">LifeEventsDict</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
         <span class="n">personality_thresh</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
@@ -1240,9 +1287,6 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">AgentSet</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An ordered collection of Agent objects that maintains consistency for the Model.</span>
-
-<span class="sd">    :param model: The parent model that this AgentSet is being attached to</span>
-<span class="sd">    :type model: ABModel</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1253,7 +1297,7 @@
 <a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.save_agentset.html#gatoh.agents.AgentSet.save_agentset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save_agentset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Save the Agent objects into a compressed subdirectory representing the the saved AgentSet.</span>
+<span class="sd">        Save the Agent objects into a compressed subdirectory representing the saved AgentSet.</span>
 
 <span class="sd">        :param directory_path: The path to the directory where the agentset subdirectory should be created.</span>
 <span class="sd">        :type directory_path: str</span>
@@ -1304,7 +1348,7 @@
 <a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.write_agent_pickle.html#gatoh.agents.AgentSet.write_agent_pickle">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">write_agent_pickle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A helper function that allows for multithreading of :meth:`~gatoh.agents.agents.AgentSet.save_agentset`.</span>
+<span class="sd">        A helper function that allows for multithreading of :meth:`~gatoh.agents.AgentSet.save_agentset`.</span>
 
 <span class="sd">        :param agent: The agent that is being saved.</span>
 <span class="sd">        :type agent: Agent</span>
@@ -1323,10 +1367,11 @@
 <a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.load_agentset.html#gatoh.agents.AgentSet.load_agentset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_agentset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Loads an AgentSet that has been saved following the same process as in the save_agentset() function.</span>
+<span class="sd">        Loads an AgentSet that has been saved following the same process as in the :meth:`~gatoh.agents.AgentSet.save_agentset` function.</span>
 
 <span class="sd">        :param load_path: The path to the model&#39;s overall save directory.</span>
 <span class="sd">        :type load_path: str</span>
+<span class="sd">        :raises FileNotFoundError: If no valid agentset zip was found in the load path.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">zip_load_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">load_path</span><span class="si">}</span><span class="s2">/_agentset.zip&quot;</span>
 
@@ -1370,10 +1415,10 @@
 <a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.extract_agent_pickle.html#gatoh.agents.AgentSet.extract_agent_pickle">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">extract_agent_pickle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_pickle_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subdirectory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A helper function that allows for multithreading of :meth:`~gatoh.agents.agents.AgentSet.load_agentset`.</span>
+<span class="sd">        A helper function that allows for multithreading of :meth:`~gatoh.agents.AgentSet.load_agentset`.</span>
 
-<span class="sd">        :param agent_pickle_path: The name of the pickled Agent object file.</span>
-<span class="sd">        :type agent_pickle_path: str</span>
+<span class="sd">        :param agent_pickle_name: The name of the pickled Agent object file.</span>
+<span class="sd">        :type agent_pickle_name: str</span>
 <span class="sd">        :param subdirectory_path: The root path to which the pickled agent object was written.</span>
 <span class="sd">        :type subdirectory_path: str</span>
 <span class="sd">        :return: The unpickled agent.</span>
@@ -1412,7 +1457,7 @@
 <span class="sd">        :return: A flag indicating if the Agent object is in the AgentSet.</span>
 <span class="sd">        :rtype: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_in_agentset</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1423,7 +1468,7 @@
 <span class="sd">        :return: A flag indicating if the specified Agent object is in the AgentSet.</span>
 <span class="sd">        :rtype: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_in_agentset</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">slice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1461,6 +1506,24 @@
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">agent</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">):</span>
             <span class="n">agent</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">idx</span>
         <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="AgentSet.id_in_agentset">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.id_in_agentset.html#gatoh.agents.AgentSet.id_in_agentset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">id_in_agentset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Report if an agent with the given unique ID exists in the agentset.</span>
+
+<span class="sd">        :param agent_id: The unique ID of the agent that is being checked for.</span>
+<span class="sd">        :type agent_id: str</span>
+<span class="sd">        :return: A flag indicating if an agent with the input ID exists in the agentset or not.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">agent_id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
 
 
 <div class="viewcode-block" id="AgentSet.discard">
@@ -1512,9 +1575,34 @@
             <span class="k">return</span> <span class="kc">None</span></div>
 
 
+<div class="viewcode-block" id="AgentSet.agents_at_indices">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.agents_at_indices.html#gatoh.agents.AgentSet.agents_at_indices">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">agents_at_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of all the agent objects at the specified indices.</span>
+
+<span class="sd">        :param indices: A list of all the indices for which the agent should be returned.</span>
+<span class="sd">        :type indices: list[int]</span>
+<span class="sd">        :raises UserWarning: If any of the input indices are out of bounds.</span>
+<span class="sd">        :return: All of the agent objects that correspond to the input indices.</span>
+<span class="sd">        :rtype: list[Agent]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">agents_to_return</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                <span class="n">agents_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;WARNING: Index </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> is out of bounds for the AgentSet. Only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span><span class="si">}</span><span class="s2"> Agents have been created.&quot;</span><span class="p">,</span>
+                    <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">agents_to_return</span></div>
+
+
 <div class="viewcode-block" id="AgentSet.get_agent_by_id">
 <a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.get_agent_by_id.html#gatoh.agents.AgentSet.get_agent_by_id">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_agent_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_agent_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Searches the AgentSet for an Agent with the given id and returns its object if it exists.</span>
 
@@ -1531,6 +1619,23 @@
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;The Agent with id &#39;</span><span class="si">{</span><span class="nb">id</span><span class="si">}</span><span class="s2">&#39; does not exist in the AgentSet -- unable to return an Agent object.&quot;</span>
         <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AgentSet.get_agents_by_ids">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.get_agents_by_ids.html#gatoh.agents.AgentSet.get_agents_by_ids">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_agents_by_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Searches the AgentSet for Agents with the given ids and returns their objects if they all exist.</span>
+
+<span class="sd">        :param ids: The ids that have been assigned to every Agent object at creation.</span>
+<span class="sd">        :type ids: list[str]</span>
+<span class="sd">        :return: The Agent objects with the specified ids.</span>
+<span class="sd">        :rtype: list[Agent]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">agents_to_return</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+            <span class="n">agents_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_agent_by_id</span><span class="p">(</span><span class="nb">id</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">agents_to_return</span></div>
 
 
 <div class="viewcode-block" id="AgentSet.get_index">
@@ -1554,6 +1659,23 @@
         <span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="AgentSet.get_indices">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.get_indices.html#gatoh.agents.AgentSet.get_indices">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the indices within the AgentSet of the input Agent objects.</span>
+
+<span class="sd">        :param agents: The agents whose indices are being searched for.</span>
+<span class="sd">        :type agents: list[Agent]</span>
+<span class="sd">        :return: The indices of the agents within the AgentSet.</span>
+<span class="sd">        :rtype: list[int]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">agent_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">agents</span><span class="p">:</span>
+            <span class="n">agent_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="n">agent</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">agent_indices</span></div>
+
+
 <div class="viewcode-block" id="AgentSet.discard_index">
 <a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.discard_index.html#gatoh.agents.AgentSet.discard_index">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">discard_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -1566,8 +1688,8 @@
 <span class="sd">        :rtype: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">):</span>
-            <span class="n">left_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[:</span><span class="n">index</span><span class="p">])</span>
-            <span class="n">right_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:])</span>
+            <span class="n">left_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[:</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">right_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">agents</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">left_half</span><span class="p">)</span> <span class="o">+</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">right_half</span><span class="p">)</span>
             <span class="k">del</span> <span class="n">left_half</span><span class="p">,</span> <span class="n">right_half</span>
@@ -1591,8 +1713,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">agnt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">agent</span> <span class="o">==</span> <span class="n">agnt</span><span class="p">:</span>
-                <span class="n">left_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[:</span><span class="n">idx</span><span class="p">])</span>
-                <span class="n">right_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:])</span>
+                <span class="n">left_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[:</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">right_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">agents</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">left_half</span><span class="p">)</span> <span class="o">+</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">right_half</span><span class="p">)</span>
                 <span class="k">del</span> <span class="n">left_half</span><span class="p">,</span> <span class="n">right_half</span>
@@ -1617,8 +1739,8 @@
 <span class="sd">        :rtype: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">):</span>
-            <span class="n">left_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[:</span><span class="n">index</span><span class="p">])</span>
-            <span class="n">right_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:])</span>
+            <span class="n">left_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[:</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">right_half</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">agents</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">left_half</span><span class="p">)</span> <span class="o">+</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">right_half</span><span class="p">)</span>
             <span class="k">del</span> <span class="n">left_half</span><span class="p">,</span> <span class="n">right_half</span>
@@ -1645,6 +1767,8 @@
         <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">sampled_agents</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="AgentSet.get_agent_ids">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.get_agent_ids.html#gatoh.agents.AgentSet.get_agent_ids">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_agent_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A getter function that returns the IDs of all agents contained within the agent set.</span>
@@ -1655,7 +1779,8 @@
         <span class="n">agent_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
             <span class="n">agent_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">agent_ids</span>
+        <span class="k">return</span> <span class="n">agent_ids</span></div>
+
 
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">|</span> <span class="n">rd</span><span class="o">.</span><span class="n">Random</span><span class="p">]:</span>

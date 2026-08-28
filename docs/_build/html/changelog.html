@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="_static/thebelab.css" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.min.css?v=6e7d0de0" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-images/LightBox2/lightbox2-customize/pointer.css?v=c97663ff" />
-      <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=209a0a29" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
@@ -121,6 +121,11 @@
 <li><p>Finished the test cases for <a class="reference internal" href="apiref/gatoh.agents.Agent.html#gatoh.agents.Agent" title="gatoh.agents.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a> creation and attributes</p></li>
 <li><p>Added input parameter data type checks to various methods in <a class="reference internal" href="apiref/gatoh.agents.Agent.html#gatoh.agents.Agent" title="gatoh.agents.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a></p></li>
 <li><p>Finished the test cases for :class:’~gatoh.agents.Agent’ populated and empty objects</p></li>
+<li><p>Ability to have partial agent iterations in the <a class="reference internal" href="apiref/gatoh.model.ABModel.html#gatoh.model.ABModel" title="gatoh.model.ABModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABModel</span></code></a></p></li>
+<li><p>Additional getter methods defined for <a class="reference internal" href="apiref/gatoh.agents.AgentSet.html#gatoh.agents.AgentSet" title="gatoh.agents.AgentSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">AgentSet</span></code></a></p></li>
+<li><p>Additional getter methods defined for <a class="reference internal" href="apiref/gatoh.graphs.GraphSet.html#gatoh.graphs.GraphSet" title="gatoh.graphs.GraphSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphSet</span></code></a></p></li>
+<li><p>Ability to log and track specific attributes of individual agents throughout model runtimes</p></li>
+<li><p><strong>MAJOR</strong> New module <code class="xref py py-mod docutils literal notranslate"><span class="pre">groups</span></code> which adds the ability to further group agents within hierarchies, and pseudo-vectorise operations</p></li>
 </ul>
 </section>
 <section id="fixes">
@@ -129,6 +134,7 @@
 <li><p>Fixed the test cases in <code class="xref py py-mod docutils literal notranslate"><span class="pre">test_model_multiprocessed.py</span></code> and <code class="xref py py-mod docutils literal notranslate"><span class="pre">test_model_simulation.py</span></code> (All 151 existing test cases up to 01/08/2026 are working correctly)</p></li>
 <li><p>Fixed a specific <a class="reference internal" href="apiref/gatoh.graphs.Graph.add_edges.html#gatoh.graphs.Graph.add_edges" title="gatoh.graphs.Graph.add_edges"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_edges()</span></code></a> case in which edges were not being added to the graph</p></li>
 <li><p>Fixed the build parameters for the docs (will now always add new methods when building)</p></li>
+<li><p>Fixed the <a class="reference internal" href="apiref/gatoh.model.ABModel.calculate_density.html#gatoh.model.ABModel.calculate_density" title="gatoh.model.ABModel.calculate_density"><code class="xref py py-meth docutils literal notranslate"><span class="pre">calculate_density()</span></code></a> to account for the bidirectional nature of relationships</p></li>
 </ul>
 </section>
 </section>
