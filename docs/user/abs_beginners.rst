@@ -236,7 +236,7 @@ The model space can be an explicit "map" with coordinates that the agents inhabi
     \                       ║        ╞═════╬═════╬═════╬═════╡      ║
     \                       ║        │(...)║(...)║(...)║(...)│      ║
     \                       ║        ╞═════╬═════╬═════╬═════╡      ║
-    \                       ║        │(0,1)║(1,1)║(...)║(...)│      ║
+    \                       ║        │(0,1)║(1,1)║(...)║(x,1)│      ║
     \                       ║        ╞═════╬═════╬═════╬═════╡      ║
     \                       ║        │(0,0)║(1,0)║(...)║(x,0)│      ║
     \                       ║        └─────╨─────╨─────╨─────┘      ║
@@ -366,8 +366,40 @@ You may have noticed that throughout the previous sections, we have kept mention
 If we use the traditional terminology of the scientific method, you could then say that "emergent behaviours" in an :abbr:`ABM (Agent-Based Model)` are equivalent
 to the dependent variable (i.e. the results that are being analysed).
 
+In most cases of :abbr:`ABM (Agent-Based Modelling)`, you will be designing you model around an established problem, with a somewhat clear expectation of
+what behaviours are expected as an outcome, and an idea of what outcomes would be nonsensical and outright impossible following common sense.
+
+However, there may be some cases where the outcome is not clearly defined, because the process that is being modelled has too many variables to accurately
+predict. A good example of this in real life are opinion polls prior to federal elections. In many cases, the polls may indicate that it is a "certainty"
+for candidate A to win the election, but then for some reason or another, candidate B ends up winning.
+
+And this is due to multiple factors. It could be possible that by chance, the people polled were just not representative of all voters. Candidate A may
+have catastrophically blundered and lost voter support between the polls and the election. Or the elections may have been rigged.
+
+But, :abbr:`ABMs (Agent-Based Models)` have never been intended to be used to create deterministic predictions, rather they are used as tools to better
+simulate and understand the processes behind the behaviours, and how these can be affected by different factors.
+
+Approaching the problem from this perspective, the real utility of an :abbr:`ABM (Agent-Based Model)` comes from its ability to deeply explore and
+understand the process rather than the outcome itself.
+
+It is much more interesting to be able to simulate the weeks leading up to the election to see how political propaganda and the candidates' actions
+affected the opinions of the voters.
+
+Then assuming that the model is accurate, if the final results don't reflect what really happened in the election, we can start exploring possible
+explanations such as electoral fraud.
+
+Although, this doesn't mean that :abbr:`ABMs (Agent-Based Models)` couldn't be used as predictive tools to some extent. Simply knowing how certain
+conditions have historically impacted behaviours is enough information to be able to change those behaviours in the future.
+
+We can also use these models to simulate hypothetical conditions, and then see what types of behaviours emerge from those conditions; which then allows
+us to preemptively avoid conditions leading to "negative outcomes", or foster conditions leading to "positive outcomes".
+
 Beyond Traditional ABMs
 =======================
+
+---------------------
+Clustering Algorithms
+---------------------
 
 ---------------
 Social Networks

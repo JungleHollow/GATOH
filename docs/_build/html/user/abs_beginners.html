@@ -71,6 +71,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#beyond-traditional-abms">Beyond Traditional ABMs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#clustering-algorithms">Clustering Algorithms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#social-networks">Social Networks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#graphs">Graphs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#multilayer-graphs">Multilayer Graphs</a></li>
@@ -290,7 +291,7 @@ directly depend on the space itself.</p>
                       ║        ╞═════╬═════╬═════╬═════╡      ║
                       ║        │(...)║(...)║(...)║(...)│      ║
                       ║        ╞═════╬═════╬═════╬═════╡      ║
-                      ║        │(0,1)║(1,1)║(...)║(...)│      ║
+                      ║        │(0,1)║(1,1)║(...)║(x,1)│      ║
                       ║        ╞═════╬═════╬═════╬═════╡      ║
                       ║        │(0,0)║(1,0)║(...)║(x,0)│      ║
                       ║        └─────╨─────╨─────╨─────┘      ║
@@ -384,10 +385,32 @@ seen in reality.</p>
 <p><strong>Definition:</strong> Emergent behaviour is any behaviour of interest that is produced as a final outcome of the agent-based modelling process.</p>
 <p>If we use the traditional terminology of the scientific method, you could then say that “emergent behaviours” in an <abbr title="Agent-Based Model">ABM</abbr> are equivalent
 to the dependent variable (i.e. the results that are being analysed).</p>
+<p>In most cases of <abbr title="Agent-Based Modelling">ABM</abbr>, you will be designing you model around an established problem, with a somewhat clear expectation of
+what behaviours are expected as an outcome, and an idea of what outcomes would be nonsensical and outright impossible following common sense.</p>
+<p>However, there may be some cases where the outcome is not clearly defined, because the process that is being modelled has too many variables to accurately
+predict. A good example of this in real life are opinion polls prior to federal elections. In many cases, the polls may indicate that it is a “certainty”
+for candidate A to win the election, but then for some reason or another, candidate B ends up winning.</p>
+<p>And this is due to multiple factors. It could be possible that by chance, the people polled were just not representative of all voters. Candidate A may
+have catastrophically blundered and lost voter support between the polls and the election. Or the elections may have been rigged.</p>
+<p>But, <abbr title="Agent-Based Models">ABMs</abbr> have never been intended to be used to create deterministic predictions, rather they are used as tools to better
+simulate and understand the processes behind the behaviours, and how these can be affected by different factors.</p>
+<p>Approaching the problem from this perspective, the real utility of an <abbr title="Agent-Based Model">ABM</abbr> comes from its ability to deeply explore and
+understand the process rather than the outcome itself.</p>
+<p>It is much more interesting to be able to simulate the weeks leading up to the election to see how political propaganda and the candidates’ actions
+affected the opinions of the voters.</p>
+<p>Then assuming that the model is accurate, if the final results don’t reflect what really happened in the election, we can start exploring possible
+explanations such as electoral fraud.</p>
+<p>Although, this doesn’t mean that <abbr title="Agent-Based Models">ABMs</abbr> couldn’t be used as predictive tools to some extent. Simply knowing how certain
+conditions have historically impacted behaviours is enough information to be able to change those behaviours in the future.</p>
+<p>We can also use these models to simulate hypothetical conditions, and then see what types of behaviours emerge from those conditions; which then allows
+us to preemptively avoid conditions leading to “negative outcomes”, or foster conditions leading to “positive outcomes”.</p>
 </section>
 </section>
 <section id="beyond-traditional-abms">
 <h2>Beyond Traditional ABMs<a class="headerlink" href="#beyond-traditional-abms" title="Link to this heading"></a></h2>
+<section id="clustering-algorithms">
+<h3>Clustering Algorithms<a class="headerlink" href="#clustering-algorithms" title="Link to this heading"></a></h3>
+</section>
 <section id="social-networks">
 <h3>Social Networks<a class="headerlink" href="#social-networks" title="Link to this heading"></a></h3>
 <div class="admonition note">
