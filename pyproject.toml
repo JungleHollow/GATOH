@@ -20,6 +20,8 @@ dependencies = [
     "pyyaml",
     "multimethod",
     "seaborn",
+    "scipy-stubs",
+    "typing-extensions",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -36,8 +38,6 @@ Issues = "https://github.com/JungleHollow/GATOH/issues"
 dev = [
     "bumpver",
     "sphinx",
-    "scipy-stubs",
-    "typing-extensions",
     "coverage",
     "sphinx-autobuild",
     "jupyter-sphinx",
