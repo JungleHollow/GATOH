@@ -401,16 +401,7 @@ class ResponseParser:
                     else:
                         # Somewhat restrict the relationship density to maintain reasonable model runtimes
                         inclusion_threshold: float = rd.random()
-                        if community == "NONMN" and inclusion_threshold <= 0.1:
-                            new_value = rd.uniform(matrix_value[0], matrix_value[1])
-                            new_adj_matrix[i, j] = new_value
-                        elif community == "MINNG" and inclusion_threshold <= 0.01:
-                            new_value = rd.uniform(matrix_value[0], matrix_value[1])
-                            new_adj_matrix[i, j] = new_value
-                        elif (
-                            community not in ["NONMN", "MINNG"]
-                            and inclusion_threshold <= 0.2
-                        ):
+                        if (community == "NONMN" and inclusion_threshold <= 0.1) or (community == "MINNG" and inclusion_threshold <= 0.01) or (community not in ["NONMN", "MINNG"] and inclusion_threshold <= 0.2):
                             new_value = rd.uniform(matrix_value[0], matrix_value[1])
                             new_adj_matrix[i, j] = new_value
                         else:
