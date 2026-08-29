@@ -7,9 +7,7 @@ from collections.abc import Callable
 from datetime import datetime
 from multiprocessing.pool import Pool
 from random import choices, randint
-from re import L
 from shutil import rmtree
-from this import s
 from typing import Any, TypedDict
 
 import numpy as np
@@ -53,7 +51,7 @@ DEFAULT_SUBSETTING_DIV: int = 4
 # The absolute threshold value to use when determining 'like-minded' collective opinion changes
 LIKE_MINDED_THRESH: float = 0.05
 # A mapping of strings to link functions used for model parameter scaling
-LINK_FUNCTIONS: dict[str, Callable] = {
+LINK_FUNCTIONS: dict[str, Callable[[float, float], float]] = {
     "linear": linear_link,
     "multiplicative": multiplicative_link,
 }
@@ -722,7 +720,7 @@ class ABModel:
     def generate_graphs(
         self,
         hierarchies: list[str],
-        agents: list[Agent] | AgentSet,
+        agents: list[Agent],
         method: str = "small-world",
         agent_subsetting: bool = False,
         rw_params: list[tuple[float, float]] | None = None,
@@ -736,7 +734,7 @@ class ABModel:
         :param hierarchies: The names of the social hierarchy graphs to be created.
         :type hierarchies: list[str]
         :param agents: The agents to be included in the hierarchies.
-        :type agents: list[Agent] | AgentSet
+        :type agents: list[Agent]
         :param method: The social network graph generation method to use. Options include: 'small-world', 'scale-free', 'random', 'blockmodel'. Defaults to 'small-world'.
         :type method: str, optional
         :param agent_subsetting: A flag indicating if the agents should be sampled into random subsets when generating each graph.
@@ -758,12 +756,9 @@ class ABModel:
         for idx, hierarchy in enumerate(hierarchies):
             if agent_subsetting:
                 random_k: int = randint(len(agents) // DEFAULT_SUBSETTING_DIV, len(agents))
-                if isinstance(agents, list):
-                    agent_sample = list(
-                        np.random.choice(agent_array, size=random_k, replace=False)
-                    )
-                else:
-                    agent_sample = agents.sample(random_k)
+                agent_sample = list(
+                    np.random.choice(agent_array, size=random_k, replace=False)
+                )
             else:
                 agent_sample = agents
 
@@ -776,7 +771,9 @@ class ABModel:
             )
 
             # Use the flag if it exists, or assume True in all other cases (not ensuring graph completeness should only be valid in niche, explicit usecases)
-            ensure_complete: bool = ensure_connected.get(hierarchy) if ensure_connected.get(hierarchy) is not None else True
+            ensure_complete: bool | None = ensure_connected.get(hierarchy)
+            if ensure_complete is None:
+                ensure_complete = True
             if individual_methods is not None:
                 hierarchy_graph = hierarchy_graph.generate_graph(
                     agent_sample, method=individual_methods[hierarchy], ensure_complete=ensure_complete
@@ -1066,7 +1063,7 @@ class ABModel:
 
         # Type declaration
         partial_indices: list[int] | None = None
-        partial_agents: list[Agent]
+        partial_agents: list[Agent] | None = None
 
         if partial:
             # Draw the partial indices
@@ -1077,7 +1074,7 @@ class ABModel:
 
         # First each agent looks at its neighbours to see how their opinion will evolve this iteration
         if worker_pool is not None:
-            if partial:
+            if partial and partial_indices is not None:
                 opinion_results = worker_pool.imap(
                     self.iteration_opinion_calculation,
                     self.agents.agents_at_indices(partial_indices),
@@ -1099,7 +1096,7 @@ class ABModel:
             del opinion_results
             _ = gc.collect()
         else:
-            if partial:
+            if partial and partial_agents is not None:
                 for agent in partial_agents:
                     opinion_result = self.iteration_opinion_calculation(agent)
                     new_agent_opinions[opinion_result[0]] = opinion_result[1]
@@ -1201,7 +1198,7 @@ class ABModel:
 
         # Type declarations
         partial_indices: list[int] | None = None
-        partial_groups: list[Group]
+        partial_groups: list[Group] | None = None
 
         if partial:
             # Draw the partial indices
@@ -1212,7 +1209,7 @@ class ABModel:
 
         # First each groups looks at its neighbours to see how their opinion will evolve this iteration
         if worker_pool is not None:
-            if partial:
+            if partial and partial_indices is not None:
                 opinion_results = worker_pool.imap(
                     self.group_iteration_opinion_calculation,
                     self.groups.groups_at_indices(partial_indices),
@@ -1234,7 +1231,7 @@ class ABModel:
             del opinion_results
             _ = gc.collect()
         else:
-            if partial:
+            if partial and partial_groups is not None:
                 for group in partial_groups:
                     opinion_result = self.group_iteration_opinion_calculation(group)
                     new_group_opinions[opinion_result[0]] = opinion_result[1]

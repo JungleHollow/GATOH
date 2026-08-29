@@ -496,7 +496,7 @@ class Agent:
 
         # Hierarchy existence checking
         for hierarchy in opinion_silenced:
-            if hierarchy not in self.rw_distributions:
+            if self.rw_distributions is not None and hierarchy not in self.rw_distributions:
                 raise KeyError(f"Hierarchy '{hierarchy}' has been passed in opinion_silenced, but does not exist in the agent's rw_distributions")
 
         self.is_silenced = opinion_silenced  # Update is_silenced
