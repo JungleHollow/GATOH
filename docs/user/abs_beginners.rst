@@ -446,6 +446,102 @@ Analysing Your Final Results
 
 When it comes to analysing your final results, there are a number of ways that this can be done, and it depends on what your particular needs are.
 
+In broad terms, there are two main ways that you would be analysing the results of your :abbr:`ABM (Agent-Based Model)`: statistical methods, and
+visualisations.
+
+Although, you will likely be using both of these methods together, and there will always be a similar basic order of analysis that you will be
+following:
+
+1. Define all relevant data that you need or want from your results
+2. Collect this data during and after the model's runtime
+3. Perform an initial, basic exploratory analysis
+4. Look for any obvious initial patterns or trends to inform further analysis
+5. Carry out more complicated statistical and visual analyses
+
+  5.1. Possibly include specific analytical tests that have been established in literature
+  5.2. Include any other tests or explorations that are specific to your problem
+
+6. Finally, gather all your observations and start to describe your findings
+
+This isn't set in stone, and you can approach the analysis of your results however works best for you, but this is a good starting point for the
+majority of cases.
+
+Now let's look into the statistical methods and visualisations that you might be using for your analysis in a bit more detail.
+
+~~~~~~~~~~~~~~~~~~~
+Statistical Methods
+~~~~~~~~~~~~~~~~~~~
+
+Statistical methods will probably be the foundation of your analysis in most cases, as these use concrete mathematical equations and the quantitative data
+produced by your model to produce definitive metrics and significant conclusions.
+
+The most basic of the statistical tests, which can be used for your initial exploratory analysis, are the descriptive statistics:
+
+  - **Mean** (:math:`\mu`) = :math:`\frac{1}{n}(\sum\limits^{n}_{i=1}x_{i})` = sum of all values / number of values
+  - **Median** = The value that appears at the exact middle of a set of values
+  - **Mode** = The value that appears the most frequently in a set of values
+  - **Standard Deviation** (:math:`\sigma`) = :math:`\sqrt{\frac{1}{n}\sum\limits^{n}_{i=1} (x_{i} - \mu)^{2}}`
+  - **Quartiles** = Splitting the data into evenly sized subsets
+
+These initial statistics provide you with enough information to be able to see any obvious patterns in the data, or areas which are in need of more detailed
+analysis to provide useful results.
+
+From these basic statistics, we can then go into more detailed metrics or tests which are chosen depending on the information you got from this first step.
+
+Below we'll briefly go over some of the more commonly encountered complex statistical methods:
+
+**KMeans Clustering:**
+
+KMeans clustering is a method which is defined through the mathematical equation:
+
+.. math::
+
+    \underset{S}{\arg\min}\sum\limits^{k}_{i=1}\sum\limits_{x\in S_{i}}||x - \mu_{i}||^{2}
+
+where :math:`\mu_{i}` is the mean of the points in cluster :math:`S_{i}`, defined by:
+
+.. math::
+
+    \mu_{i} = \frac{1}{|S_{i}|}\sum\limits_{x\in S_{i}}x
+
+In simple terms, the KMeans equation is looking for the values of clusters S which minimise the variance (:math:`\sigma^{2}`) present
+across all clusters.
+
+The main use of clustering in your analysis will be to determine if there are any major "groups" formed within the output data, and how well the
+output data actually separates itself into those groups.
+
+If after performing clustering on the data, there is very little variance across the determined clusters, then you can be more confident that there
+are clear differences between the groups in the data.
+
+On the other hand, if the algorithm has trouble converging on a solution, or whatever solutions it proposes have a very high variance, it cannot be
+said that the output data is significantly heterogeneous.
+
+It is also worth noting that clustering can be used when constructing the initial model in some cases; allowing for the initial population of agents
+to be simplified into aggregate groups for simulation.
+
+**Chi-Squared** (:math:`\chi^{2}`) **Tests:**
+
+:math:`\chi^{2}` tests are primarily used for null-hypothesis testing, in which one looks at how likely it is for an observed result to have been produced
+assuming that some initial hypothesis were true.
+
+The most widely used of the :math:`\chi^{2}` tests is Pearson's :math:`\chi^{2}` test, whose test statistic is calculated through the following equation:
+
+.. math::
+
+    \chi^{2} = N \sum\limits^{n}_{i=1}\frac{(O_{i}/N - p_{i})^{2}}{p_{i}}
+
+where
+
+  * :math:`\chi^{2}` = Pearson's cumulative test statistic
+  * :math:`O_{i}` = the number of observations of type :math:`i`
+  * :math:`N` = the total number of observations
+  * :math:`p_{i}` = the theoretical probability of type :math:`i` appearing under the null hypothesis
+  * :math:`n` = the total number of types
+
+~~~~~~~~~~~~~~
+Visualisations
+~~~~~~~~~~~~~~
+
 Beyond Traditional ABMs
 =======================
 
