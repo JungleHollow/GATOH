@@ -24,6 +24,8 @@ New Features
 - Additional getter methods defined for :class:`~gatoh.graphs.GraphSet`
 - Ability to log and track specific attributes of individual agents throughout model runtimes
 - **MAJOR** New module :mod:`~gatoh.groups` which adds the ability to further group agents within hierarchies, and pseudo-vectorise operations
+- Addition of KMeans clustering algorithm to graphs
+
 
 Fixes
 -----
@@ -32,6 +34,7 @@ Fixes
 - Fixed a specific :meth:`~gatoh.graphs.Graph.add_edges` case in which edges were not being added to the graph
 - Fixed the build parameters for the docs (will now always add new methods when building)
 - Fixed the :meth:`~gatoh.model.ABModel.calculate_density` to account for the bidirectional nature of relationships
+- Tidying up of multiple typechecks
 
 2026.07.0
 ==============

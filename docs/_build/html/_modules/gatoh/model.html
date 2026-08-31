@@ -92,9 +92,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing.pool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="kn">import</span> <span class="n">choices</span><span class="p">,</span> <span class="n">randint</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">re</span><span class="w"> </span><span class="kn">import</span> <span class="n">L</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shutil</span><span class="w"> </span><span class="kn">import</span> <span class="n">rmtree</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">this</span><span class="w"> </span><span class="kn">import</span> <span class="n">s</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">TypedDict</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -138,7 +136,7 @@
 <span class="c1"># The absolute threshold value to use when determining &#39;like-minded&#39; collective opinion changes</span>
 <span class="n">LIKE_MINDED_THRESH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
 <span class="c1"># A mapping of strings to link functions used for model parameter scaling</span>
-<span class="n">LINK_FUNCTIONS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<span class="n">LINK_FUNCTIONS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="n">linear_link</span><span class="p">,</span>
     <span class="s2">&quot;multiplicative&quot;</span><span class="p">:</span> <span class="n">multiplicative_link</span><span class="p">,</span>
 <span class="p">}</span>
@@ -874,7 +872,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_graphs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">hierarchies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="n">agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">|</span> <span class="n">AgentSet</span><span class="p">,</span>
+        <span class="n">agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">],</span>
         <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;small-world&quot;</span><span class="p">,</span>
         <span class="n">agent_subsetting</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">rw_params</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -888,7 +886,7 @@
 <span class="sd">        :param hierarchies: The names of the social hierarchy graphs to be created.</span>
 <span class="sd">        :type hierarchies: list[str]</span>
 <span class="sd">        :param agents: The agents to be included in the hierarchies.</span>
-<span class="sd">        :type agents: list[Agent] | AgentSet</span>
+<span class="sd">        :type agents: list[Agent]</span>
 <span class="sd">        :param method: The social network graph generation method to use. Options include: &#39;small-world&#39;, &#39;scale-free&#39;, &#39;random&#39;, &#39;blockmodel&#39;. Defaults to &#39;small-world&#39;.</span>
 <span class="sd">        :type method: str, optional</span>
 <span class="sd">        :param agent_subsetting: A flag indicating if the agents should be sampled into random subsets when generating each graph.</span>
@@ -910,12 +908,9 @@
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">hierarchies</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">agent_subsetting</span><span class="p">:</span>
                 <span class="n">random_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">agents</span><span class="p">)</span> <span class="o">//</span> <span class="n">DEFAULT_SUBSETTING_DIV</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">agents</span><span class="p">))</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">agents</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                    <span class="n">agent_sample</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-                        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">agent_array</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">random_k</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">agent_sample</span> <span class="o">=</span> <span class="n">agents</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">random_k</span><span class="p">)</span>
+                <span class="n">agent_sample</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">agent_array</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">random_k</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">agent_sample</span> <span class="o">=</span> <span class="n">agents</span>
 
@@ -928,7 +923,9 @@
             <span class="p">)</span>
 
             <span class="c1"># Use the flag if it exists, or assume True in all other cases (not ensuring graph completeness should only be valid in niche, explicit usecases)</span>
-            <span class="n">ensure_complete</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">ensure_connected</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span> <span class="k">if</span> <span class="n">ensure_connected</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">True</span>
+            <span class="n">ensure_complete</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">ensure_connected</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">hierarchy</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ensure_complete</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ensure_complete</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="n">individual_methods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">hierarchy_graph</span> <span class="o">=</span> <span class="n">hierarchy_graph</span><span class="o">.</span><span class="n">generate_graph</span><span class="p">(</span>
                     <span class="n">agent_sample</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">individual_methods</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">],</span> <span class="n">ensure_complete</span><span class="o">=</span><span class="n">ensure_complete</span>
@@ -1249,7 +1246,7 @@
 
         <span class="c1"># Type declaration</span>
         <span class="n">partial_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">partial_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span>
+        <span class="n">partial_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">partial</span><span class="p">:</span>
             <span class="c1"># Draw the partial indices</span>
@@ -1260,7 +1257,7 @@
 
         <span class="c1"># First each agent looks at its neighbours to see how their opinion will evolve this iteration</span>
         <span class="k">if</span> <span class="n">worker_pool</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">partial</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">partial</span> <span class="ow">and</span> <span class="n">partial_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">opinion_results</span> <span class="o">=</span> <span class="n">worker_pool</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">iteration_opinion_calculation</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">agents_at_indices</span><span class="p">(</span><span class="n">partial_indices</span><span class="p">),</span>
@@ -1282,7 +1279,7 @@
             <span class="k">del</span> <span class="n">opinion_results</span>
             <span class="n">_</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">partial</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">partial</span> <span class="ow">and</span> <span class="n">partial_agents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">partial_agents</span><span class="p">:</span>
                     <span class="n">opinion_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration_opinion_calculation</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
                     <span class="n">new_agent_opinions</span><span class="p">[</span><span class="n">opinion_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">opinion_result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -1384,7 +1381,7 @@
 
         <span class="c1"># Type declarations</span>
         <span class="n">partial_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">partial_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span>
+        <span class="n">partial_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Group</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">partial</span><span class="p">:</span>
             <span class="c1"># Draw the partial indices</span>
@@ -1395,7 +1392,7 @@
 
         <span class="c1"># First each groups looks at its neighbours to see how their opinion will evolve this iteration</span>
         <span class="k">if</span> <span class="n">worker_pool</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">partial</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">partial</span> <span class="ow">and</span> <span class="n">partial_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">opinion_results</span> <span class="o">=</span> <span class="n">worker_pool</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">group_iteration_opinion_calculation</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">groups_at_indices</span><span class="p">(</span><span class="n">partial_indices</span><span class="p">),</span>
@@ -1417,7 +1414,7 @@
             <span class="k">del</span> <span class="n">opinion_results</span>
             <span class="n">_</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">partial</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">partial</span> <span class="ow">and</span> <span class="n">partial_groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">partial_groups</span><span class="p">:</span>
                     <span class="n">opinion_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_iteration_opinion_calculation</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
                     <span class="n">new_group_opinions</span><span class="p">[</span><span class="n">opinion_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">opinion_result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>

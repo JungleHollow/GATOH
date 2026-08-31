@@ -618,7 +618,7 @@
 
         <span class="c1"># Hierarchy existence checking</span>
         <span class="k">for</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="n">opinion_silenced</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">hierarchy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rw_distributions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rw_distributions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">hierarchy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rw_distributions</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hierarchy &#39;</span><span class="si">{</span><span class="n">hierarchy</span><span class="si">}</span><span class="s2">&#39; has been passed in opinion_silenced, but does not exist in the agent&#39;s rw_distributions&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">is_silenced</span> <span class="o">=</span> <span class="n">opinion_silenced</span>  <span class="c1"># Update is_silenced</span>

@@ -570,6 +570,21 @@ where the traditional odds may take extreme values (very small or very large).
 Visualisations
 ~~~~~~~~~~~~~~
 
+Visualisations can play a complementary role in the initial exploratory analysis, but they are most useful for contextualising and clarifying the
+exploratory statistics.
+
+While you can realistically visualise pretty much any result, in the case of :abbr:`ABMs (Agent-Based Models)` you will likely be creating visualisations
+which can be categorised into one of two broad groups.
+
+**Model Visualisations:**
+
+Model visualisations are the more unique type of visualisations that can be generated from an :abbr:`ABM (Agent-Based Model)`, and are probably what you
+are thinking of when you hear about visualisations in this context.
+
+**Statistic Visualisations:**
+
+Statistic visualisations, on the other hand, don't necessarily provide any new information, but they extend on what you can see in the generated statistics.
+
 Beyond Traditional ABMs
 =======================
 
