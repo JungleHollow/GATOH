@@ -268,7 +268,7 @@ class Group:
         attribute: T | None = self.__dict__.get(name)
         if attribute is None:
             warnings.warn(
-                f"WARNING: Attempting to get an agent attribute ({name}) which doesn't exist.",
+                f"WARNING: Attempting to get a group attribute ({name}) which doesn't exist.",
                 category=UserWarning,
             )
         return attribute
@@ -385,15 +385,29 @@ class Group:
         :param opinion_delta: The delta value by which to shift the Group's aggregate opinion.
         :type opinion_delta: float
         :raises TypeError: If opinion_delta is not a float.
+        :raises AttributeError: If the aggregate_opinion has not been initialised yet.
         :return: The per-agent opinion_delta value that must be applied to each member.
         :rtype: float
         """
         if not isinstance(opinion_delta, float):
             raise TypeError("opinion_delta must be a float")
+        if not hasattr(self, "aggregate_opinion"):
+            raise AttributeError("aggregate_opinion has not been initialised for this group")
 
         num_agents: int = self.get_num_members()
 
-        per_agent_delta: float = opinion_delta / num_agents
+        per_agent_delta: float
+
+        if self.aggregate_opinion + opinion_delta > OPINION_MAX:
+            # Set the delta value to the difference between the maximum and the current aggregate opinion (which will be lower than opinion_delta)
+            per_agent_delta = OPINION_MAX - self.aggregate_opinion
+        elif self.aggregate_opinion + opinion_delta < -OPINION_MAX:
+            # Same as above, but using -OPINION_MAX
+            per_agent_delta = -OPINION_MAX - self.aggregate_opinion
+        else:
+            # Simply use the raw opinion_delta (each individual opinion shifted by the delta will cause the aggregate opinion
+            # to shift by the same delta on average)
+            per_agent_delta = opinion_delta
 
         # Change the group's aggregate opinion in the meantime
         self.aggregate_opinion += opinion_delta
