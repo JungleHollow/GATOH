@@ -677,3 +677,76 @@ class TestGroupAttributes(ut.TestCase):
             "close",
             "Group -- a valid call to set_cohesion is not setting the cohesion type to the correct value",
         )
+
+    def test_group_at_capacity(self) -> None:
+        """
+        Test that group_at_capacity() is working as intended.
+        """
+        group: grp.Group = grp.Group(2)
+        at_capacity: bool = group.group_at_capacity()
+        self.assertIsInstance(
+            at_capacity,
+            bool,
+            "Group -- group_at_capacity is not returning a boolean value (with limit)",
+        )
+        self.assertFalse(
+            at_capacity,
+            "Group -- group_at_capacity is not reporting that the group is not at capacity (with limit)"
+        )
+        group.members = ["foo", "bar"]
+        at_capacity = group.group_at_capacity()
+        self.assertTrue(
+            at_capacity,
+            "Group -- group_at_capacity is not reporting that the group is at capacity (with limit)",
+        )
+
+    def test_group_at_capacity_nolimit(self) -> None:
+        """
+        Test that group_at_capacity() is working as intended when the group has no max size.
+        """
+        group: grp.Group = grp.Group()
+        at_capacity: bool = group.group_at_capacity()
+        self.assertIsInstance(
+            at_capacity,
+            bool,
+            "Group -- group_at_capacity is not returning a boolean value (no limit)",
+        )
+        self.assertFalse(
+            at_capacity,
+            "Group -- group_at_capacity is not returning False when there is no limit",
+        )
+        group.members = ["foo", "bar"]
+        at_capacity = group.group_at_capacity()
+        self.assertFalse(
+            at_capacity,
+            "Group -- group_at_capacity is not returning False when there is no limit",
+        )
+
+    def test_is_radicalised_empty(self) -> None:
+        """
+        Test that is_radicalised() when the radicalisation_rate has not been initialised will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(AttributeError, msg="radicalisation_rate has not been initialised yet for this group") as cm:
+            is_radicalised: bool = group.is_radicalised()
+
+    def test_is_radicalised(self) -> None:
+        """
+        Test that is_radicalised() is working as intended.
+        """
+        group: grp.Group = grp.Group(radicalisation_rate=0.75)
+        is_radicalised: bool = group.is_radicalised()
+        self.assertIsInstance(
+            is_radicalised,
+            bool,
+            "Group -- a valid call to is_radicalised() is not returning a boolean value",
+        )
+        self.assertTrue(
+            is_radicalised,
+            "Group -- a valid call to is_radicalised() is not reporting that the group is radicalised at the specified threshold",
+        )
+        high_threshold: bool = group.is_radicalised(threshold=0.95)
+        self.assertFalse(
+            high_threshold,
+            "Group -- a valid call to is_radicalised() is not reporting that the group is not radicalised at the specified threshold",
+        )

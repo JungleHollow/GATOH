@@ -505,9 +505,12 @@ class Group:
 
         :param threshold: The threshold that the radicalisation rate must surpass for the group to be considered radicalised.
         :type threshold: float, optional
+        :raises AttributeError: If the radicalisation_rate has not been initialised.
         :return: A flag indicating if the group can be collectively considered to be radicalised.
         :rtype: bool
         """
+        if not hasattr(self, "radicalisation_rate"):
+            raise AttributeError("radicalisation_rate has not been initialised yet for this group")
         if self.radicalisation_rate >= threshold:
             return True
         return False
