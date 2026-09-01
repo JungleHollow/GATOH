@@ -10,7 +10,7 @@ from collections.abc import Iterable, Iterator
 import concurrent.futures
 from copy import deepcopy
 from shutil import rmtree
-from typing import NotRequired, TypeVar, TypedDict, override
+from typing import Any, NotRequired, TypeVar, TypedDict, override
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -27,6 +27,10 @@ COHESIONS: list[str] = ["intimate", "close", "neutral", "distant", "passing"]
 OPINION_MAX: float = 1.0
 # The compression level to use across relevant methods
 COMPRESS_LEVEL: int = 4
+# The modifier value for groups with predominant personality type ["neutral", "rational", "erratic"] for opinion silencing
+OPINION_SILENCING_MODIFIER: float = 0.4
+# The absolute maximum value that hierarchy weightings can take
+SOCIAL_WEIGHTINGS_MAX: float = 1.0
 
 # Used for type-checking valid group cohesion types wherever relevant
 class CohesionProbs(TypedDict):
@@ -398,8 +402,6 @@ class Group:
         if not hasattr(self, "aggregate_opinion"):
             raise AttributeError("aggregate_opinion has not been initialised for this group")
 
-        num_agents: int = self.get_num_members()
-
         per_agent_delta: float
 
         if self.aggregate_opinion + opinion_delta > OPINION_MAX:
@@ -421,6 +423,50 @@ class Group:
             self.aggregate_opinion = -OPINION_MAX
         elif self.aggregate_opinion > OPINION_MAX:
             self.aggregate_opinion = OPINION_MAX
+
+        return per_agent_delta
+
+    def change_aggregate_hierarchy_weighting(self, weighting_delta: float) -> float:
+        """
+        A setter method that changes the Group's aggregate hierarchy weighting by a given delta value.
+
+        This will not cause changes to the weightings of member agents to create the desired aggregate
+        hierarchy weighting -- This should be handled from within the parent model by using the returned
+        per-agent weighting delta.
+
+        :param weighting_delta: The value by which to shift the aggregate hierarchy weighting.
+        :type weighting_delta: float
+        :raises TypeError: If the weighting delta is not a float.
+        :raises AttributeError: If the aggregate_hierarchy_weighting has not yet been initialised.
+        :return: The per-agent weighting delta that must be applied to each member.
+        :rtype: float
+        """
+        if not isinstance(weighting_delta, float):
+            raise TypeError("weighting_delta must be a float")
+        if not hasattr(self, "aggregate_hierarchy_weighting"):
+            raise AttributeError("aggregate_hierarchy_weighting has not been initialised for this group")
+
+        per_agent_delta: float
+
+        if self.aggregate_hierarchy_weighting + weighting_delta > SOCIAL_WEIGHTINGS_MAX:
+            # Set the delta value to the difference between the maximum and the current aggregate opinion (which will be lower than opinion_delta)
+            per_agent_delta = SOCIAL_WEIGHTINGS_MAX - self.aggregate_hierarchy_weighting
+        elif self.aggregate_hierarchy_weighting + weighting_delta < -SOCIAL_WEIGHTINGS_MAX:
+            # Same as above, but using -SOCIAL_WEIGHTINGS_MAX
+            per_agent_delta = -SOCIAL_WEIGHTINGS_MAX - self.aggregate_hierarchy_weighting
+        else:
+            # Simply use the raw opinion_delta (each individual opinion shifted by the delta will cause the aggregate opinion
+            # to shift by the same delta on average)
+            per_agent_delta = weighting_delta
+
+        # Change the group's aggregate opinion in the meantime
+        self.aggregate_hierarchy_weighting += weighting_delta
+
+        # Constrain the value back to the valid range
+        if self.aggregate_hierarchy_weighting < -SOCIAL_WEIGHTINGS_MAX:
+            self.aggregate_hierarchy_weighting = -SOCIAL_WEIGHTINGS_MAX
+        elif self.aggregate_hierarchy_weighting > SOCIAL_WEIGHTINGS_MAX:
+            self.aggregate_hierarchy_weighting = SOCIAL_WEIGHTINGS_MAX
 
         return per_agent_delta
 
@@ -566,6 +612,142 @@ class Group:
             else:
                 self.members.append(member)
         return None
+
+    def step(self, weighting_rw: tuple[float, float], opinion_rw: tuple[float, float]) -> dict[str, Any]:
+        """
+        Step the individual group object:
+            1. Handle dynamic hierarchy weightings
+            2. Handle the stochastic opinion changes
+
+        :param weighting_rw: The (mean, variance) defining the random walk distribution of the aggregate hierarchy weighting.
+        :type weighting_rw: tuple[float, float]
+        :param opinion_rw: The (mean, variance) defining the random walk distribution of the aggregate opinion.
+        :type opinion_rw: tuple[float, float]
+        :return: A <label : information> mapping that provides all relevant information from the group's step to the parent model.
+        :rtype: dict[str, Any]
+        """
+        output_dict: dict[str, Any] = {}
+
+        hierarchy_rw_info: tuple[str, float] = self.evolve_hierarchy(weighting_rw)
+        output_dict["hierarchy_rw_info"] = hierarchy_rw_info
+
+        self.stochastic_opinion(opinion_rw)
+
+        return output_dict
+
+    def opinion_silencing(self, estimated_opinion_climate: float, silencing_threshold: float | None = None) -> tuple[bool, float]:
+        """
+        Determines if members in the group will become silenced in their hierarchy based on their collective attributes.
+
+        If no silencing threshold has been passed, the group's aggregate susceptibility is used as the threshold instead.
+
+        :param estimated_opinion_climate: The opinion climate perceived by the Group in its hierarchy.
+        :type estimated_opinion_climate: float
+        :param silencing_threshold: The silencing threshold that must be surpassed for silencing to occur.
+        :type silencing_threshold: float, optional
+        :raises RuntimeError: If opinion silencing is called before the group has been initialised appropriately.
+        :raises TypeError: If the input parameters contain any invalid data types.
+        :return: A pair of values indicating if silencing occurs, and the absolute difference between the perceived opinion climate and the group's aggregate opinion.
+        :rtype: tuple[bool, float]
+        """
+        # Check that the group has been initialised
+        if not hasattr(self, "aggregate_opinion"):
+            raise RuntimeError("The group for which opinion silencing is being determined has not yet been initialised")
+
+        # Type checking
+        if not isinstance(estimated_opinion_climate, float):
+            raise TypeError("estimated_opinion_climate must be a float")
+        if silencing_threshold is not None and not isinstance(silencing_threshold, float):
+            raise TypeError("silencing_threshold must either be a float or None")
+
+        # It is assumed that a radicalised group will never silence itself regardless of the perceived opinion climate
+        if self.is_radicalised():
+            return False, 0.0
+
+        threshold: float
+        if silencing_threshold is not None:
+            threshold = silencing_threshold
+        else:
+            threshold = self.aggregate_susceptibility
+
+        absolute_difference: float = 0.0
+
+        if self.predominant_personality in ["neutral", "rational", "erratic"]:
+            # Cases where opinion silencing will be less influenced by the surrounding opinion climate
+            absolute_difference = abs(estimated_opinion_climate - self.aggregate_opinion) * OPINION_SILENCING_MODIFIER
+        elif self.predominant_personality in ["impulsive", "social"]:
+            # Cases where opinion silencing will be much more influenced by the surrounding opinion climate
+            absolute_difference = abs(estimated_opinion_climate - self.aggregate_opinion)
+
+        return absolute_difference > threshold, absolute_difference
+
+    def opinion_negation(self, absolute_difference: float, threshold: float) -> bool:
+        """
+        Checks if a group has experienced sufficiently 'overwhelming' social pressure in its hierarchy leading to a complete
+        reversal of its members' opinions.
+
+        :param absolute_difference: The absolute difference between the perceived opinion climate and the group's aggregate opinion.
+        :type absolute_difference: float
+        :param threshold: A global model threshold that has been specified for this effect to occur.
+        :type threshold: float
+        :raises RuntimeError: If the group has not yet been initialised appropriately.
+        :raises TypeError: If the input parameters contain any invalid data types.
+        :return: A flag indicating if the group's opinion experienced a total negation.
+        :rtype: bool
+        """
+        # Check that the group is initialised
+        if not hasattr(self, "aggregate_susceptibility"):
+            raise RuntimeError("The group for which opinion negation is being determined has not yet been initialised")
+
+        # Type checking
+        if not isinstance(absolute_difference, float):
+            raise TypeError("absolute_difference must be a float")
+        if not isinstance(threshold, float):
+            raise TypeError("threshold must be a float")
+
+        # It is assumed that a radicalised Group will never experience a total opinion reversal regardless of the perceived opinion climate
+        if self.is_radicalised():
+            return False
+
+        negation_strength: float = absolute_difference
+
+        # Multiplication by (susceptibility * hierarchy weighting) will always decrease negation strength, whilst division will always increase it
+        if self.predominant_personality in ["neutral", "rational"]:
+            # Cases where opinion negation is less likely to occur
+            if self.aggregate_susceptibility * self.aggregate_hierarchy_weighting != 0:
+                negation_strength *= self.aggregate_susceptibility * self.aggregate_hierarchy_weighting
+        elif self.predominant_personality in ["erratic", "impulsive", "social"]:
+            # Cases where opinion negation is more likely to occur
+            if self.aggregate_susceptibility * self.aggregate_hierarchy_weighting != 0:
+                negation_strength /= self.aggregate_susceptibility * self.aggregate_hierarchy_weighting
+
+        return negation_strength > threshold
+
+    def evolve_hierarchy(self, weighting_rw: tuple[float, float]) -> tuple[str, float]:
+        """
+        Experimental function that aims to model the constantly evolving 'intrinsic value' that people palce on
+        the social hierarchies that the y belong in over time.
+
+        :param weighting_rw: The (mean, variance) for a normal distribution that will be used to draw random walk values.
+        :type weighting_rw: tuple[float, float]
+        :raises TypeError: If the input parameter is of an incorrect type.
+        :return: The group's hierarchy and the per-agent delta value that must be applied to each agent's hierarchy weighting.
+        :rtype: tuple[str, float]
+        """
+        # Initial type check
+        if not isinstance(weighting_rw, tuple):
+            raise TypeError("weighting_rw must be a tuple")
+
+        # Inner type check
+        if not isinstance(weighting_rw[0], float) or not isinstance(weighting_rw[1], float):
+            raise TypeError("One or more of the values in weighting_rw are not a float")
+
+        rw_result: float = value_rw_delta(self.aggregate_hierarchy_weighting, weighting_rw[0], weighting_rw[1])
+
+        # Change the value (all appropriate checks are handled here)
+        per_agent_delta: float = self.change_aggregate_hierarchy_weighting(rw_result)
+
+        return self.hierarchy, per_agent_delta
 
     def __in__(self, iterable: Iterable[Group]) -> bool:
         """

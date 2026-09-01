@@ -538,7 +538,7 @@ class Agent:
             return False, 0.0
 
         threshold: float
-        if silencing_threshold:
+        if silencing_threshold is not None:
             threshold = silencing_threshold
         else:
             threshold = self.social_susceptibility
