@@ -76,7 +76,7 @@ class TestAgentCreation(ut.TestCase):
             bool,
             "Agent -- generate_agent without the optional personal benefit argument is not assigning a boolean flag for personal_benefit",
         )
-        self.assertIsIn(
+        self.assertIn(
             "A",
             empty_agent.social_weightings,
             "Agent -- generate_agent is not creating the appropriate hierarchy entries in social_weightings",
@@ -90,7 +90,7 @@ class TestAgentCreation(ut.TestCase):
             0.0 <= empty_agent.social_weightings["A"] <= 1.0,
             "Agent -- generate_agent is not generating social_weightings values in the correct range",
         )
-        self.assertIsIn(
+        self.assertIn(
             "A",
             empty_agent.is_silenced,
             "Agent -- generate_agent is not creating the appropriate hierarchy entries in is_silenced",
@@ -157,6 +157,11 @@ class TestAgentCreation(ut.TestCase):
         empty_agent: agt.Agent = agt.Agent()
         with self.assertWarns(UserWarning, msg="WARNING: Attempting to overwrite an existing Agent attribute (previous_opinion) without meaning to.") as cm:
             empty_agent.add_attribute("previous_opinion", value=0.1312, overwrite=False)
+        self.assertEqual(
+            empty_agent.previous_opinion,
+            0.0,
+            "Agent -- add_attribute when overwrite=False is changing the specified attribute's value",
+        )
 
     def test_add_attribute_value(self) -> None:
         """

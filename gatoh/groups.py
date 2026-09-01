@@ -176,6 +176,7 @@ class Group:
         # Aggregate the required values, adding the member names during the process
         opinion_sum: float = 0.0
         radicalisation_count: int = 0
+        benefit_count: int = 0
         susceptibility_sum: float = 0.0
         hierarchy_weighting_total: float = 0.0
         personality_counts: dict[str, int] = {}
@@ -187,14 +188,17 @@ class Group:
             hierarchy_weighting_total += agent.social_weightings[hierarchy]
             if agent.radicalised:
                 radicalisation_count += 1
+            if agent.personal_benefit:
+                benefit_count += 1
             _ = personality_counts.setdefault(agent.personality, 0)
             personality_counts[agent.personality] += 1
 
         # Calculate the final attributes and set them
-        self.aggregate_opinion = opinion_sum / self.max_size
-        self.radicalisation_rate = radicalisation_count / self.max_size
-        self.aggregate_susceptibility = susceptibility_sum / self.max_size
-        self.aggregate_hierarchy_weighting = hierarchy_weighting_total / self.max_size
+        self.aggregate_opinion = opinion_sum / len(members)
+        self.radicalisation_rate = radicalisation_count / len(members)
+        self.member_benefit_rate = benefit_count / len(members)
+        self.aggregate_susceptibility = susceptibility_sum / len(members)
+        self.aggregate_hierarchy_weighting = hierarchy_weighting_total / len(members)
         self.predominant_personality = max(personality_counts, key=lambda x: personality_counts[x])
 
         return self
