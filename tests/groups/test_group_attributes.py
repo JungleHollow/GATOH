@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest as ut
 
+from experiments.Base.SocialSusceptibility.plot_results import aggregate_opinion
 import gatoh.groups as grp
 
 
@@ -338,4 +339,341 @@ class TestGroupAttributes(ut.TestCase):
         self.assertEqual(
             string_repr,
             "Group Foobar composed of members: [\"Foo\", \"Bar\"], and belonging to hierarchy Barfoo with an aggregate opinion of 0.22"
+        )
+
+    def test_get_attribute_empty(self) -> None:
+        """
+        Test that get_attribute() on a non-existing Group attribute raises a warning and returns None.
+        """
+        empty_group: grp.Group = grp.Group()
+        with self.assertWarns(UserWarning, msg="WARNING: Attempting to get a group attribute (foobar) which doesn't exist.") as cm:
+            attribute = empty_group.get_attribute("foobar")
+        self.assertIsNone(
+            attribute,
+            "Group -- get_attribute() on a non-existing attribute is not returning None",
+        )
+
+    def test_store_previous_opinion(self) -> None:
+        """
+        Test that store_previous_opinion() is working as intended.
+        """
+        group: grp.Group = grp.Group(aggregate_opinion=0.44)
+        group.store_previous_opinion()
+        self.assertAlmostEqual(
+            group.previous_opinion,
+            0.44,
+            5,
+            "Group -- store_previous_opinion() is not storing the group's aggregate opinion into its previous_opinion correctly",
+        )
+
+    def test_get_num_members(self) -> None:
+        """
+        Test that get_num_members() is working as intended.
+        """
+        group: grp.Group = grp.Group(members=["Foo", "Bar"])
+        num_members: int = group.get_num_members()
+        self.assertIsInstance(
+            num_members,
+            int,
+            "Group -- get_num_members() is not returning an int value",
+        )
+        self.assertEqual(
+            num_members,
+            2,
+            "Group -- get_num_members() is not reporting the correct number of members in a group",
+        )
+
+    def test_recalculate_aggregate_opinion_invalid(self) -> None:
+        """
+        Test that recalculate_aggregate_opinion() with an invalid number of input opinions will raise the expected error.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"])
+        with self.assertRaises(ValueError, msg="The number of member opinions input does not match the number of group members") as cm:
+            group.recalculate_aggregate_opinion([0.13, 0.12, 0.99, 0.1])
+
+    def test_recalculate_aggregate_opinion(self) -> None:
+        """
+        Test that recalculate_aggregate_opinion() is working as intended.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"])
+        group.recalculate_aggregate_opinion([0.13, 0.12])
+        self.assertHasAttr(
+            group,
+            "aggregate_opinion",
+            "Group -- a valid call to recalculate_aggregate_opinion on a new group is not initialising the aggregate_opinion attribute",
+        )
+        self.assertAlmostEqual(
+            group.aggregate_opinion,
+            0.125,
+            2,
+            "Group -- a valid call to recalculate_aggregate_opinion is not setting aggregate_opinion to the correct value",
+        )
+
+    def test_recalculate_radicalisation_rate_invalid(self) -> None:
+        """
+        Test that recalculate_radicalisation_rate() with an invalid number of input radicalisation statuses will raise the expected error.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"])
+        with self.assertRaises(ValueError, msg="The number of radicalisation statuses input does not match the number of group members") as cm:
+            group.recalculate_radicalisation_rate([False, False, True, False])
+
+    def test_recalculate_radicalisation_rate(self) -> None:
+        """
+        Test that recalculate_radicalisation_rate() is working as intended.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"])
+        group.recalculate_radicalisation_rate([True, False])
+        self.assertHasAttr(
+            group,
+            "radicalisation_rate",
+            "Group -- a valid call to recalculate_radicalisation_rate on a new group is not initialising the radicalisation_rate attribute",
+        )
+        self.assertAlmostEqual(
+            group.radicalisation_rate,
+            0.5,
+            1,
+            "Group -- a valid call to recalculate_radicalisation_rate is not setting radicalisation_rate to the correct value",
+        )
+
+    def test_recalculate_member_benefit_rate_invalid(self) -> None:
+        """
+        Test that recalculate_member_benefit_rate() with an invalid number of benefits input will raise the expected error.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"])
+        with self.assertRaises(ValueError, msg="The number of benefit statuses input does not match the number of group members") as cm:
+            group.recalculate_member_benefit_rate([False, False, False, True])
+
+    def test_recalculate_member_benefit_rate(self) -> None:
+        """
+        Test that recalculate_member_benefit_rate() is working as intended.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"])
+        group.recalculate_member_benefit_rate([True, False])
+        self.assertHasAttr(
+            group,
+            "member_benefit_rate",
+            "Group -- a valid call to recalculate_member_benefit_rate on a new group is not initialising the member_benefit_rate attribute",
+        )
+        self.assertAlmostEqual(
+            group.member_benefit_rate,
+            0.5,
+            1,
+            "Group -- a valid call to recalculate_member_benefit_rate is not setting member_benefit_rate to the correct value",
+        )
+
+    def test_recalculate_hierarchy_weighting_invalid(self) -> None:
+        """
+        Test that recalculate_hierarchy_weighting() with an invalid number of weightings input will raise the expected error.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"])
+        with self.assertRaises(ValueError, msg="The number of hierarchy weightings input does not match the number of group members") as cm:
+            group.recalculate_hierarchy_weighting([0.13, 0.12, 0.99, 0.2, 0.45])
+
+    def test_recalculate_hierarchy_weighting(self) -> None:
+        """
+        Test that recalculate_hierarchy_weighting() is working as intended.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"])
+        group.recalculate_hierarchy_weighting([0.13, 0.12])
+        self.assertHasAttr(
+            group,
+            "aggregate_hierarchy_weighting",
+            "Group -- a valid call to recalculate_hierarchy_weighting on a new group is not initialising the aggregate_hierarchy_weighting attribute",
+        )
+        self.assertAlmostEqual(
+            group.aggregate_hierarchy_weighting,
+            0.125,
+            2,
+            "Group -- a valid call to recalculate_hierarchy_weighting is not setting aggregate_hierarchy_weighting to the correct value",
+        )
+
+    def test_determine_predominant_personality_invalid(self) -> None:
+        """
+        Test that determine_predominant_personality() with an invalid number of personalities input will raise the expected error.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"])
+        with self.assertRaises(ValueError, msg="The number of personality types input does not match the number of group members") as cm:
+            group.determine_predominant_personality(["neutral", "neutral", "neutral"])
+
+    def test_determine_predominant_personality(self) -> None:
+        """
+        Test that determine_predominant_personality() is working as intended.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar", "foobar", "barfoo"])
+        group.determine_predominant_personality(["rational", "impulsive", "impulsive", "social"])
+        self.assertEqual(
+            group.predominant_personality,
+            "impulsive",
+            "Group -- a valid call to determine_predominant_personality is not reporting the correct predominant personality type among members",
+        )
+
+    def test_change_aggregate_opinion_empty(self) -> None:
+        """
+        Test that change_aggregate_opinion() when aggregate_opinion has not been initialised will raise the expected error.
+        """
+        empty_group: grp.Group = grp.Group()
+        with self.assertRaises(AttributeError, msg="aggregate_opinion has not been initialised for this group") as cm:
+            per_agt_delta: float = empty_group.change_aggregate_opinion(0.1312)
+
+    def test_change_aggregate_opinion_dtype(self) -> None:
+        """
+        Test that change_aggregate_opinion() with an invalid data type will raise the expected error.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"], aggregate_opinion=0.125)
+        with self.assertRaises(TypeError, msg="opinion_delta must be a float") as cm:
+            per_agt_delta: float = group.change_aggregate_opinion("0.1")
+
+    def test_change_aggregate_opinion(self) -> None:
+        """
+        Test that change_aggregate_opinion() is working as intended.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"], aggregate_opinion=0.125)
+        per_agt_delta: float = group.change_aggregate_opinion(0.1)
+        self.assertIsInstance(
+            per_agt_delta,
+            float,
+            "Group -- a valid call to change_aggregate_opinion() is not returning a float value (no cap)",
+        )
+        self.assertAlmostEqual(
+            per_agt_delta,
+            0.1,
+            1,
+            "Group -- a valid call to change_aggregate_opinion() is not returning the correct per-agent delta (no cap)",
+        )
+
+    def test_change_aggregate_opinion_capped(self) -> None:
+        """
+        Test that change_aggregate_opinion() with a delta that would reach the value cap is working as intended.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"], aggregate_opinion=0.94)
+        per_agt_delta: float = group.change_aggregate_opinion(0.47)
+        self.assertIsInstance(
+            per_agt_delta,
+            float,
+            "Group -- a valid call to change_aggregate_opinion() is not returning a float value (cap)",
+        )
+        self.assertAlmostEqual(
+            per_agt_delta,
+            0.06,
+            2,
+            "Group -- a valid call to change_aggregate_opinion() is not returning the correct per-agent delta (cap)",
+        )
+
+    def test_set_index_invalid(self) -> None:
+        """
+        Test that set_index() with an incorrect data type will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(TypeError, msg="index must be an integer") as cm:
+            group.set_index("six-seven")
+
+    def test_set_index(self) -> None:
+        """
+        Test that set_index() is working as intended.
+        """
+        group: grp.Group = grp.Group()
+        group.set_index(4)
+        self.assertHasAttr(
+            group,
+            "index",
+            "Group -- a valid call to set_index on a new group is not initialising the index attribute",
+        )
+        self.assertEqual(
+            group.index,
+            4,
+            "Group -- a valid call to set_index is not changing the index to the correct value",
+        )
+
+    def test_set_max_size_dtype(self) -> None:
+        """
+        Test that set_max_size() with an incorrect data type will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(TypeError, msg="max_size must be an integer") as cm:
+            group.set_max_size("no cap")
+
+    def test_set_max_size_invalid(self) -> None:
+        """
+        Test that set_max_size() with an invalid max_size value when no_limit=False will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(ValueError, msg="max_size must be equal or greater to 1") as cm:
+            group.set_max_size(-1312)
+
+    def test_set_max_size_limit(self) -> None:
+        """
+        Test that set_max_size() with no_limit=False is working as intended.
+        """
+        group: grp.Group = grp.Group()
+        group.set_max_size(1312)
+        self.assertEqual(
+            group.max_size,
+            1312,
+            "Group -- a valid call to set_max_size with no_limit=False is not setting the max_size attribute to the correct value",
+        )
+
+    def test_set_max_size_nolimit(self) -> None:
+        """
+        Test that set_max_size() with no_limit=True is working as intended.
+        """
+        # Initialise the group with an explicit max_size
+        group: grp.Group = grp.Group(2)
+        group.set_max_size(1111, no_limit=True)
+        self.assertEqual(
+            group.max_size,
+            -1,
+            "Group -- a valid call to set_max_size with no_limit=True is not setting the max_size attribute to -1",
+        )
+
+    def test_set_hierarchy_invalid(self) -> None:
+        """
+        Test that set_hierarchy() with an invalid data type will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(TypeError, msg="hierarchy must be a string") as cm:
+            group.set_hierarchy(False)
+
+    def test_set_hierarchy(self) -> None:
+        """
+        Test that set_hierarchy() is working as intended.
+        """
+        group: grp.Group = grp.Group()
+        group.set_hierarchy("foobar")
+        self.assertHasAttr(
+            group,
+            "hierarchy",
+            "Group -- a valid call to set_hierarchy on a new group is not initialising the hierarchy attribute",
+        )
+        self.assertEqual(
+            group.hierarchy,
+            "foobar",
+            "Group -- a valid call to set_hierarchy is not changing the group's hierarchy to the correct value",
+        )
+
+    def test_set_cohesion_dtype(self) -> None:
+        """
+        Test that set_cohesion() with an incorrect data type will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(TypeError, msg="cohesion must be a string") as cm:
+            group.set_cohesion(True)
+
+    def test_set_cohesion_invalid(self) -> None:
+        """
+        Test that set_cohesion() with an unsupported cohesion type will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(ValueError, msg="The cohesion type 'friendly' is not supported -- cannot change the Group's cohesion type") as cm:
+            group.set_cohesion("friendly")
+
+    def test_set_cohesion(self) -> None:
+        """
+        Test that set_cohesion() is working as intended.
+        """
+        group: grp.Group = grp.Group()
+        group.set_cohesion("close")
+        self.assertEqual(
+            group.cohesion,
+            "close",
+            "Group -- a valid call to set_cohesion is not setting the cohesion type to the correct value",
         )
