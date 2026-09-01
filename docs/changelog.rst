@@ -25,7 +25,7 @@ New Features
 - Ability to log and track specific attributes of individual agents throughout model runtimes
 - **MAJOR** New module :mod:`~gatoh.groups` which adds the ability to further group agents within hierarchies, and pseudo-vectorise operations
 - Addition of KMeans clustering algorithm to graphs
-
+- Test cases for Group attributes and creation
 
 Fixes
 -----
