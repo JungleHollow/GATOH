@@ -9,15 +9,18 @@ import zipfile
 from collections.abc import Iterable, Iterator
 import concurrent.futures
 from copy import deepcopy
+from math import ceil
 from shutil import rmtree
 from typing import Any, NotRequired, TypeVar, TypedDict, override
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from gatoh.agents import Agent
+    from gatoh.agents import Agent, PersonalityProbs
 
-from gatoh.utils import draw_random_value, random_coinflip, value_rw_delta
+from gatoh.utils import draw_random_value, random_coinflip, value_rw_delta, make_list_with_mode
 
+# Definition of all valid, existing group member personality types
+PERSONALITIES: list[str] = ["neutral", "rational", "erratic", "impulsive", "social"]
 # Definition of all valid, existing Group cohesion categories
 COHESIONS: list[str] = ["intimate", "close", "neutral", "distant", "passing"]
 
@@ -45,6 +48,16 @@ class CohesionProbs(TypedDict):
 T = TypeVar("T")
 # A generic to be used for the case where a fully generic dictionary may be passed (e.g dict[S, T])
 S = TypeVar("S")
+
+def draw_personality() -> str:
+    """
+    A copy of :func:`~gatoh.agents.draw_personality` defined again here to avoid circular imports.
+
+    :return: The string representing the drawn personality type.
+    :rtype: str
+    """
+    drawn_personality: str = rd.choice(PERSONALITIES)
+    return drawn_personality
 
 def draw_cohesion() -> str:
     """
@@ -370,12 +383,14 @@ class Group:
 
         :param member_personalities: The personality types for each group member.
         :type member_personalities: list[str]
-        :raises ValueError: If the input list is not the same size as the group.
+        :raises ValueError: If the input list is not the same size as the group or one or more personalities are invalid.
         """
         if len(member_personalities) != self.get_num_members():
             raise ValueError("The number of personality types input does not match the number of group members")
         personality_counts: dict[str, int] = {}
         for personality in member_personalities:
+            if personality not in PERSONALITIES:
+                raise ValueError("One or more input personality types are unsupported")
             _ = personality_counts.setdefault(personality, 0)
             personality_counts[personality] += 1
         dict_mode: str = max(personality_counts, key=lambda x: personality_counts[x])
@@ -631,7 +646,8 @@ class Group:
         hierarchy_rw_info: tuple[str, float] = self.evolve_hierarchy(weighting_rw)
         output_dict["hierarchy_rw_info"] = hierarchy_rw_info
 
-        self.stochastic_opinion(opinion_rw)
+        opinion_rw_info: tuple[str, float] = self.stochastic_opinion(opinion_rw)
+        output_dict["opinion_rw_info"] = opinion_rw_info
 
         return output_dict
 
@@ -748,6 +764,85 @@ class Group:
         per_agent_delta: float = self.change_aggregate_hierarchy_weighting(rw_result)
 
         return self.hierarchy, per_agent_delta
+
+    def stochastic_opinion(self, opinion_rw: tuple[float, float]) -> tuple[str, float]:
+        """
+        Determine the direction and magnitude of a shift in the Group's aggregate opinion and apply it.
+
+        This is representative of opinion changes in real social networks in which individual opinions may increase or decrease
+        away from the aggregate mean (independent of external influences).
+
+        :param opinion_rw: A (mean, variance) pair which parametrises the Gaussian distribution used for stochastic opinion shift.
+        :type opinion_rw: tuple[float, float]
+        :raises RuntimeError: If the group has not yet been initialised appropriately.
+        :raises TypeError: If the input contains any invalid data types.
+        :return: The group's hierarchy and per-member delta that must be applied to each member Agent to shift the aggregate opinion by the drawn delta value.
+        :rtype: tuple[str, float]
+        """
+        # Check that the group is initialised
+        if not hasattr(self, "aggregate_opinion"):
+            raise RuntimeError("The group for which the stochastic opinion is being determined has not yet been initialised")
+
+        # Data type checks
+        if not isinstance(opinion_rw, tuple):
+            raise TypeError("opinion_rw must be a tuple")
+        if not isinstance(opinion_rw[0], float) or not isinstance(opinion_rw[1], float):
+            raise TypeError("One or both of the values in opinion_rw are invalid data types -- both must be floats")
+
+        rw_result: float = value_rw_delta(self.aggregate_opinion, opinion_rw[0], opinion_rw[1])
+
+        # Change the value (all appropriate checks are handled here)
+        per_agent_delta: float = self.change_aggregate_opinion(rw_result)
+
+        return self.hierarchy, per_agent_delta
+
+    def stochastic_personality_change(self, personality_probs: PersonalityProbs | None = None) -> dict[str, str]:
+        """
+        Calls to this function are primarily meant to originate from :meth:`~gatoh.groups.Group.life_events`.
+
+        Will redraw a valid predominant personality types from the ones that have been defined, and then change the group's
+        predominant personality to this new type.
+
+        Following this, the minimum proportion of members which need to hold this personality is determined, and the members'
+        personalities are randomly reassigned so that a proportion equal or greater to the minimum needed for this to be the
+        predominant personality type are present.
+
+        :param personality_probs: Specific per-personality type probabilities to be used for drawing the new predominant personality type.
+        :type personality_probs: dict[str, float]
+        :raises TypeError: If a non-float probability is supplied.
+        :raises KeyError: If an unsupported personality type is passed.
+        :return: A <member ID : personality> mapping that specifies which (if any) member personalities have changed.
+        :rtype: dict[str, str]
+        """
+        previous_personality: str = self.predominant_personality
+        member_personalities: dict[str, str] = {member: "" for member in self.members}
+
+        if personality_probs is None:
+            self.predominant_personality = draw_personality()
+        else:
+            personality_flags: list[str] = list(personality_probs.keys())
+            personality_p: list[float] = []
+            for key, value in personality_probs.items():
+                if isinstance(value, float):
+                    personality_p.append(value)
+                else:
+                    raise TypeError("A non-float probability was supplied in probability_probs when trying to determine a stochastic personality change in a group")
+                if key not in PERSONALITIES:
+                    raise KeyError("An unsupported personality was specified in personality_probs when trying to determine a stochastic personality change in a group")
+            chosen_personality = rd.choices(personality_flags, weights=personality_p, k=1)
+            self.predominant_personality = chosen_personality[0]
+        
+        # No change has ocurred, then return empty strings for each member (this will be treated as no change needed in outer functions)
+        if self.predominant_personality == previous_personality:
+            return member_personalities
+        else:
+            new_personalities: list[str] = make_list_with_mode(PERSONALITIES, self.predominant_personality, n=self.get_num_members())
+
+            # Set the new personality for each member in simple numerical order
+            for idx, member in enumerate(member_personalities.keys()):
+                member_personalities[member] = new_personalities[idx]
+
+            return member_personalities
 
     def __in__(self, iterable: Iterable[Group]) -> bool:
         """

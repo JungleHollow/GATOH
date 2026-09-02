@@ -959,6 +959,8 @@ class Agent:
 
         :param personality_probs: Specific per-personality type probabilities to be used for drawing the new agent personality.
         :type personality_probs: dict[str, float]
+        :raises TypeError: If a non-float probability is supplied.
+        :raises KeyError: If an unsupported personality type is passed.
         """
         if personality_probs is None:
             self.personality = draw_personality()
