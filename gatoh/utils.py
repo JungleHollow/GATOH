@@ -709,4 +709,41 @@ def make_list_with_mode(possible_values: list[K], mode_value: K, n: int = 10) ->
     :return: A generated list of arbitrary length in which the specified value is the most frequently appearing.
     :rtype: list[Any]
     """
-    # TODO: CONTINUE FROM HERE...
+    # Data integrity checks
+    if not isinstance(mode_value, type(possible_values[0])):
+        raise TypeError("The input mode_value is not the same data type as those in the list of possible values")
+    if mode_value not in possible_values:
+        raise ValueError("The input mode_value does not exist in the list of possible values")
+
+    value_counts: dict[K, int] = {value: 0 for value in possible_values}
+    output_list: list[K] = []
+
+    # First populate the list to n
+    for _ in range(n):
+        drawn_value: K = random.sample(possible_values, k=1)[0]
+        output_list.append(drawn_value)
+        value_counts[drawn_value] += 1
+
+    # As long as the specified mode_value is not the list's mode, continue randomly changing values in the list
+    # (not the most efficient way, but this also helps to produce more "interesting" output lists)
+    while max(value_counts, key=lambda x: value_counts[x]) != mode_value:
+        drawn_index: int = random.randint(0, n - 1)
+
+        if output_list[drawn_index] == mode_value:
+            # Do not change an entry that is already of the desired mode value
+            continue
+
+        old_value: K = output_list[drawn_index]
+        new_value: K = random.sample(possible_values, k=1)[0]
+
+        if old_value == new_value:
+            # No change has happened
+            continue
+
+        # Change the value, and update the value counts
+        output_list[drawn_index] = new_value
+        value_counts[old_value] -= 1
+        value_counts[new_value] += 1
+
+    # Finally, return the output_list
+    return output_list
