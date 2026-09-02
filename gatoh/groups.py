@@ -9,7 +9,6 @@ import zipfile
 from collections.abc import Iterable, Iterator
 import concurrent.futures
 from copy import deepcopy
-from math import ceil
 from shutil import rmtree
 from typing import Any, NotRequired, TypeVar, TypedDict, override
 
@@ -34,6 +33,12 @@ COMPRESS_LEVEL: int = 4
 OPINION_SILENCING_MODIFIER: float = 0.4
 # The absolute maximum value that hierarchy weightings can take
 SOCIAL_WEIGHTINGS_MAX: float = 1.0
+# The threshold used when determining if stochastic benefit changes occur
+BENEFIT_THRESH: float = 0.999
+# The threshold used when determining if stochastic personality changes occur
+PERSONALITY_THRESH: float = 0.999
+# The threshold used when determining if stochastic radicalisation changes occur
+RADICALISATION_THRESH: float = 0.999
 
 # Used for type-checking valid group cohesion types wherever relevant
 class CohesionProbs(TypedDict):
@@ -831,7 +836,7 @@ class Group:
                     raise KeyError("An unsupported personality was specified in personality_probs when trying to determine a stochastic personality change in a group")
             chosen_personality = rd.choices(personality_flags, weights=personality_p, k=1)
             self.predominant_personality = chosen_personality[0]
-        
+
         # No change has ocurred, then return empty strings for each member (this will be treated as no change needed in outer functions)
         if self.predominant_personality == previous_personality:
             return member_personalities
@@ -843,6 +848,124 @@ class Group:
                 member_personalities[member] = new_personalities[idx]
 
             return member_personalities
+
+    def stochastic_benefit_change(self) -> dict[str, bool]:
+        """
+        Calls to this function are primarily meant to originate from :meth:`~gatoh.groups.Group.life_events`.
+
+        Will randomly select a new number of group members that should have personal benefit, and then randomly
+        assigns these benefit statuses to the group members.
+
+        :raises RuntimeError: If the group has not yet been initialised appropriately.
+        :return: A <member ID : benefit flag> mapping that specifies the new personal benefit flags for each agent member.
+        :rtype: dict[str, bool]
+        """
+        # Check that the group has been initialised
+        if not hasattr(self, "member_benefit_rate"):
+            raise RuntimeError("The group for which a stochastic benefit change is being determined has not yet been initialised")
+
+        new_benefit_count: int = rd.randint(0, self.get_num_members() - 1)
+        selected_indices: list[int] = rd.sample(list(range(self.get_num_members())), k=new_benefit_count)
+
+        output_dict: dict[str, bool] = {}
+
+        for idx, member in enumerate(self.members):
+            if idx in selected_indices:
+                output_dict[member] = True
+            else:
+                output_dict[member] = False
+
+        self.recalculate_member_benefit_rate(list(output_dict.values()))
+
+        return output_dict
+
+    def stochastic_radicalisation_change(self) -> dict[str, bool]:
+        """
+        Calls to this function are primarily meant to originate from :meth:`~gatoh.groups.Group.life_events`.
+
+        Will randomly select a new number of group members that are radicalised, and then randomly assigns these
+        radicalisation statuses to the group members.
+
+        :return: A <member ID : radicalisation status> mapping that specifies the new radicalisation status for each agent member.
+        :rtype: dict[str, bool]
+        """
+        new_radicalisation_count: int = rd.randint(0, self.get_num_members() - 1)
+        selected_indices: list[int] = rd.sample(list(range(self.get_num_members())), k=new_radicalisation_count)
+
+        output_dict: dict[str, bool] = {}
+
+        for idx, member in enumerate(self.members):
+            if idx in selected_indices:
+                output_dict[member] = True
+            else:
+                output_dict[member] = False
+
+        self.recalculate_radicalisation_rate(list(output_dict.values()))
+
+        return output_dict
+
+    class LifeEventsDict(TypedDict):
+        personality_thresh: NotRequired[float]
+        personality_probs: NotRequired[PersonalityProbs]
+        benefit_thresh: NotRequired[float]
+        radicalisation_thresh: NotRequired[float]
+
+    def life_events(
+        self,
+        personality_changes: bool = False,
+        benefit_changes: bool = False,
+        radicalisation_changes: bool = False,
+        parameters: LifeEventsDict | None = None,
+    ) -> dict[str, dict[str, Any]]:
+        """
+        Experimental function that aims to model the ways in which behaviours change according to major random life events over time.
+
+        :param personality_changes: A flag indicating if personality changes are allowed to occur due to life events.
+        :type personality_changes: bool, optional
+        :param benefit_changes: A flag indicating if changes in personal benefit statuses are allowed to occur due to life events.
+        :type benefit_changes: bool, optional
+        :param radicalisation_changes: A flag indicating if spontaneous changes to radicalisation statuses are allowed to occur due to life events.
+        :type radicalisation_changes: bool, optional
+        :param parameters: A <key, value> mapping which outlines all relevant threshold or other values used in this function.
+        :type parameters: dict[str, Any], optional
+        """
+        member_changes: dict[str, dict[str, Any]] = {}
+
+        if personality_changes:
+            personality_results: dict[str, str]
+            if parameters is not None:
+                personality_thresh: float | None = parameters.get("personality_thresh")
+                personality_probs: PersonalityProbs | None = parameters.get("personality_probs")
+                if (personality_thresh is not None and rd.random() >= personality_thresh) or rd.random() >= PERSONALITY_THRESH:
+                    personality_results = self.stochastic_personality_change(personality_probs=personality_probs)
+                    member_changes["personality"] = personality_results
+            elif rd.random() >= PERSONALITY_THRESH:
+                personality_results = self.stochastic_personality_change()
+                member_changes["personality"] = personality_results
+
+        if benefit_changes:
+            benefit_results: dict[str, bool]
+            if parameters is not None:
+                benefit_thresh: float | None = parameters.get("benefit_thresh")
+                if (benefit_thresh is not None and rd.random() >= benefit_thresh) or rd.random() >= BENEFIT_THRESH:
+                    benefit_results = self.stochastic_benefit_change()
+                    member_changes["benefit"] = benefit_results
+            elif rd.random() >= BENEFIT_THRESH:
+                benefit_results = self.stochastic_benefit_change()
+                member_changes["benefit"] = benefit_results
+
+        if radicalisation_changes:
+            radicalisation_results: dict[str, bool]
+            if parameters is not None:
+                radicalisation_thresh: float | None = parameters.get("radicalisation_thresh")
+                if (radicalisation_thresh is not None and rd.random() >= radicalisation_thresh) or rd.random() >= RADICALISATION_THRESH:
+                    radicalisation_results = self.stochastic_radicalisation_change()
+                    member_changes["radicalisation"] = radicalisation_results
+            elif rd.random() >= RADICALISATION_THRESH:
+                radicalisation_results = self.stochastic_radicalisation_change()
+                member_changes["radicalisation"] = radicalisation_results
+
+        return member_changes
 
     def __in__(self, iterable: Iterable[Group]) -> bool:
         """
@@ -1282,6 +1405,19 @@ class GroupSet:
         """
         sampled_groups: list[Group] = self.random.sample(self.groups, n)
         return deepcopy(sampled_groups)
+
+    def get_total_members(self) -> int:
+        """
+        A getter function that iterates across all groups in the groupset and adds their member counts to
+        report the total number of members that exist in the groupset.
+
+        :return: The total number of members that exist in the grouspet.
+        :rtype: int
+        """
+        total_members: int = 0
+        for group in self.groups:
+            total_members += group.get_num_members()
+        return total_members
 
     def get_num_members(self, index: int) -> int:
         """
