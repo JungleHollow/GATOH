@@ -684,3 +684,29 @@ def get_keys_by_value(input_dict: dict[K, V], value_to_find: V) -> list[K]:
         if value == value_to_find:
             keys_list.append(key)
     return keys_list
+
+
+def make_list_with_mode(possible_values: list[K], mode_value: K, n: int = 10) -> list[K]:
+    """
+    A utility function that takes a list of possible values, and the value which should be the most frequent (mode),
+    and then returns a list of a specified length where this is true.
+
+    This function has been defined as it is not as simple as just saying that a proportion >= than a threshold of values
+    should be the specified type.
+
+    In cases where the list is relatively small and the possible values are comparatively large, it is possible through
+    pure chance that even if the minimum threshold of [1 + ceil(1/len(possible_values * n)] is reached; if all other values
+    in the list happen to be the same drawn value, this will be the actual mode of the list...
+
+    :param possible_values: A list of all possible values that any one entry in the list may take.
+    :type possible_values: list[Any]
+    :param mode_value: The specific value that should be the mode of the generated list.
+    :type mode_value: Any
+    :param n: The length of the list that should be generated.
+    :type n: int, optional
+    :raises TypeError: If the mode_value is of a different data type than the possible values.
+    :raises ValueError: If the mode_value is not present in the list of possible values.
+    :return: A generated list of arbitrary length in which the specified value is the most frequently appearing.
+    :rtype: list[Any]
+    """
+    # TODO: CONTINUE FROM HERE...
