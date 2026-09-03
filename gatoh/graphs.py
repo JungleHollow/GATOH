@@ -341,6 +341,27 @@ class Graph:
             )
             return None
 
+    def get_nodes(self, node_indices: list[int]) -> list[GraphNode]:
+        """
+        A getter function to access multiple GraphNode objects at once.
+
+        :param node_indices: The indices of the nodes to access.
+        :type node_indices: list[int]
+        :raises RuntimeWarning: If any of the node indices are out of bounds.
+        :return: A list of all the valid graph nodes that were found.
+        :rtype: list[GraphNode]
+        """
+        out_nodes: list[GraphNode] = []
+        for index in node_indices:
+            try:
+                out_nodes.append(self.graph.nodes()[index])
+            except IndexError:
+                warnings.warn(
+                    f"WARNING: Node with index {index} is out of bounds for graph {self.name} with {self.node_count} total nodes.",
+                    category=RuntimeWarning,
+                )
+        return out_nodes
+
     def get_edge(self, edge_index: int) -> GraphEdge | None:
         """
         A getter function to access GraphEdge objects.
@@ -359,6 +380,27 @@ class Graph:
                 category=RuntimeWarning,
             )
             return None
+
+    def get_edges(self, edge_indices: list[int]) -> list[GraphEdge]:
+        """
+        A getter function to access multiple GraphEdge objects at once.
+
+        :param edge_indices: The indices of the edges to access.
+        :type edge_indices: list[int]
+        :raises RuntimeWarning: If any of the edge indices is out of bounds for this Graph.
+        :return: A list containing all the valid graph edges that were found.
+        :rtype: list[GraphEdge]
+        """
+        out_edges: list[GraphEdge] = []
+        for index in edge_indices:
+            try:
+                out_edges.append(self.graph.edges()[index])
+            except IndexError:
+                warnings.warn(
+                    f"WARNING: Edge with index {index} is out of bounds for graph {self.name} with {self.edge_count} total edges.",
+                    category=RuntimeWarning,
+                )
+        return out_edges
 
     def update_node_indices(self) -> None:
         """
@@ -2057,6 +2099,24 @@ class GroupNode:
         self.index = idx
         return None
 
+    def get_hierarchy(self) -> str:
+        """
+        A getter method that returns the hierarchy that the contained group belongs to.
+
+        :return: The hierarchy that the node's contained group belongs to.
+        :rtype: str
+        """
+        return self.group.hierarchy
+
+    def get_num_members(self) -> int:
+        """
+        A wrapper for the group's :meth:`~gatoh.groups.Group.get_num_members` method.
+
+        :return: The number of members that make up the node's contained group.
+        :rtype: int
+        """
+        return self.group.get_num_members()
+
     @override
     def __str__(self) -> str:
         """
@@ -2308,6 +2368,27 @@ class GroupGraph:
             )
             return None
 
+    def get_nodes(self, node_indices: list[int]) -> list[GroupNode]:
+        """
+        A getter function to access multiple GroupNode objects at once.
+
+        :param node_indices: The indices of all the nodes to access.
+        :type node_indices: list[int]
+        :raises RuntimeWarning: If any of the node indices is out of bounds.
+        :return: A list containing all valid graph nodes that were found.
+        :rtype: list[GroupNode]
+        """
+        out_nodes: list[GroupNode] = []
+        for index in node_indices:
+            try:
+                out_nodes.append(self.graph.nodes()[index])
+            except IndexError:
+                warnings.warn(
+                    f"WARNING: Node with index {index} is out of bounds for the group graph with {self.node_count} total nodes.",
+                    category=RuntimeWarning,
+                )
+        return out_nodes
+
     def get_edge(self, edge_index: int) -> GroupEdge | None:
         """
         A getter function to access GroupEdge objects.
@@ -2326,6 +2407,27 @@ class GroupGraph:
                 category=RuntimeWarning,
             )
             return None
+
+    def get_edges(self, edge_indices: list[int]) -> list[GroupEdge]:
+        """
+        A getter function to access multiple GroupEdge objects at once.
+
+        :param edge_indices: The indices of the edges to access.
+        :type edge_indices: list[int]
+        :raises RuntimeWarning: If any of the edge indices are out of bounds.
+        :return: A list containing all valid graph edges that were found.
+        :rtype list[GroupEdge]
+        """
+        out_edges: list[GroupEdge] = []
+        for index in edge_indices:
+            try:
+                out_edges.append(self.graph.edges()[index])
+            except IndexError:
+                warnings.warn(
+                    f"WARNING: Edge with index {index} is out of bounds for the group graph with {self.edge_count} total edges.",
+                    category=RuntimeWarning,
+                )
+        return out_edges
 
     def update_node_indices(self) -> None:
         """
@@ -2852,7 +2954,7 @@ class GroupGraph:
             group_node.group.store_previous_opinion()
         return None
 
-    def group_opinion_change(self, group: Group, change_delta: float) -> None:
+    def group_opinion_change(self, group: Group, change_delta: float) -> float:
         """
         Change the specified Group's current aggregate opinion by the given delta.
 
@@ -2860,11 +2962,31 @@ class GroupGraph:
         :type group: Group
         :param change_delta: The value by which to change the Group's aggregate opinion.
         :type change_delta: float
+        :return: The per-agent delta value that must be applied for the overall group aggregate change to occur.
+        :rtype: float
         """
         group_node: GroupNode | None = self.node_from_group(group)
         if group_node is not None:
-            group_node.group.change_aggregate_opinion(change_delta)
-        return None
+            per_agent_delta: float = group_node.group.change_aggregate_opinion(change_delta)
+            return per_agent_delta
+        return 0.0
+
+    def group_radicalisation_change(self, group: Group, change_delta: float) -> dict[str, bool]:
+        """
+        Change the specified Group's radicalisation rate by the given delta.
+
+        :param group: The group whose radicalisation rate is being changed.
+        :type group: Group
+        :param change_delta: The value by which to change the Group's radicalisation rate.
+        :type change_delta: float
+        :return: A <Agent ID : radicalisation flag> mapping that outlines the new radicalisation status for each member agent.
+        :rtype: dict[str, bool]
+        """
+        group_node: GroupNode | None = self.node_from_group(group)
+        if group_node is not None:
+            radicalisation_mappings: dict[str, bool] = group_node.group.change_radicalisation_rate(change_delta)
+            return radicalisation_mappings
+        return {}
 
     def node_from_group(self, group: Group) -> GroupNode | None:
         """
