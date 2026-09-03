@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from gatoh.agents import Agent, PersonalityProbs
 
-from gatoh.utils import draw_random_value, random_coinflip, value_rw_delta, make_list_with_mode
+from gatoh.utils import draw_random_value, value_rw_delta, make_list_with_mode
 
 # Definition of all valid, existing group member personality types
 PERSONALITIES: list[str] = ["neutral", "rational", "erratic", "impulsive", "social"]
@@ -46,6 +46,8 @@ BENEFIT_THRESH: float = 0.999
 PERSONALITY_THRESH: float = 0.999
 # The threshold used when determining if stochastic radicalisation changes occur
 RADICALISATION_THRESH: float = 0.999
+# The threshold used when determining if stochastic silencing changes occur
+SILENCING_THRESH: float = 0.999
 
 # Used for type-checking valid group cohesion types wherever relevant
 class CohesionProbs(TypedDict):
@@ -956,12 +958,14 @@ class Group:
             self.aggregate_opinion *= -1.0
         return self.hierarchy, members_silenced
 
-    # TODO: Rework this function to match the new group silencing system
     def opinion_silencing(self, estimated_opinion_climate: float, silencing_threshold: float | None = None) -> tuple[bool, float]:
         """
         Determines if members in the group will become silenced in their hierarchy based on their collective attributes.
 
         If no silencing threshold has been passed, the group's aggregate susceptibility is used as the threshold instead.
+
+        Using the information returned by this function, the parent model will then have to handle it appropriately and make a call
+        to :meth:`~gatoh.groups.Group.update` with the defined silencing_rate delta due to the reported absolute difference value.
 
         :param estimated_opinion_climate: The opinion climate perceived by the Group in its hierarchy.
         :type estimated_opinion_climate: float
@@ -1205,25 +1209,44 @@ class Group:
 
         return output_dict
 
-    def stochastic_silencing_change(self) -> bool:
+    def stochastic_silencing_change(self) -> dict[str, bool]:
         """
         Calls to this function are primarily meant to originate from :meth:`~gatoh.groups.Group.life_events`.
 
-        Will flip the silenced status of the group within its hierarchy,
+        Will randomly select a new number of group members that are silenced, and then randomly assigns these
+        silencing statuses to the group members.
+
+        :return: A <Member ID : silencing status> mapping that specifies the new silencing status for each agent member.
+        :rtype: dict[str, bool]
         """
-        # TODO: finish...
+        new_silenced_count: int = rd.randint(0, self.get_num_members() - 1)
+        selected_indices: list[int] = rd.sample(list(range(self.get_num_members())), k=new_silenced_count)
+
+        output_dict: dict[str, bool] = {}
+
+        for idx, member in enumerate(self.members):
+            if idx in selected_indices:
+                output_dict[member] = True
+            else:
+                output_dict[member] = False
+
+        self.recalculate_silencing_rate(list(output_dict.values()))
+
+        return output_dict
 
     class LifeEventsDict(TypedDict):
         personality_thresh: NotRequired[float]
         personality_probs: NotRequired[PersonalityProbs]
         benefit_thresh: NotRequired[float]
         radicalisation_thresh: NotRequired[float]
+        silencing_thresh: NotRequired[float]
 
     def life_events(
         self,
         personality_changes: bool = False,
         benefit_changes: bool = False,
         radicalisation_changes: bool = False,
+        silencing_changes: bool = False,
         parameters: LifeEventsDict | None = None,
     ) -> dict[str, dict[str, Any]]:
         """
@@ -1235,6 +1258,8 @@ class Group:
         :type benefit_changes: bool, optional
         :param radicalisation_changes: A flag indicating if spontaneous changes to radicalisation statuses are allowed to occur due to life events.
         :type radicalisation_changes: bool, optional
+        :param silencing_changes: A flag indicating if spontaneous changes to opinion silencing statuses are allowed to occur due to life events.
+        :type silencing_changes: bool, optional
         :param parameters: A <key, value> mapping which outlines all relevant threshold or other values used in this function.
         :type parameters: dict[str, Any], optional
         """
@@ -1273,6 +1298,17 @@ class Group:
             elif rd.random() >= RADICALISATION_THRESH:
                 radicalisation_results = self.stochastic_radicalisation_change()
                 member_changes["radicalisation"] = radicalisation_results
+
+        if silencing_changes:
+            silencing_results: dict[str, bool]
+            if parameters is not None:
+                silencing_thresh: float | None = parameters.get("silencing_thresh")
+                if (silencing_thresh is not None and rd.random() >= silencing_thresh) or rd.random() >= SILENCING_THRESH:
+                    silencing_results = self.stochastic_silencing_change()
+                    member_changes["silencing"] = silencing_results
+            elif rd.random() >= SILENCING_THRESH:
+                silencing_results = self.stochastic_silencing_change()
+                member_changes["silencing"] = silencing_results
 
         return member_changes
 
