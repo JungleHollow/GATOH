@@ -82,6 +82,19 @@ class TestGroupAttributes(ut.TestCase):
             "aggregate_hierarchy_weighting",
             "Group -- empty group is being created with an aggregate_hierarchy_weighting attribute",
         )
+        self.assertNotHasAttr(
+            empty_group,
+            "silencing_rate",
+            "Group -- empty group is being created with a silencing_rate attribute",
+        )
+        self.assertIsNone(
+            empty_group.rw_distribution,
+            "Group -- empty group is not using the default rw_distribution value of None",
+        )
+        self.assertIsNone(
+            empty_group.opinion_rw,
+            "Group -- empty group is not using the default opinion_rw value of None",
+        )
 
     def test_group_in(self) -> None:
         """
@@ -137,6 +150,8 @@ class TestGroupAttributes(ut.TestCase):
             cohesion="close",
             predominant_personality="rational",
             hierarchy="FooBar",
+            rw_distribution=(0.0, 0.13),
+            opinion_rw=(0.0, 0.12),
         )
         self.assertEqual(
             group.max_size,
@@ -167,6 +182,16 @@ class TestGroupAttributes(ut.TestCase):
             group.hierarchy,
             "FooBar",
             "Group -- explicit hierarchy attribute as a kwarg is not setting the attribute correctly",
+        )
+        self.assertEqual(
+            group.rw_distribution,
+            (0.0, 0.13),
+            "Group -- explicit rw_distribution attribute as a kwarg is not setting the attribute correctly",
+        )
+        self.assertEqual(
+            group.opinion_rw,
+            (0.0, 0.12),
+            "Group -- explicit opinion_rw attribute as a kwarg is not setting the attribute correctly",
         )
 
     def test_init_kwargs_unseen(self) -> None:
@@ -461,6 +486,32 @@ class TestGroupAttributes(ut.TestCase):
             "Group -- a valid call to recalculate_member_benefit_rate is not setting member_benefit_rate to the correct value",
         )
 
+    def test_recalculate_silencing_rate_invalid(self) -> None:
+        """
+        Test that recalculate_silencing_rate() with an invalid number of weightings input will raise the expected error.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"])
+        with self.assertRaises(ValueError, msg="The number of silencing statuses input does not match the number of group members") as cm:
+            group.recalculate_silencing_rate([True, True, False, False, False])
+
+    def test_recalculate_silencing_rate(self) -> None:
+        """
+        Test that recalculate_silencing_rate() is working as intended.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"])
+        group.recalculate_silencing_rate([True, False])
+        self.assertHasAttr(
+            group,
+            "silencing_rate",
+            "Group -- a valid call to recalculate_silencing_rate on a new group is not initialising the silencing_rate attribute",
+        )
+        self.assertAlmostEqual(
+            group.silencing_rate,
+            0.5,
+            1,
+            "Group -- a valid call to recalculate_silencing_rate is not setting silencing_rate to the correct value",
+        )
+
     def test_recalculate_hierarchy_weighting_invalid(self) -> None:
         """
         Test that recalculate_hierarchy_weighting() with an invalid number of weightings input will raise the expected error.
@@ -558,6 +609,111 @@ class TestGroupAttributes(ut.TestCase):
             2,
             "Group -- a valid call to change_aggregate_opinion() is not returning the correct per-agent delta (cap)",
         )
+
+    def test_change_radicalisation_rate_empty(self) -> None:
+        """
+        Test that change_radicalisation_rate() when radicalisation_rate has not yet been initialised will raise the expected error.
+        """
+        empty_group: grp.Group = grp.Group()
+        with self.assertRaises(AttributeError, msg="radicalisation_rate has not yet been initialised for this group") as cm:
+            agent_radicalisations: dict[str, bool] = empty_group.change_radicalisation_rate(0.1312)
+
+    def test_change_radicalisation_rate_dtype(self) -> None:
+        """
+        Test that change_radicalisation_rate() with an invalid data type will raise the expected error.
+        """
+        group: grp.Group = grp.Group(radicalisation_rate=0.1)
+        with self.assertRaises(TypeError, msg="rate_delta must be a float value") as cm:
+            agent_radicalisations: dict[str, bool] = group.change_radicalisation_rate("seven")
+
+    def test_change_radicalisation_rate(self) -> None:
+        """
+        Test that change_radicalisation_rate() is working as intended.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"], radicalisation_rate=0.0)
+        agent_radicalisations: dict[str, bool] = group.change_radicalisation_rate(0.4)
+        self.assertIsInstance(
+            agent_radicalisations,
+            dict,
+            "Group -- change_radicalisation_rate is not returning a dictionary value",
+        )
+        self.assertEqual(
+            len(agent_radicalisations.keys()),
+            2,
+            "Group -- change_radicalisation_rate is not reporting the correct number of group members",
+        )
+        radical_count: int = sum(int(flag) for flag in agent_radicalisations.values())
+        self.assertEqual(
+            radical_count,
+            1,
+            "Group -- change_radicalisation_rate is not producing the correct number of radicalised agents for the new radicalisation_rate value",
+        )
+
+    def test_change_rw_distribution_invalid_outer(self) -> None:
+        """
+        Test that change_rw_distribution() with a non-tuple input will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(TypeError, msg="parameters must be a (float, float) tuple") as cm:
+            group.change_rw_distribution([0.0, 0.1])
+
+    def test_change_rw_distribution_invalid_inner(self) -> None:
+        """
+        Test that change_rw_distribution() with an invalid data type in the tuple input will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(TypeError, msg="parameters must be a (float, float) tuple") as cm:
+            group.change_rw_distribution((0.0, "0.3"))
+
+    def test_change_rw_distribution(self) -> None:
+        """
+        Test that change_rw_distribution() is working as intended.
+        """
+        group: grp.Group = grp.Group()
+        group.change_rw_distribution((0.0, 0.1))
+        self.assertIsNotNone(
+            group.rw_distribution,
+            "Group -- a valid call to change_rw_distribution on a new group is not assigning a non-None value to rw_distribution",
+        )
+        self.assertEqual(
+            group.rw_distribution,
+            (0.0, 0.1),
+            "Group -- a valid call to change_rw_distribution is not setting rw_distribution to the correct value",
+        )
+
+    def test_change_opinion_rw_invalid_outer(self) -> None:
+        """
+        Test that change_opinion_rw() with a non-tuple input will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(TypeError, msg="rw_params must be a (float, float) tuple") as cm:
+            group.change_opinion_rw([0.0, 0.1])
+
+    def test_change_opinion_rw_invalid_inner(self) -> None:
+        """
+        Test that change_opinion_rw() with an invalid data type in the tuple input will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(TypeError, msg="rw_params must be a (float, float) tuple") as cm:
+            group.change_opinion_rw((0.0, "0.3"))
+
+    def test_change_opinion_rw(self) -> None:
+        """
+        Test that change_opinion_rw() is working as intended.
+        """
+        group: grp.Group = grp.Group()
+        group.change_opinion_rw((0.0, 0.1))
+        self.assertIsNotNone(
+            group.opinion_rw,
+            "Group -- a valid call to change_opinion_rw on a new group is not assigning a non-None value to opinion_rw",
+        )
+        self.assertEqual(
+            group.opinion_rw,
+            (0.0, 0.1),
+            "Group -- a valid call to change_opinion_rw is not setting opinion_rw to the correct value",
+        )
+
+    # TODO: Continue with change_predominant_personality from here...
 
     def test_set_index_invalid(self) -> None:
         """
