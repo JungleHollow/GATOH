@@ -489,7 +489,7 @@ class Agent:
             raise RuntimeError("The agent for which an update is being attempted has not yet been initialised")
 
         # Type checking
-        if not isinstance(opinion_silenced, dict) or not isinstance(negation_ocurred, bool):
+        if not isinstance(opinion_silenced, dict):
             raise TypeError("opinion_silenced must be a <string : boolean> dictionary -- the input is of an incorrect data type")
         elif not isinstance(negation_ocurred, bool):
             raise TypeError("negation_ocurred must be a boolean -- the input value is not of the correct data type")

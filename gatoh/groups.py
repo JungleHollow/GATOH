@@ -9,6 +9,7 @@ import zipfile
 from collections.abc import Iterable, Iterator
 import concurrent.futures
 from copy import deepcopy
+from math import ceil
 from shutil import rmtree
 from typing import Any, NotRequired, TypeVar, TypedDict, override
 
@@ -27,6 +28,12 @@ COHESIONS: list[str] = ["intimate", "close", "neutral", "distant", "passing"]
 
 # The absolute maximum value that aggregate group opinions can take
 OPINION_MAX: float = 1.0
+# The threshold that a group's radicalisation_rate must surpass for it to be considered collectively radicalised
+COLLECTIVE_RAD_THRESH: float = 0.2
+# The threshold that a group's member_benefit_rate must surpass for it to be considered collectively benefited
+COLLECTIVE_BENEFIT_THRESH: float = 0.4
+# The threshold that a group's silencing_rate must surpass for it to be considered collectively silenced
+COLLECTIVE_SILENCING_THRESH: float = 0.75
 # The compression level to use across relevant methods
 COMPRESS_LEVEL: int = 4
 # The modifier value for groups with predominant personality type ["neutral", "rational", "erratic"] for opinion silencing
@@ -125,13 +132,22 @@ class Group:
         self.previous_opinion: float = 0.0
 
         self.member_benefit_rate: float
-
         self.aggregate_susceptibility: float
+
         self.cohesion: str = "neutral"
         self.predominant_personality: str = "neutral"
+
         self.radicalisation_rate: float
 
         self.aggregate_hierarchy_weighting: float
+
+        self.silencing_rate: float
+
+        # To assign per-group random-walk parameters for the dynamic hierarchy weighting
+        self.rw_distribution: tuple[float, float] | None = None
+
+        # To assign per-group random-walk parameters for the stochastic opinion shifts
+        self.opinion_rw: tuple[float, float] | None = None
 
         # If no args have been passed, it is assumed that self.generate_group() will be subsequently called
         if args:
@@ -199,6 +215,7 @@ class Group:
         opinion_sum: float = 0.0
         radicalisation_count: int = 0
         benefit_count: int = 0
+        silenced_count: int = 0
         susceptibility_sum: float = 0.0
         hierarchy_weighting_total: float = 0.0
         personality_counts: dict[str, int] = {}
@@ -212,6 +229,8 @@ class Group:
                 radicalisation_count += 1
             if agent.personal_benefit:
                 benefit_count += 1
+            if agent.is_silenced[hierarchy]:
+                silenced_count += 1
             _ = personality_counts.setdefault(agent.personality, 0)
             personality_counts[agent.personality] += 1
 
@@ -219,6 +238,7 @@ class Group:
         self.aggregate_opinion = opinion_sum / len(members)
         self.radicalisation_rate = radicalisation_count / len(members)
         self.member_benefit_rate = benefit_count / len(members)
+        self.silencing_rate = silenced_count / len(members)
         self.aggregate_susceptibility = susceptibility_sum / len(members)
         self.aggregate_hierarchy_weighting = hierarchy_weighting_total / len(members)
         self.predominant_personality = max(personality_counts, key=lambda x: personality_counts[x])
@@ -366,6 +386,24 @@ class Group:
         self.member_benefit_rate = float(benefit_count / len(member_benefits))
         return None
 
+    def recalculate_silencing_rate(self, members_silenced: list[bool]) -> None:
+        """
+        A setter method that will calculate a fixed silencing rate value from the current
+        opinion silencing statuses of group members.
+
+        :param members_silenced: The current opinion silencing status for each group member.
+        :type members_silenced: list[bool]
+        :raises ValueError: If the input list is not the same size as the group.
+        """
+        if len(members_silenced) != self.get_num_members():
+            raise ValueError("The number of silencing statuses input does not match the number of group members")
+        silenced_count: int = 0
+        for silenced in members_silenced:
+            if silenced:
+                silenced_count += 1
+        self.silencing_rate = float(silenced_count / len(members_silenced))
+        return None
+
     def recalculate_hierarchy_weighting(self, member_weightings: list[float]) -> None:
         """
         A setter method that will calculate a fixed member hierarchy weighting value from
@@ -445,6 +483,205 @@ class Group:
             self.aggregate_opinion = OPINION_MAX
 
         return per_agent_delta
+
+    def change_radicalisation_rate(self, rate_delta: float) -> dict[str, bool]:
+        """
+        A setter method that changes the Group's radicalisation rate by a given delta value.
+
+        This will not cause changes to the radicalisation status of member agents -- This should
+        be handled from within the parent model by using the returned radicalisation status mapping.
+
+        :param rate_delta: The value by which to shift the radicalisation rate of the group.
+        :type rate_delta: float
+        :raises TypeError: If the rate delta is not a float.
+        :raises AttributeError: If the radicalisation_rate has not yet been initialised.
+        :return: A <Member ID : radicalisation status> mapping that reports the new radicalisation status for each member.
+        :rtype: dict[str, bool]
+        """
+        # Check that radicalisation rate has been initialised
+        if not hasattr(self, "radicalisation_rate"):
+            raise AttributeError("radicalisation_rate has not yet been initialised for this group")
+        if not isinstance(rate_delta, float):
+            raise TypeError("rate_delta must be a float value")
+
+        # Apply the delta
+        self.radicalisation_rate += rate_delta
+
+        # Constrain back to a valid proportion
+        if self.radicalisation_rate < 0.0:
+            self.radicalisation_rate = 0.0
+        elif self.radicalisation_rate > 1.0:
+            self.radicalisation_rate = 1.0
+
+        # Determine the number of radicalised agents for the new rate
+        new_radicalisation_count: int = ceil(self.radicalisation_rate * self.get_num_members())
+        selected_indices: list[int] = rd.sample(list(range(self.get_num_members())), k=new_radicalisation_count)
+
+        output_dict: dict[str, bool] = {}
+
+        for idx, member in enumerate(self.members):
+            if idx in selected_indices:
+                output_dict[member] = True
+            else:
+                output_dict[member] = False
+
+        self.recalculate_radicalisation_rate(list(output_dict.values()))
+
+        return output_dict
+
+    def change_rw_distribution(self, parameters: tuple[float, float]) -> None:
+        """
+        A setter method that change the group's explicit random walk parameters for its social hierarchy.
+
+        :param parameters: The new (mean, variance) for the random walk's gaussian distribution.
+        :type parameters: tuple[float, float]
+        :raises TypeError: If the input contains any invalid data types.
+        """
+        if not isinstance(parameters, tuple) or not isinstance(parameters[0], float) or not isinstance(parameters[1], float):
+            raise TypeError("parameters must be a (float, float) tuple")
+        self.rw_distribution = parameters
+        return None
+
+    def change_opinion_rw(self, rw_params: tuple[float, float]) -> None:
+        """
+        A setter method that changes the group's explicit opinion random walk parameters.
+
+        :param rw_params: The new (mean, variance) for the random walk's gaussian distribution.
+        :type rw_params: tuple[float, float]
+        :raises TypeError: If rw_params is not a (float, float) tuple.
+        """
+        if not isinstance(rw_params, tuple) or not isinstance(rw_params[0], float) or not isinstance(rw_params[1], float):
+            raise TypeError("rw_params must be a (float, float) tuple")
+        self.opinion_rw = rw_params
+        return None
+
+    def change_predominant_personality(self, personality: str) -> dict[str, str]:
+        """
+        A setter method that changes the group's predominant personality type.
+
+        This will not cause changes to the personalities of member agents to create the desired predominant
+        type -- This should be handled from within the parent model by using the returned per-agent
+        personality mapping.
+
+        :param personality: The personality type that should be the new predominant personality.
+        :type personality: str
+        :raises TypeError: If personality is not a string.
+        :raises ValueError: If the personality type is not currently supported.
+        :return: A <Member ID : personality type> mapping reporting what each member's new personality type should be.
+        :rtype: dict[str, str]
+        """
+        # Data checks
+        if not isinstance(personality, str):
+            raise TypeError("The input personality must be a string")
+        if personality not in PERSONALITIES:
+            raise ValueError("The input personality is not currently supported")
+
+        member_personalities: dict[str, str] = {member: "" for member in self.members}
+
+        # No change is actually ocurring, return empty strings for each member (which will be treated as 'no change' in outer functions)
+        if personality == self.predominant_personality:
+            return member_personalities
+        else:
+            self.predominant_personality = personality
+            new_personalities: list[str] = make_list_with_mode(PERSONALITIES, self.predominant_personality, n=self.get_num_members())
+
+            # Set the new personality for each member in simple numerical order
+            for idx, member in enumerate(member_personalities.keys()):
+                member_personalities[member] = new_personalities[idx]
+
+        return member_personalities
+
+    def change_benefit_rate(self, rate_delta: float) -> dict[str, bool]:
+        """
+        A setter method that changes the group's member_benefit_rate by a given delta value.
+
+        This will not cause changes to the personal benefit status of member agents to create the desired
+        benefit rate -- This should be handled from within the parent model by using the returned per-agent
+        personal benefit mapping.
+
+        :param rate_delta: The value by which to shift the group's member_benefit_rate.
+        :type rate_delta: float
+        :raises AttributeError: If the member benefit rate has not yet been initialised for this group.
+        :raises TypeError: If the rate delta is not a float
+        :return: A <Member ID : personal benefit flag> mapping that defines each member agent's new personal benefit status.
+        :rtype: dict[str, bool]
+        """
+        # Checks
+        if not hasattr(self, "member_benefit_rate"):
+            raise AttributeError("member_benefit_rate has not yet been initialised for this group")
+        if not isinstance(rate_delta, float):
+            raise TypeError("rate_delta must be a float value")
+
+        # Apply the delta
+        self.member_benefit_rate += rate_delta
+
+        # Constrain back to a valid proportion
+        if self.member_benefit_rate < 0.0:
+            self.member_benefit_rate = 0.0
+        elif self.member_benefit_rate > 1.0:
+            self.member_benefit_rate = 1.0
+
+        # Determine the number of agents who experience personal benefit for the new rate
+        new_benefit_count: int = ceil(self.member_benefit_rate * self.get_num_members())
+        selected_indices: list[int] = rd.sample(list(range(self.get_num_members())), k=new_benefit_count)
+
+        output_dict: dict[str, bool] = {}
+
+        for idx, member in enumerate(self.members):
+            if idx in selected_indices:
+                output_dict[member] = True
+            else:
+                output_dict[member] = False
+
+        self.recalculate_member_benefit_rate(list(output_dict.values()))
+
+        return output_dict
+
+    def change_silencing_rate(self, rate_delta: float) -> dict[str, bool]:
+        """
+        A setter method that changes the Group's silencing rate by a given delta value.
+
+        This will not cause changes to the silencing status of member agents for the relevant hierarchy
+        to reach the desired silencing rate -- This should be handled from within the parent model by
+        using the returned per-agent is_silenced mapping.
+
+        :param rate_delta: The value by which to shift the silencing_rate.
+        :type rate_delta: float
+        :raises TypeError: If the rate delta is not a float.
+        :raises AttributeError: If the silencing_rate has not yet been initialised.
+        :return: A <Member ID : is_silenced flag> mapping that specifies which agents are silenced in this group's hierarchy.
+        :rtype: dict[str, bool]
+        """
+        # Checks
+        if not hasattr(self, "silencing_rate"):
+            raise AttributeError("silencing_rate has not yet been initialised for this group")
+        if not isinstance(rate_delta, float):
+            raise TypeError("rate_delta must be a float value")
+
+        # Apply the delta
+        self.silencing_rate += rate_delta
+
+        # Constrain back to a valid proportion
+        if self.silencing_rate < 0.0:
+            self.silencing_rate = 0.0
+        elif self.silencing_rate > 1.0:
+            self.silencing_rate = 1.0
+
+        # Determine the number of agents who have their opinions silenced for the new rate
+        new_silenced_count: int = ceil(self.silencing_rate * self.get_num_members())
+        selected_indices: list[int] = rd.sample(list(range(self.get_num_members())), k=new_silenced_count)
+
+        output_dict: dict[str, bool] = {}
+
+        for idx, member in enumerate(self.members):
+            if idx in selected_indices:
+                output_dict[member] = True
+            else:
+                output_dict[member] = False
+
+        self.recalculate_silencing_rate(list(output_dict.values()))
+
+        return output_dict
 
     def change_aggregate_hierarchy_weighting(self, weighting_delta: float) -> float:
         """
@@ -569,7 +806,7 @@ class Group:
             return True
         return False
 
-    def is_radicalised(self, threshold: float = 0.2) -> bool:
+    def is_radicalised(self, threshold: float = COLLECTIVE_RAD_THRESH) -> bool:
         """
         A function that reports if the group is considered to be "radicalised" as a collective.
 
@@ -582,6 +819,39 @@ class Group:
         if not hasattr(self, "radicalisation_rate"):
             raise AttributeError("radicalisation_rate has not been initialised yet for this group")
         if self.radicalisation_rate >= threshold:
+            return True
+        return False
+
+    def is_benefited(self, threshold: float = COLLECTIVE_BENEFIT_THRESH) -> bool:
+        """
+        A function that reports if the group is considered to experience personal benefit from the social contagion
+        as a collective.
+
+        :param threshold: The threshold that the member benefit rate must surpass for the group to be considered as benefited.
+        :type threshold: float, optional
+        :raises AttributeError: If the member_benefit_rate has not been initialised.
+        :return: A flag indicating if the group can be collectively considered to be benefited.
+        :rtype: bool
+        """
+        if not hasattr(self, "member_benefit_rate"):
+            raise AttributeError("member_benefit_rate has not yet been initialised for this group")
+        if self.member_benefit_rate >= threshold:
+            return True
+        return False
+
+    def is_silenced(self, threshold: float = COLLECTIVE_SILENCING_THRESH) -> bool:
+        """
+        A function that reports if the group is considered to be silenced in its hierarchy as a collective.
+
+        :param threshold: The threshold that the silencing rate must surpass for the group to be considered as silenced.
+        :type threshold: float, optional
+        :raises AttributeError: If silencing_rate has not been initialised.
+        :return: A flag indicating if the group can be collectively considered to be silenced.
+        :rtype: float
+        """
+        if not hasattr(self, "silencing_rate"):
+            raise AttributeError("silencing_rate has not yet been initialised for this group")
+        if self.silencing_rate >= threshold:
             return True
         return False
 
@@ -656,6 +926,37 @@ class Group:
 
         return output_dict
 
+    def update(self, opinion_silenced: float, negation_ocurred: bool) -> tuple[str, dict[str, bool]]:
+        """
+        Updates the internal state of the group after the model has stepped:
+            1. Updates whether the group is silenced within its hierarchy
+            2. Inverts the group's aggregate opinion if opinion negation ocurred
+
+        :param opinion_silenced: A delta value indicating by how much the group's silencing_rate has shifted.
+        :type opinion_silenced: float
+        :param negation_ocurred: A flag indicating if opinion negation has ocurred in the current iteration.
+        :type negation_ocurred: bool
+        :raises RuntimeError: If the group has not yet been initialised appropriately.
+        :raises TypeError: If either of the input parameters are of an incorrect data type.
+        :return: The group's hierarchy, and which group members have become silenced.
+        :rtype: tuple[str, dict[str, bool]]
+        """
+        # Check for initialisation
+        if not hasattr(self, "aggregate_opinion"):
+            raise AttributeError("The group for which an update is being attempted has not yet been initialised")
+
+        # Type checking
+        if not isinstance(opinion_silenced, bool) or not isinstance(negation_ocurred, bool):
+            raise TypeError("opinion_silenced and negation_ocurred must both be boolean values")
+
+        # Update is_silenced
+        members_silenced: dict[str, bool] = self.change_silencing_rate(opinion_silenced)
+        if negation_ocurred:
+            # Invert the Group's aggregate opinion
+            self.aggregate_opinion *= -1.0
+        return self.hierarchy, members_silenced
+
+    # TODO: Rework this function to match the new group silencing system
     def opinion_silencing(self, estimated_opinion_climate: float, silencing_threshold: float | None = None) -> tuple[bool, float]:
         """
         Determines if members in the group will become silenced in their hierarchy based on their collective attributes.
@@ -903,6 +1204,14 @@ class Group:
         self.recalculate_radicalisation_rate(list(output_dict.values()))
 
         return output_dict
+
+    def stochastic_silencing_change(self) -> bool:
+        """
+        Calls to this function are primarily meant to originate from :meth:`~gatoh.groups.Group.life_events`.
+
+        Will flip the silenced status of the group within its hierarchy,
+        """
+        # TODO: finish...
 
     class LifeEventsDict(TypedDict):
         personality_thresh: NotRequired[float]
@@ -1444,6 +1753,19 @@ class GroupSet:
         for group in self.groups:
             group_ids.append(group.id)
         return group_ids
+
+    def get_member_ids(self) -> list[str]:
+        """
+        A getter function that returns the unique IDs of all members contained within the group set.
+
+        :return: Every unique member ID.
+        :rtype: list[str]
+        """
+        group_ids: set[str] = set()
+        for group in self.groups:
+            for member in group.members:
+                group_ids.add(member)
+        return list(group_ids)
 
     @override
     def __getstate__(self) -> dict[str, list[Group] | rd.Random]:
