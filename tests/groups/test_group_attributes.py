@@ -630,12 +630,19 @@ class TestGroupAttributes(ut.TestCase):
         """
         Test that change_radicalisation_rate() is working as intended.
         """
-        group: grp.Group = grp.Group(members=["foo", "bar"], radicalisation_rate=0.0)
+        group_members: list[str] = ["foo", "bar"]
+        group: grp.Group = grp.Group(members=group_members, radicalisation_rate=0.0)
         agent_radicalisations: dict[str, bool] = group.change_radicalisation_rate(0.4)
         self.assertIsInstance(
             agent_radicalisations,
             dict,
             "Group -- change_radicalisation_rate is not returning a dictionary value",
+        )
+        self.assertAlmostEqual(
+            group.radicalisation_rate,
+            0.4,
+            1,
+            "Group -- change_radicalisation_rate is not actually changing the group's radicalisation_rate attribute",
         )
         self.assertEqual(
             len(agent_radicalisations.keys()),
@@ -648,6 +655,12 @@ class TestGroupAttributes(ut.TestCase):
             1,
             "Group -- change_radicalisation_rate is not producing the correct number of radicalised agents for the new radicalisation_rate value",
         )
+        for member in agent_radicalisations:
+            self.assertIn(
+                member,
+                group_members,
+                "Group -- change_radicalisation_rate is reporting a radicalisation status for a non-existent member",
+            )
 
     def test_change_rw_distribution_invalid_outer(self) -> None:
         """
@@ -713,7 +726,199 @@ class TestGroupAttributes(ut.TestCase):
             "Group -- a valid call to change_opinion_rw is not setting opinion_rw to the correct value",
         )
 
-    # TODO: Continue with change_predominant_personality from here...
+    def test_change_predominant_personality_dtype(self) -> None:
+        """
+        Test that change_predominant_personality with an invalid data type will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(TypeError, msg="The input personality must be a string") as cm:
+            member_personalities: dict[str, str] = group.change_predominant_personality(False)
+
+    def test_change_predominant_personality_invalid(self) -> None:
+        """
+        Test that change_predominant_personality with an invalid personality type will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(ValueError, msg="The input personality is not currently supported") as cm:
+            member_personalities: dict[str, str] = group.change_predominant_personality("stubborn")
+
+    def test_change_predominant_personality(self) -> None:
+        """
+        Test that change_predominant_personality is working as intended.
+        """
+        group_members: list[str] = ["foo", "bar", "oof", "rab"]
+        group: grp.Group = grp.Group(members=group_members)
+        member_personalities: dict[str, str] = group.change_predominant_personality("social")
+        self.assertIsInstance(
+            member_personalities,
+            dict,
+            "Group -- a valid call to change_predominant_personality is not returning a dict value",
+        )
+        self.assertEqual(
+            group.predominant_personality,
+            "social",
+            "Group -- a valid call to change_predominant_personality is not changing the predominant_personality attribute",
+        )
+        personality_counts: dict[str, int] = {personality: 0 for personality in grp.PERSONALITIES}
+        for member, personality in member_personalities.items():
+            self.assertIn(
+                member,
+                group_members,
+                "Group -- a valid call to change_predominant_personality is reporting a new personality type for a non-existent member",
+            )
+            self.assertIn(
+                personality,
+                grp.PERSONALITIES,
+                "Group -- a valid call to change_predominant_personality is reporting a new personality type that is unsupported",
+            )
+            personality_counts[personality] += 1
+        self.assertEqual(
+            max(personality_counts, key=lambda x: personality_counts[x]),
+            "social",
+            "Group -- a valid call to change_predominant_personality is not generating member personalities which result in the correct predominant type",
+        )
+
+    def test_change_benefit_rate_empty(self) -> None:
+        """
+        Test that change_benefit_rate on an uninitialised group will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(AttributeError, msg="member_benefit_rate has not yet been initialised for this group") as cm:
+            member_benefits: dict[str, bool] = group.change_benefit_rate(0.1312)
+
+    def test_change_benefit_rate_dtype(self) -> None:
+        """
+        Test that change_benefit_rate with an invalid data type input will raise the expected error.
+        """
+        group: grp.Group = grp.Group(member_benefit_rate=0.2)
+        with self.assertRaises(TypeError, msg="rate_delta must be a float value") as cm:
+            member_benefits: dict[str, bool] = group.change_benefit_rate("zero_point_one")
+
+    def test_change_benefit_rate(self) -> None:
+        """
+        Test that change_benefit_rate is working as intended.
+        """
+        group_members: list[str] = ["foo", "bar"]
+        group: grp.Group = grp.Group(members=group_members, member_benefit_rate=0.0)
+        member_benefits: dict[str, bool] = group.change_benefit_rate(0.4)
+        self.assertIsInstance(
+            member_benefits,
+            dict,
+            "Group -- change_benefit_rate is not returning a dictionary value",
+        )
+        self.assertAlmostEqual(
+            group.member_benefit_rate,
+            0.4,
+            1,
+            "Group -- change_benefit_rate is not actually changing the member_benefit_rate attribute",
+        )
+        self.assertEqual(
+            len(member_benefits.keys()),
+            2,
+            "Group -- change_benefit_rate is not reporting the correct number of group members",
+        )
+        benefit_count: int = sum(int(flag) for flag in member_benefits.values())
+        self.assertEqual(
+            benefit_count,
+            1,
+            "Group -- change_benefit_rate is not producing the correct number of benefited agents for the new member_benefit_rate value",
+        )
+        for member in member_benefits:
+            self.assertIn(
+                member,
+                group_members,
+                "Group -- change_benefit_rate is reporting a benefit status for a non-existent member",
+            )
+
+    def test_change_silencing_rate_empty(self) -> None:
+        """
+        Test that change_silencing_rate on an uninitialised group will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(AttributeError, msg="silencing_rate has not yet been initialised for this group") as cm:
+            members_silenced: dict[str, bool] = group.change_silencing_rate(0.1312)
+
+    def test_change_silencing_rate_dtype(self) -> None:
+        """
+        Test that change_silencing_rate with an incorrect data type input will raise the expected error.
+        """
+        group: grp.Group = grp.Group(silencing_rate=0.1)
+        with self.assertRaises(TypeError, msg="rate_delta must be a float value") as cm:
+            members_silenced: dict[str, bool] = group.change_silencing_rate("zero_point_two")
+
+    def test_change_silencing_rate(self) -> None:
+        """
+        Test that change_silencing_rate is working as intended.
+        """
+        group_members: list[str] = ["foo", "bar"]
+        group: grp.Group = grp.Group(members=group_members, silencing_rate=0.0)
+        members_silenced: dict[str, bool] = group.change_silencing_rate(0.4)
+        self.assertIsInstance(
+            members_silenced,
+            dict,
+            "Group -- a valid call to change_silencing_rate is not returning a dictionary value",
+        )
+        self.assertAlmostEqual(
+            group.silencing_rate,
+            0.4,
+            1,
+            "Group -- a valid call to change_silencing_rate is not changing the silencing_rate attribute",
+        )
+        self.assertEqual(
+            len(members_silenced.keys()),
+            2,
+            "Group -- a valid call to change_silencing_rate is not reporting a new silencing status for the correct number of agents",
+        )
+        silenced_count: int = sum(int(flag) for flag in members_silenced.values())
+        self.assertEqual(
+            silenced_count,
+            1,
+            "Group -- a valid call to change_silencing_rate is not producing the correct number of silenced agents for the new silencing_rate value",
+        )
+        for member in members_silenced:
+            self.assertIn(
+                member,
+                group_members,
+                "Group -- a valid call to change_silencing_rate is reporting a silencing status for a non-existent member",
+            )
+
+    def test_change_aggregate_hierarchy_weighting_empty(self) -> None:
+        """
+        Test that change_aggregate_hierarchy_weighting on an uninitialised group will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(AttributeError, msg="aggregate_hierarchy_weighting has not been initialised for this group") as cm:
+            per_agent_delta: float = group.change_aggregate_hierarchy_weighting(0.1312)
+
+    def test_change_aggregate_hierarchy_weighting_dtype(self) -> None:
+        """
+        Test that change_aggregate_hierarchy_weighting with an invalid data type input will raise the expected error.
+        """
+        group: grp.Group = grp.Group(aggregate_hierarchy_weighting=0.1)
+        with self.assertRaises(TypeError, msg="weighting_delta must be a float") as cm:
+            per_agent_delta: float = group.change_aggregate_hierarchy_weighting("zero_point_two")
+
+    def test_change_aggregate_hierarchy_weighting(self) -> None:
+        """
+        Test that change_aggregate_hierarchy_weighting is working as intended.
+        """
+        group: grp.Group = grp.Group(members=["foo", "bar"], aggregate_hierarchy_weighting=0.25)
+        per_agent_delta: float = group.change_aggregate_hierarchy_weighting(-0.13)
+        self.assertIsInstance(
+            per_agent_delta,
+            float,
+            "Group -- a valid call to change_aggregate_hierarchy_weighting is not returning a float value",
+        )
+        self.assertEqual(
+            per_agent_delta,
+            -0.13,
+            "Group -- a valid call to change_aggregate_hierarchy_weighting is not returning the correct per-agent delta",
+        )
+        self.assertEqual(
+            group.aggregate_hierarchy_weighting,
+            0.12,
+            "Group -- a valid call to change_aggregate_hierarchy_weighting is not changing the aggregate_hierarchy_weighting attribute",
+        )
 
     def test_set_index_invalid(self) -> None:
         """
@@ -905,4 +1110,62 @@ class TestGroupAttributes(ut.TestCase):
         self.assertFalse(
             high_threshold,
             "Group -- a valid call to is_radicalised() is not reporting that the group is not radicalised at the specified threshold",
+        )
+
+    def test_is_benefited_empty(self) -> None:
+        """
+        Test that is_benefited() when the member_benefit_rate has not been initialised will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(AttributeError, msg="member_benefit_rate has not yet been initialised for this group") as cm:
+            is_benefited: bool = group.is_benefited()
+
+    def test_is_benefited(self) -> None:
+        """
+        Test that is_benefited() is working as intended.
+        """
+        group: grp.Group = grp.Group(member_benefit_rate=0.75)
+        is_benefited: bool = group.is_benefited()
+        self.assertIsInstance(
+            is_benefited,
+            bool,
+            "Group -- a valid call to is_benefited() is not returning a boolean value",
+        )
+        self.assertTrue(
+            is_benefited,
+            "Group -- a valid call to is_benefited() is not reporting that the group is radicalised at the specified threshold",
+        )
+        high_threshold: bool = group.is_benefited(threshold=0.95)
+        self.assertFalse(
+            high_threshold,
+            "Group -- a valid call to is_benefited() is not reporting that the group is not radicalised at the specified threshold",
+        )
+
+    def test_is_silenced_empty(self) -> None:
+        """
+        Test that is_silenced() when the silencing_rate has not been initialised will raise the expected error.
+        """
+        group: grp.Group = grp.Group()
+        with self.assertRaises(AttributeError, msg="silencing_rate has not yet been initialised for this group") as cm:
+            is_silenced: bool = group.is_silenced()
+
+    def test_is_silenced(self) -> None:
+        """
+        Test that is_silenced() is working as intended.
+        """
+        group: grp.Group = grp.Group(silencing_rate=0.8)
+        is_silenced: bool = group.is_silenced()
+        self.assertIsInstance(
+            is_silenced,
+            bool,
+            "Group -- a valid call to is_silenced() is not returning a boolean value",
+        )
+        self.assertTrue(
+            is_silenced,
+            "Group -- a valid call to is_silenced() is not reporting that the group is silenced at the specified threshold",
+        )
+        high_threshold: bool = group.is_silenced(threshold=0.95)
+        self.assertFalse(
+            high_threshold,
+            "Group -- a valid call to is_silenced() is not reporting that the group is not silenced at the specified threshold",
         )
