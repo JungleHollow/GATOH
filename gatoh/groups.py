@@ -1191,9 +1191,14 @@ class Group:
         Will randomly select a new number of group members that are radicalised, and then randomly assigns these
         radicalisation statuses to the group members.
 
+        :raises RuntimeError: If the group has not yet been initialised appropriately.
         :return: A <member ID : radicalisation status> mapping that specifies the new radicalisation status for each agent member.
         :rtype: dict[str, bool]
         """
+        # Check that the group has been initialised
+        if not hasattr(self, "radicalisation_rate"):
+            raise RuntimeError("The group for which a stochastic radicalisation change is being determined has not yet been initialised")
+
         new_radicalisation_count: int = rd.randint(0, self.get_num_members() - 1)
         selected_indices: list[int] = rd.sample(list(range(self.get_num_members())), k=new_radicalisation_count)
 
@@ -1216,9 +1221,14 @@ class Group:
         Will randomly select a new number of group members that are silenced, and then randomly assigns these
         silencing statuses to the group members.
 
+        :raises RuntimeError: If the group has not yet been initialised appropriately.
         :return: A <Member ID : silencing status> mapping that specifies the new silencing status for each agent member.
         :rtype: dict[str, bool]
         """
+        # Check that the group has been initialised
+        if not hasattr(self, "silencing_rate"):
+            raise RuntimeError("The group for which a stochastic silencing change is being determined has not yet been initialised")
+
         new_silenced_count: int = rd.randint(0, self.get_num_members() - 1)
         selected_indices: list[int] = rd.sample(list(range(self.get_num_members())), k=new_silenced_count)
 
