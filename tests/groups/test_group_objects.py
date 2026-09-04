@@ -190,6 +190,7 @@ class TestGroupObjects(ut.TestCase):
         """
         Test that opinion_silencing() with no threshold passed will correctly report that silencing should occur.
         """
+        _ = self.group.change_radicalisation_rate(-0.25)
         opinion_silencing: tuple[bool, float] = self.group.opinion_silencing(0.8)
         # Worked example:
         #   1. No explicit silencing_threshold was passed, so the group's aggregate social susceptibility of 0.9 is used to calculate the threshold
@@ -226,6 +227,7 @@ class TestGroupObjects(ut.TestCase):
         """
         Test that opinion_silencing() with no threshold passed will correctly report that silencing should not occur.
         """
+        _ = self.group.change_radicalisation_rate(-0.25)
         opinion_silencing: tuple[bool, float] = self.group.opinion_silencing(-0.48)
         # Worked example:
         #   1. No explicit silencing threshold was passed, so the group's aggregate social susceptibility of 0.9 is used to calculate the threshold.
@@ -262,6 +264,277 @@ class TestGroupObjects(ut.TestCase):
         """
         Test that opinion_silencing() with a threshold will correctly report that silencing should occur.
         """
+        _ = self.group.change_radicalisation_rate(-0.25)
+        opinion_silencing: tuple[bool, float] = self.group.opinion_silencing(-0.48, silencing_threshold=0.01)
+        # Worked example:
+        #   1. An explicit threshold of 0.01 was passed
+        #   2. The group's predominant personality is "impulsive", so the absolute difference is calculated as abs(estimated opinion climate - aggregate opinion)
+        #   3. Therefore: absolute_difference = abs(-0.48 - -0.44) = abs(-0.04) = 0.04
+        #   4. 0.04 is greater than the threshold of 0.01, so silencing will occur
+        self.assertIsInstance(
+            opinion_silencing,
+            tuple,
+            "Group -- opinion_silencing is not returning a tuple as the result (thresh - true)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[0],
+            bool,
+            "Group -- opinion_silencing is not returning a boolean as the first value (thresh - true)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[1],
+            float,
+            "Group -- opinion_silencing is not returning a float as the second value (thresh - true)",
+        )
+        self.assertTrue(
+            opinion_silencing[0],
+            "Group -- opinion_silencing is not correctly reporting that silencing should occur (thresh - true)",
+        )
+        self.assertAlmostEqual(
+            opinion_silencing[1],
+            0.04,
+            5,
+            "Group -- opinion_silencing is not calculating and reporting the correct absolute difference value (thresh - true)",
+        )
+
+    def test_opinion_silencing_false(self) -> None:
+        """
+        Test that opinion_silencing() with a threshold will correctly report that silencing should not occur.
+        """
+        _ = self.group.change_radicalisation_rate(-0.25)
+        opinion_silencing: tuple[bool, float] = self.group.opinion_silencing(0.9, silencing_threshold=1.99)
+        # Worked example:
+        #   1. An explicit silencing threshold of 1.99 was passed
+        #   2. The group's predominant personality is "impulsive", so the absolute difference is calculated as abs(estimated opinion climate - aggregate opinion)
+        #   3. Therefore: absolute difference = abs(0.9 - -0.44) = abs(1.34) = 1.34
+        #   4. 1.34 is smaller than the threshold of 1.99, so silencing will not occur
+        self.assertIsInstance(
+            opinion_silencing,
+            tuple,
+            "Group -- opinion_silencing is not returning a tuple as the result (thresh - false)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[0],
+            bool,
+            "Group -- opinion_silencing is not returning a boolean as the first value (thresh - false)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[1],
+            float,
+            "Group -- opinion_silencing is not returning a float as the second value (thresh - false)",
+        )
+        self.assertFalse(
+            opinion_silencing[0],
+            "Group -- opinion_silencing is not correctly reporting that silencing should not occur (thresh - false)",
+        )
+        self.assertAlmostEqual(
+            opinion_silencing[1],
+            1.34,
+            5,
+            "Group -- opinion_silencing is not calculating and reporting the correct absolute difference value (thresh - false)",
+        )
+
+    def test_opinion_silencing_radicalised(self) -> None:
+        """
+        Test that opinion_silencing() on a radicalised group will return the expected result.
+        """
+        opinion_silencing: tuple[bool, float] = self.group.opinion_silencing(1.0, silencing_threshold=0.01)
+        self.assertIsInstance(
+            opinion_silencing,
+            tuple,
+            "Group -- opinion_silencing is not returning a tuple as the result (radicalised)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[0],
+            bool,
+            "Group -- opinion_silencing is not returning a boolean as the first value (radicalised)",
+        )
+        self.assertIsInstance(
+            opinion_silencing[1],
+            float,
+            "Group -- opinion_silencing is not returning a float as the second value (radicalised)",
+        )
+        self.assertFalse(
+            opinion_silencing[0],
+            "Group -- opinion_silencing is not correctly reporting that silencing should not occur (radicalised)",
+        )
+        self.assertAlmostEqual(
+            opinion_silencing[1],
+            0.0,
+            5,
+            "Group -- opinion_silencing is not reporting an absolute difference of 0.0 (radicalised)",
+        )
+
+    def test_opinion_negation_invalid_diff(self) -> None:
+        """
+        Test that opinion_negation() with an absolute difference of invalid data type will raise the expected error.
+        """
+        with self.assertRaises(TypeError) as cm:
+            negation: bool = self.group.opinion_negation("thirteen", 0.12)
+
+    def test_opinion_negation_invalid_thresh(self) -> None:
+        """
+        Test that opinion_negation() with a threshold of invalid data type will raise the expected error.
+        """
+        with self.assertRaises(TypeError) as cm:
+            negation: bool = self.group.opinion_negation(0.13, "twelve")
+
+    def test_opinion_negation_false(self) -> None:
+        """
+        Test that opinion_negation() will correctly report that negation should not occur.
+        """
+        _ = self.group.change_radicalisation_rate(-0.25)
+        negation: bool = self.group.opinion_negation(0.03, 1.99)
+        # Worked example:
+        #   1. negation_strength is initialised as the reported absolute difference 0.03
+        #   2. Predominant personality is "impulsive", so negation_strength is modified by /= ((1 - aggregate susceptibility) * aggregate hierarchy weighting)
+        #   3. Therefore, negation_strength = 0.03 / ((1 - 0.9) * 0.2) = 0.03 / 0.02 = 1.5
+        #   4. The negation_strength of 1.5 is not above the threshold of 1.99, so negation does not occur
+        self.assertIsInstance(
+            negation,
+            bool,
+            "Group -- opinion_negation is not returning a boolean result (negation=false)",
+        )
+        self.assertFalse(
+            negation,
+            "Group -- opinion_negation is not correctly reporting that negation should not occur",
+        )
+
+    def test_opinion_negation_true(self) -> None:
+        """
+        Test that opinion_negation() will correctly report that negation should occur.
+        """
+        _ = self.group.change_radicalisation_rate(-0.25)
+        negation: bool = self.group.opinion_negation(6.9, 13.12)
+        # Worked example:
+        #   1. negation_strength is initialised as the reported absolute difference 6.9
+        #   2. Predominant personality is "impulsive", so negation_strength is modified by /= ((1 - aggregate susceptibility) * aggregate hierarchy weighitng)
+        #   3. Therefore, negation_strength = 6.9 / ((1 - 0.9) * 0.2) = 6.9 / 0.02 = 345
+        #   4. The negation_strength of 345 is above the threshold of 13.12, so negation does occur
+        self.assertIsInstance(
+            negation,
+            bool,
+            "Group -- opinion_negation is not returning a boolean result (negation=true)",
+        )
+        self.assertTrue(
+            negation,
+            "Group -- opinion_negation is not correctly reporting that negation should occur",
+        )
+
+    def test_opinion_negation_radicalised(self) -> None:
+        """
+        Test that opinion_negation() on a radicalised group will correctly report that negation does not occur.
+        """
+        negation: bool = self.group.opinion_negation(6.9, 13.12)
+        self.assertIsInstance(
+            negation,
+            bool,
+            "Group -- opinion_negation is not returning a boolean result (radicalised)",
+        )
+        self.assertFalse(
+            negation,
+            "Group -- opinion_negation on a radicalised group is not reporting that negation will not occur",
+        )
+
+    def test_evolve_hierarchy_invalid_input(self) -> None:
+        """
+        Test that evolve_hierarchy() with an invalid rw_distribution data type will produce the expected error.
+        """
+        with self.assertRaises(TypeError) as cm:
+            evolve_info: tuple[str, float] = self.group.evolve_hierarchy([0.0, 0.1])
+
+    def test_evolve_hierarchy(self) -> None:
+        """
+        Test that evolve_hierarchy() is working as intended.
+        """
+        evolve_info: tuple[str, float] = self.group.evolve_hierarchy((0.0, 0.5))
+        self.assertIsInstance(
+            evolve_info,
+            tuple,
+            "Group -- a valid call to evolve_hierarchy is not returning a tuple value",
+        )
+        self.assertIsInstance(
+            evolve_info[0],
+            str,
+            "Group -- a valid call to evolve_hierarchy is not returning a string as the first value",
+        )
+        self.assertEqual(
+            evolve_info[0],
+            "FooBar",
+            "Group -- a valid call to evolve_hierarchy is not reporting the group's hierarchy correctly"
+        )
+        self.assertIsInstance(
+            evolve_info[1],
+            float,
+            "Group -- a valid call to evolve_hierarchy is not returning a float as the second value",
+        )
+        self.assertIsInstance(
+            self.group.aggregate_hierarchy_weighting,
+            float,
+            "Group -- a valid call to evolve_hierarchy is causing a non-float value to be set for the aggregate hierarchy weighting",
+        )
+        self.assertTrue(
+            (self.group.aggregate_hierarchy_weighting >= -grp.SOCIAL_WEIGHTINGS_MAX) and (self.group.aggregate_hierarchy_weighting <= grp.SOCIAL_WEIGHTINGS_MAX),
+            "Group -- a valid call to evolve_hierarchy is not producing an aggregate weighting value in the valid range",
+        )
+        self.assertNotAlmostEqual(
+            self.group.aggregate_hierarchy_weighting,
+            0.7,
+            5,
+            "Group -- a valid call to evolve_hierarchy is not changing the aggregate hierarchy value of the group correctly",
+        )
+
+    def test_stochastic_opinion_invalid(self) -> None:
+        """
+        Test that stochastic_opinion() with invalid data types will raise the expected errors.
+        """
+        with self.assertRaises(TypeError) as cm:
+            opinion_info = self.group.stochastic_opinion([0.0, 0.1])
+        with self.assertRaises(TypeError) as cm:
+            opinion_info = self.group.stochastic_opinion(("zero", 0.1))
+        with self.assertRaises(TypeError) as cm:
+            opinion_info = self.group.stochastic_opinion((0.0, "point_one"))
+
+    def test_stochastic_opinion(self) -> None:
+        """
+        Test that stochastic_opinion() is working as intended.
+        """
+        opinion_info: tuple[str, float] = self.group.stochastic_opinion((0.0, 0.5))
+        self.assertIsInstance(
+            opinion_info,
+            tuple,
+            "Group -- stochastic_opinion is not returning a tuple result",
+        )
+        self.assertIsInstance(
+            opinion_info[0],
+            str,
+            "Group -- stochastic_opinion is not returning a string as the first value",
+        )
+        self.assertEqual(
+            opinion_info[0],
+            "FooBar",
+            "Group -- stochastic_opinion is not correctly reporting the group's hierarchy"
+        )
+        self.assertIsInstance(
+            opinion_info[1],
+            float,
+            "Group -- stochastic_opinion is not returning a float as the second value",
+        )
+        self.assertIsInstance(
+            self.group.aggregate_opinion,
+            float,
+            "Group -- a valid call to stochastic_opinon is causing a non-float value to be set for the aggregate opinion",
+        )
+        self.assertTrue(
+            (self.group.aggregate_opinion >= -grp.OPINION_MAX) and (self.group.aggregate_opinion <= grp.OPINION_MAX),
+            "Group -- a valid call to stochastic_opinion is not producing an aggregate opinion value in the valid range",
+        )
+        self.assertNotAlmostEqual(
+            self.group.aggregate_opinion,
+            -0.44,
+            5,
+            "Group -- a valid call to stochastic_opinion is not changing the group's aggregate opinion value correctly",
+        )
 
     @override
     def tearDown(self) -> None:

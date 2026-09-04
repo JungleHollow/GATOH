@@ -300,7 +300,7 @@ class TestAgentObjects(ut.TestCase):
         Test that opinion_silencing() on a radicalised agent will return the expected result.
         """
         est_op_climate: float = -0.99
-        silencing_threshold: float = 0.01,
+        silencing_threshold: float = 0.01
         self.agent.change_radicalisation(True)
         opinion_silencing: tuple[bool, float] = self.agent.opinion_silencing(est_op_climate, silencing_threshold=silencing_threshold)
         self.assertIsInstance(
@@ -377,9 +377,9 @@ class TestAgentObjects(ut.TestCase):
         opinion_negation: bool = self.agent.opinion_negation("A", abs_difference, thresh)
         # Worked example:
         #   1. negation_strength is initialised as the reported absolute difference (0.03)
-        #   2. Agent personality is "social", so negation_strength is modified by /= social_susceptibility * social_weightings[hierarchy]
-        #   3. Therefore, negation_strength = 0.03 / (0.75 * 0.2) = 0.03 / 0.15 = 0.2
-        #   4. The negation_strength of 0.2 is not above the threshold of 1.99, so negation does not occur
+        #   2. Agent personality is "social", so negation_strength is modified by /= (1 - social_susceptibility) * social_weightings[hierarchy]
+        #   3. Therefore, negation_strength = 0.03 / ((1 - 0.75) * 0.2) = 0.03 / 0.05 = 0.6
+        #   4. The negation_strength of 0.6 is not above the threshold of 1.99, so negation does not occur
         self.assertIsInstance(
             opinion_negation,
             bool,
@@ -399,9 +399,9 @@ class TestAgentObjects(ut.TestCase):
         opinion_negation: bool = self.agent.opinion_negation("A", abs_difference, thresh)
         # Worked example:
         #   1. negation_strength is initialised as the reported absolute difference (1.47)
-        #   2. Agent personality is "social", so negation_strength is modified by /= social_susceptibility * social_weightings[hierarchy]
-        #   3. Therefore, negation_strength = 1.47 / (0.75 * 0.2) = 1.47 / 0.15 = 9.8
-        #   4. The negation_strength of 9.8 is above the threshold of 6.9, so negation does occur
+        #   2. Agent personality is "social", so negation_strength is modified by /= (1 - social_susceptibility) * social_weightings[hierarchy]
+        #   3. Therefore, negation_strength = 1.47 / ((1 - 0.75) * 0.2) = 1.47 / 0.05 = 29.4
+        #   4. The negation_strength of 29.4 is above the threshold of 6.9, so negation does occur
         self.assertIsInstance(
             opinion_negation,
             bool,
