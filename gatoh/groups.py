@@ -948,8 +948,8 @@ class Group:
             raise AttributeError("The group for which an update is being attempted has not yet been initialised")
 
         # Type checking
-        if not isinstance(opinion_silenced, bool) or not isinstance(negation_ocurred, bool):
-            raise TypeError("opinion_silenced and negation_ocurred must both be boolean values")
+        if not isinstance(opinion_silenced, float) or not isinstance(negation_ocurred, bool):
+            raise TypeError("opinion_silenced must be a float and negation_ocurred must be a boolean value")
 
         # Update is_silenced
         members_silenced: dict[str, bool] = self.change_silencing_rate(opinion_silenced)
@@ -994,7 +994,8 @@ class Group:
         if silencing_threshold is not None:
             threshold = silencing_threshold
         else:
-            threshold = self.aggregate_susceptibility
+            # "inverse" of the susceptibility as a higher level of susceptibility will mean a lower threshold
+            threshold = 1.0 - self.aggregate_susceptibility
 
         absolute_difference: float = 0.0
 
@@ -1040,12 +1041,12 @@ class Group:
         # Multiplication by (susceptibility * hierarchy weighting) will always decrease negation strength, whilst division will always increase it
         if self.predominant_personality in ["neutral", "rational"]:
             # Cases where opinion negation is less likely to occur
-            if self.aggregate_susceptibility * self.aggregate_hierarchy_weighting != 0:
-                negation_strength *= self.aggregate_susceptibility * self.aggregate_hierarchy_weighting
+            if (1.0 - self.aggregate_susceptibility) * self.aggregate_hierarchy_weighting != 0:
+                negation_strength *= (1.0 - self.aggregate_susceptibility) * self.aggregate_hierarchy_weighting
         elif self.predominant_personality in ["erratic", "impulsive", "social"]:
             # Cases where opinion negation is more likely to occur
-            if self.aggregate_susceptibility * self.aggregate_hierarchy_weighting != 0:
-                negation_strength /= self.aggregate_susceptibility * self.aggregate_hierarchy_weighting
+            if (1.0 - self.aggregate_susceptibility) * self.aggregate_hierarchy_weighting != 0:
+                negation_strength /= (1.0 - self.aggregate_susceptibility) * self.aggregate_hierarchy_weighting
 
         return negation_strength > threshold
 

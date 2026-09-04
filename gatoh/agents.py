@@ -541,7 +541,8 @@ class Agent:
         if silencing_threshold is not None:
             threshold = silencing_threshold
         else:
-            threshold = self.social_susceptibility
+            # "inverse" of social susceptibility as a higher susceptibility will mean that a lower threshold will exist
+            threshold = 1.0 - self.social_susceptibility
 
         absolute_difference: float = 0.0
 
@@ -598,15 +599,15 @@ class Agent:
         # Multiplication by (susceptibility * hierarchy weighting) will always decrease negation strength, whilst division will always increase it
         if self.personality in ["neutral", "rational"]:
             # Cases where opinion negation is less likely to occur
-            if self.social_susceptibility * self.social_weightings[hierarchy] != 0:
+            if (1.0 - self.social_susceptibility) * self.social_weightings[hierarchy] != 0:
                 negation_strength *= (
-                    self.social_susceptibility * self.social_weightings[hierarchy]
+                    (1.0 - self.social_susceptibility) * self.social_weightings[hierarchy]
                 )
         elif self.personality in ["erratic", "impulsive", "social"]:
             # Cases where opinion negation is more likely to occur
-            if self.social_susceptibility * self.social_weightings[hierarchy] != 0:
+            if (1.0 - self.social_susceptibility) * self.social_weightings[hierarchy] != 0:
                 negation_strength /= (
-                    self.social_susceptibility * self.social_weightings[hierarchy]
+                    (1.0 - self.social_susceptibility) * self.social_weightings[hierarchy]
                 )
 
         return negation_strength > threshold
@@ -711,7 +712,7 @@ class Agent:
                     # Flag whether the change is moving in the same direction as the agent's original opinion
                     change_direction: bool = (change < 0.0 and self.opinion < 0.0) or (change > 0.0 and self.opinion > 0.0)
 
-                    if absolute_change >= self.social_susceptibility and not change_direction:
+                    if absolute_change >= (1.0 - self.social_susceptibility) and not change_direction:
                         # A strong opinion change which disagreed with the agent's opinion was caused by some hierarchy
                         self.radicalised = False
                         return not self.radicalised
@@ -724,7 +725,7 @@ class Agent:
                         else:
                             change_directions -= 1.0
                 # If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)
-                if absolute_changes >= self.social_susceptibility * len(hierarchy_changes) * DERAD_SOCIAL_THRESH_MOD and change_directions <= 0.0:
+                if absolute_changes >= (1.0 - self.social_susceptibility) * len(hierarchy_changes) * DERAD_SOCIAL_THRESH_MOD and change_directions <= 0.0:
                     self.radicalised = False
                     return not self.radicalised
             case _:
@@ -834,7 +835,7 @@ class Agent:
                     # Flag whether the change is moving in the same direction as the agent's original opinion
                     change_direction: bool = (change < 0.0 and self.opinion < 0.0) or (change > 0.0 and self.opinion > 0.0)
 
-                    if absolute_change >= self.social_susceptibility and change_direction:
+                    if absolute_change >= (1.0 - self.social_susceptibility) and change_direction:
                         # A strong opinion change which agreed with the agent's opinion was caused by some hierarchy
                         self.radicalised = True
                         return self.radicalised
@@ -847,7 +848,7 @@ class Agent:
                         else:
                             change_directions -= 1.0
                 # If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)
-                if absolute_changes >= self.social_susceptibility * len(hierarchy_changes) * RAD_SOCIAL_THRESH_MOD and change_directions >= 0.0:
+                if absolute_changes >= (1.0 - self.social_susceptibility) * len(hierarchy_changes) * RAD_SOCIAL_THRESH_MOD and change_directions >= 0.0:
                     self.radicalised = True
                     return self.radicalised
             case _:

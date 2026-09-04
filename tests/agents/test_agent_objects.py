@@ -152,10 +152,10 @@ class TestAgentObjects(ut.TestCase):
         est_op_climate: float = -0.8
         opinion_silencing: tuple[bool, float] = self.agent.opinion_silencing(est_op_climate)
         # Worked example:
-        #   1. No explicit silencing_threshold was passed, so the agent's social_susceptibility of 0.75 is used as the threshold
+        #   1. No explicit silencing_threshold was passed, so the agent's social_susceptibility of 0.75 is used to calculate the threshold
         #   2. The agent's personality is "social", so the absolute difference is calculated as abs(estimated opinion climate - agent opinion)
         #   3. Therefore: absolute difference = abs(-0.8 - 0.44) = abs(-1.24) = 1.24
-        #   4. 1.24 is larger than the threshold of 0.75, so silencing will occur
+        #   4. 1.24 is larger than the threshold of (1 - 0.75) = 0.25, so silencing will occur
         self.assertIsInstance(
             opinion_silencing,
             tuple,
@@ -186,13 +186,13 @@ class TestAgentObjects(ut.TestCase):
         """
         Test that opinion_silencing() with no silencing_threshold passed will correctly report that silencing should not occur.
         """
-        est_op_climate: float = 0.69
+        est_op_climate: float = 0.67
         opinion_silencing: tuple[bool, float] = self.agent.opinion_silencing(est_op_climate)
         # Worked example:
         #   1. No explicit silencing_threshold was passed, so the agent's social susceptibility of 0.75 is used as the threshold
         #   2. The agent's personality is "social", so the absolute difference is calculated as abs(estimated opinion climate - agent opinion)
-        #   3. Therefore: absolute difference = abs(0.69 - 0.44) = abs(0.25) = 0.25
-        #   4. 0.25 is smaller than the threshold of 0.75, so silencing will not occur
+        #   3. Therefore: absolute difference = abs(0.67 - 0.44) = abs(0.23) = 0.23
+        #   4. 0.23 is smaller than the threshold of (1.0 - 0.75) = 0.25, so silencing will not occur
         self.assertIsInstance(
             opinion_silencing,
             tuple,
@@ -214,7 +214,7 @@ class TestAgentObjects(ut.TestCase):
         )
         self.assertAlmostEqual(
             opinion_silencing[1],
-            0.25,
+            0.23,
             5,
             "Agent -- opinion_silencing is not calculating and reporting the correct absolute difference value (no threshold - false)",
         )
