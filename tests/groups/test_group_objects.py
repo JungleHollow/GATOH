@@ -536,6 +536,161 @@ class TestGroupObjects(ut.TestCase):
             "Group -- a valid call to stochastic_opinion is not changing the group's aggregate opinion value correctly",
         )
 
+    def test_stochastic_personality_change_invalid_prob(self) -> None:
+        """
+        Test that stochastic_personality_change with an invalid probability value will produce the expected error.
+        """
+        personalities_p_invalid: dict[str, float] = {"neutral": "half", "rational": "half"}
+        with self.assertRaises(TypeError) as cm:
+            member_personalities: dict[str, str] = self.group.stochastic_personality_change(personalities_p_invalid)
+
+    def test_stochastic_personality_change_invalid_personality(self) -> None:
+        """
+        Test that stochastic_personality_change with an invalid personality type will produce the expected error.
+        """
+        personalities_p_invalid: dict[str, float] = {"neutral": 0.9, "rare": 0.1}
+        with self.assertRaises(KeyError) as cm:
+            member_personalities: dict[str, str] = self.group.stochastic_personality_change(personalities_p_invalid)
+
+    def test_stochastic_personality_change(self) -> None:
+        """
+        Test that stochastic_personality_change is working as intended.
+        """
+        member_personalities: dict[str, str] = self.group.stochastic_personality_change()
+        self.assertIsInstance(
+            member_personalities,
+            dict,
+            "Group -- a valid call to stochastic_personality_change is not returning a dictionary value (no p)",
+        )
+        self.assertEqual(
+            len(member_personalities.keys()),
+            len(self.group_members),
+            "Group -- a valid call to stochastic_personality_change is not reporting a personality for the correct number of members (no p)",
+        )
+        personality_counts: dict[str, int] = {personality: 0 for personality in grp.PERSONALITIES}
+        for member, personality in member_personalities:
+            self.assertIn(
+                member,
+                self.group_members,
+                "Group -- a valid call to stochastic_personality_change is reporting a personality type for one or more non-existent members (no p)",
+            )
+            self.assertIn(
+                personality,
+                grp.PERSONALITIES,
+                "Group -- a valid call to stochastic_personality_change is assigning an unsupported personality type to one or more agents (no p)",
+            )
+            personality_counts[personality] += 1
+        self.assertEqual(
+            max(personality_counts, key=lambda x: personality_counts[x]),
+            self.group.predominant_personality,
+            "Group -- a valid call to stochastic_personality_change is not assigning personalities to members so that the predominant personality is such (no p)",
+        )
+
+    def test_stochastic_personality_change_probs(self) -> None:
+        """
+        Test that stochastic_personality_change with explicit probabilities is working as intended.
+        """
+        member_personalities: dict[str, str] = self.group.stochastic_personality_change(personality_probs={"neutral": 0.5, "rational": 0.5})
+        self.assertIsInstance(
+            member_personalities,
+            dict,
+            "Group -- a valid call to stochastic_personality_change is not returning a dictionary value (p)",
+        )
+        self.assertEqual(
+            len(member_personalities.keys()),
+            len(self.group_members),
+            "Group -- a valid call to stochastic_personality_change is not reporting a personality for the correct number of members (p)",
+        )
+        personality_counts: dict[str, int] = {personality: 0 for personality in grp.PERSONALITIES}
+        for member, personality in member_personalities:
+            self.assertIn(
+                member,
+                self.group_members,
+                "Group -- a valid call to stochastic_personality_change is reporting a personality type for one or more non-existent members (p)",
+            )
+            self.assertIn(
+                personality,
+                grp.PERSONALITIES,
+                "Group -- a valid call to stochastic_personality_change is assigning an unsupported personality type to one or more agents (p)",
+            )
+            personality_counts[personality] += 1
+        self.assertEqual(
+            max(personality_counts, key=lambda x: personality_counts[x]),
+            self.group.predominant_personality,
+            "Group -- a valid call to stochastic_personality_change is not assigning personalities to members so that the predominant personality is such (p)",
+        )
+        self.assertIn(
+            self.group.predominant_personality,
+            ["neutral", "rational"],
+            "Group -- a valid call to stochastic_personality_change is assigning an impossible predominant personality (p)",
+        )
+
+    def test_stochastic_benefit_change(self) -> None:
+        """
+        Test that stochastic_benefit_change is working as intended.
+        """
+        member_benefits: dict[str, bool] = self.group.stochastic_benefit_change()
+        self.assertIsInstance(
+            member_benefits,
+            dict,
+            "Group -- a valid call to stochastic_benefit_change is not returning a dictionary value",
+        )
+        for member in self.group_members:
+            self.assertIn(
+                member,
+                member_benefits.keys(),
+                "Group -- a valid call to stochastic_benefit_change is not reporting a benefit status for one or more members",
+            )
+            self.assertIsInstance(
+                member_benefits[member],
+                bool,
+                "Group -- a valid call to stochastic_benefit_change is not assigning a boolean flag as the value for one or more members",
+            )
+
+    def test_stochastic_radicalisation_change(self) -> None:
+        """
+        Test that stochastic_radicalisation_change is working as intended.
+        """
+        member_radicalisations: dict[str, bool] = self.group.stochastic_radicalisation_change()
+        self.assertIsInstance(
+            member_radicalisations,
+            dict,
+            "Group -- a valid call to stochastic_radicalisation_change is not returning a dictionary value",
+        )
+        for member in self.group_members:
+            self.assertIn(
+                member,
+                member_radicalisations.keys(),
+                "Group -- a valid call to stochastic_radicalisation_change is not reporting a radicalisation status for one or more members",
+            )
+            self.assertIsInstance(
+                member_radicalisations[member],
+                bool,
+                "Group -- a valid call to stochastic_radicalisation_change is not assigning a boolean flag as the value for one or more members",
+            )
+
+    def test_stochastic_silencing_change(self) -> None:
+        """
+        Test that stochastic_silencing_change is working as intended.
+        """
+        members_silenced: dict[str, bool] = self.group.stochastic_silencing_change()
+        self.assertIsInstance(
+            members_silenced,
+            dict,
+            "Group -- a valid call to stochastic_silencing_change is not returning a dictionary value",
+        )
+        for member in self.group_members:
+            self.assertIn(
+                member,
+                members_silenced.keys(),
+                "Group -- a valid call to stochastic_silencing_change is not reporting a silencing status for one or more members",
+            )
+            self.assertIsInstance(
+                members_silenced[member],
+                bool,
+                "Group -- a valid call to stochastic_silencing_change is not assigning a boolean flag as the value for one or more members",
+            )
+
     @override
     def tearDown(self) -> None:
         del self.group_members, self.group
