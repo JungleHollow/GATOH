@@ -140,4 +140,4 @@ class TestAgentSetPersistence(ut.TestCase):
     @classmethod
     @override
     def tearDownClass(cls) -> None:
-        del cls._agentset
+        del cls._agentset, cls._subdir_path
