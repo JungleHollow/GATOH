@@ -1007,6 +1007,20 @@ class Graph:
             return agent_node
         return None
 
+    def node_from_agent_id(self, agent_id: str) -> GraphNode | None:
+        """
+        Returns the GraphNode object corresponding to the Agent with the given ID.
+
+        :param agent_id: The ID of the agent being searched for in the GraphNodes.
+        :type agent_id: str
+        :return: The graph node corresponding to the input agent id if it exists, or None otherwise.
+        :rtype: GraphNode | None
+        """
+        for node in self.graph.nodes():
+            if node.agent.id == agent_id:
+                return node
+        return None
+
     def get_agent_index(self, agent: Agent) -> int | None:
         """
         Searches for the node index in the Graph which corresponds to the input Agent object.
@@ -1472,6 +1486,39 @@ class Graph:
 
         print("The KMeans clustering algorithm has finished running")
         return cluster_dict
+
+    def generate_group_edges(self, groups: list[Group]) -> list[tuple[int, int]]:
+        """
+        Looks at the members that make up the input groups, and their individual connections within
+        the graph's agents to determine which groups are connected to each other.
+
+        :param groups: The groups for which the edges are being generated.
+        :type groups: list[Group]
+        :raises ValueError: If any of the groups contain members which do not belong to this graph.
+        :return: A list containing (from_group, to_group) indices that define the connections of the groups.
+        :rtype: list[tuple[int, int]]
+        """
+        generated_edges: list[tuple[int, int]] = []
+
+        for i in groups:
+            for j in groups:
+                if i == j:
+                    # Groups cannot be connected to themselves
+                    continue
+                else:
+                    for agent_i in i.members:
+                        for agent_j in j.members:
+                            node_i: GraphNode | None = self.node_from_agent_id(agent_i)
+                            node_j: GraphNode | None = self.node_from_agent_id(agent_j)
+                            if node_i is not None and node_j is not None and self.relationship_exists(node_i.index, node_j.index) is not None:
+                                generated_edges.append((i.index, j.index))
+                                break
+                        else:
+                            # If the inner loop has not broken, the nested loop over agents continues
+                            continue
+                        # If the inner loop has broken, the nested loop over agents breaks
+                        break
+        return generated_edges
 
     def __in__(self, iterable: Iterable[Graph]) -> bool:
         """
@@ -2482,7 +2529,7 @@ class GroupGraph:
 
         The parameter :attr:`edges` has been typed as :class:`~typing.Any` to simplify typechecking.
 
-        :param edges: A mapping of <key : list> where each key corresponds to (hierarchy, from_node, to_node, [optional] weighting, [optional] rw_param).
+        :param edges: A mapping of <key : list> where each key corresponds to (hierarchy <name>, from_node, to_node, [optional] weighting, [optional] rw_param).
         :type edges: dict[str, list[str | int | float | tuple[float, float]]]
         """
         graph_edges: list[tuple[int, int, GroupEdge]] = []
@@ -3001,6 +3048,20 @@ class GroupGraph:
         if group_index is not None:
             group_node: GroupNode | None = self.get_node(group_index)
             return group_node
+        return None
+
+    def node_from_group_id(self, group_id: str) -> GroupNode | None:
+        """
+        Returns the GroupNode object corresponding to the Group object with the given ID.
+
+        :param group_id: The ID of the Group being searched for in the GroupNodes.
+        :type group_id: str
+        :return: The group node corresponding to the input ID if it exists, or None otherwise.
+        :rtype: GroupNode | None
+        """
+        for node in self.graph.nodes():
+            if node.group.id == group_id:
+                return node
         return None
 
     def get_group_index(self, group: Group) -> int | None:

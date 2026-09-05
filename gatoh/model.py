@@ -6,7 +6,7 @@ from copy import deepcopy
 from collections.abc import Callable
 from datetime import datetime
 from multiprocessing.pool import Pool
-from random import choices, randint
+from random import choices, randint, uniform
 from shutil import rmtree
 from typing import Any, TypedDict
 
@@ -20,7 +20,7 @@ from rustworkx.rustworkx import NoEdgeBetweenNodes
 from rustworkx import all_shortest_paths as rx_shortest_paths
 
 from gatoh.agents import Agent, AgentSet, OPINION_MAX
-from gatoh.graphs import Graph, GraphNode, GraphEdge, GraphSet
+from gatoh.graphs import Graph, GraphNode, GraphEdge, GraphSet, MAX_RELATIONSHIP
 from gatoh.graphs import GroupGraph, GroupNode, GroupEdge, GroupGraphSet
 from gatoh.groups import Group, GroupSet
 from gatoh.logging import GATOHLogger
@@ -89,6 +89,8 @@ class ABModel:
     :type hierarchy_rw_distributions: list[tuple[float, float]]
     :param agent_opinion_rw: Shared (mean, variance) parameters used for stochastic opinion changes across all agents at each timestep.
     :type agent_opinion_rw: tuple[float, float], optional
+    :param group_rw_distribution: (mean, variance) parameters used for random walk effects within the group graph.
+    :type group_rw_distribution: tuple[float, float], optional
     :param iterations: The number of iterations that the model will run for.
     :type iterations: int, optional
     :param silencing_threshold: A threshold that, when surpassed by agents, will cause them to cease expressing their opinions in a given hierarchy.
@@ -138,6 +140,7 @@ class ABModel:
         hierarchy_names: list[str],
         hierarchy_rw_distributions: list[tuple[float, float]],
         agent_opinion_rw: tuple[float, float] = (0.0, 0.1),
+        group_rw_distribution: tuple[float, float] = (0.0, 0.1),
         iterations: int = 100,
         silencing_threshold: float = 0.95,
         silencing_link: tuple[str, float] = ("", 0.0),
@@ -170,6 +173,11 @@ class ABModel:
         self.graphs: GraphSet = GraphSet()
         self.groups: GroupSet = GroupSet()
         self.group_graph: GroupGraphSet = GroupGraphSet()
+
+        # Initialise and add the group graph
+        self.group_graph.add_graph(
+            GroupGraph(group_rw_distribution, suppress_warnings=suppress_warnings)
+        )
 
         if init_graphs:
             # Ensure that the input hierarchy information always produce at least empty graphs in the graphset
@@ -751,7 +759,7 @@ class ABModel:
 
         # Done this way to prevent memory leaks from initiating the empty dict in the function parameters
         if ensure_connected is None:
-            ensure_connected: dict[str, bool] = {}
+            ensure_connected = {}
 
         for idx, hierarchy in enumerate(hierarchies):
             if agent_subsetting:
@@ -952,7 +960,9 @@ class ABModel:
         :return: The index of the newly added Group in the GroupSet.
         :rtype: int
         """
+        self.group_graph.group_graph.add_nodes([group])
         if self.debug:
+            self.logger.log_function_call("GroupGraph.add_nodes")
             self.logger.log_function_call("ABModel.add_group")
             # Preemptively logging the groupset add
             self.logger.log_function_call("GroupSet.add")
@@ -972,8 +982,11 @@ class ABModel:
             if self.debug:
                 self.logger.log_function_call("GroupSet.add")
 
+        self.group_graph.group_graph.add_nodes(groups)
+
         if self.debug:
             self.logger.log_function_call("ABModel.add_groups")
+            self.logger.log_function_call("GroupGraph.add_nodes")
 
         return self.groups
 
@@ -2139,6 +2152,31 @@ class ABModel:
         # Including here for return checking
         raise RuntimeError("This line should not have been reached...")
 
+    def get_groupgraph_indices_from_endpoints(self, from_group: Group, to_group: Group) -> tuple[int, int]:
+        """
+        A helper function for the groupset that takes in two Group objects and retrieves their node indices
+        within the model's groupgraph.
+
+        :param from_group: The group that the edge starts from.
+        :type from_group: Group
+        :param to_group: The group that the edge points to.
+        :type to_group: Group
+        :return: The index in the groupgraph of the parent and child nodes involved in the edge's relationship.
+        :rtype: tuple[int, int]
+        """
+        from_index: int | None = self.group_graph.group_graph.get_group_index(from_group)
+        to_index: int | None = self.group_graph.group_graph.get_group_index(to_group)
+
+        if self.debug:
+            self.logger.log_function_call("GroupGraph.get_group_index")
+            self.logger.log_function_call("GroupGraph.get_group_index")
+
+        if from_index is not None and to_index is not None:
+            return from_index, to_index
+
+        # Including here for return checking
+        raise RuntimeError("This line should not have been reached...")
+
     def add_base_graph_edges(self, graph: Graph) -> None:
         """
         A function that takes a Graph object and adds all of its weighted edges to the model's base graph.
@@ -2179,6 +2217,42 @@ class ABModel:
         if self.debug:
             self.logger.log_function_call("Graph.add_edges")
             self.logger.log_function_call("ABModel.add_base_graph_edges")
+
+        return None
+
+    def add_group_graph_edge(self, from_group: Group, to_group: Group, weighting: float | None = None, rw_params: tuple[float, float] | None = None) -> None:
+        """
+        A function that takes two groups and adds a relationship between them in the model's groupgraph.
+
+        :param from_group: The node representing the parent node of the relationship.
+        :type from_group: Group
+        :param to_group: The node representing the child node of the relationship.
+        :type to_group: Group
+        :param weighting: The weighting that should be assigned to the relationship.
+        :type weighting: float, optional
+        :param rw_params: The relationship-specific random-walk parameters that should be assigned.
+        :type rw_params: tuple[float, float], optional
+        :raises ValueError: If either of the groups do not exist in the groupgraph as nodes.
+        """
+        if not self.group_graph.group_graph.group_in_graph(from_group) or not self.group_graph.group_graph.group_in_graph(to_group):
+            raise ValueError("One or both of the input Groups do not exist as GroupNodes in the model's GroupGraph -- cannot create an edge")
+
+        node_indices: tuple[int, int] = self.get_groupgraph_indices_from_endpoints(from_group, to_group)
+
+        if weighting is None:
+            weighting = uniform(-MAX_RELATIONSHIP, MAX_RELATIONSHIP)
+
+        edge_to_add: dict[str, Any] = {
+            "name": [from_group.hierarchy],
+            "from_node": [node_indices[0]],
+            "to_node": [node_indices[1]],
+            "weighting": [weighting],
+        }
+
+        if rw_params is not None:
+            edge_to_add["rw_param"] = [rw_params]
+
+        self.group_graph.group_graph.add_edges(edge_to_add)
 
         return None
 
