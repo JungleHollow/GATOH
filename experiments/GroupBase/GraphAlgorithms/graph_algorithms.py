@@ -34,8 +34,8 @@ class GraphAlgTester:
 
         # Define the data types without assigning values
         self.model_agents: list[agt.Agent]
-        self.model_graphs: dict[str, gr.GroupGraph]
-        self.model_groups: list[grp.Group]
+        self.model_graphs: dict[str, list[gr.Graph]]
+        self.model_groups: dict[str, dict[str, dict[str, list[gr.Group] | list[tuple[int, int]]]]]
 
         # Dynamic model space
         self.models: dict[str, md.ABModel] = {}
@@ -58,13 +58,24 @@ class GraphAlgTester:
 
             self.model_graphs = {}
             for algorithm in self.algorithms:
-                algorithm_graph: gr.GroupGraph = self.create_group_graph(
+                algorithm_graphs: list[gr.Graph] = self.create_graphs(
                     algorithm,
                     HIERARCHY_NAMES,
                     HIERARCHY_RW_DISTRIBUTIONS,
                     self.model_agents,
                 )
-                self.model_graphs[algorithm] = algorithm_graph
+                self.model_graphs[algorithm] = algorithm_graphs
+
+            self.model_groups = {}
+            for algorithm in self.algorithms:
+                algorithm_groups: dict[str, dict[str, list[grp.Group] | list[tuple[int, int]]]] = self.create_groups(
+                    algorithm,
+                    self.model_graphs[algorithm],
+                )
+                self.model_groups[algorithm] = algorithm_groups
+
+            for algorithm in self.algorithms:
+                self.create_group_graphs(algorithm)
 
     def create_agents(self, num_agents: int) -> list[agt.Agent]:
         """
@@ -115,10 +126,106 @@ class GraphAlgTester:
 
         return created_agents
 
-    def create_group_graph(self) -> gr.GroupGraph:
+    def create_graphs(
+        self,
+        algorithm: str,
+        hierarchies: list[str],
+        rw_distributions: list[tuple[float, float]],
+        agents: list[agt.Agent],
+    ) -> list[gr.Graph]:
         """
+        Creates the graphs for an arbitrary model.
+
+        For the purposes of this experiment, each graph contains all Agents in the population,
+        and the relationships are created using the specified algorithm for every graph in a given model.
+
+        These hierarchy graphs will serve as the base from which the agent groups are created.
+
+        :param algorithm: The graph generation algorithm that is being used.
+        :type algorithm: str
+        :param hierarchies: The hierarchies that each generated graph will represent.
+        :type hierarchies: list[str]
+        :param rw_distributions: The random walk distribution parameters for each social hierarchy.
+        :type rw_distributions: list[tuple[float, float]]
+        :param agents: The population of Agents from which the graphs will be generated.
+        :return: All of the generated graph objects for the specified algorithm.
+        :rtype: list[Graph]
         """
-        pass
+        created_graphs: list[gr.Graph] = []
+
+        rel_range: tuple[float, float] = AGENT_CHARACTERISTICS["relationship"]
+
+        for idx, hierarchy in enumerate(hierarchies):
+            graph: gr.Graph = gr.Graph(hierarchy, rw_distributions[idx])
+
+            _ = graph.generate_graph(
+                deepcopy(agents),
+                method=algorithm,
+                relationship_range=rel_range,
+            )
+
+            created_graphs.append(graph)
+
+        return created_graphs
+
+    def create_groups(self, algorithm: str, graphs: list[gr.Graph]) -> dict[str, dict[str, list[gr.Group] | list[tuple[int, int]]]]:
+        """
+        Creates the clustered groups for each social hierarchy for the specified
+        algorithm model.
+
+        :param algorithm: The graph generation algorithm that is being used.
+        :type algorithm: str
+        :param graphs: The social hierarchy graphs that have been generated for the algorithm's model.
+        :type graphs: list[Graph]
+        :return: A <hierarchy : groups> mapping of the generated agent groups for each social hierarchy.
+        :rtype: dict[str, dict[str, list[group] | list[tuple[int, int]]]]
+        """
+        created_groups: dict[str, dict[str, list[grp.Group] | list[tuple[int, int]]]] = {}
+
+        for graph in graphs:
+            clustered_nodes: dict[gr.GraphNode, int] = graph.cluster_nodes(k=self.num_groups)
+
+            # Re-organise the nodes in clusters into clustered agents
+            group_members: dict[int, list[agt.Agent]] = {}
+            for node, cluster in clustered_nodes.items():
+                group_members.setdefault(cluster, []).append(node.agent)
+
+            graph_groups: list[gr.Group] = []
+
+            for cluster, members in group_members.items():
+                new_group: gr.Group = gr.Group()
+                new_group.generate_group(
+                    f"GROUP{cluster:04}",
+                    cluster,
+                    graph.name,
+                    members,
+                )
+                graph_groups.append(new_group)
+
+            created_groups.setdefault(graph.name, {})["groups"] = deepcopy(graph_groups)
+            created_groups[graph.name]["edges"] = graph.generate_group_edges(graph_groups)
+
+            # Manual garbage collection
+            del clustered_nodes, group_members, graph_groups
+            _ = gc.collect()
+
+        return created_groups
+
+    def create_group_graphs(self, algorithm: str) -> None:
+        """
+        Uses the generated groups, and their corresponding edges for each social hierarchy to set
+        the group graph for the model that represents the input algorithm.
+
+        :param algorithm: The algorithm model for which the group graph is being created.
+        :type algorithm: str
+        """
+        for info in self.model_groups[algorithm].values():
+            self.models[algorithm].add_groups(info["groups"])
+            for connections in info["edges"]:
+                from_group: grp.Group = info["groups"][connections[0]]
+                to_group: grp.Group = info["groups"][connections[1]]
+                self.models[algorithm].add_group_graph_edge(from_group, to_group)
+        return None
 
     def load_models(self, existing_saves: list[str] | None = None) -> None:
         """
@@ -143,18 +250,15 @@ class GraphAlgTester:
         :param missing_saves: The potentially partial names of the algorithms that do not have an existing save.
         :type missing_saves: list[str], optional
         """
-
-        # TODO: Add in the relevant group graph addition here when that is defined...
-
         if missing_saves is not None:
             for missing_save in missing_saves:
                 _ = self.models[missing_save].add_agents(deepcopy(self.model_agents))
-                _ = self.models[missing_save].add_groups(deepcopy(self.model_groups))
+                self.create_group_graphs(missing_save)
             return None
 
         for algorithm in self.algorithms:
             _ = self.models[algorithm].add_agents(deepcopy(self.model_agents))
-            _ = self.models[algorithm].add_groups(deepcopy(self.model_groups))
+            self.create_group_graphs(algorithm)
         return None
 
     def run_models(self, missing_saves: list[str] | None = None) -> None:
