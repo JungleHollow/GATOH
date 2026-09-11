@@ -766,12 +766,12 @@ class OpinionChangesTester:
         self.save_models()
         return None
 
-    def agent_opinion_change(self, initial_opinion: float) -> float:
+    def group_opinion_change(self, initial_opinion: float) -> float:
         """
-        A helper function that looks at the direction and magnitude of an initial Agent opinion and then
+        A helper function that looks at the direction and magnitude of an initial Group opinion and then
         significantly changes it following a set process.
 
-        :param initial_opinion: The agent's initial opinion.
+        :param initial_opinion: The group's initial opinion.
         :type initial_opinion: float
         :return: An opinion value which is significantly different from the initial one.
         :rtype: float
@@ -820,8 +820,75 @@ class OpinionChangesTester:
 
             is_change_iteration: bool = model_struct.current_iteration == model_struct.change_iteration
 
-            # TODO: Continue from here...
+            agent_changes: dict[str, list[float]] = {}
 
+            for group in model_struct.model.groups:
+                # Always store the group's previous opinion at the start of an iteration no matter what
+                group.store_previous_opinion()
+
+                if is_change_iteration and group.id in model_struct.changed_groups:
+                    changed_opinion: float = self.group_opinion_change(group.aggregate_opinion)
+
+                    # Change the group's aggregate opinion
+                    per_agent_delta: float = model_struct.model.group_graph.group_graph.group_opinion_change(group, changed_opinion)
+
+                    # Apply note the change for every member agent in this group's hierarchy
+                    for member in group.members:
+                        agent_changes.setdefault(member, []).append(per_agent_delta)
+
+            if is_change_iteration:
+                # Changes have been noted in agent_changes...
+                for agent, changes in agent_changes.items():
+                    agent_object: agt.Agent = model_struct.model.agents.get_agent_by_id(agent)
+                    total_changes: float = sum(changes)
+                    agent_object.change_opinion(total_changes)
+
+            # The actual model iteration process (not when the change iteration happens)
+
+            # Track the group opinion changes separately to prevent recursive updates
+            new_group_opinions: dict[str, tuple[float, list[bool]]] = {}
+
+            # First, calculate the opinion changes and store them
+            if worker_pool is not None and not is_change_iteration:
+                opinion_results = worker_pool.imap(
+                    model_struct.model.group_iteration_opinion_calculation,
+                    model_struct.model.groups,
+                    chunksize=10,
+                )
+
+                for opinion_result in opinion_results:
+                    new_group_opinions[opinion_result[0]] = opinion_result[1]
+
+                # Manual garbage collection
+                del opinion_results
+                _ = gc.collect()
+            elif worker_pool is None and not is_change_iteration:
+                for group in model_struct.model.groups:
+                    opinion_result = model_struct.model.group_iteration_opinion_calculation(group)
+                    new_group_opinions[opinion_result[0]] = opinion_result[1]
+
+                    # Manual garbage collection
+                    del opinion_result
+                    _ = gc.collect()
+
+            model_struct.model.group_iteration_opinion_changes(new_group_opinions)
+            model_struct.model.step()
+            model_struct.model.update(worker_pool=worker_pool)
+            model_struct.model.logger_iteration(worker_pool=worker_pool)
+            iteration_print_string: str = model_struct.model.logger.iteration_print()
+            print(iteration_print_string)
+
+            if model_struct.model.visualise:
+                model_struct.model.visualiser.visualiser_iteration(
+                    model_struct.model.base_graph,
+                    model_struct.model.current_iteration,
+                    model_name=model_struct.model.model_id,
+                )
+            if model_struct.model.checkpointing:
+                model_struct.model.save_model()
+
+            model_struct.model.current_iteration += 1
+            model_struct.current_iteration += 1
         return None
 
 
