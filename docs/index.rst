@@ -7,7 +7,7 @@
 gatoh Documentation
 ###################
 
-**Version**: 2026.08.0
+**Version**: 2026.09.0
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.21156969.svg
   :target: https://doi.org/10.5281/zenodo.21156969
