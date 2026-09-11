@@ -1498,7 +1498,7 @@ class Graph:
         :return: A list containing (from_group, to_group) indices that define the connections of the groups.
         :rtype: list[tuple[int, int]]
         """
-        generated_edges: list[tuple[int, int]] = []
+        generated_edges: set[tuple[int, int]] = set()
 
         for i in groups:
             for j in groups:
@@ -1511,14 +1511,9 @@ class Graph:
                             node_i: GraphNode | None = self.node_from_agent_id(agent_i)
                             node_j: GraphNode | None = self.node_from_agent_id(agent_j)
                             if node_i is not None and node_j is not None and self.relationship_exists(node_i.index, node_j.index) is not None:
-                                generated_edges.append((i.index, j.index))
+                                generated_edges.add((i.index, j.index))
                                 break
-                        else:
-                            # If the inner loop has not broken, the nested loop over agents continues
-                            continue
-                        # If the inner loop has broken, the nested loop over agents breaks
-                        break
-        return generated_edges
+        return list(generated_edges)
 
     def __in__(self, iterable: Iterable[Graph]) -> bool:
         """

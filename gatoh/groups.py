@@ -219,6 +219,7 @@ class Group:
         # Begin by setting crucial information
         self.id = id
         self.index = index
+        self.hierarchy = hierarchy
         if cohesion is not None:
             if cohesion not in COHESIONS:
                 raise ValueError("The specified cohesion type is not supported")

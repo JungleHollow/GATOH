@@ -97,6 +97,8 @@ class ABModel:
     :type hierarchy_rw_distributions: list[tuple[float, float]]
     :param agent_opinion_rw: Shared (mean, variance) parameters used for stochastic opinion changes across all agents at each timestep.
     :type agent_opinion_rw: tuple[float, float], optional
+    :param group_opinion_rw: Shared (mean, variance) parameters used for stochastic opinion changes across all groups at each timestep.
+    :type group_opinion_rw: tuple[float, float], optional
     :param group_rw_distribution: (mean, variance) parameters used for random walk effects within the group graph.
     :type group_rw_distribution: tuple[float, float], optional
     :param iterations: The number of iterations that the model will run for.
@@ -148,6 +150,7 @@ class ABModel:
         hierarchy_names: list[str],
         hierarchy_rw_distributions: list[tuple[float, float]],
         agent_opinion_rw: tuple[float, float] = (0.0, 0.1),
+        group_opinion_rw: tuple[float, float] = (0.0, 0.1),
         group_rw_distribution: tuple[float, float] = (0.0, 0.1),
         iterations: int = 100,
         silencing_threshold: float = 0.95,
@@ -176,6 +179,7 @@ class ABModel:
             self.hierarchy_information[hierarchy] = hierarchy_rw_distributions[idx]
 
         self.agent_opinion_rw: tuple[float, float] = agent_opinion_rw
+        self.group_opinion_rw: tuple[float, float] = group_opinion_rw
 
         self.agents: AgentSet = AgentSet()
         self.graphs: GraphSet = GraphSet()
@@ -1676,7 +1680,7 @@ class ABModel:
                         group_object, group_opinion_delta, deradicalisation=True,
                     )
                     agent_radicalisations = self.group_graph.group_graph.group_radicalisation_change(
-                        group_object, not deradicalisation_info[1],
+                        group_object, deradicalisation_info[1],
                     )
 
                     # Store each agent's results for this group
@@ -1765,6 +1769,13 @@ class ABModel:
             )
             if self.debug:
                 self.logger.log_function_call("Agent.step")
+        for group in self.groups:
+            group.step(
+                self.hierarchy_information[group.hierarchy],
+                self.group_opinion_rw,
+            )
+            if self.debug:
+                self.logger.log_function_call("Group.step")
 
         if self.debug:
             self.logger.log_function_call("ABModel.step")

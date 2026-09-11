@@ -873,10 +873,10 @@ class Agent:
             raise TypeError("rw_distributions must be a dictionary")
 
         # Data type checks for the values in rw_distributions
-        for item in rw_distributions.items():
-            if not isinstance(item, tuple):
+        for value in rw_distributions.values():
+            if not isinstance(value, tuple):
                 raise TypeError("One or more items in rw_distributions is of an invalid data type -- all must be tuples")
-            if not isinstance(item[0], float) or not isinstance(item[1], float):
+            if not isinstance(value[0], float) or not isinstance(value[1], float):
                 raise TypeError("One or more tuples in rw_distributions contain invalid data types -- all must be tuples with two float items")
 
         for key, value in rw_distributions.items():

@@ -426,6 +426,7 @@ class InfluentialTester:
                     members,
                 )
                 group_count += 1
+                _ = self.li_model.add_group(new_group)
                 graph_groups.append(new_group)
 
             created_groups["groups"].extend(deepcopy(graph_groups))
@@ -467,14 +468,11 @@ class InfluentialTester:
                     graph.name,
                     members,
                 )
+                _ = self.hi_model.add_group(new_group)
                 graph_groups.append(new_group)
 
             created_groups["groups"].extend(deepcopy(graph_groups))
-            created_groups["edges"]
-            created_groups[graph.name] = {
-                "groups": deepcopy(graph_groups),
-                "edges": graph.generate_group_edges(graph_groups),
-            }
+            created_groups["edges"].extend(graph.generate_group_edges(graph_groups))
 
             # Manual garbage collection
             del clustered_nodes, group_members, graph_groups
@@ -500,7 +498,6 @@ class InfluentialTester:
             deepcopy(HIERARCHY_NAMES),
             deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
         )
-        _ = self.li_model.add_groups(self.li_groups)
 
         _ = self.hi_model.add_agents(self.hi_agents)
         _ = self.hi_model.add_graphs(
@@ -508,7 +505,6 @@ class InfluentialTester:
             deepcopy(HIERARCHY_NAMES),
             deepcopy(HIERARCHY_RW_DISTRIBUTIONS),
         )
-        _ = self.hi_model.add_groups(self.hi_groups)
 
         from_group: grp.Group
         to_group: grp.Group

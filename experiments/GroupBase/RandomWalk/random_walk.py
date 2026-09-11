@@ -239,8 +239,8 @@ class RandomWalkTester:
                 new_group.generate_group(
                     f"GROUP{group_count + 1:04}",
                     cluster,
-                    graph.name,
-                    members,
+                    hierarchy=graph.name,
+                    members=members,
                 )
                 group_count += 1
                 graph_groups.append(new_group)
