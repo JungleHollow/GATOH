@@ -79,6 +79,14 @@ class ConfigData(TypedDict):
     model_id: str
 
 
+class AgentChanges(TypedDict):
+    """
+    A helper class used to type check the agent changes dictionary for group iterations in :class:`~gatoh.model.ABModel`.
+    """
+    opinion_changes: list[float]
+    radicalisation_changes: list[bool]
+
+
 class ABModel:
     """
     An agent-based model class that is capable of handling multiple layers that affect agent behaviour.
@@ -1592,6 +1600,9 @@ class ABModel:
         :param changes_dict: A <group ID : opinion change information> mapping of the opinion values to apply.
         :type changes_dict: dict[str, tuple[float, list[bool]]]
         """
+        # A dictionary that tracks the total group influences on each individual agent (for an aggregate application of changes later)
+        agent_changes: dict[str, AgentChanges] = {}
+
         for group_id, opinion_change_info in changes_dict.items():
             group_object: Group | None = self.groups.get_group_by_id(group_id)
             if self.debug:
@@ -1623,12 +1634,23 @@ class ABModel:
                     agent_opinion_delta = self.group_graph.group_graph.group_opinion_change(group_object, group_opinion_delta)
                     agent_radicalisations = self.group_graph.group_graph.group_radicalisation_change(group_object, radicalisation_info[1])
 
-                    # Handle updating the group members with the provided info
-                    self.group_members_opinion_changes(agent_opinion_delta, agent_radicalisations)
+                    # Store each agent's results for this group
+                    for agent, radicalisation_status in agent_radicalisations.items():
+                        # First set the opinion change
+                        agent_changes.setdefault(
+                            agent,
+                            {
+                                "opinion_changes": [],
+                                "radicalisation_changes": []
+                            },
+                        )["opinion_changes"].append(agent_opinion_delta)
+
+                        # Next, set the radicalisation change (the inner dict and lists will always be initialised by this point)
+                        agent_changes[agent]["radicalisation_changes"].append(radicalisation_status)
 
                     # Update the radicalisation count in the logger as needed
                     # (radicalisation_info[0] will always be False if the group was already radicalised)
-                    self.logger.variables.increment_radicalised_group(radicalisation_info[1])
+                    self.logger.variables.increment_radicalised_group(radicalisation_info[0])
 
                     if self.debug:
                         self.logger.log_function_call("ABModel.group_members_opinion_changes")
@@ -1657,23 +1679,38 @@ class ABModel:
                         group_object, not deradicalisation_info[1],
                     )
 
-                    # Handle updating the group members with the provided info
-                    self.group_members_opinion_changes(agent_opinion_delta, agent_radicalisations)
+                    # Store each agent's results for this group
+                    for agent, radicalisation_status in agent_radicalisations.items():
+                        # First set the opinion change
+                        agent_changes.setdefault(
+                            agent,
+                            {
+                                "opinion_changes": [],
+                                "radicalisation_changes": []
+                            },
+                        )["opinion_changes"].append(agent_opinion_delta)
+
+                        # Next set the radicalisation change (the inner dict and lists will always be initialised at this point)
+                        agent_changes[agent]["radicalisation_changes"].append(radicalisation_status)
 
                     # Update the deradicalisation count in the logger as needed
                     # (deradicalisation_info[0] will always be False if the group was not already radicalised)
-                    self.logger.variables.increment_deradicalised_group(deradicalisation_info[1])
+                    self.logger.variables.increment_deradicalised_group(deradicalisation_info[0])
 
                     if self.debug:
                         self.logger.log_function_call("ABModel.group_members_opinion_changes")
                         self.logger.log_function_call("GroupGraph.group_opinion_change")
                         self.logger.log_function_call("GroupGraph.group_radicalisation_change")
                         self.logger.log_function_call("LoggerVariables.increment_deradicalised_group")
+
+        # Finally, apply all agent changes at the aggregate level
+        self.group_members_opinion_changes(agent_changes)
+
         if self.debug:
             self.logger.log_function_call("ABModel.group_iteration_opinion_changes")
         return None
 
-    def group_members_opinion_changes(self, opinion_delta: float, radicalisations: dict[str, bool]) -> None:
+    def group_members_opinion_changes(self, agent_changes: dict[str, AgentChanges]) -> None:
         """
         A helper function that applies the group's aggregate opinion changes to the individual Agents which make it up.
 
@@ -1682,12 +1719,20 @@ class ABModel:
         :param radicalisations: The new radicalisation statuses that have been determined for each member.
         :type radicalisations: dict[str, bool]
         """
-        for group_member, radicalisation in radicalisations.items():
-            agent_obj: Agent = self.agents.get_agent_by_id(group_member)
-            # Apply the opinion delta
-            agent_obj.change_opinion(opinion_delta)
-            # Update the radicalisation status
-            agent_obj.change_radicalisation(radicalisation)
+        for agent, changes in agent_changes.items():
+            agent_obj: Agent = self.agents.get_agent_by_id(agent)
+
+            # Calculate the aggregate effects
+            total_opinion_change: float = sum(changes["opinion_changes"]) / len(changes["opinion_changes"])
+            total_radicalisation: float = sum([int(flag) for flag in changes["radicalisation_changes"]]) / len(changes["radicalisation_changes"])
+
+            # Apply the total opinion change
+            agent_obj.change_opinion(total_opinion_change)
+            # Update the radicalisation status based on the total radicalisation rate within groups
+            if total_radicalisation >= 0.5:
+                agent_obj.change_radicalisation(True)
+            else:
+                agent_obj.change_radicalisation(False)
         return None
 
     def apply_link_functions(self) -> None:
