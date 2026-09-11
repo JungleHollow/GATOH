@@ -1402,9 +1402,9 @@ class Graph:
         :rtype: dict[int, dict[int, float]]
         """
         if subgraph is not None:
-            return rx.digraph_all_pairs_dijkstra_path_lengths(subgraph, lambda x: x.weighting)
+            return rx.digraph_all_pairs_dijkstra_path_lengths(subgraph, lambda x: 1.0 - abs(x.weighting))
         else:
-            return rx.digraph_all_pairs_dijkstra_path_lengths(self.graph, lambda x: x.weighting)
+            return rx.digraph_all_pairs_dijkstra_path_lengths(self.graph, lambda x: 1.0 - abs(x.weighting))
 
     def cluster_nodes(self, k: int, n_iters: int = 40) -> dict[GraphNode, int]:
         """
@@ -1428,7 +1428,7 @@ class Graph:
         all_pairs_lengths: rx.AllPairsPathLengthMapping = self.get_dijkstra_all_pairs()
 
         # Randomly select k nodes as centers
-        k_nodes: list[int] = sample(self.graph.node_indices(), k=k)
+        k_nodes: list[int] = sample(list(self.graph.node_indices()), k=k)
 
         current_centers: list[int] = k_nodes
 
@@ -1446,7 +1446,7 @@ class Graph:
                 # Find the distances to the current centers for the current node
                 distance_to_center: dict[int, float] = {}
                 for center in current_centers:
-                    if center in distance_to_node:
+                    if center in distance_to_node.keys():
                         distance_to_center[center] = distance_to_node[center]
                     else:
                         # This is done for edge cases in which hierarchy graphs may not be fully connected

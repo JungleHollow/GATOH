@@ -415,10 +415,10 @@ class InfluentialTester:
             for node, cluster in clustered_nodes.items():
                 group_members.setdefault(cluster, []).append(node.agent)
 
-            graph_groups: list[gr.Group] = []
+            graph_groups: list[grp.Group] = []
 
             for cluster, members in group_members.items():
-                new_group: gr.Group = gr.Group()
+                new_group: grp.Group = grp.Group()
                 new_group.generate_group(
                     f"LIGRP{group_count + 1:04}",
                     cluster,
