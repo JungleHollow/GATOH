@@ -4,6 +4,27 @@ Release Notes
 
 .. release-notes::
 
+2026.09.0
+==============
+
+Further integration of the new Groups module with existing code, and rewrites of the existing
+validation experiments to include groups.
+
+New Features
+------------
+
+- New version of the GraphAlgorithms experiment with groups
+- New version of the InfluentialAgents experiment with groups
+- New version of the OpinionChanges experiment with groups
+- New version of the RandomWalk experiment with groups
+- New version of the SocialSusceptibility experiment with groups
+
+Fixes
+-----
+
+- Fixed the way that (de)radicalisation thresholds were being determined with social susceptibility
+
+
 2026.08.0
 ==============
 
