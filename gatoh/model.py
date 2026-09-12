@@ -1638,10 +1638,6 @@ class ABModel:
                     if self.debug:
                         self.logger.log_function_call("Group.radicalisation")
 
-                    # Overwrite the group's opinion delta as needed
-                    if radicalisation_info[1] != 0.0:
-                        group_opinion_delta = radicalisation_info[1]
-
                     # Update the node in the group graph
                     agent_opinion_delta = self.group_graph.group_graph.group_opinion_change(group_object, group_opinion_delta)
                     agent_radicalisations = self.group_graph.group_graph.group_radicalisation_change(group_object, radicalisation_info[1])
@@ -1676,16 +1672,12 @@ class ABModel:
                         threshold=radicalisation_thresh,
                     )
 
-                    # Overwrite the group's opinion delta as needed
-                    if deradicalisation_info[1] != 0.0:
-                        group_opinion_delta = deradicalisation_info[1]
-
                     if self.debug:
                         self.logger.log_function_call("Group.deradicalisation")
 
                     # Update the node in the group graph
                     agent_opinion_delta = self.group_graph.group_graph.group_opinion_change(
-                        group_object, group_opinion_delta, deradicalisation=True,
+                        group_object, group_opinion_delta, deradicalisation=deradicalisation_info[0],
                     )
                     agent_radicalisations = self.group_graph.group_graph.group_radicalisation_change(
                         group_object, deradicalisation_info[1],
@@ -1736,7 +1728,11 @@ class ABModel:
 
             # Calculate the aggregate effects
             total_opinion_change: float = sum(changes["opinion_changes"]) / len(changes["opinion_changes"])
-            total_radicalisation: int = sum([int(flag) for flag in changes["radicalisation_changes"]])
+            total_radicalisation: float = 0.0
+            for radicalisation_change in changes["radicalisation_changes"]:
+                if radicalisation_change:
+                    total_radicalisation += 1.0
+            total_radicalisation /= len(changes["radicalisation_changes"])
 
             # Apply the total opinion change
             agent_obj.change_opinion(total_opinion_change)
@@ -1745,7 +1741,7 @@ class ABModel:
             previous_radicalisation: bool = agent_obj.radicalised
 
             # Update the radicalisation status based on the presence of any radicalisation in parent groups
-            if total_radicalisation >= 0:
+            if total_radicalisation >= 0.33:
                 agent_obj.change_radicalisation(True)
             else:
                 agent_obj.change_radicalisation(False)

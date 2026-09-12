@@ -66,8 +66,8 @@ if __name__ == "__main__":
         iterations,
         radicalised_agents,
         x_label="Iterations",
-        y_label="Number of Radicalised Agents",
-        title="Number of Radicalised Agents over Iterations",
+        y_label="Number of Radicalisation Events",
+        title="Number of Radicalisation Events over Iterations",
         save_path=f"{ROOT_DIR}/GraphAlgorithms_RadicalAgents.png",
     )
 

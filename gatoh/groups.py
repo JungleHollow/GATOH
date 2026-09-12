@@ -1195,35 +1195,35 @@ class Group:
                 # This will mean that deradicalisation is exclusively determined by the strength of the Group's opinion
                 if absolute_opinion <= threshold:
                     # Reduce the group's radicalisation rate until it is not considered radicalised anymore
-                    # (*1.05 to have some buffer space for the deradicalisation to be definite)
-                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.05
+                    # (*1.01 to have some buffer space for the deradicalisation to be definite)
+                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.01
                     return (True, radicalisation_rate_delta)
             case "rational":
                 # This will likely mean that the group is more disposed towards considering tangible benefits and their own
                 # opinions when determining deradicalisation, rather than external influences
                 if absolute_opinion <= threshold and aggregate_benefit >= DERAD_AGG_BEN_THRESH:
-                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.05
+                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.01
                     return (True, radicalisation_rate_delta)
                 elif absolute_opinion >= threshold and aggregate_benefit >= DERAD_AGG_BEN_THRESH and random_coinflip("bool"):
                     # In the case where the radicalisation threshold is not met but there is a presence of aggregate benefit, treat it as a random coinflip
-                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.05
+                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.01
                     return (True, radicalisation_rate_delta)
             case "erratic":
                 # Deradicalisation is influenced by personal opinions to some extent, but is largely stochastically determined
                 if absolute_opinion * DERAD_ERRATIC_MOD <= threshold:
-                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.05
+                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.01
                     return (True, radicalisation_rate_delta)
             case "impulsive":
                 # The group places very strong consideration on tangible benefits over anything else
                 if absolute_opinion <= threshold and not self.is_benefited():
-                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.05
+                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.01
                     return (True, radicalisation_rate_delta)
                 elif absolute_opinion <= threshold and self.is_benefited():
                     # The choice is stochastically determined, but the presence of personal benefit affects the weighting
                     # and it is no longer an even coinflip
                     radicalisation: bool = rd.choices([True, False], weights=DERAD_IMPULSIVE_PROBS)[0]
                     if not radicalisation:
-                        radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.05
+                        radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.01
                         return (True, radicalisation_rate_delta)
             case "social":
                 # Deradicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors
@@ -1231,7 +1231,7 @@ class Group:
                 absolute_change: float = abs(neighbour_influences)
                 if absolute_change >= (1.0 - self.aggregate_susceptibility) and not change_direction:
                     # A strong opinion change which disagreed with the group's opinion was caused by its neighbours
-                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.05
+                    radicalisation_rate_delta = -(self.radicalisation_rate - threshold) * 1.01
                     return (True, radicalisation_rate_delta)
             case _:
                 return (False, 0.0)
@@ -1304,31 +1304,31 @@ class Group:
             case "neutral":
                 # This will mean that radicalisation is exclusively determined by the strength of the Group's opinion
                 if absolute_opinion >= threshold:
-                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.05, 0.0)
+                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.01, 0.01)
                     return (True, radicalisation_rate_delta)
             case "rational":
                 # This will likely mean that the group is more disposed towards considering tangible benefits and their own
                 # opinions when determining radicalisation, rather than external influences
                 if absolute_opinion >= threshold and aggregate_benefit >= RAD_AGG_BEN_THRESH:
-                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.05, 0.0)
+                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.01, 0.01)
                     return (True, radicalisation_rate_delta)
                 elif absolute_opinion >= threshold and not aggregate_benefit >= RAD_AGG_BEN_THRESH and random_coinflip("bool"):
                     # In the case where the threshold is met, but there is not explicit aggregate benefit, radicalisation is treated as a coinflip
-                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.05, 0.0)
+                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.01, 0.01)
                     return (True, radicalisation_rate_delta)
             case "erratic":
                 # Radicalisation is influenced by personal opinions to some extent, but is largely stochastically determined
                 if absolute_opinion * RAD_ERRATIC_MOD >= threshold:
-                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.05, 0.0)
+                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.01, 0.01)
             case "impulsive":
                 # The group places very strong consideration on tangible benefits over anything else
                 if absolute_opinion >= threshold * RAD_IMPULSIVE_MOD and self.is_benefited():
-                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.05, 0.0)
+                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.01, 0.01)
                     return (True, radicalisation_rate_delta)
                 elif absolute_opinion >= threshold * RAD_IMPULSIVE_MOD and not self.is_benefited():
                     radicalisation: bool = rd.choices([True, False], weights=RAD_IMPULSIVE_PROBS)[0]
                     if radicalisation:
-                        radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.05, 0.0)
+                        radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.01, 0.01)
                         return (True, radicalisation_rate_delta)
             case "social":
                 # Radicalisation is strongly determined by the opinion climate and neighbour opinions rather than internal factors
@@ -1336,7 +1336,7 @@ class Group:
                 absolute_change: float = abs(neighbour_influences)
                 if absolute_change >= (1.0 - self.aggregate_susceptibility) and change_direction:
                     # A strong opinion change which agreed with the agent's opinion was caused by neighbour influences
-                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.05, 0.0)
+                    radicalisation_rate_delta = max((threshold - self.radicalisation_rate) * 1.01, 0.01)
                     return (True, radicalisation_rate_delta)
             case _:
                 return (False, 0.0)
