@@ -113,3 +113,14 @@ experiments/GroupBase/GraphAlgorithms/GraphAlgorithms_RadicalAgents.png
 experiments/GroupBase/GraphAlgorithms/random_model_variables.csv
 experiments/GroupBase/GraphAlgorithms/scale-free_model_variables.csv
 experiments/GroupBase/GraphAlgorithms/small-world_model_variables.csv
+experiments/GroupBase/RandomWalk/RandomWalk_BASE/
+experiments/GroupBase/RandomWalk/RandomWalk_BOTH/
+experiments/GroupBase/RandomWalk/RandomWalk_HIER/
+experiments/GroupBase/RandomWalk/RandomWalk_RELS/
+experiments/GroupBase/RandomWalk/BASE_model_variables.csv
+experiments/GroupBase/RandomWalk/BOTH_model_variables.csv
+experiments/GroupBase/RandomWalk/HIER_model_variables.csv
+experiments/GroupBase/RandomWalk/RandomWalk_AggOps.png
+experiments/GroupBase/RandomWalk/RandomWalk_Polarisations.png
+experiments/GroupBase/RandomWalk/RandomWalk_RadicalAgents.png
+experiments/GroupBase/RandomWalk/RELS_model_variables.csv
