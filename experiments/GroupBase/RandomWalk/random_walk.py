@@ -239,9 +239,11 @@ class RandomWalkTester:
                 new_group.generate_group(
                     f"GROUP{group_count + 1:04}",
                     cluster,
-                    hierarchy=graph.name,
-                    members=members,
+                    graph.name,
+                    members,
                 )
+                # Index must be set here so that the group edge tuples have valid indices
+                new_group.set_index(group_count)
                 group_count += 1
                 graph_groups.append(new_group)
 
