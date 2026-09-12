@@ -996,9 +996,13 @@ class GATOHLogger:
                     "iterations": f"{i + 1}",
                     "aggregate_opinions": f"{self.variables.aggregate_opinions[i]}",
                     "radicalised_agents": f"{self.variables.radicalised_agents[i]}",
+                    "radicalised_groups": f"{self.variables.radicalised_groups[i]}",
                     "deradicalised_agents": f"{self.variables.deradicalised_agents[i]}",
+                    "deradicalised_groups": f"{self.variables.deradicalised_groups[i]}",
                     "silenced_agents": f"{self.variables.silenced_agents[i]}",
+                    "silenced_groups": f"{self.variables.silenced_groups[i]}",
                     "negated_agents": f"{self.variables.negated_agents[i]}",
+                    "negated_groups": f"{self.variables.negated_groups[i]}",
                     "radicalisation_logodds": f"{self.variables.radicalisation_logodds[i]}",
                 }
 

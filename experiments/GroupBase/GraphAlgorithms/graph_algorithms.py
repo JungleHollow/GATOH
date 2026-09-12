@@ -166,7 +166,7 @@ class GraphAlgTester:
         for idx, hierarchy in enumerate(hierarchies):
             graph: gr.Graph = gr.Graph(hierarchy, rw_distributions[idx])
 
-            _ = graph.generate_graph(
+            graph = graph.generate_graph(
                 deepcopy(agents),
                 method=algorithm,
                 relationship_range=rel_range,
@@ -264,11 +264,21 @@ class GraphAlgTester:
         if missing_saves is not None:
             for missing_save in missing_saves:
                 _ = self.models[missing_save].add_agents(deepcopy(self.model_agents))
+                _ = self.models[missing_save].add_graphs(
+                    deepcopy(self.model_graphs[missing_save]),
+                    HIERARCHY_NAMES,
+                    HIERARCHY_RW_DISTRIBUTIONS,
+                )
                 self.create_group_graphs(missing_save)
             return None
 
         for algorithm in self.algorithms:
             _ = self.models[algorithm].add_agents(deepcopy(self.model_agents))
+            _ = self.models[algorithm].add_graphs(
+                deepcopy(self.model_graphs[algorithm]),
+                HIERARCHY_NAMES,
+                HIERARCHY_RW_DISTRIBUTIONS,
+            )
             self.create_group_graphs(algorithm)
         return None
 

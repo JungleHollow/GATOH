@@ -1596,14 +1596,22 @@ class ABModel:
             )
         return opinion_result
 
-    def group_iteration_opinion_changes(self, changes_dict: dict[str, tuple[float, list[bool]]]) -> None:
+    def group_iteration_opinion_changes(self, changes_dict: dict[str, tuple[float, list[bool]]], radicalisation_thresh: float | None = None) -> None:
         """
         A helper function for group_iterate that simply applies all group opinion changes and then
         performs the appropriate checks.
 
         :param changes_dict: A <group ID : opinion change information> mapping of the opinion values to apply.
         :type changes_dict: dict[str, tuple[float, list[bool]]]
+        :param radicalisation_thresh: An explicit threshold that should be used when determining (de)radicalisation.
+        :type radicalisation_thresh: float, optional
+        :raises TypeError: If the explicit radicalisation_thresh is invalid.
         """
+        # Type check for the radicalisation threshold
+        if radicalisation_thresh is not None:
+            if not isinstance(radicalisation_thresh, float) or (isinstance(radicalisation_thresh, float) and not (0.0 <= radicalisation_thresh <= 1.0)):
+                raise TypeError("radicalisation_thresh must be a float value in the range [0.0, 1.0]")
+
         # A dictionary that tracks the total group influences on each individual agent (for an aggregate application of changes later)
         agent_changes: dict[str, AgentChanges] = {}
 
@@ -1625,7 +1633,7 @@ class ABModel:
                     radicalisation_info: tuple[bool, float] = group_object.radicalisation(
                         opinion_change_info[0],
                         opinion_change_info[1],
-                        self.radicalisation_threshold,
+                        threshold=radicalisation_thresh,
                     )
                     if self.debug:
                         self.logger.log_function_call("Group.radicalisation")
@@ -1665,7 +1673,7 @@ class ABModel:
                     deradicalisation_info: tuple[bool, float] = group_object.deradicalisation(
                         opinion_change_info[0],
                         opinion_change_info[1],
-                        self.radicalisation_threshold,
+                        threshold=radicalisation_thresh,
                     )
 
                     # Overwrite the group's opinion delta as needed
@@ -1728,15 +1736,38 @@ class ABModel:
 
             # Calculate the aggregate effects
             total_opinion_change: float = sum(changes["opinion_changes"]) / len(changes["opinion_changes"])
-            total_radicalisation: float = sum([int(flag) for flag in changes["radicalisation_changes"]]) / len(changes["radicalisation_changes"])
+            total_radicalisation: int = sum([int(flag) for flag in changes["radicalisation_changes"]])
 
             # Apply the total opinion change
             agent_obj.change_opinion(total_opinion_change)
-            # Update the radicalisation status based on the total radicalisation rate within groups
-            if total_radicalisation >= 0.5:
+
+            # Note the existing radicalisation_status
+            previous_radicalisation: bool = agent_obj.radicalised
+
+            # Update the radicalisation status based on the presence of any radicalisation in parent groups
+            if total_radicalisation >= 0:
                 agent_obj.change_radicalisation(True)
             else:
                 agent_obj.change_radicalisation(False)
+
+            # Log for (de)radicalisation by comparing the previous status to the new one
+            if previous_radicalisation and not agent_obj.radicalised:
+                self.logger.variables.increment_deradicalised(True)
+            elif not previous_radicalisation and agent_obj.radicalised:
+                self.logger.variables.increment_radicalised(True)
+
+            # Also update the values in each agent graph (to allow for the calculated metrics to be produced)
+            for graph in self.graphs:
+                graph_agent_obj: GraphNode | None = graph.node_from_agent(agent_obj)
+                if graph_agent_obj is not None:
+                    graph_agent_obj.agent.opinion = agent_obj.opinion
+                    graph_agent_obj.agent.change_radicalisation(agent_obj.radicalised)
+
+            # Remember to update the base graph
+            base_graph_agent: GraphNode | None = self.base_graph.node_from_agent(agent_obj)
+            if base_graph_agent is not None:
+                base_graph_agent.agent.opinion = agent_obj.opinion
+                base_graph_agent.agent.change_radicalisation(agent_obj.radicalised)
         return None
 
     def apply_link_functions(self) -> None:

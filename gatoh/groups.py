@@ -1132,7 +1132,7 @@ class Group:
         self,
         neighbour_influences: float,
         neighbour_benefits: list[bool],
-        threshold: float,
+        threshold: float | None = None,
     ) -> tuple[bool, float]:
         """
         Uses the group's own aggregate opinion as well as the neighbours' opinions to determine if an already radicalised group
@@ -1143,7 +1143,7 @@ class Group:
         :param neighbour_benefits: Flags indicating the presence of personal benefit across a group's neighbours.
         :type neighbour_benefits: list[bool]
         :param threshold: The deradicalisation threshold that has been defined at the global level in the model.
-        :type threshold: float
+        :type threshold: float, optional
         :raises RuntimeError: If the group has not yet been initialised appropriately.
         :raises TypeError: If any of the input parameters contain an invalid data type.
         :return: A (deradicalisation flag, per-agent delta) pair outlining if deradicalisation occurred, and the per-agent opinion delta to apply.
@@ -1158,8 +1158,10 @@ class Group:
             raise TypeError("neighbour_influences must be a float")
         if not isinstance(neighbour_benefits, list):
             raise TypeError("neighbour_benefits must be a list")
-        if not isinstance(threshold, float):
-            raise TypeError("threshold must be a float")
+
+        if threshold is not None:
+            if not isinstance(threshold, float):
+                raise TypeError("threshold must be a float")
 
         # Data type check for items within lists
         for neighbour_benefit in neighbour_benefits:
@@ -1167,8 +1169,12 @@ class Group:
                 raise TypeError("One or more of the items in neighbour_benefits is of an invalid data type -- all must be booleans")
 
         # If the group is not radicalised, always return False, and a per-agent delta of 0.0
-        if not self.is_radicalised(threshold=threshold):
+        if not self.is_radicalised():
             return (False, 0.0)
+
+        if threshold is None:
+            # Use the defined global threshold for group radicalisation
+            threshold = COLLECTIVE_RAD_THRESH
 
         absolute_opinion: float = abs(self.aggregate_opinion)
 
@@ -1236,7 +1242,7 @@ class Group:
         self,
         neighbour_influences: float,
         neighbour_benefits: list[bool],
-        threshold: float,
+        threshold: float | None = None,
     ) -> tuple[bool, float]:
         """
         Uses the group's own aggregate opinion as well as the neighbours' opinions to determine if a non-radical group
@@ -1247,7 +1253,7 @@ class Group:
         :param neighbour_benefits: Flags indicating the presence of personal benefit across a group's neighbours.
         :type neighbour_benefits: list[bool]
         :param threshold: The radicalisation threshold that has been defined at the global level in the model.
-        :type threshold: float
+        :type threshold: float, optional
         :raises RuntimeError: If the group has not yet been initialised appropriately.
         :raises TypeError: If any of the input parameters contain an invalid data type.
         :return: A (radicalisation flag, per-agent delta) pair outlining if radicalisation has occurred, and the per-agent opinion delta to apply.
@@ -1262,8 +1268,10 @@ class Group:
             raise TypeError("neighbour_influences must be a float")
         if not isinstance(neighbour_benefits, list):
             raise TypeError("neighbour_benefits must be a list")
-        if not isinstance(threshold, float):
-            raise TypeError("threshold must be a float")
+
+        if threshold is not None:
+            if not isinstance(threshold, float):
+                raise TypeError("threshold must be a float")
 
         # Data type check for items within lists
         for neighbour_benefit in neighbour_benefits:
@@ -1271,8 +1279,12 @@ class Group:
                 raise TypeError("One or more of the items in neighbour_benefits is of an invalid data type -- all must be booleans")
 
         # If the group is already radicalised, always return False and a per-agent delta of 0.0
-        if self.is_radicalised(threshold=threshold):
+        if self.is_radicalised():
             return (False, 0.0)
+
+        if threshold is None:
+            # Use the defined global threshold for collective group radicalisation
+            threshold = COLLECTIVE_RAD_THRESH
 
         absolute_opinion: float = abs(self.aggregate_opinion)
 
