@@ -1569,6 +1569,66 @@ class AgentSet:
             agent_ids.append(agent.id)
         return agent_ids
 
+    def radicalised_count(self) -> int:
+        """
+        A getter function that returns the number of radicalised agents that are present in the
+        agent set.
+
+        :return: The number of radicalised agents in the agent set.
+        :rtype: int
+        """
+        radical_count: int = 0
+        for agent in self.agents:
+            if agent.radicalised:
+                radical_count += 1
+        return radical_count
+
+    def benefit_count(self) -> int:
+        """
+        A getter function that returns the number of agents which experience personal benefit
+        from social contagion in the agent set.
+
+        :return: The number of benefited agents in the agent set.
+        :rtype: int
+        """
+        benefit_count: int = 0
+        for agent in self.agents:
+            if agent.personal_benefit:
+                benefit_count += 1
+        return benefit_count
+
+    def personality_counts(self) -> dict[str, int]:
+        """
+        A getter function that returns the counts of all personality types among agents in
+        the agent set.
+
+        :return: The count of each supported personality type among agents in the agent set.
+        :rtype: dict[str, int]
+        """
+        personality_counts: dict[str, int] = {personality : 0 for personality in PERSONALITIES}
+        for agent in self.agents:
+            personality_counts[agent.personality] += 1
+        return personality_counts
+
+    def personality_count(self, personality: str) -> int:
+        """
+        A getter function that returns the count of agents which hold a specific personality
+        type in the agent set.
+
+        :param personality: The personality type that is being counted.
+        :type personality: str
+        :raises ValueError: If the personality type input is unsupported.
+        :return: The count of agents which hold the specified personality type.
+        :rtype: int
+        """
+        if personality not in PERSONALITIES:
+            raise ValueError("The input personality is not one of the supported types")
+        personality_count: int = 0
+        for agent in self.agents:
+            if agent.personality == personality:
+                personality_count += 1
+        return personality_count
+
     @override
     def __getstate__(self) -> dict[str, list[Agent] | rd.Random]:
         """

@@ -3458,9 +3458,9 @@ class GroupGraph:
         :rtype: dict[int, dict[int, float]]
         """
         if subgraph is not None:
-            return rx.digraph_all_pairs_dijkstra_path_lengths(subgraph, lambda x: x.weighting)
+            return rx.digraph_all_pairs_dijkstra_path_lengths(subgraph, lambda x: 1.0 - abs(x.weighting))
         else:
-            return rx.digraph_all_pairs_dijkstra_path_lengths(self.graph, lambda x: x.weighting)
+            return rx.digraph_all_pairs_dijkstra_path_lengths(self.graph, lambda x: 1.0 - abs(x.weighting))
 
     def cluster_nodes(self, k: int, n_iters: int = 40) -> dict[GroupNode, int]:
         """
