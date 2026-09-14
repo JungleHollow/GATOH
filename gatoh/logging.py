@@ -208,11 +208,15 @@ class LoggerVariables:
     aggregate_opinions: list[float] = field(default_factory=list)
     # The number of radicalised agents that exist in the model at each timestep
     radicalised_agents: list[int] = field(default_factory=list)
+    # The cumulative number of agent radicalisation events that occur
+    radicalisation_events: list[int] = field(default_factory=list)
     # The number of radicalised groups that exist in the model at each timestep
     radicalised_groups: list[int] = field(default_factory=list)
-    # The number of deradicalisation events that occur at each timestep
+    # The cumulative number of group radicalisation events that occur
+    group_radicalisation_events: list[int] = field(default_factory=list)
+    # The cumulative number of deradicalisation events that occur
     deradicalised_agents: list[int] = field(default_factory=list)
-    # The number of group deradicalisation events that occur at each timestep
+    # The cumulative number of group deradicalisation events that occur
     deradicalised_groups: list[int] = field(default_factory=list)
     # The total count of opinion silencing effects that have ocurred in the simulation over time
     silenced_agents: list[int] = field(default_factory=list)
@@ -242,7 +246,9 @@ class LoggerVariables:
         self.current_iteration = 0
         self.aggregate_opinions = [0.0 for _ in range(self.max_iterations)]
         self.radicalised_agents = [0 for _ in range(self.max_iterations)]
+        self.radicalisation_events = [0 for _ in range(self.max_iterations)]
         self.radicalised_groups = [0 for _ in range(self.max_iterations)]
+        self.group_radicalisation_events = [0 for _ in range(self.max_iterations)]
         self.deradicalised_agents = [0 for _ in range(self.max_iterations)]
         self.deradicalised_groups = [0 for _ in range(self.max_iterations)]
         self.silenced_agents = [0 for _ in range(self.max_iterations)]
@@ -265,28 +271,28 @@ class LoggerVariables:
 
     def increment_radicalised(self, flag: bool) -> None:
         """
-        A simple setter function that checks the input flag and updates the radicalisation count accordingly.
+        A simple setter function that checks the input flag and updates the radicalisation event count accordingly.
 
         :param flag: A flag indicating if radicalisation ocurred.
         :type flag: bool
         """
         if flag:
-            self.radicalised_agents[self.current_iteration - 1] += 1
+            self.radicalisation_events[self.current_iteration - 1] += 1
         return None
 
     def increment_radicalised_group(self, flag: bool) -> None:
         """
-        A simple setter function that checks the input flag and updates the group radicalisation count accordingly.
+        A simple setter function that checks the input flag and updates the group radicalisation event count accordingly.
 
         :param flag: A flag indicating if radicalisation ocurred.
         :type flag: bool
         """
         if flag:
-            self.radicalised_groups[self.current_iteration - 1] += 1
+            self.group_radicalisation_events[self.current_iteration - 1] += 1
 
     def increment_deradicalised(self, flag: bool) -> None:
         """
-        A simple setter function that checks the input flag and updates the deradicalisation count accordingly.
+        A simple setter function that checks the input flag and updates the deradicalisation event count accordingly.
 
         :param flag: A flag indicating if deradicalisation occurred.
         :type flag: bool
@@ -297,7 +303,7 @@ class LoggerVariables:
 
     def increment_deradicalised_group(self, flag: bool) -> None:
         """
-        A simple setter function that checks the input flag and updates the group deradicalisation count accordingly.
+        A simple setter function that checks the input flag and updates the group deradicalisation event count accordingly.
 
         :param flag: A flag indicating if deradicalisation ocurred.
         :type flag: bool
@@ -370,6 +376,26 @@ class LoggerVariables:
         self.radicalisation_logodds[self.current_iteration - 1] = r_logodds
         return None
 
+    def store_radicalisation(self, radical_n: int) -> None:
+        """
+        A setter function that simplifies the storing of the model's radicalised agents count at each iteration.
+
+        :param radical_n: The number of radicalised agents to store for the current iteration.
+        :type radical_n: int
+        """
+        self.radicalised_agents[self.current_iteration - 1] = radical_n
+        return None
+
+    def store_group_radicalisation(self, radical_n: int) -> None:
+        """
+        A setter function that simplifies the storing of the model's radicalised groups count at each iteration.
+
+        :param radical_n: The number of radicalised groups to store for the current iteration.
+        :type radical_n: int
+        """
+        self.radicalised_groups[self.current_iteration - 1] = radical_n
+        return None
+
     def store_layer_interdependences(self, layer_interdeps: dict[str, float]) -> None:
         """
         A setter function that simplifies the storing of the model's layer interdependences at each iteration.
@@ -427,8 +453,8 @@ class LoggerVariables:
         # -1 and -2 indexes due to indexing logic for lists...
 
         # Only these 8 variables must be carried over, all others are calculated at the end of the timestep independently
-        self.radicalised_agents[t_now] = self.radicalised_agents[t_last]
-        self.radicalised_groups[t_now] = self.radicalised_groups[t_last]
+        self.radicalisation_events[t_now] = self.radicalisation_events[t_last]
+        self.group_radicalisation_events[t_now] = self.group_radicalisation_events[t_last]
         self.deradicalised_agents[t_now] = self.deradicalised_agents[t_last]
         self.deradicalised_groups[t_now] = self.deradicalised_groups[t_last]
         self.silenced_agents[t_now] = self.silenced_agents[t_last]
@@ -482,8 +508,10 @@ class LoggerVariables:
         formatted_string: str = (
             f"""\n\n==== GATOH model variables at iteration {self.current_iteration}/{self.max_iterations}====
                 \n\nAggregate community opinion: {self.aggregate_opinions[self.current_iteration - 1]}
-                \nNumber of radicalisation events in the community: {self.radicalised_agents[self.current_iteration - 1]}
-                \nNumber of group radicalisation events in the community: {self.radicalised_groups[self.current_iteration - 1]}
+                \nNumber of radicalised agents in the community: {self.radicalised_agents[self.current_iteration - 1]}
+                \nNumber of radicalisation events in the community: {self.radicalisation_events[self.current_iteration - 1]}
+                \nNumber of radicalised groups in the community: {self.radicalised_groups[self.current_iteration - 1]}
+                \nNumber of group radicalisation events in the community: {self.group_radicalisation_events[self.current_iteration - 1]}
                 \nNumber of deradicalisation events in the community: {self.deradicalised_agents[self.current_iteration - 1]}
                 \nNumber of group deradicalisation events in the community: {self.deradicalised_groups[self.current_iteration - 1]}
                 \nLog odds of radicalisation ocurring: {self.radicalisation_logodds[self.current_iteration - 1]}
@@ -510,7 +538,9 @@ class LoggerVariables:
             "iterations",
             "aggregate_opinions",
             "radicalised_agents",
+            "radicalisation_events",
             "radicalised_groups",
+            "group_radicalisation_events",
             "deradicalised_agents",
             "deradicalised_groups",
             "silenced_agents",
@@ -876,6 +906,8 @@ class GATOHLogger:
     def iteration(
         self,
         aggregate_opinion: float,
+        radicalised_agents: int,
+        radicalised_groups: int,
         radicalisation_logodds: float,
         layer_interdependences: dict[str, float],
         layer_polarisations: dict[str, float],
@@ -887,6 +919,10 @@ class GATOHLogger:
 
         :param aggregate_opinion: The aggregate network opinion that has been observed in the model at the end of this iteration.
         :type aggregate_opinion: float
+        :param radicalised_agents: The number of radicalised agents in the model at the end of this iteration.
+        :type radicalised_agents: int
+        :param radicalised_groups: The number of radicalised groups in the model at the end of this iteration.
+        :type radicalised_groups: int
         :param radicalisation_logodds: The log odds of an agent being radicalised in the model at the end of this iteration.
         :type radicalisation_logodds: float
         :param layer_interdependences: A <hierarchy : value> mapping containing the calculated layer interdependency for each hierarchy in the model at the end of this iteration.
@@ -899,6 +935,8 @@ class GATOHLogger:
         :type model_parameters: dict[str, Any], optional
         """
         self.variables.store_aggregate_opinion(aggregate_opinion)
+        self.variables.store_radicalisation(radicalised_agents)
+        self.variables.store_group_radicalisation(radicalised_groups)
         self.variables.store_radicalisation_logodds(radicalisation_logodds)
         self.variables.store_layer_interdependences(layer_interdependences)
         self.variables.store_layer_polarisations(layer_polarisations)
@@ -908,6 +946,8 @@ class GATOHLogger:
 
         if self.debug:
             self.log_function_call("LoggerVariables.store_aggregate_opinion")
+            self.log_function_call("LoggerVariables.store_radicalisation")
+            self.log_function_call("LoggerVariables.store_group_radicalisation")
             self.log_function_call("LoggerVariables.store_radicalisation_logodds")
             self.log_function_call("LoggerVariables.store_layer_interdependences")
             self.log_function_call("LoggerVariables.store_layer_polarisations")
@@ -996,7 +1036,9 @@ class GATOHLogger:
                     "iterations": f"{i + 1}",
                     "aggregate_opinions": f"{self.variables.aggregate_opinions[i]}",
                     "radicalised_agents": f"{self.variables.radicalised_agents[i]}",
+                    "radicalisation_events": f"{self.variables.radicalisation_events[i]}",
                     "radicalised_groups": f"{self.variables.radicalised_groups[i]}",
+                    "group_radicalisation_events": f"{self.variables.group_radicalisation_events[i]}",
                     "deradicalised_agents": f"{self.variables.deradicalised_agents[i]}",
                     "deradicalised_groups": f"{self.variables.deradicalised_groups[i]}",
                     "silenced_agents": f"{self.variables.silenced_agents[i]}",
