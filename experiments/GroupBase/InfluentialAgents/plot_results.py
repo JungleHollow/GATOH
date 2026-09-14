@@ -18,6 +18,10 @@ if __name__ == "__main__":
         "HI": [],
         "LI": [],
     }
+    radicalised_groups: dict[str, list[int | float]] = {
+        "HI": [],
+        "LI": [],
+    }
     polarisations: dict[str, list[float]] = {
         "HI": [],
         "LI": [],
@@ -34,11 +38,13 @@ if __name__ == "__main__":
             for row in csv_reader:
                 aggregate_opinion: float = float(row["aggregate_opinions"])
                 radicalised_agent: int = int(row["radicalised_agents"])
+                radicalised_group: int = int(row["radicalised_groups"])
                 # All hierarchies contain the full population, so polarisation in one layer is representative of all
                 polarisation: float = float(row["layer_polarisations_family"])
 
                 aggregate_opinions[model_type].append(aggregate_opinion)
                 radicalised_agents[model_type].append(radicalised_agent)
+                radicalised_groups[model_type].append(radicalised_group)
                 polarisations[model_type].append(polarisation)
 
     # Plot the aggregate opinions
@@ -59,6 +65,16 @@ if __name__ == "__main__":
         y_label="Number of Radicalised Agents",
         title="Number of Radicalised Agents over Iterations",
         save_path=f"{ROOT_DIR}/InfluentialAgents_RadicalAgents.png",
+    )
+
+    # Plot the radicalised groups
+    plot_graph(
+        iterations,
+        radicalised_groups,
+        x_label="Iterations",
+        y_label="Number of Radicalised Groups",
+        title="Number of Radicalised Groups over Iterations",
+        save_path=f"{ROOT_DIR}/InfluentialAgents_RadicalGroups.png",
     )
 
     # Plot the polarisations
