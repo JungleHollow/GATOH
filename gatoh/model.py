@@ -87,6 +87,18 @@ class AgentChanges(TypedDict):
     radicalisation_changes: list[bool]
 
 
+class GroupUpdateDict(TypedDict):
+    """
+    A helper class used to type check the group updates dictionary for group updates at the end of iterations in :class:`~gatoh.model.ABModel`.
+    """
+    aggregate_opinion: float
+    member_benefit_rate: float
+    aggregate_susceptibility: float
+    radicalisation_rate: float
+    aggregate_hierarchy_weighting: float
+    silencing_rate: float
+
+
 class ABModel:
     """
     An agent-based model class that is capable of handling multiple layers that affect agent behaviour.
@@ -677,6 +689,84 @@ class ABModel:
             self.logger.log_function_call("ABModel.load_model")
 
         return None
+
+    def get_radical_count(self) -> int:
+        """
+        A wrapper for :meth:`~gatoh.agents.AgentSet.radicalised_count`.
+
+        :return: The number of radicalised agents in the model's agent set.
+        :rtype: int
+        """
+        return self.agents.radicalised_count()
+
+    def get_benefited_count(self) -> int:
+        """
+        A wrapper for :meth:`~gatoh.agents.AgentSet.benefit_count`.
+
+        :return: The number of benefited agents in the model's agent set.
+        :rtype: int
+        """
+        return self.agents.benefit_count()
+
+    def get_personality_counts(self) -> dict[str, int]:
+        """
+        A wrapper for :meth:`~gatoh.agents.AgentSet.personality_counts`.
+
+        :return: The count of each supported personality type among agents in the agent set.
+        :rtype: dict[str, int]
+        """
+        return self.agents.personality_counts()
+
+    def get_personality_count(self, personality: str) -> int:
+        """
+        A wrapper for :meth:`~gatoh.agents.AgentSet.personality_count`.
+
+        :param personality: The personality type that is being counted.
+        :type personality: str
+        :raises ValueError: If the wrapped function receives an invalid personality type.
+        :return: The count of agents which hold the specified personality type.
+        :rtype: int
+        """
+        return self.agents.personality_count(personality)
+
+    def get_group_radical_count(self) -> int:
+        """
+        A wrapper for :meth:`~gatoh.groups.GroupSet.radicalised_count`.
+
+        :return: The number of radicalised groups in the model's group set.
+        :rtype: int
+        """
+        return self.groups.radicalised_count()
+
+    def get_group_benefited_count(self) -> int:
+        """
+        A wrapper for :meth:`~gatoh.groups.GroupSet.benefit_count`.
+
+        :return: The number of benefited groups in the model's group set.
+        :rtype: int
+        """
+        return self.groups.benefit_count()
+
+    def get_group_personality_counts(self) -> dict[str, int]:
+        """
+        A wrapper for :meth:`~gatoh.groups.GroupSet.personality_counts`.
+
+        :return: The count of each supported personality type among groups in the group set.
+        :rtype: dict[str, int]
+        """
+        return self.groups.personality_counts()
+
+    def get_group_personality_count(self, personality: str) -> int:
+        """
+        A wrapper for :meth:`~gatoh.groups.GroupSet.personality_count`.
+
+        :param personality: The personality type that is being counted.
+        :type personality: str
+        :raises ValueError: If the wrapped function receives an invalid personality type.
+        :return: The count of groups which hold the specified predominant personality type.
+        :rtype: int
+        """
+        return self.groups.personality_count(personality)
 
     def add_graph(self, graph: Graph) -> GraphSet:
         """
@@ -1832,6 +1922,12 @@ class ABModel:
 
                 self.logger.variables.increment_silenced(agent_update[1])
                 self.logger.variables.increment_negated(agent_update[2])
+
+            # Update the group objects to account for multi-group agent membership effects
+            if self.simulate_groups:
+                group_updates = worker_pool.map(self.update_group_multi, self.groups)
+                for idx, group_update in enumerate(group_updates):
+                    self.groups.groups[idx].apply_update(group_update)
         else:
             if partial_indices is None:
                 for agent in self.agents:
@@ -1842,6 +1938,13 @@ class ABModel:
                     # Update the logger variables as needed
                     self.logger.variables.increment_silenced(agent_update[1])
                     self.logger.variables.increment_negated(agent_update[2])
+
+                if self.simulate_groups:
+                    # Recalculate all relevant aggregate attributes to account for multi-group agent membership effects
+                    for group in self.groups:
+                        group_update: GroupUpdateDict = self.update_group_multi(group)
+
+                        group.apply_update(group_update)
             else:
                 partial_agents = [self.agents.agent_at_index(i) for i in partial_indices]
                 for agent in partial_agents:
@@ -1853,6 +1956,12 @@ class ABModel:
 
                         self.logger.variables.increment_silenced(agent_update[1])
                         self.logger.variables.increment_negated(agent_update[2])
+
+                if self.simulate_groups:
+                    for group in self.groups:
+                        group_update = self.update_group_multi(group)
+
+                        group.apply_update(group_update)
 
         if self.debug:
             for _ in range(len(self.agents)):
@@ -1896,6 +2005,19 @@ class ABModel:
                     )
         return (silenced, was_silenced, negation)
 
+    def update_group_multi(self, group: Group) -> GroupUpdateDict:
+        """
+        A helper function that allows for multiprocessing of the :meth:`~gatoh.model.ABModel.update` function when simulating groups.
+
+        :param group: The group being updated.
+        :type group: Group
+        :return: All recalculated group aggregate attributes (reflecting the changes that members may have experienced from their other groups).
+        :rtype: dict[str, Any]
+        """
+        group_members: list[Agent] = self.agents.get_agents_by_ids(group.members)
+        recalculated_attributes: GroupUpdateDict = group.update(group_members)
+        return recalculated_attributes
+
     def logger_debug_iteration(self) -> None:
         """
         A helper function that handles the iteration of the logger's debugging component.
@@ -1919,6 +2041,10 @@ class ABModel:
         :type worker_pool: :class:`~multiprocessing.pool.Pool`
         """
         aggregate_opinion: float = self.calculate_aggregate_opinion()
+
+        radicalised_agents: int = self.get_radical_count()
+        radicalised_groups: int = self.get_group_radical_count()
+
         radicalisation_logodds: float = self.calculate_radicalisation_logodds()
 
         layer_interdependences: dict[str, float] = {}
@@ -1933,6 +2059,8 @@ class ABModel:
 
         self.logger.iteration(
             aggregate_opinion,
+            radicalised_agents,
+            radicalised_groups,
             radicalisation_logodds,
             layer_interdependences,
             layers_polarisation,
