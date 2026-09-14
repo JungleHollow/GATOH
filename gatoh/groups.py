@@ -16,6 +16,7 @@ from typing import Any, NotRequired, TypeVar, TypedDict, override
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from gatoh.agents import Agent, PersonalityProbs
+    from gatoh.model import GroupUpdateDict
 
 from gatoh.utils import draw_random_value, value_rw_delta, make_list_with_mode, random_coinflip
 
@@ -1006,35 +1007,71 @@ class Group:
 
         return output_dict
 
-    def update(self, opinion_silenced: float, negation_ocurred: bool) -> tuple[str, dict[str, bool]]:
+    def update(self, members: list[Agent]) -> GroupUpdateDict:
         """
-        Updates the internal state of the group after the model has stepped:
-            1. Updates whether the group is silenced within its hierarchy
-            2. Inverts the group's aggregate opinion if opinion negation ocurred
+        Updates the internal state of the group after the model has stepped by recalculating all aggregate attributes
+        to reflect any additional effects from members which may belong to multiple groups.
 
-        :param opinion_silenced: A delta value indicating by how much the group's silencing_rate has shifted.
-        :type opinion_silenced: float
-        :param negation_ocurred: A flag indicating if opinion negation has ocurred in the current iteration.
-        :type negation_ocurred: bool
+        :param members: The Agent objects of the members that make up this group.
+        :type members: list[Agent]
         :raises RuntimeError: If the group has not yet been initialised appropriately.
-        :raises TypeError: If either of the input parameters are of an incorrect data type.
-        :return: The group's hierarchy, and which group members have become silenced.
-        :rtype: tuple[str, dict[str, bool]]
+        :raises TypeError: If the input parameter is invalid.
+        :return: All of the group's recalculated aggregate attributes.
+        :rtype: dict[str, float]
         """
         # Check for initialisation
         if not hasattr(self, "aggregate_opinion"):
             raise AttributeError("The group for which an update is being attempted has not yet been initialised")
 
         # Type checking
-        if not isinstance(opinion_silenced, float) or not isinstance(negation_ocurred, bool):
-            raise TypeError("opinion_silenced must be a float and negation_ocurred must be a boolean value")
+        if not isinstance(members, list):
+            raise TypeError("members must be a list")
 
-        # Update is_silenced
-        members_silenced: dict[str, bool] = self.change_silencing_rate(opinion_silenced)
-        if negation_ocurred:
-            # Invert the Group's aggregate opinion
-            self.aggregate_opinion *= -1.0
-        return self.hierarchy, members_silenced
+        new_attributes: GroupUpdateDict = {
+            "aggregate_opinion": 0.0,
+            "member_benefit_rate": 0.0,
+            "aggregate_susceptibility": 0.0,
+            "radicalisation_rate": 0.0,
+            "aggregate_hierarchy_weighting": 0.0,
+            "silencing_rate": 0.0
+        }
+
+        for member in members:
+            new_attributes["aggregate_opinion"] += member.opinion
+            if member.personal_benefit:
+                new_attributes["member_benefit_rate"] += 1.0
+            new_attributes["aggregate_susceptibility"] += member.social_susceptibility
+            if member.radicalised:
+                new_attributes["radicalisation_rate"] += 1.0
+            new_attributes["aggregate_hierarchy_weighting"] += member.social_weightings[self.hierarchy]
+            if member.is_silenced[self.hierarchy]:
+                new_attributes["silencing_rate"] += 1.0
+
+        # Values updated this way to prevent type errors due to how typing TypedDicts work...
+        new_attributes["aggregate_opinion"] = new_attributes["aggregate_opinion"] / len(members)
+        new_attributes["member_benefit_rate"] = new_attributes["member_benefit_rate"] / len(members)
+        new_attributes["aggregate_susceptibility"] = new_attributes["aggregate_susceptibility"] / len(members)
+        new_attributes["radicalisation_rate"] = new_attributes["radicalisation_rate"] / len(members)
+        new_attributes["aggregate_hierarchy_weighting"] = new_attributes["aggregate_hierarchy_weighting"] / len(members)
+        new_attributes["silencing_rate"] = new_attributes["silencing_rate"] / len(members)
+
+        return new_attributes
+
+    def apply_update(self, new_attributes: GroupUpdateDict) -> None:
+        """
+        A multi-setter function that simply updates all aggregate attributes with input ones that have been recalculated.
+
+        :param new_attributes: The group's recalculated aggregate attributes.
+        :type new_attributes: dict[str, float]
+        """
+        # Values updated this way to prevent type errors due to how typing TypedDicts work...
+        self.aggregate_opinion = new_attributes["aggregate_opinion"]
+        self.member_benefit_rate = new_attributes["member_benefit_rate"]
+        self.aggregate_susceptibility = new_attributes["aggregate_susceptibility"]
+        self.radicalisation_rate = new_attributes["radicalisation_rate"]
+        self.aggregate_hierarchy_weighting = new_attributes["aggregate_hierarchy_weighting"]
+        self.silencing_rate = new_attributes["silencing_rate"]
+        return None
 
     def opinion_silencing(self, estimated_opinion_climate: float, silencing_threshold: float | None = None) -> tuple[bool, float]:
         """
@@ -2106,6 +2143,66 @@ class GroupSet:
             for member in group.members:
                 group_ids.add(member)
         return list(group_ids)
+
+    def radicalised_count(self) -> int:
+        """
+        A getter function that returns the number of radicalised groups that are present
+        in the group set.
+
+        :return: The number of radicalised groups in the group set.
+        :rtype: int
+        """
+        radical_count: int = 0
+        for group in self.groups:
+            if group.is_radicalised():
+                radical_count += 1
+        return radical_count
+
+    def benefit_count(self) -> int:
+        """
+        A getter function that returns the number of groups which experience aggregate personal
+        benefit from social contagion in the group set.
+
+        :return: The number of benefited groups in the group set.
+        :rtype: int
+        """
+        benefit_count: int = 0
+        for group in self.groups:
+            if group.is_benefited():
+                benefit_count += 1
+        return benefit_count
+
+    def personality_counts(self) -> dict[str, int]:
+        """
+        A getter function that returns the counts of all predomninant personality types
+        among groups in the group set.
+
+        :return: The count of each supported personality type which is predominant among groups in the group set.
+        :rtype: dict[str, int]
+        """
+        personality_counts: dict[str, int] = {personality: 0 for personality in PERSONALITIES}
+        for group in self.groups:
+            personality_counts[group.predominant_personality] += 1
+        return personality_counts
+
+    def personality_count(self, personality: str) -> int:
+        """
+        A getter function that returns the count of groups which hold a specific personality type as
+        it predominant one in the group set.
+
+        :param personality: The personality type that is being counted.
+        :type personality: str
+        :raises ValueError: If the personality type input is unsupported.
+        :return: The count of groups which hold the specified predominant personality type.
+        :rtype: int
+        """
+        if personality not in PERSONALITIES:
+            raise ValueError("The input personality is not one of the supported types")
+        personality_count: int = 0
+        for group in self.groups:
+            if group.predominant_personality == personality:
+                personality_count += 1
+        return personality_count
 
     @override
     def __getstate__(self) -> dict[str, list[Group] | rd.Random]:
