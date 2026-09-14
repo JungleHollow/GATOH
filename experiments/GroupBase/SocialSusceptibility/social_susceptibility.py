@@ -193,6 +193,7 @@ class SocialSusceptibilityTester:
                     hierarchy=graph.name,
                     members=members,
                 )
+                new_group.set_index(group_count)
                 group_count += 1
                 graph_groups.append(new_group)
 
@@ -255,7 +256,7 @@ class SocialSusceptibilityTester:
                 correct_agent: agt.Agent | None = None
 
                 for agent_obj in self.model_agents[model_name]:
-                    if agent_obj.id != agent_id
+                    if agent_obj.id != agent_id:
                         continue
                     else:
                         correct_agent = deepcopy(agent_obj)
