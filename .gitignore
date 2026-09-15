@@ -143,3 +143,13 @@ experiments/GroupBase/SocialSusceptibility/SocialSusceptibility_AggOps.png
 experiments/GroupBase/SocialSusceptibility/SocialSusceptibility_Polarisations.png
 experiments/GroupBase/SocialSusceptibility/SocialSusceptibility_RadicalAgents.png
 experiments/GroupBase/SocialSusceptibility/SocialSusceptibility_RadicalGroups.png
+experiments/GroupBase/OpinionChanges/agents/
+experiments/GroupBase/OpinionChanges/graphs/
+experiments/GroupBase/OpinionChanges/models/
+experiments/GroupBase/OpinionChanges/groups/
+experiments/GroupBase/OpinionChanges/OpinionChanges_logged_savedirs.csv
+experiments/GroupBase/OpinionChanges/plots/
+experiments/GroupBase/OpinionChanges/OpinionChanges_AggOps.png
+experiments/GroupBase/OpinionChanges/OpinionChanges_Polarisations.png
+experiments/GroupBase/OpinionChanges/OpinionChanges_RadicalAgents.png
+experiments/GroupBase/OpinionChanges/OpinionChanges_RadicalGroups.png
