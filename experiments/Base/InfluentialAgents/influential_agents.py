@@ -5,6 +5,10 @@ import random as rd
 from copy import deepcopy
 from typing import TypedDict
 
+from multiprocessing import Pool
+# For type checking
+from multiprocessing.pool import Pool as WorkerPool
+
 import numpy as np
 
 import gatoh.agents as agt
@@ -402,24 +406,33 @@ class InfluentialTester:
         )
         return None
 
-    def run_model_li(self) -> None:
+    def run_model_li(self, worker_pool: WorkerPool | None = None) -> None:
         """
         Runs the low influence model.
+
+        :param worker_pool: A pool of workers that can share the model iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         """
-        self.li_model.iterate()
+        self.li_model.iterate(worker_pool=worker_pool)
         self.li_model.save_model()
         return None
 
-    def run_model_hi(self) -> None:
+    def run_model_hi(self, worker_pool: WorkerPool | None = None) -> None:
         """
         Runs the high influence model.
+
+        :param worker_pool: A pool of workers that can share the model iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         """
-        self.hi_model.iterate()
+        self.hi_model.iterate(worker_pool=worker_pool)
         self.hi_model.save_model()
         return None
 
 
 if __name__ == "__main__":
+    MULTIPROCESSING: bool = True
+    WORKER_POOL: WorkerPool | None = Pool() if MULTIPROCESSING else None
+
     class TestParameters(TypedDict):
         n_agents: int
         n_negative: int
@@ -515,8 +528,8 @@ if __name__ == "__main__":
         # Create the tester normally, setup the models, and begin iterations
         tester = InfluentialTester()
         tester.setup_models()
-        tester.run_model_li()
-        tester.run_model_hi()
+        tester.run_model_li(worker_pool=WORKER_POOL)
+        tester.run_model_hi(worker_pool=WORKER_POOL)
     elif os.path.exists(LI_SAVEDIR) and os.path.exists(
         HI_SAVEDIR
     ):  # Both model save directories exist
@@ -524,4 +537,6 @@ if __name__ == "__main__":
         tester = InfluentialTester(existing=True)
         tester.load_models()
 
-    # TODO: Add the graph visualisation functions here once those features are implemented...
+    # Ensure that the worker pool is terminated if it exists once all processing is done
+    if WORKER_POOL is not None:
+        WORKER_POOL.terminate()
