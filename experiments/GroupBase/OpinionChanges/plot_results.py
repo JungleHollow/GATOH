@@ -18,6 +18,7 @@ if __name__ == "__main__":
 
     aggregate_opinions: dict[str, dict[str, list[float]]] = {}
     radicalised_agents: dict[str, dict[str, list[float]]] = {}
+    radicalised_groups: dict[str, dict[str, list[float]]] = {}
     polarisations: dict[str, dict[str, list[float]]] = {}
 
     csv_reader: csv.DictReader[str]
@@ -38,6 +39,7 @@ if __name__ == "__main__":
             iterations[change_iteration] = {}
             aggregate_opinions[change_iteration] = {}
             radicalised_agents[change_iteration] = {}
+            radicalised_groups[change_iteration] = {}
             polarisations[change_iteration] = {}
         if model not in aggregate_opinions[change_iteration]:
             aggregate_opinions[change_iteration][model] = []
@@ -45,6 +47,7 @@ if __name__ == "__main__":
             # It is assumed that the other dicts are also uninitialised
             iterations[change_iteration][model] = [i + 1 for i in range(100)]
             radicalised_agents[change_iteration][model] = []
+            radicalised_groups[change_iteration][model] = []
             polarisations[change_iteration][model] = []
 
         graph_groups[change_iteration].append((model, save_dir))
@@ -59,6 +62,7 @@ if __name__ == "__main__":
                 for row in csv_reader:
                     aggregate_opinion: float = float(row["aggregate_opinions"])
                     radicalised_agent: int = int(row["radicalised_agents"])
+                    radicalised_group: int = int(row["radicalised_groups"])
 
                     polarisation: float = 0.0
                     for hierarchy in MODEL_HIERARCHIES:
@@ -67,39 +71,45 @@ if __name__ == "__main__":
 
                     aggregate_opinions[graph_group][data_file[0]].append(aggregate_opinion)
                     radicalised_agents[graph_group][data_file[0]].append(radicalised_agent)
+                    radicalised_groups[graph_group][data_file[0]].append(radicalised_group)
                     polarisations[graph_group][data_file[0]].append(polarisation)
 
     # Calculate averages for each graph group
     for graph_group in aggregate_opinions:
         agg_opps_avgs: list[float] = []
         radical_agts_avgs: list[float] = []
+        radical_grps_avgs: list[float] = []
         polarisations_avgs: list[float] = []
 
         for i in range(100):
             agg_opps_sum: float = 0.0
             radical_agts_total: float = 0.0
+            radical_grps_total: float = 0.0
             polarisations_sum: float = 0.0
 
             for instance in aggregate_opinions[graph_group]:
                 agg_opps_sum += aggregate_opinions[graph_group][instance][i]
                 radical_agts_total += radicalised_agents[graph_group][instance][i]
+                radical_grps_total += radicalised_groups[graph_group][instance][i]
                 polarisations_sum += polarisations[graph_group][instance][i]
 
             num_instances: int = len(list(aggregate_opinions[graph_group].keys()))
 
             agg_opps_avgs.append(float(agg_opps_sum / num_instances))
             radical_agts_avgs.append(float(radical_agts_total / num_instances))
+            radical_grps_avgs.append(float(radical_grps_total / num_instances))
             polarisations_avgs.append(float(polarisations_sum / num_instances))
 
         aggregate_opinions[graph_group]["Average"] = deepcopy(agg_opps_avgs)
         radicalised_agents[graph_group]["Average"] = deepcopy(radical_agts_avgs)
+        radicalised_groups[graph_group]["Average"] = deepcopy(radical_grps_avgs)
         polarisations[graph_group]["Average"] = deepcopy(polarisations_avgs)
 
         # Remember to update the iterations dict
         iterations[graph_group]["Average"] = [i + 1 for i in range(100)]
 
         # Manual garbage collection
-        del agg_opps_avgs, radical_agts_avgs, polarisations_avgs
+        del agg_opps_avgs, radical_agts_avgs, radical_grps_avgs, polarisations_avgs
         _ = gc.collect()
 
     # Create the aggregate opinion plots for each graph group
@@ -132,8 +142,25 @@ if __name__ == "__main__":
             iterations[graph_group],
             instances,
             x_label="Iterations",
-            y_label="Number of Radicalised Agents over Iterations",
+            y_label="Number of Radicalised Agents",
             title="Number of Radicalised Agents over Iterations",
+            save_path=graph_group_save_path,
+            vertical_x=change_iteration_int,
+            vertical_name="Change Iteration",
+        )
+
+    # Create the radicalised groups plots for each graph group
+    for graph_group, instances in radicalised_groups.items():
+        graph_group_save_path = f"{ROOT_DIR}/plots/OpinionChanges_{graph_group}_RadicalGroups.png"
+
+        change_iteration_int = int(graph_group.split("-")[1])
+
+        plot_graph(
+            iterations[graph_group],
+            instances,
+            x_label="Iterations",
+            y_label="Number of Radicalised Groups",
+            title="Number of Radicalised Groups over Iterations",
             save_path=graph_group_save_path,
             vertical_x=change_iteration_int,
             vertical_name="Change Iteration",
@@ -160,6 +187,7 @@ if __name__ == "__main__":
     group_averages: dict[str, dict[str, list[float]]] = {
         "agg_opps": {},
         "rad_agents": {},
+        "rad_groups": {},
         "polarisations": {},
     }
     group_iterations: dict[str, list[float]] = {}
@@ -168,6 +196,7 @@ if __name__ == "__main__":
     for graph_group in aggregate_opinions:
         group_averages["agg_opps"][graph_group] = deepcopy(aggregate_opinions[graph_group]["Average"])
         group_averages["rad_agents"][graph_group] = deepcopy(radicalised_agents[graph_group]["Average"])
+        group_averages["rad_groups"][graph_group] = deepcopy(radicalised_groups[graph_group]["Average"])
         group_averages["polarisations"][graph_group] = deepcopy(polarisations[graph_group]["Average"])
         group_iterations[graph_group] = [i + 1 for i in range(100)]
 
@@ -187,6 +216,14 @@ if __name__ == "__main__":
         y_label="Average Number of Radicalised Agents",
         title="Average Number of Radicalised Agents over Iterations",
         save_path=f"{ROOT_DIR}/OpinionChanges_RadicalAgents.png",
+    )
+    plot_graph(
+        group_iterations,
+        group_averages["rad_groups"],
+        x_label="Iterations",
+        y_label="Average Number of Radicalised Groups",
+        title="Average Number of Radicalised Groups over Iterations",
+        save_path=f"{ROOT_DIR}/OpinionChanges_RadicalGroups.png",
     )
     plot_graph(
         group_iterations,
