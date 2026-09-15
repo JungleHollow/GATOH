@@ -480,6 +480,9 @@ class OpinionChangesTester:
         del group_relationships, created_groups
         _ = gc.collect()
 
+        # Serialise the created Group objects
+        self.pickle_groups()
+
         print("==== Finished Group creation ====")
         return None
 
@@ -952,7 +955,7 @@ if __name__ == "__main__":
 
     # The parameters that will be used to create the Group population that is shared across models
     GROUP_PARAMETERS: GroupParameters = {
-        "n_groups": 20,
+        "n_groups": 10,
         "id_base": "GEXOC"  # (Grouped EXperiment Opinion Changes)
     }
 
@@ -962,6 +965,10 @@ if __name__ == "__main__":
     # The root of the directory in which each instance's save directory will be located
     # (using a /models subdirectory just for this experiment due to significant increase in number of instances)
     SAVEDIR_ROOT: str = f"{ROOT_DIR}/models"
+
+    # Ensure that the savedir root for models is created
+    if not os.path.exists(SAVEDIR_ROOT):
+        os.mkdir(SAVEDIR_ROOT)
 
     # A path to which a validation file will be written -- outlining the model name and save directory that were generated
     # for each instance using the tester initialisation (to allow for checking of missing saves in the future)
