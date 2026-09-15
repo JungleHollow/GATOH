@@ -462,6 +462,7 @@ class OpinionChangesTester:
                     hierarchy=graph.name,
                     members=members,
                 )
+                new_group.set_index(group_count)
                 group_count += 1
                 graph_groups.append(new_group)
 
