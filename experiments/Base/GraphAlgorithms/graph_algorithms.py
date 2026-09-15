@@ -5,6 +5,10 @@ import random as rd
 from copy import deepcopy
 from typing import TypedDict
 
+from multiprocessing import Pool
+# For type checking
+from multiprocessing.pool import Pool as WorkerPool
+
 import gatoh.agents as agt
 import gatoh.graphs as gr
 import gatoh.model as md
@@ -177,26 +181,32 @@ class GraphAlgTester:
             )
         return None
 
-    def run_models(self, missing_saves: list[str] | None = None) -> None:
+    def run_models(self, missing_saves: list[str] | None = None, worker_pool: WorkerPool | None = None) -> None:
         """
         Runs each model in the tester class.
 
-        :param missing_saves: An optional partial list of the algorithms representing models that should be run.
+        :param missing_saves: A potentially partial list of the algorithms representing models that should be run.
+        :type missing_saves: list[str], optional
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         """
         if missing_saves:
             for missing_save in missing_saves:
-                self.models[missing_save].iterate()
+                self.models[missing_save].iterate(worker_pool=worker_pool)
                 self.models[missing_save].save_model()
             return None
 
         for algorithm in self.algorithms:
-            self.models[algorithm].iterate()
+            self.models[algorithm].iterate(worker_pool=worker_pool)
             self.models[algorithm].save_model()
 
         return None
 
 
 if __name__ == "__main__":
+    MULTIPROCESSING: bool = True
+    WORKER_POOL: WorkerPool | None = Pool() if MULTIPROCESSING else None
+
     class TestParameters(TypedDict):
         generation_algorithms: list[str]
         num_agents: int
@@ -292,13 +302,15 @@ if __name__ == "__main__":
         if len(existing_savedirs) > 0:  # At least one model exists
             tester.load_models(existing_saves=existing_savedirs)
             tester.setup_models(missing_saves=missing_savedirs)
-            tester.run_models(missing_saves=missing_savedirs)
+            tester.run_models(missing_saves=missing_savedirs, worker_pool=WORKER_POOL)
         else:  # Assume all models should be newly created and run
             tester.setup_models()
-            tester.run_models()
+            tester.run_models(worker_pool=WORKER_POOL)
     else:  # Assume that all existing subdirectories include every algorithms's valid save subdirectory...
         # Create the tester in "existing" mode, and examine the results
         tester = GraphAlgTester(existing=True)
         tester.load_models()
 
-    # TODO: Add the graph visualisation functions here once those features are implemented...
+    # Ensure that the worker pool is terminated if it exists after all processing is finished
+    if WORKER_POOL is not None:
+        WORKER_POOL.terminate()
