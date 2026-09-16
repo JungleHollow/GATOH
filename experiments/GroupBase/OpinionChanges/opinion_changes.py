@@ -836,7 +836,7 @@ class OpinionChangesTester:
                     # Change the group's aggregate opinion
                     per_agent_delta: float = model_struct.model.group_graph.group_graph.group_opinion_change(group, changed_opinion)
 
-                    # Apply note the change for every member agent in this group's hierarchy
+                    # Note the change for every member agent in this group's hierarchy
                     for member in group.members:
                         agent_changes.setdefault(member, []).append(per_agent_delta)
 

@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import csv
+import gc
 import os
 import pickle
 import random as rd
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import TypedDict
+
+from multiprocessing import Pool
+# For type checking
+from multiprocessing.pool import Pool as WorkerPool
 
 import numpy as np
 
@@ -611,24 +616,27 @@ class OpinionChangesTester:
                 del save_struct
         return None
 
-    def run_models(self, missing_saves: list[str] | None = None) -> None:
+    def run_models(self, missing_saves: list[str] | None = None, worker_pool: WorkerPool | None = None) -> None:
         """
         Runs each model instance in the tester class, calling the custom iteration function, and introducing the
         sudden opinion changes at the correct iteration.
 
-        :param missing_saves: An optional partial list of the model names representing models that should be run.
+        :param missing_saves: A potentially partial list of the model names representing models that should be run.
+        :type missing_saves: list[str], optional
+        :param worker_pool: A pool of workers that can distribute the processing of the iterations amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         """
         print("==== Beginning model iterations ====\n\n")
         if missing_saves:
             for missing_save in missing_saves:
                 missing_struct: ModelStruct = self.get_struct(missing_save)
-                self.custom_iterate(missing_struct)
+                self.custom_iterate(missing_struct, worker_pool=worker_pool)
             # Only save the models which were missing
             self.save_models(missing_saves=missing_saves)
             return None
 
         for model_struct in self.models:
-            self.custom_iterate(model_struct)
+            self.custom_iterate(model_struct, worker_pool=worker_pool)
         self.save_models()
         return None
 
@@ -664,12 +672,15 @@ class OpinionChangesTester:
 
         return changed_opinion
 
-    def custom_iterate(self, model_struct: ModelStruct) -> None:
+    def custom_iterate(self, model_struct: ModelStruct, worker_pool: WorkerPool | None = None) -> None:
         """
         A custom model iteration function that is able to introduce the opinion changes at the correct iterations across
         instances.
 
-        :param model_struct: A ModelStruct object containing all the relevant information needed to handle the model runtime.
+        :param model_struct: An object containing all the relevant information needed to handle the model runtime.
+        :type model_struct: ModelStruct
+        :param worker_pool: A pool of workers that can distribute the processing of the iterations amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         """
         print(f"==== Iterating model {model_struct.model.model_id} ====")
 
@@ -688,10 +699,7 @@ class OpinionChangesTester:
                 for hierarchy in model_struct.model.graphs:
                     hierarchy.agent_previous_opinion(agent)
 
-                if (
-                    is_change_iteration
-                    and agent.id in model_struct.changed_agents.keys()
-                ):
+                if is_change_iteration and agent.id in model_struct.changed_agents:
                     agent_hierarchies: list[str] = model_struct.changed_agents[agent.id]
 
                     changed_opinion: float = self.agent_opinion_change(agent.opinion)
@@ -714,57 +722,53 @@ class OpinionChangesTester:
                             continue
 
                         agent_node.agent.change_opinion(changed_opinion)
-                else:
-                    collective_changes: list[float] = []
-                    for hierarchy in model_struct.model.graphs:
-                        neighbour_influences: float | None = (
-                            hierarchy.neighbour_influences(agent)
-                        )
-                        if neighbour_influences is not None:
-                            collective_changes.append(neighbour_influences)
-                    total_change: float = sum(collective_changes)
-                    if (agent.opinion + total_change < -1.0) or (
-                        agent.opinion + total_change > 1.0
-                    ):
-                        # Constrain to [-1, 1]
-                        continue
-                    else:
-                        agent.change_opinion(total_change)
-                        for hierarchy in model_struct.model.graphs:
-                            # Update the opinion across all hierarchies
-                            hierarchy.agent_opinion_change(agent, total_change)
 
-                    all_neighbour_indices: list[int] = list(model_struct.model.base_graph.graph.neighbors(agent.index))
-                    all_neighbour_benefits: list[bool] = []
-                    for neighbour_index in all_neighbour_indices:
-                        neighbour_object: agt.Agent = model_struct.model.base_graph.graph[neighbour_index].agent
-                        all_neighbour_benefits.append(neighbour_object.personal_benefit)
+            # The actual model iteration process (not when the change iteration happens)
 
-                    # After the opinion change, determine if the Agent has become radicalised
-                    was_radicalised: bool = agent.radicalisation(
-                        collective_changes,
-                        all_neighbour_benefits,
-                        model_struct.model.radicalisation_threshold,
-                    )
+            # Track the agent opinion changes separately to prevent recursive updates
+            agent_opinion_results: dict[str, tuple[float, list[float], list[bool]]] = {}
 
-                    for hierarchy in model_struct.model.graphs:
-                        # Update the radicalisation status of the Agent across all hierarchies
-                        hierarchy.agent_radicalisation_change(agent, was_radicalised)
+            if worker_pool is not None and not is_change_iteration:
+                opinion_results = worker_pool.imap(
+                    model_struct.model.iteration_opinion_calculation,
+                    model_struct.model.agents,
+                    chunksize=10,
+                )
 
-                    # Update the radicalisation count in the logger as needed
-                    model_struct.model.logger.variables.increment_radicalised(
-                        was_radicalised
-                    )
+                for opinion_result in opinion_results:
+                    agent_opinion_results[opinion_result[0]] = opinion_result[1]
 
+                # Manual garbage collection
+                del opinion_results
+                _ = gc.collect()
+            elif worker_pool is None and not is_change_iteration:
+                for agent in model_struct.model.agents:
+                    opinion_result = model_struct.model.iteration_opinion_calculation(agent)
+                    agent_opinion_results[opinion_result[0]] = opinion_result[1]
+
+                    # Manual garbage collection
+                    del opinion_result
+                    _ = gc.collect()
+
+            model_struct.model.iteration_opinion_changes(agent_opinion_results)
             model_struct.model.step()
-            model_struct.model.update()
+            model_struct.model.update(worker_pool=worker_pool)
 
             # Handle the logger's iteration() calculations and call its method
-            model_struct.model.logger_iteration()
+            model_struct.model.logger_iteration(worker_pool=worker_pool)
 
             # Get this iteration's print string (will be formatted appropriately based on the print interval)
             iteration_print_string: str = model_struct.model.logger.iteration_print()
             print(iteration_print_string)
+
+            if model_struct.model.visualise:
+                model_struct.model.visualiser.visualiser_iteration(
+                    model_struct.model.base_graph,
+                    model_struct.model.current_iteration,
+                    model_name=model_struct.model.model_id,
+                )
+            if model_struct.model.checkpointing:
+                model_struct.model.save_model()
 
             model_struct.model.current_iteration += 1
             model_struct.current_iteration += 1
@@ -772,6 +776,9 @@ class OpinionChangesTester:
 
 
 if __name__ == "__main__":
+    MULTIPROCESSING: bool = True
+    WORKER_POOL: WorkerPool | None = Pool() if MULTIPROCESSING else None
+
     class TestParameters(TypedDict):
         iterations: int
         opinion_change_interval: int
@@ -868,12 +875,14 @@ if __name__ == "__main__":
         if len(existing_savedirs) > 0:  # At least one model exists
             tester.load_models(existing_saves=existing_savedirs)
             tester.initialise_model_structs(missing_saves=missing_savedirs)
-            tester.run_models(missing_saves=missing_savedirs)
+            tester.run_models(missing_saves=missing_savedirs, worker_pool=WORKER_POOL)
         else:
             tester.initialise_model_structs()
-            tester.run_models()
+            tester.run_models(worker_pool=WORKER_POOL)
     else:
         tester = OpinionChangesTester(existing=True)
         tester.load_models()
 
-    # TODO: Add the graph visualisation functions here when they have been implemented...
+    # Ensure the worker pool is terminated if it exists once all processing is finished
+    if WORKER_POOL is not None:
+        WORKER_POOL.terminate()
