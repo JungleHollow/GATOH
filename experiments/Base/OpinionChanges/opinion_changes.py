@@ -835,6 +835,10 @@ if __name__ == "__main__":
     # (using a /models subdirectory just for this experiment due to significant increase in number of instances)
     SAVEDIR_ROOT: str = f"{ROOT_DIR}/models"
 
+    # Ensure the savedir exists
+    if not os.path.exists(SAVEDIR_ROOT):
+        os.mkdir(SAVEDIR_ROOT)
+
     # A path to which a validation file will be written -- outlining the model name and save directory that were generated
     # for each instance during the tester initialisation (to allow for checking of missing saves in the future)
     LOGGED_SAVEDIRS: str = f"{ROOT_DIR}/OpinionChanges_logged_savedirs.csv"

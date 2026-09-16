@@ -1,4 +1,5 @@
 import csv
+import os
 from copy import deepcopy
 
 from gatoh.utils import plot_graph
@@ -9,6 +10,10 @@ if __name__ == "__main__":
         "./experiments/Base/OpinionChanges/OpinionChanges_logged_savedirs.csv"
     )
     SAVEDIRS: dict[str, str] = {}
+
+    # Ensure the plots subdirectory exists
+    if not os.path.exists(f"{ROOT_DIR}/plots"):
+        os.mkdir(f"{ROOT_DIR}/plots")
 
     MODEL_HIERARCHIES: list[str] = ["A", "B", "C", "D", "E", "F"]
 
