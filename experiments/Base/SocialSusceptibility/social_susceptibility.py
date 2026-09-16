@@ -5,6 +5,10 @@ import random as rd
 from copy import deepcopy
 from typing import TypedDict
 
+from multiprocessing import Pool
+# For type checking
+from multiprocessing.pool import Pool as WorkerPool
+
 import numpy as np
 
 import gatoh.agents as agt
@@ -247,27 +251,33 @@ class SocialSusceptibilityTester:
             )
         return None
 
-    def run_models(self, missing_saves: list[str] | None = None) -> None:
+    def run_models(self, missing_saves: list[str] | None = None, worker_pool: WorkerPool | None = None) -> None:
         """
         Runs each model instance in the tester class.
 
-        :missing_saves: An optional partial list of the model names representing models that should be run.
+        :param missing_saves: A potentially partial list of the model names representing models that should be run.
+        :type missing_saves: list[str], optional
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         """
         print("==== Beginning model iterations ====\n\n")
         if missing_saves:
             for missing_save in missing_saves:
-                self.models[missing_save].iterate()
+                self.models[missing_save].iterate(worker_pool=worker_pool)
                 self.models[missing_save].save_model()
             return None
 
         for model_name in self.model_names:
-            self.models[model_name].iterate()
+            self.models[model_name].iterate(worker_pool=worker_pool)
             self.models[model_name].save_model()
 
         return None
 
 
 if __name__ == "__main__":
+    MULTIPROCESSING: bool = True
+    WORKER_POOL: WorkerPool | None = Pool() if MULTIPROCESSING else None
+
     class TestParameters(TypedDict):
         iterations: int
         model_names: list[str]
@@ -361,12 +371,14 @@ if __name__ == "__main__":
         if len(existing_savedirs) > 0:  # At least one model exists
             tester.load_models(existing_saves=existing_savedirs)
             tester.setup_models(missing_saves=missing_savedirs)
-            tester.run_models(missing_saves=missing_savedirs)
+            tester.run_models(missing_saves=missing_savedirs, worker_pool=WORKER_POOL)
         else:
             tester.setup_models()
-            tester.run_models()
+            tester.run_models(worker_pool=WORKER_POOL)
     else:
         tester = SocialSusceptibilityTester(existing=True)
         tester.load_models()
 
-    # TODO: Add the graph visualisation functions here when they have been implemented...
+    # Ensure that the worker pool is terminated if it exists once all processing is finished
+    if WORKER_POOL is not None:
+        WORKER_POOL.terminate()
