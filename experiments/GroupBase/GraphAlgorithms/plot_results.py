@@ -66,7 +66,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Network Aggregate Opinions",
         title="Network Aggregate Opinions over Iterations",
-        save_path=f"{ROOT_DIR}/GraphAlgorithms_AggOps.png",
+        save_path=f"{ROOT_DIR}/GroupGraphAlgorithms_AggOps.png",
     )
 
     # Plot the radicalised agents
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Number of Radicalised Agents",
         title="Number of Radicalised Agents over Iterations",
-        save_path=f"{ROOT_DIR}/GraphAlgorithms_RadicalAgents.png",
+        save_path=f"{ROOT_DIR}/GroupGraphAlgorithms_RadicalAgents.png",
     )
 
     # Plot the radicalised groups
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Number of Radicalised Groups",
         title="Number of Radicalised Groups over Time",
-        save_path=f"{ROOT_DIR}/GraphAlgorithms_RadicalGroups.png",
+        save_path=f"{ROOT_DIR}/GroupGraphAlgorithms_RadicalGroups.png",
     )
 
     # Plot the polarisations
@@ -96,5 +96,5 @@ if __name__ == "__main__":
         x_label="Iterations",
         y_label="Network Polarisation",
         title="Network Polarisation over Iterations",
-        save_path=f"{ROOT_DIR}/GraphAlgorithms_Polarisations.png",
+        save_path=f"{ROOT_DIR}/GroupGraphAlgorithms_Polarisations.png",
     )
