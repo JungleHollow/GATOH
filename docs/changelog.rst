@@ -18,11 +18,16 @@ New Features
 - New version of the OpinionChanges experiment with groups
 - New version of the RandomWalk experiment with groups
 - New version of the SocialSusceptibility experiment with groups
+- Multiple QoL reporting functions for things such as number of radicalised agents in an agentset, etc.
+- Integrated the new :class:`~gatoh.groups.Group` class with the :class:`~gatoh.logger.GATOHLogger`
+- Fully implemented all baseline iteration features for :class:`~gatoh.groups.Group` (now on par with :class:`~gatoh.agents.Agent`)
 
 Fixes
 -----
 
 - Fixed the way that (de)radicalisation thresholds were being determined with social susceptibility
+- Fixed the weighting that was used for dijkstra path lengths in clustering (abs(edge.weighting) -> 1 - abs(edge.weighting))
+- Fixed the way that the logger was tracking radicalised agents (now correctly stores the number of radicalised agents for that iteration)
 
 
 2026.08.0
