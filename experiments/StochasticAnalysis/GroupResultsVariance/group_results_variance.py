@@ -328,6 +328,153 @@ class VarianceTester:
     :type existing: bool, optional
     """
 
+    def __init__(self, results_container: AnalysisResults, existing: bool = False) -> None:
+        self.results: AnalysisResults = results_container
+        self.num_agents: int = AGENT_PARAMETERS["n_agents"]
+
+        self.existing: bool = existing
+        self.model_saves: dict[str, str] = {}
+
+        # Dynamic model space
+        self.models: dict[str, md.ABModel] = {}
+
+        # Define the lists that will contain the populations of Agents, Graphs, and Groups
+        self.model_agents: list[agt.Agent] = []
+        self.model_graphs: list[gr.Graph] = []
+        self.model_groups: list[grp.Group] = []
+
+        if not self.existing:
+            self.create_models()
+            self.create_agents()
+            self.create_graphs(self.model_agents)
+            self.create_groups()
+        else:
+            self.model_saves = SAVEDIRS
+            # load_models is called from __main__ as any missing savefiles are checked for there
+            self.load_agents()
+            self.load_graphs()
+            self.load_groups()
+
+    def create_models(self) -> None:
+        """
+        Creates the empty model objects that will later be set up and run for the experiment.
+        """
+        for i in range(TEST_PARAMETERS["repetitions"]):
+            model_id: str = f"{TEST_PARAMETERS['model_id_base']}-{i + 1:03}"
+
+            model_savedir: str = f"{SAVEDIR_ROOT}/{model_id}"
+            if not os.path.exists(model_savedir):
+                os.mkdir(model_savedir)
+
+            model_datafile: str = f"{model_savedir}/{model_id}_variables.csv"
+
+            new_model: md.ABModel = md.ABModel(
+                deepcopy(TEST_PARAMETERS["hierarchy_names"]),
+                deepcopy(list(TEST_PARAMETERS["hierarchy_rw"].values())),
+                save_dir=model_savedir,
+                data_file=model_datafile,
+                model_id=model_id,
+            )
+            self.models[model_id] = deepcopy(new_model)
+
+            # Manual garbage collection
+            del new_model
+            _ = gc.collect()
+        return None
+
+    def create_agents(self) -> None:
+        """
+        Generates and sets the shared population of Agent objects that will be used across the instances.
+        """
+        print("==== Starting Agent creation ====")
+        created_agents: list[agt.Agent] = []
+
+        benefit_flags: list[bool] = list(AGENT_PARAMETERS["personal_benefit"].keys())
+        benefit_p: list[float] = list(AGENT_PARAMETERS["personal_benefit"].values())
+
+        for i in range(self.num_agents):
+            agent_id: str = f"{AGENT_PARAMETERS['id_base']}{i + 1:04}"
+            agent_opinion: float = rd.uniform(
+                AGENT_PARAMETERS["opinions"][0], AGENT_PARAMETERS["opinions"][1],
+            )
+            agent_personality: str = agt.draw_personality()
+            agent_susceptibility: float = rd.uniform(
+                AGENT_PARAMETERS["social_susceptibility"][0], AGENT_PARAMETERS["social_susceptibility"][1],
+            )
+            agent_behaviour: tuple[str, float] = (agent_personality, agent_susceptibility)
+            agent_benefit: bool = bool(np.random.choice(benefit_flags, size=1, p=benefit_p)[0])
+
+            hierarchy_weightings: dict[str, float] = {}
+            for hierarchy_name in TEST_PARAMETERS["hierarchy_names"]:
+                generated_weighting: float = rd.uniform(
+                    AGENT_PARAMETERS["hierarchy_weighting"][0], AGENT_PARAMETERS["hierarchy_weighting"][1],
+                )
+                hierarchy_weightings[hierarchy_name] = generated_weighting
+
+            created_agent: agt.Agent = agt.Agent(
+                agent_id,
+                agent_opinion,
+                hierarchy_weightings,
+                agent_behaviour,
+                agent_benefit,
+            )
+
+            created_agents.append(deepcopy(created_agent))
+
+            # Manual garbage collection
+            del agent_id, agent_opinion, agent_personality, agent_susceptibility, agent_behaviour, agent_benefit
+            del hierarchy_weightings, created_agent
+            _ = gc.collect()
+
+        self.model_agents = deepcopy(created_agents)
+
+        # Manual garbage collection
+        del created_agents
+        _ = gc.collect()
+
+        # Serialise the created Agent objects so that they remain unchanged across future runs
+        self.pickle_agents()
+
+        print("==== Finished Agent creation ====")
+        return None
+
+    def pickle_agents(self) -> None:
+        """
+        Serialises the tester's initial shared Agent population to a subdirectory within the experiment directory.
+        """
+        agents_path: str = f"{ROOT_DIR}/agents"
+
+        if not os.path.exists(agents_path):
+            os.mkdir(agents_path)
+
+        for agent in self.model_agents:
+            agent_pickle_path: str = f"{agents_path}/agent_{agent.id}.pkl"
+            with open(agent_pickle_path, "wb") as pickle_file:
+                pickle.dump(agent, pickle_file)
+
+        return None
+
+    def load_agents(self) -> None:
+        """
+        Deserialises the tester's initial shared Agent population and loads them into memory.
+        """
+        agents_path: str = f"{ROOT_DIR}/agents"
+
+        for i in range(self.num_agents):
+            agent_id: str = f"{AGENT_PARAMETERS['id_base']}{i + 1:04}"
+            agent_pickle_path: str = f"{agents_path}/agent_{agent_id}.pkl"
+            agent_obj: agt.Agent
+            with open(agent_pickle_path, "rb") as pickle_file:
+                agent_obj = pickle.load(pickle_file)
+
+            self.model_agents.append(deepcopy(agent_obj))
+
+            # Manual garbage collection
+            del agent_id, agent_pickle_path, agent_obj
+            _ = gc.collect()
+
+        return None
+
 
 if __name__ == "__main__":
     MULTIPROCESSING: bool = True
