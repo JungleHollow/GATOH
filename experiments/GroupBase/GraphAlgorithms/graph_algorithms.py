@@ -320,8 +320,8 @@ if __name__ == "__main__":
             "random",
             "blockmodel",
         ],
-        "num_agents": 40,
-        "num_groups": 4,
+        "num_agents": 50,
+        "num_groups": 5,
     }
 
     # Default model parameters will be used for all scenarios, no need to set explicitly
