@@ -153,7 +153,7 @@ class AnalysisResults:
                     else:
                         self.radicalised_agents[model_name].append(int(value))
 
-        # Finally load the radicalised agents
+        # Finally load the polarisations
         with open(polarisation_path, "r", newline="") as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
