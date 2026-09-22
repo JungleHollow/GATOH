@@ -342,6 +342,7 @@ class VarianceTester:
         self.model_agents: list[agt.Agent] = []
         self.model_graphs: list[gr.Graph] = []
         self.model_groups: list[grp.Group] = []
+        self.group_edges: list[tuple[int, int]] = []
 
         if not self.existing:
             self.create_models()
@@ -473,6 +474,202 @@ class VarianceTester:
             del agent_id, agent_pickle_path, agent_obj
             _ = gc.collect()
 
+        return None
+
+    def create_graphs(self, agents: list[agt.Agent]) -> None:
+        """
+        Generates and sets the shared collection of social hierarchy Graph objects that will be used across the instances.
+
+        :param agents: The population of agents to use for graph creation.
+        :type agents: list[:class:`~gatoh.agents.Agent`]
+        """
+        print("==== Starting Graph creation ====")
+
+        # Workaround to allow for np random choice
+        agent_indices: list[int] = [i for i in range(len(agents))]
+
+        for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+            graph: gr.Graph = gr.Graph(
+                hierarchy, TEST_PARAMETERS["relationship_rw"], suppress_warnings=True,
+            )
+
+            # Ensures that every agent in the population belongs to at least one hierarchy
+            if hierarchy == "B":
+                _ = graph.generate_graph(
+                    deepcopy(agents),
+                    method=TEST_PARAMETERS["graph_generation_alg"],
+                    relationship_range=AGENT_PARAMETERS["relationships"],
+                )
+            else:
+                hierarchy_n_agents: int = rd.randint(
+                    AGENT_PARAMETERS["subset_size_range"][0],
+                    AGENT_PARAMETERS["subset_size_range"][1],
+                )
+                selected_agents: list[int] = list(np.random.choice(agent_indices, size=hierarchy_n_agents, replace=False))
+
+                agent_sample: list[agt.Agent] = []
+                for index in selected_agents:
+                    agent_sample.append(deepcopy(agents[index]))
+
+                _ = graph.generate_graph(
+                    deepcopy(agent_sample),
+                    method=TEST_PARAMETERS["graph_generation_alg"],
+                    relationship_range=AGENT_PARAMETERS["relationships"],
+                )
+
+                # Manual garvage collection
+                del hierarchy_n_agents, selected_agents, agent_sample
+                _ = gc.collect()
+
+            self.model_graphs.append(deepcopy(graph))
+
+            # Manual garbage collection
+            del graph
+            _ = gc.collect()
+
+        # Serialise the created Graph objects so that they remain unchanged across future runs
+        self.pickle_graphs()
+
+        print("==== Graph creatiron finished ====")
+        return None
+
+    def pickle_graphs(self) -> None:
+        """
+        Serialises the tester's initial shared Graph population to a subdirectory within the experiment directory.
+        """
+        graphs_path: str = f"{ROOT_DIR}/graphs"
+
+        if not os.path.exists(graphs_path):
+            os.mkdir(graphs_path)
+
+        for graph in self.model_graphs:
+            graph_dir: str = f"{graphs_path}/{graph.name}"
+            if not os.path.exists(graph_dir):
+                os.mkdir(graph_dir)
+
+            # Write the graphml file for the graph
+            graph.save_graph(f"{graph_dir}/graph_{graph.name}.graphml")
+
+            nodes_dir: str = f"{graph_dir}/nodes"
+            if not os.path.exists(nodes_dir):
+                os.mkdir(nodes_dir)
+
+            for idx, node in enumerate(graph.graph.nodes()):
+                node_pickle_path: str = f"{nodes_dir}/node_{idx}.pkl"
+                with open(node_pickle_path, "wb") as pickle_file:
+                    pickle.dump(node, pickle_file)
+
+            edges_dir: str = f"{graph_dir}/edges"
+            if not os.path.exists(edges_dir):
+                os.mkdir(edges_dir)
+
+            for idx, edge in enumerate(graph.graph.edges()):
+                edge_pickle_path: str = f"{edges_dir}/edge_{idx}.pkl"
+                with open(edge_pickle_path, "wb") as pickle_file:
+                    pickle.dump(edge, pickle_file)
+
+        return None
+
+    def load_graphs(self) -> None:
+        """
+        Deserialises the tester's initial shared Graph population and loads it into memory.
+        """
+        graphs_path: str = f"{ROOT_DIR}/graphs"
+
+        for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+            hierarchy_dir: str = f"{graphs_path}/{hierarchy}"
+
+            new_graph: gr.Graph = gr.Graph("", (0.0, 0.0))
+            new_graph.load_graph(
+                f"{hierarchy_dir}/graph_{hierarchy}.graphml",
+                hierarchy,
+                rw_params=TEST_PARAMETERS["hierarchy_rw"][hierarchy],
+            )
+
+            nodes_dir: str = f"{hierarchy_dir}/nodes"
+            node_paths: list[str] = list(os.walk(nodes_dir))[0][2]
+            for node_path in node_paths:
+                node_index: int = int(
+                    (os.path.basename(node_path).split("_")[-1]).split(".")[0]
+                )
+                with open(f"{nodes_dir}/{node_path}", "rb") as pickle_file:
+                    node_object: gr.GraphNode = pickle.load(pickle_file)
+                    new_graph.graph[node_index] = node_object
+
+            edges_dir: str = f"{hierarchy_dir}/edges"
+            edge_paths: list[str] = list(os.walk(edges_dir))[0][2]
+            for edge_path in edge_paths:
+                edge_index: int = int(
+                    (os.path.basename(edge_path).split("_")[-1]).split(".")[0]
+                )
+                with open(f"{edges_dir}/{edge_path}", "rb") as pickle_file:
+                    edge_object: gr.GraphEdge = pickle.load(pickle_file)
+                    new_graph.graph.update_edge_by_index(edge_index, edge_object)
+
+            self.model_graphs.append(deepcopy(new_graph))
+
+            # Manual garbage collection
+            del new_graph
+            _ = gc.collect()
+        return None
+
+    def create_groups(self) -> None:
+        """
+        Generates and sets the shared population of Group objects that will be used across the instances.
+        """
+        print("==== Starting Group creation ====")
+        created_groups: list[grp.Group] = []
+        group_relationships: list[tuple[int, int]] = []
+
+        group_count: int = 0
+
+        for graph in self.model_graphs:
+            clustered_nodes: dict[gr.GraphNode, int] = graph.cluster_nodes(k=GROUP_PARAMETERS["n_groups"])
+
+            # Re-organise the nodes in clusters into clustered agents
+            group_members: dict[int, list[agt.Agent]] = {}
+            for node, cluster in clustered_nodes.items():
+                group_members.setdefault(cluster, []).append(node.agent)
+
+            graph_groups: list[grp.Group] = []
+
+            for cluster, members in group_members.items():
+                new_group: grp.Group = grp.Group()
+                _ = new_group.generate_group(
+                    f"{GROUP_PARAMETERS['id_base']}{group_count + 1:04}",
+                    cluster,
+                    hierarchy=graph.name,
+                    members=members,
+                )
+                new_group.set_index(group_count)
+                group_count += 1
+                graph_groups.append(new_group)
+
+            created_groups.extend(deepcopy(graph_groups))
+            group_relationships.extend(graph.generate_group_edges(graph_groups))
+
+            # Manual garbage collection
+            del clustered_nodes, group_members, graph_groups
+            _ = gc.collect()
+
+        self.group_edges = deepcopy(group_relationships)
+        self.model_groups = deepcopy(created_groups)
+
+        # Manual garbage collection
+        del group_relationships, created_groups
+        _ = gc.collect()
+
+        # Serialise the created Group objects
+        self.pickle_groups()
+
+        print("==== Finished Group creation ====")
+        return None
+
+    def pickle_groups(self) -> None:
+        """
+        Serialise the tester's initial shared Group population to a subdirectory within the experiment directory.
+        """
+        groups_path: str = f"{ROOT_DIR}/groups"
         return None
 
 
