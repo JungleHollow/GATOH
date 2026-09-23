@@ -940,7 +940,7 @@ def plot_model_runtimes(analysis_results: AnalysisResults, analysis_statistics: 
 
     _ = ax.plot(
         iterations,
-        analysis_statistics["opinion_statistics"][0]m
+        analysis_statistics["opinion_statistics"][0],
         "-r",
         linewidth=0.8,
         alpha=1.0,
