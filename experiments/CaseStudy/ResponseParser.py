@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import gc
 import os
 import pickle
 import random as rd
@@ -13,6 +14,7 @@ import polars as pl
 
 import gatoh.agents as agt
 import gatoh.graphs as gr
+import gatoh.groups as grp
 
 
 @dataclass
@@ -70,6 +72,8 @@ class ResponseParser:
         self.agent_objects: dict[str, dict[str, agt.Agent]] = {}
         self.graphs: dict[str, GraphsDict] = {}
         self.graph_objects: dict[str, list[gr.Graph]] = {}
+        self.group_objects: dict[str, list[grp.Group]] = {}
+        self.group_rels: dict[str, list[tuple[int, int]]] = {}
         self.hierarchy_clusters: dict[str, dict[str, dict[str, list[str]]]] = {}
 
         for key in RESPONSE_CSV.keys():
@@ -84,6 +88,8 @@ class ResponseParser:
                 "agents": [],  # List of IDs of all agents contained within the hierarchy
             }
             self.graph_objects[key] = []
+            self.group_objects[key] = []
+            self.group_rels[key] = []
             self.hierarchy_clusters[
                 key
             ] = {  # All values are dictionaries that will represent <cluster, list[agent ids]> within each hierarchy
@@ -453,6 +459,53 @@ class ResponseParser:
                 self.graphs[community]["agents"].append(deepcopy(agent_ids))
         return None
 
+    def generate_groups(self) -> None:
+        """
+        Clusters the generated hierarchies to create groups of agents for each instance.
+        """
+        for community, hierarchies in self.graph_objects.items():
+            created_groups: list[grp.Group] = []
+            group_relationships: list[tuple[int, int]] = []
+
+            group_count: int = 0
+
+            for graph in hierarchies:
+                clustered_nodes: dict[gr.GraphNode, int] = graph.cluster_nodes(k=N_CLUSTERS)
+
+                # Re-organise the nodes in clusters into clustered agents
+                group_members: dict[int, list[agt.Agent]] = {}
+                for node, cluster in clustered_nodes.items():
+                    group_members.setdefault(cluster, []).append(node.agent)
+
+                graph_groups: list[grp.Group] = []
+
+                for cluster, members in group_members.items():
+                    new_group: grp.Group = grp.Group()
+                    _ = new_group.generate_group(
+                        f"G{community}{group_count + 1:03}",
+                        cluster,
+                        hierarchy=graph.name,
+                        members=members,
+                    )
+                    new_group.set_index(group_count)
+                    group_count += 1
+                    graph_groups.append(new_group)
+
+                created_groups.extend(deepcopy(graph_groups))
+                group_relationships.extend(graph.generate_group_edges(graph_groups))
+
+                # Manual garbage collection
+                del clustered_nodes, group_members, graph_groups
+                _ = gc.collect()
+
+            self.group_objects[community] = deepcopy(created_groups)
+            self.group_rels[community] = deepcopy(group_relationships)
+
+            # Manual garbage collection
+            del group_relationships, created_groups
+            _ = gc.collect()
+        return None
+
     def write_agents(self) -> None:
         """
         Writes Agent objects for the models, serliases them to Pickle objects, and then saves them to
@@ -563,6 +616,34 @@ class ResponseParser:
                 del new_graph
         return None
 
+    def write_groups(self) -> None:
+        """
+        Serialises the Group objects for each model, and saves them to the appropriate subdirectory.
+
+        Will also save the needed relationship information for these groups to the root directory of the model.
+
+        One subdirectory is created per community.
+        """
+        if not os.path.exists("./experiments/CaseStudy/Groups"):
+            os.mkdir("./experiments/CaseStudy/Groups")
+
+        for community, grp_dir in GROUP_PATHS.items():
+            # Create the group subdirectory if needed
+            if not os.path.exists(grp_dir):
+                os.mkdir(grp_dir)
+
+            for group in self.group_objects[community]:
+                group_path: str = f"{grp_dir}/group_{group.id}.pkl"
+
+                with open(group_path, "wb") as pickle_file:
+                    pickle.dump(group, pickle_file)
+
+            # Additionally, pickle the relationships for each community
+            with open(f"{grp_dir}/group_edges.pkl", "wb") as pickle_file:
+                pickle.dump(self.group_rels[community], pickle_file)
+
+        return None
+
     def save_graph(self, graph_obj: gr.Graph, hierarchy_dir: str) -> None:
         """
         A helper function that handles the serialising and saving of a Graph object to a subdirectory within the input
@@ -622,6 +703,11 @@ if __name__ == "__main__":
         "MINNG": "./experiments/CaseStudy/Graphs/MINNG_Graphs",
     }
 
+    GROUP_PATHS: dict[str, str] = {
+        "NONMN": "./experiments/CaseStudy/Groups/NONMN_Groups",
+        "MINNG": "./experiments/CaseStudy/Groups/MINNG_Groups",
+    }
+
     HIERARCHIES: list[str] = [
         "Age",
         "Gender",
@@ -646,6 +732,9 @@ if __name__ == "__main__":
         ),  # 0.0 var will be treated as hierarchy without dynamic relationships
         "Social": (0.0, 0.1),
     }
+
+    # The number of clusters to split each hierarchy into when generating agent groups for the graphs
+    N_CLUSTERS: int = 5
 
     ADJ_MATRIX_PATHS: dict[str, dict[str, str]] = {
         "NONMN": {
@@ -676,3 +765,5 @@ if __name__ == "__main__":
     response_parser.generate_hierarchies()
     response_parser.write_agents()
     response_parser.write_graphs()
+    response_parser.generate_groups()
+    response_parser.write_groups()
