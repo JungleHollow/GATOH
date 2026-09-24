@@ -137,10 +137,14 @@ class DataReader:
     :type agent_paths: dict[str, str]
     :param graph_paths: A <model name: path> mapping pointing to the subdirectories at which each model's Graph objects are saved.
     :type graph_paths: dict[str, str]
+    :param group_paths: A <model name : path> mapping pointing to the subdirectories at which each model's Group objects are saved.
+    :type group_paths: dict[str, str]
     :param initial_hierarchies: A list of the social hierarchies that will be present in the initial data passed to the reader.
     :type initial_hierarchies: list[str]
     :param agent_parameters: A <parameter : value> mapping specifying any additional, relevant parameters for agents in this experiment.
     :type agent_parameters: dict[str, float]
+    :param group_parameters: A <parameter : value> mapping specifying any additional, relevant parameters for groups in this experiment.
+    :type group_parameters: dict[str, int]
     :param test_parameters: A <model : parameters> mapping specifying explicit initialisation and runtime parameters for each model.
     :type test_parameters: dict[str, dict[str, Any]]
     :param opinion_paths: A <model name: path> mapping pointing to csv files containing dependant variable data (for model validation after running).
@@ -155,8 +159,10 @@ class DataReader:
         self,
         agent_paths: dict[str, str],
         graph_paths: dict[str, str],
+        group_paths: dict[str, str],
         initial_hierarchies: list[str],
         agent_parameters: dict[str, float],
+        group_parameters: dict[str, int],
         test_parameters: TestParameters,
         opinion_paths: dict[str, str] | None = None,
         worker_pool: WorkerPool | None = None,
@@ -166,10 +172,12 @@ class DataReader:
 
         self.agent_paths: dict[str, str] = agent_paths
         self.graph_paths: dict[str, str] = graph_paths
+        self.group_paths: dict[str, str] = group_paths
 
         self.initial_hierarchies: list[str] = initial_hierarchies
 
         self.agent_parameters: dict[str, float] = agent_parameters
+        self.group_parameters: dict[str, int] = group_parameters
 
         self.opinion_paths: dict[str, str] | None = opinion_paths
         self.opinion_dfs: dict[str, pl.DataFrame] = {}
@@ -430,12 +438,14 @@ class DataReader:
                     )
         return None
 
-    def custom_iterate(self, model_to_iterate: ABModel) -> ABModel:
+    def custom_iterate(self, model_to_iterate: ABModel, worker_pool: WorkerPool | None = None) -> ABModel:
         """
         Custom iteration loop used for this experiment -- accounts for "Age" and "Gender" as Agent attributes.
 
         :param model_to_iterate: The model that is being run.
         :type model_to_iterate: ABModel
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         :return: The model that has been run.
         :rtype: ABModel
         """
@@ -455,8 +465,8 @@ class DataReader:
             new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
 
             # First each agent looks at its neighbours to see how their opinion will evolve this iteration
-            if WORKER_POOL is not None:
-                opinion_results = WORKER_POOL.starmap(
+            if worker_pool is not None:
+                opinion_results = worker_pool.starmap(
                     self.custom_iter_opinion_calc,
                     zip(model_to_iterate.agents, repeat(model_to_iterate.model_id)),
                 )
@@ -737,24 +747,26 @@ class DataReader:
                 )
         return final_change
 
-    def run_models(self, missing_saves: list[str] | None = None) -> None:
+    def run_models(self, missing_saves: list[str] | None = None, worker_pool: WorkerPool | None = None) -> None:
         """
         Runs each model instance in the experiment.
 
         :param missing_saves: The model names of non-existing models that should be run.
         :type missing_saves: list[str], optional
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
         """
         print("==== Beginning model iterations ====\n\n")
         if missing_saves:
             for missing_save in missing_saves:
                 model_to_run: ABModel = self.models[missing_save]
-                _ = self.custom_iterate(model_to_run)
+                _ = self.custom_iterate(model_to_run, worker_pool=worker_pool)
             # Only save the models which were missing
             self.save_models(missing_saves=missing_saves)
             return None
 
         for model in self.models.values():
-            _ = self.custom_iterate(model)
+            _ = self.custom_iterate(model, worker_pool=worker_pool)
         self.save_models()
         return None
 
@@ -791,6 +803,11 @@ if __name__ == "__main__":
     GRAPH_PATHS: dict[str, str] = {
         "NONMN": "./experiments/CaseStudy/Graphs/NONMN_Graphs",
         "MINNG": "./experiments/CaseStudy/Graphs/MINNG_Graphs",
+    }
+
+    GROUP_PATHS: dict[str, str] = {
+        "NONMN": "./experiments/CaseStudy/Groups/NONMN_Groups",
+        "MINNG": "./experiments/CaseStudy/Groups/MINNG_Groups",
     }
 
     BASE_HIERARCHIES: list[str] = [
@@ -878,6 +895,11 @@ if __name__ == "__main__":
         "gender_weighting": 1.25,
     }
 
+    # Used to change the number of groups that each hierarchy is clustered into (possibly extended on in the future)
+    GROUP_PARAMETERS: dict[str, int] = {
+        "n_groups": 5,
+    }
+
     # Specify the dependant variable CSV paths here:
     OPINION_PATHS: dict[str, str] = {}
 
@@ -912,8 +934,10 @@ if __name__ == "__main__":
         data_reader = DataReader(
             AGENT_PATHS,
             GRAPH_PATHS,
+            GROUP_PATHS,
             BASE_HIERARCHIES,
             AGENT_PARAMETERS,
+            GROUP_PARAMETERS,
             TEST_PARAMETERS,
             opinion_paths=None,
             worker_pool=WORKER_POOL,
@@ -922,17 +946,19 @@ if __name__ == "__main__":
         if len(existing_savedirs) > 0:  # At least one model exists
             data_reader.load_models(existing_saves=existing_savedirs)
             data_reader.create_models(missing_saves=missing_savedirs)
-            data_reader.run_models(missing_saves=missing_savedirs)
+            data_reader.run_models(missing_saves=missing_savedirs, worker_pool=WORKER_POOL)
         else:
             data_reader.create_models()
-            data_reader.run_models()
+            data_reader.run_models(worker_pool=WORKER_POOL)
     else:
         # Create the tester in "existing" mode, and examine the results
         data_reader = DataReader(
             AGENT_PATHS,
             GRAPH_PATHS,
+            GROUP_PATHS,
             BASE_HIERARCHIES,
             AGENT_PARAMETERS,
+            GROUP_PARAMETERS,
             TEST_PARAMETERS,
             opinion_paths=OPINION_PATHS,
             worker_pool=WORKER_POOL,
