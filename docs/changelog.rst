@@ -21,6 +21,7 @@ New Features
 - Multiple QoL reporting functions for things such as number of radicalised agents in an agentset, etc.
 - Integrated the new :class:`~gatoh.groups.Group` class with the :class:`~gatoh.logger.GATOHLogger`
 - Fully implemented all baseline iteration features for :class:`~gatoh.groups.Group` (now on par with :class:`~gatoh.agents.Agent`)
+- Fully integrated the clustered groups functionality with the CaseStudy experiment script
 
 Fixes
 -----
