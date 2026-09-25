@@ -375,6 +375,7 @@ class VarianceTester:
                 save_dir=model_savedir,
                 data_file=model_datafile,
                 model_id=model_id,
+                simulate_groups=True,
             )
             self.models[model_id] = deepcopy(new_model)
 
