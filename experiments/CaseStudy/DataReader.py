@@ -18,6 +18,7 @@ from rustworkx import NodeIndices
 
 from gatoh.agents import Agent
 from gatoh.graphs import Graph, GraphEdge, GraphNode
+from gatoh.groups import Group
 from gatoh.model import ABModel
 from gatoh.utils import random_coinflip
 
@@ -184,6 +185,9 @@ class DataReader:
 
         self.agent_objects: dict[str, list[Agent]] = {}
         self.graph_objects: dict[str, list[Graph]] = {}
+        self.group_objects: dict[str, list[Group]] = {}
+
+        self.group_edges: dict[str, list[tuple[int, int]]] = {}
 
         if self.opinion_paths:
             for key, value in self.opinion_paths.items():
@@ -203,6 +207,8 @@ class DataReader:
                     # Also initialise the appropriate object lists
                     self.agent_objects[key] = []
                     self.graph_objects[key] = []
+                    self.group_objects[key] = []
+                    self.group_edges[key] = []
 
         self.models: dict[str, ABModel] = {}
 
@@ -252,6 +258,28 @@ class DataReader:
                     # Manual garbage collection
                     del loaded_graph
                     _ = gc.collect()
+
+        # Finally, load the Groups
+        for model_name, group_path in self.group_paths.items():
+            # - 1 as one of the pickle files corresponds to the group relationships
+            group_num: int = len(list(os.walk(group_path))[0][2]) - 1
+
+            for i in range(group_num):
+                group_pickle_path: str = f"{group_path}/group_G{model_name}{i + 1:03}.pkl"
+                group_obj: Group
+                with open(group_pickle_path, "rb") as pickle_file:
+                    group_obj = pickle.load(pickle_file)
+
+                self.group_objects[model_name].append(deepcopy(group_obj))
+
+                # Manual garbage collection
+                del group_pickle_path, group_obj
+                _ = gc.collect()
+
+            # Also load the group edges
+            with open(f"{group_path}/group_edges.pkl", "rb") as pickle_file:
+                self.group_edges[model_name] = pickle.load(pickle_file)
+
         return None
 
     def load_graphs(self, graph_name: str, subdirectory_path: str, rw_params: tuple[float, float], community: str) -> Graph:
@@ -341,10 +369,11 @@ class DataReader:
         :param existing_saves: The model names of the existing models that can be loaded.
         :type existing_saves: list[str], optional
         """
+        new_model: ABModel
         if existing_saves:
             for existing_save in existing_saves:
                 # Create an empty dummy model
-                new_model: ABModel = ABModel(
+                new_model = ABModel(
                     TEST_PARAMETERS["DEFAULT"]["hierarchies"],
                     list(TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"].values()),
                 )
@@ -354,7 +383,7 @@ class DataReader:
             return None
 
         for model_name, model_savedir in SAVEDIRS.items():
-            new_model: ABModel = ABModel(
+            new_model = ABModel(
                 TEST_PARAMETERS["DEFAULT"]["hierarchies"],
                 list(TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"].values()),
             )
@@ -391,6 +420,7 @@ class DataReader:
                 save_dir=model_parameters.save_dir,
                 data_file=model_parameters.data_file,
                 model_id=model_parameters.model_id,
+                simulate_groups=True,
             )
 
             # Add the Agents and Graphs to the new model
@@ -400,6 +430,12 @@ class DataReader:
                 model_parameters.hierarchy_names,
                 list(model_parameters.hierarchy_rw_distributions.values()),
             )
+            _ = new_model.add_groups(deepcopy(self.group_objects[model_name]))
+
+            for edge in self.group_edges[model_name]:
+                from_group: Group = self.group_objects[model_name][edge[0]]
+                to_group: Group = self.group_objects[model_name][edge[1]]
+                new_model.add_group_graph_edge(from_group, to_group)
 
             # Store the model object
             self.models[model_name] = new_model
@@ -437,6 +473,139 @@ class DataReader:
                         f"\n\nGATOH logger data was successfully written to the file at path: {model_to_save.data_file}\n\n"
                     )
         return None
+
+    def custom_group_iterate(self, model_to_iterate: ABModel, worker_pool: WorkerPool | None = None) -> ABModel:
+        """
+        Custom iteration loop used for this experiment -- operates on the group objects in the models.
+
+        :param model_to_iterate: The model that is being run.
+        :type model_to_iterate: ABModel
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
+        :return: The model that has been run.
+        :rtype: ABModel
+        """
+        while model_to_iterate.current_iteration < model_to_iterate.max_iterations:
+            if DEBUG:
+                # Start tracing memory usage
+                tracemalloc.start()
+
+            # Initialise the logger state for the current iteration
+            if model_to_iterate.current_iteration == 0:
+                model_to_iterate.logger.new_iteration(init=True)
+            else:
+                model_to_iterate.logger.new_iteration()
+
+            for group in model_to_iterate.groups:
+                # Always store the group's previous opinion at the start of an iteration no matter what
+                group.store_previous_opinion()
+
+            # Track the group opinion changes separately to prevent recursive updates
+            new_group_opinions: dict[str, tuple[float, list[bool]]] = {}
+
+            # First, calculate the opinion changes and store them
+            if worker_pool is not None:
+                opinion_results = worker_pool.imap(
+                    model_to_iterate.group_iteration_opinion_calculation,
+                    model_to_iterate.groups,
+                    chunksize=10,
+                )
+
+                for opinion_result in opinion_results:
+                    new_group_opinions[opinion_result[0]] = opinion_result[1]
+
+                # Manual garbage collection
+                del opinion_results
+                _ = gc.collect()
+            else:
+                for group in model_to_iterate.groups:
+                    opinion_result = model_to_iterate.group_iteration_opinion_calculation(group)
+                    new_group_opinions[opinion_result[0]] = opinion_result[1]
+
+                    # Manual garbage collection
+                    del opinion_result
+                    _ = gc.collect()
+
+            if DEBUG:
+                # Print the memory stats after the main multiprocessed iteration loop
+                current, peak = tracemalloc.get_traced_memory()
+                print(
+                    f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after multiprocessed opinion calc: {current}\n\tPeak memory usage: {peak}"
+                )
+
+            model_to_iterate.group_iteration_opinion_changes(new_group_opinions)
+
+            if DEBUG:
+                # Print memory stats after the opinion changes are applied
+                current, peak = tracemalloc.get_traced_memory()
+                print(
+                    f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after opinion changes: {current}\n\tPeak memory usage: {peak}"
+                )
+
+            model_to_iterate.step()
+
+            if DEBUG:
+                # Print memory stats after the model steps
+                current, peak = tracemalloc.get_traced_memory()
+                print(
+                    f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after stepping: {current}\n\tPeak memory usage: {peak}"
+                )
+
+            model_to_iterate.update(worker_pool=worker_pool)
+
+            if DEBUG:
+                # Print memory stats after the multiprocessed update
+                current, peak = tracemalloc.get_traced_memory()
+                print(
+                    f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after updating: {current}\n\tPeak memory usage: {peak}"
+                )
+
+            model_to_iterate.logger_iteration(worker_pool=worker_pool)
+
+            if DEBUG:
+                # Print memory stats after the logger iteration
+                current, peak = tracemalloc.get_traced_memory()
+                print(
+                    f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after logger iteration: {current}\n\tPeak memory usage: {peak}"
+                )
+
+            # Get this iteration's print string (will be formatted appropriately based on the print interval)
+            iteration_print_string: str = model_to_iterate.logger.iteration_print()
+            print(iteration_print_string)
+
+            if model_to_iterate.visualise:
+                model_to_iterate.visualiser.visualiser_iteration(
+                    model_to_iterate.base_graph,
+                    model_to_iterate.current_iteration,
+                    model_name=model_to_iterate.model_id,
+                )
+
+                if DEBUG:
+                    # Print memory stats after visualiser iteration
+                    current, peak = tracemalloc.get_traced_memory()
+                    print(
+                        f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after visualiser iteration: {current}\n\tPeak memory usage: {peak}"
+                    )
+
+            if model_to_iterate.checkpointing:
+                model_to_iterate.save_model()
+
+                if DEBUG:
+                    # Print memory stats after checkpointing
+                    current, peak = tracemalloc.get_traced_memory()
+                    print(
+                        f"Model {model_to_iterate.model_id} - Iteration {model_to_iterate.current_iteration}:\n\tDifference in memory after model checkpointing: {current}\n\tPeak memory usage: {peak}"
+                    )
+
+            model_to_iterate.current_iteration += 1
+
+        # Call the logger's save_data function which handles persistence appropriately
+        data_saved: bool = model_to_iterate.logger.save_data(model_to_iterate.data_file)
+        if data_saved:
+            print(
+                f"\n\nGATOH logger data was successfully written to the file at path: {model_to_iterate.data_file}\n\n"
+            )
+        return model_to_iterate
 
     def custom_iterate(self, model_to_iterate: ABModel, worker_pool: WorkerPool | None = None) -> ABModel:
         """
@@ -760,21 +929,30 @@ class DataReader:
         if missing_saves:
             for missing_save in missing_saves:
                 model_to_run: ABModel = self.models[missing_save]
-                _ = self.custom_iterate(model_to_run, worker_pool=worker_pool)
+                if SIMULATE_GROUPS:
+                    _ = self.custom_group_iterate(model_to_run, worker_pool=worker_pool)
+                else:
+                    _ = self.custom_iterate(model_to_run, worker_pool=worker_pool)
             # Only save the models which were missing
             self.save_models(missing_saves=missing_saves)
             return None
 
         for model in self.models.values():
-            _ = self.custom_iterate(model, worker_pool=worker_pool)
+            if SIMULATE_GROUPS:
+                _ = self.custom_group_iterate(model, worker_pool=worker_pool)
+            else:
+                _ = self.custom_iterate(model, worker_pool=worker_pool)
         self.save_models()
         return None
 
 
 if __name__ == "__main__":
     # Declare all relevant global variables here
-    DEBUG: bool = True
+    DEBUG: bool = False
     MULTIPROCESSING: bool = True
+
+    # Whether to simulate groups of agents or not (rather than the individual agents)
+    SIMULATE_GROUPS: bool = True
 
     SAVEDIR_ROOT: str = "./experiments/CaseStudy/Results"
 
