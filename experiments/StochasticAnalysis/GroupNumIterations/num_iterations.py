@@ -6,6 +6,7 @@ import os
 import pickle
 import random as rd
 from copy import deepcopy
+from re import L
 from typing import Self, TypedDict
 
 from multiprocessing import Pool
@@ -443,6 +444,176 @@ class IterationsTester:
         self.pickle_agents()
 
         print("==== Finished Agent creation ====")
+        return None
+
+    def pickle_agents(self) -> None:
+        """
+        Serialises the tester's initial shared Agent population to a subdirectory within the experiment directory.
+        """
+        agents_path: str = f"{ROOT_DIR}/agents"
+
+        if not os.path.exists(agents_path):
+            os.mkdir(agents_path)
+
+        for agent in self.model_agents:
+            agent_pickle_path: str = f"{agents_path}/agent_{agent.id}.pkl"
+            with open(agent_pickle_path, "wb") as pickle_file:
+                pickle.dump(agent, pickle_file)
+
+        return None
+
+    def load_agents(self) -> None:
+        """
+        Deserialises the tester's initial shared Agent population and loads them into memory.
+        """
+        agents_path: str = f"{ROOT_DIR}/agents"
+
+        for i in range(self.num_agents):
+            agent_id: str = f"{AGENT_PARAMETERS['id_base']}{i + 1:04}"
+            agent_pickle_path: str = f"{agents_path}/agent_{agent_id}.pkl"
+            agent_obj: agt.Agent
+            with open(agent_pickle_path, "rb") as pickle_file:
+                agent_obj = pickle.load(pickle_file)
+
+            self.model_agents.append(deepcopy(agent_obj))
+
+            # Manual garbage collection
+            del agent_id, agent_pickle_path, agent_obj
+            _ = gc.collect()
+
+        return None
+
+    def create_graphs(self) -> None:
+        """
+        Generates and sets the shared collection of social hierarchy Graph objects that will be used across the instances.
+        """
+        print("==== Starting Graph creation ====")
+
+        # Workaround to allow for np random choice
+        agent_indices: list[int] = [i for i in range(len(self.model_agents))]
+
+        for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+            graph: gr.Graph = gr.Graph(
+                hierarchy,
+                TEST_PARAMETERS["relationship_rw"],
+                suppress_warnings=True,
+            )
+
+            # Ensures that every agent in the population belongs to at least one hierarchy
+            if hierarchy == "B":
+                _ = graph.generate_graph(
+                    deepcopy(self.model_agents),
+                    method=TEST_PARAMETERS["graph_generation_alg"],
+                    relationship_range=AGENT_PARAMETERS["relationships"],
+                )
+            else:
+                hierarchy_n_agents: int = rd.randint(self.num_agents // 2, self.num_agents)
+                selected_agents: list[int] = list(np.random.choice(agent_indices, size=hierarchy_n_agents, replace=False))
+
+                agent_sample: list[agt.Agent] = []
+                for index in selected_agents:
+                    agent_sample.append(deepcopy(self.model_agents[index]))
+
+                _ = graph.generate_graph(
+                    deepcopy(agent_sample),
+                    method=TEST_PARAMETERS["graph_generation_alg"],
+                    relationship_range=AGENT_PARAMETERS["relationships"],
+                )
+
+                # Manual garbage collection
+                del hierarchy_n_agents, selected_agents, agent_sample
+                _ = gc.collect()
+
+            self.model_graphs.append(deepcopy(graph))
+
+            # Manual garbage collection
+            del graph
+            _ = gc.collect()
+
+        # Serialise the created Graph objects so that they remain unchanged across future runs
+        self.pickle_graphs()
+
+        print("==== Graph creation finished ====")
+        return None
+
+    def pickle_graphs(self) -> None:
+        """
+        Serialises the tester's initial shared Graph population to a subdirectory within the experiment directory.
+        """
+        graphs_path: str = f"{ROOT_DIR}/graphs"
+
+        if not os.path.exists(graphs_path):
+            os.mkdir(graphs_path)
+
+        for graph in self.model_graphs:
+            graph_dir: str = f"{graphs_path}/{graph.name}"
+            if not os.path.exists(graph_dir):
+                os.mkdir(graph_dir)
+
+            # Write the graphml file
+            graph.save_graph(f"{graph_dir}/graph_{graph.name}.graphml")
+
+            nodes_dir: str = f"{graph_dir}/nodes"
+            if not os.path.exists(nodes_dir):
+                os.mkdir(nodes_dir)
+
+            for idx, node in enumerate(graph.graph.nodes()):
+                node_pickle_path: str = f"{nodes_dir}/node_{idx}.pkl"
+                with open(node_pickle_path, "wb") as pickle_file:
+                    pickle.dump(node, pickle_file)
+
+            edges_dir: str = f"{graph_dir}/edges"
+            if not os.path.exists(edges_dir):
+                os.mkdir(edges_dir)
+
+            for idx, edge in enumerate(graph.graph.edges()):
+                edge_pickle_path: str = f"{edges_dir}/edge_{idx}.pkl"
+                with open(edge_pickle_path, "wb") as pickle_file:
+                    pickle.dump(edge, pickle_file)
+
+        return None
+
+    def load_graphs(self) -> None:
+        """
+        Deserialises the tester's initial shared Graph population and loads it into memory.
+        """
+        graphs_path: str = f"{ROOT_DIR}/graphs"
+
+        for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+            hierarchy_dir: str = f"{graphs_path}/{hierarchy}"
+
+            new_graph: gr.Graph = gr.Graph("", (0.0, 0.0))
+            new_graph.load_graph(
+                f"{hierarchy_dir}/graph_{hierarchy}.graphml",
+                hierarchy,
+                rw_params=TEST_PARAMETERS["hierarchy_rw"][hierarchy],
+            )
+
+            nodes_dir: str = f"{hierarchy_dir}/nodes"
+            node_paths: list[str] = list(os.walk(nodes_dir))[0][2]
+            for node_path in node_paths:
+                node_index: int = int(
+                    (os.path.basename(node_path).split("_")[-1]).split(".")[0]
+                )
+                with open(f"{nodes_dir}/{node_path}", "rb") as pickle_file:
+                    node_object: gr.GraphNode = pickle.load(pickle_file)
+                    new_graph.graph[node_index] = node_object
+
+            edges_dir: str = f"{hierarchy_dir}/edges"
+            edge_paths: list[str] = list(os.walk(edges_dir))[0][2]
+            for edge_path in edge_paths:
+                edge_index: int = int(
+                    (os.path.basename(edge_path).split("_")[-1]).split(".")[0]
+                )
+                with open(f"{edges_dir}/{edge_path}", "rb") as pickle_file:
+                    edge_object: gr.GraphEdge = pickle.load(pickle_file)
+                    new_graph.graph.update_edge_by_index(edge_index, edge_object)
+
+            self.model_graphs.append(deepcopy(new_graph))
+
+            # Manual garbage collection
+            del new_graph
+            _ = gc.collect()
         return None
 
 

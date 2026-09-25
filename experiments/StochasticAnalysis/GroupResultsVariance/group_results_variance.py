@@ -531,7 +531,7 @@ class VarianceTester:
         # Serialise the created Graph objects so that they remain unchanged across future runs
         self.pickle_graphs()
 
-        print("==== Graph creatiron finished ====")
+        print("==== Graph creation finished ====")
         return None
 
     def pickle_graphs(self) -> None:
