@@ -219,7 +219,11 @@ class AnalysisResults:
             iteration_values: list[float] = []
 
             for model_values in self.aggregate_opinions.values():
-                iteration_values.append(model_values[i])
+                if len(model_values) > i:
+                    iteration_values.append(model_values[i])
+                else:
+                    # This instance has already finished its total iterations...
+                    continue
 
             iteration_average: float = np.average(iteration_values)
             iteration_sd: float = float(np.std(iteration_values))
@@ -243,7 +247,11 @@ class AnalysisResults:
             iteration_values: list[int] = []
 
             for model_values in self.radicalised_agents.values():
-                iteration_values.append(model_values[i])
+                if len(model_values) > i:
+                    iteration_values.append(model_values[i])
+                else:
+                    # This instance has already finished its total iterations...
+                    continue
 
             iteration_average: float = np.average(iteration_values)
             iteration_sd: float = float(np.std(iteration_values))
@@ -267,7 +275,11 @@ class AnalysisResults:
             iteration_values: list[int] = []
 
             for model_values in self.radicalised_groups.values():
-                iteration_values.append(model_values[i])
+                if len(model_values) > i:
+                    iteration_values.append(model_values[i])
+                else:
+                    # This instance has already finished its total iterations...
+                    continue
 
             iteration_average: float = np.average(iteration_values)
             iteration_sd: float = float(np.std(iteration_values))
@@ -296,7 +308,11 @@ class AnalysisResults:
 
             for hierarchy_dict in self.polarisations.values():
                 for hierarchy, hierarchy_values in hierarchy_dict.items():
-                    iteration_values[hierarchy].append(hierarchy_values[i])
+                    if len(hierarchy_values) > i:
+                        iteration_values[hierarchy].append(hierarchy_values[i])
+                    else:
+                        # This instance has already finished its total iterations...
+                        continue
 
             for hierarchy, values_list in iteration_values.items():
                 hierarchy_average: float = np.average(values_list)
