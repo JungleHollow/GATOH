@@ -940,10 +940,10 @@ def plot_model_runtimes(analysis_results: AnalysisResults, analysis_statistics: 
     :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations of the model parameters.
     :type analysis_statistics: dict[str, Any]
     """
-    iterations: list[int] = [i + 1 for i in range(TEST_PARAMETERS["iterations"])]
+    iterations: list[int] = [i + 1 for i in range(TEST_PARAMETERS["iterations"][-1])]
     fig, ax = plt.subplots()
 
-    for _, values in analysis_results.aggregate_opinions.items():
+    for values in analysis_results.aggregate_opinions.values():
         _ = ax.plot(iterations, values, "-k", linewidth=0.7, alpha=0.25)
 
     _ = ax.plot(
