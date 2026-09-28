@@ -189,3 +189,7 @@ experiments/StochasticAnalysis/GroupResultsVariance/GroupRadicalGroupStatistics.
 experiments/StochasticAnalysis/GroupResultsVariance/GroupRadicalAgentStatistics.png
 experiments/StochasticAnalysis/GroupResultsVariance/GroupPolarisationStatistics.png
 experiments/CaseStudy/Groups/
+experiments/StochasticAnalysis/GroupNumIterations/agents/
+experiments/StochasticAnalysis/GroupNumIterations/graphs/
+experiments/StochasticAnalysis/GroupNumIterations/groups/
+experiments/StochasticAnalysis/GroupNumIterations/models/
