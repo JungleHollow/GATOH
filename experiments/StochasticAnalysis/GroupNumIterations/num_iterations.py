@@ -1402,7 +1402,7 @@ def plot_parameter_whiskers_grouped(analysis_statistics: OutputDict) -> None:
     return None
 
 
-def hierarchy_group_plots(analysis_results: AnalysisResults, analysis_statistics: OutputDict) -> None:
+def create_group_analysis_plots(analysis_results: AnalysisResults, analysis_statistics: OutputDict) -> None:
     """
     Create all relevant plots for the models when grouped by the number of iterations and then store them to the
     experiment's save directory.
@@ -1576,6 +1576,7 @@ if __name__ == "__main__":
 
         # Create all relevant output plots for this experiment
         create_analysis_plots(tester.results, analysis_statistics)
+        create_group_analysis_plots(tester.results, analysis_statistics)
 
     # Ensure the worker pool is terminated if it exists once all processing is finished
     if WORKER_POOL is not None:
