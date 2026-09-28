@@ -1010,7 +1010,7 @@ def plot_parameter_whiskers(analysis_statistics: OutputDict) -> None:
 
     _ = ax.set(
         axisbelow=True,
-        title="Group ResultsVariance -- Polarisation Statistics",
+        title="Group NumIterations -- Polarisation Statistics",
         xlabel="Parameter",
         ylabel="Value",
     )
@@ -1037,7 +1037,7 @@ def plot_parameter_whiskers(analysis_statistics: OutputDict) -> None:
 
     _ = ax.set(
         axisbelow=True,
-        title="Group ResultsVariance -- Aggregate Opinion Statistics",
+        title="Group NumIterations -- Aggregate Opinion Statistics",
         xlabel="Parameter",
         ylabel="Value",
     )
@@ -1064,7 +1064,7 @@ def plot_parameter_whiskers(analysis_statistics: OutputDict) -> None:
 
     _ = ax.set(
         axisbelow=True,
-        title="Group ResultsVariance -- Radicalised Agent Statistics",
+        title="Group NumIterations -- Radicalised Agent Statistics",
         xlabel="Parameter",
         ylabel="Value",
     )
@@ -1091,7 +1091,7 @@ def plot_parameter_whiskers(analysis_statistics: OutputDict) -> None:
 
     _ = ax.set(
         axisbelow=True,
-        title="Group ResultsVariance -- Radicalised Groups Statistics",
+        title="Group NumIterations -- Radicalised Groups Statistics",
         xlabel="Parameter",
         ylabel="Value",
     )
@@ -1102,6 +1102,323 @@ def plot_parameter_whiskers(analysis_statistics: OutputDict) -> None:
 
     plt.savefig(save_path, dpi=300.0)
 
+    return None
+
+
+def plot_var_over_models_grouped(analysis_results: AnalysisResults) -> None:
+    """
+    Plots the variance of the opinions across the models; grouped by the number of iterations that the models ran for.
+
+    :param analysis_results: The result data from the experiment.
+    :type analysis_results: AnalysisResults
+    """
+    current_opinion_values: list[float] = []
+
+    y_values: list[float] = []  # Variance of n model's values
+    x_values: list[int] = [i + 1 for i in range(TEST_PARAMETERS["repetitions"])]  # Number of models
+
+    # Initialise the current iteration group at the start
+    current_iter_group: str = "001ITERS"
+
+    # A subdirectory to organise the many plots into
+    base_path: str = f"{ROOT_DIR}/subplots/ModelVariance"
+
+    if not os.path.exists(base_path):
+        os.mkdir(base_path)
+
+    # Declare the data type
+    save_path: str
+
+    for model_name, values in analysis_results.aggregate_opinions.items():
+        # Check if this is a new group and reset accordingly
+        if model_name.split("-")[1] != current_iter_group:
+            # Plot the existing values first
+            fig, ax = plt.subplots()
+
+            _ = ax.plot(x_values, y_values, "--k")
+            _ = ax.set_xlabel("Number of Models")
+            _ = ax.set_ylabel("Aggregate Opinion Variance")
+            _ = ax.set_title(f"Variance of Aggregate Opinions by Number of Models Used ({current_iter_group})")
+
+            save_path = f"{base_path}/GVOM-{current_iter_group}.png"  # (Group Variance Over Models)
+
+            plt.savefig(save_path, dpi=300.0)
+
+            # To prevent memory leaks during looping
+            plt.close()
+
+            # Then reset
+            current_iter_group = model_name.split("-")[1]
+            current_opinion_values = []
+            y_values = []
+
+        current_opinion_values += deepcopy(values)
+
+        current_vals_variance: float = float(np.var(current_opinion_values))
+
+        y_values.append(current_vals_variance)
+
+    # Generate the plots for the final group
+    fig, ax = plt.subplots()
+
+    _ = ax.plot(x_values, y_values, "--k")
+    _ = ax.set_xlabel("Number of Models")
+    _ = ax.set_ylabel("Aggregate Opinion Variance")
+    _ = ax.set_title(f"Variance of Aggregate Opinions by Number of Models Used ({current_iter_group})")
+
+    save_path = f"{base_path}/GVOM-{current_iter_group}.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    return None
+
+
+def plot_model_runtimes_grouped(analysis_results: AnalysisResults, analysis_statistics: OutputDict) -> None:
+    """
+    Plot the runtime opinion values for all models in each iteration group in the experiment, along with an overall
+    average trend.
+
+    :param analysis_results: The results data from the experiment.
+    :type analysis_results: AnalysisResults
+    :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations of the model parameters.
+    :type analysis_statistics: dict[str, Any]
+    """
+    # Initialise the iterations for the first group
+    iterations: list[int] = [1]
+
+    # A subdirectory to organise the many plots into
+    base_path: str = f"{ROOT_DIR}/subplots/ModelRuntimes"
+
+    if not os.path.exists(base_path):
+        os.mkdir(base_path)
+
+    # Initialise the current iteration group at the first
+    current_iter_group: str = "001ITERS"
+
+    # Declare the data type
+    save_path: str
+
+    fig, ax = plt.subplots()
+
+    for model_name, values in analysis_results.aggregate_opinions.items():
+        # Check if the group has changed, and reset accordingly
+        if model_name.split("-")[1] != current_iter_group:
+            # Plot the existing values
+            _ = ax.plot(
+                iterations,
+                analysis_statistics["opinion_statistics"][0][:iterations[-1]],
+                "-r",
+                linewidth=0.8,
+                alpha=1.0,
+                label="Average",
+            )
+
+            _ = ax.legend()
+            _ = ax.set_xlabel("Iterations")
+            _ = ax.set_ylabel("Aggregate Opinion")
+            _ = ax.set_title(f"Model Aggregate Opinions over Iterations ({current_iter_group})")
+
+            save_path = f"{base_path}/GMR-{current_iter_group}.png"  # (Group Model Runtimes)
+
+            plt.savefig(save_path, dpi=300.0)
+
+            # To prevent memory leaks during looping
+            plt.close()
+
+            # Then reset
+            fig, ax = plt.subplots()
+            current_iter_group = model_name.split("-")[1]
+            iterations.append(iterations[-1] + 1)
+
+        # Otherwise, plot the model's individual runtime
+        _ = ax.plot(iterations, values, "-k", linewidth=0.7, alpha=0.25)
+
+    # Generate the plots for the final group
+    _ = ax.plot(
+        iterations,
+        analysis_statistics["opinion_statistics"][0],
+        "-r",
+        linewidth=0.8,
+        alpha=1.0,
+        label="Average",
+    )
+
+    _ = ax.legend()
+    _ = ax.set_xlabel("Iterations")
+    _ = ax.set_ylabel("Aggregate Opinion")
+    _ = ax.set_title(f"Model Aggregate Opinions over Iterations ({current_iter_group})")
+
+    save_path = f"{base_path}/GMR-{current_iter_group}.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    return None
+
+
+def plot_parameter_whiskers_grouped(analysis_statistics: OutputDict) -> None:
+    """
+    Plot the box and whiskers for all model parameters at each individual iteration.
+
+    :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations for all parameters.
+    :type analysis_statistics: dict[str, Any]
+    """
+    unpacked_results: list[list[float | int]] = []
+    tick_labels: list[str] = []
+
+    unpacked_opinion: list[float] = []
+    opinion_label: list[str] = ["Aggregate Opinions"]
+
+    unpacked_rad_agt: list[float] = []
+    rad_agt_label: list[str] = ["Radicalised Agents"]
+
+    unpacked_rad_grp: list[float] = []
+    rad_grp_label: list[str] = ["Radicalised Groups"]
+
+    # A subdirectory to organise the many plots into
+    base_path: str = f"{ROOT_DIR}/subplots/ParamWhiskers"
+
+    if not os.path.exists(base_path):
+        os.mkdir(base_path)
+
+    # Declare the data type
+    save_path: str
+
+    for i in range(TEST_PARAMETERS["iterations"][-1]):
+        unpacked_results = []
+        tick_labels = []
+
+        for hierarchy, statistics in analysis_statistics["polarisation_statistics"][0].items():
+            unpacked_results.append(deepcopy(statistics[:i + 1]))
+            tick_labels.append(f"Hierarchy Polarisations ({hierarchy} - {i + 1:03}ITERS)")
+
+        fig, ax = plt.subplots()
+
+        box_plot = ax.boxplot(
+            unpacked_results, notch=False, orientation="vertical", whis=1.5,
+        )
+        _ = plt.setp(box_plot["boxes"], color="black")
+        _ = plt.setp(box_plot["whiskers"], color="black")
+        _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+        ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+        _ = ax.set(
+            axisbelow=True,
+            title=f"Group NumIterations -- Polarisation Statistics ({i + 1:03}ITERS)",
+            xlabel="Parameter",
+            ylabel="Value",
+        )
+
+        _ = ax.set_xticklabels(tick_labels, rotation=0, fontsize=8)
+
+        save_path = f"{base_path}/GPS-{i + 1:03}ITERS.png"  # (Group Polarisation Statistics)
+
+        plt.savefig(save_path, dpi=300.0)
+
+        # Reset for the aggregate opinions
+        fig, ax = plt.subplots()
+
+        unpacked_opinion.append(deepcopy(analysis_statistics["opinion_statistics"][0][i]))
+
+        box_plot = ax.boxplot(
+            unpacked_opinion, notch=False, orientation="vertical", whis=1.5,
+        )
+        _ = plt.setp(box_plot["boxes"], color="black")
+        _ = plt.setp(box_plot["whiskers"], color="black")
+        _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+        ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+        _ = ax.set(
+            axisbelow=True,
+            title=f"Group NumIterations -- Aggregate Opinion Statistics ({i + 1:03}ITERS)",
+            xlabel="Parameter",
+            ylabel="Value",
+        )
+
+        _ = ax.set_xticklabels(opinion_label, rotation=0, fontsize=8)
+
+        save_path = f"{base_path}/GOS-{i + 1:03}ITERS.png"  # (Group Opinion Statistics)
+
+        plt.savefig(save_path, dpi=300.0)
+
+        # Reset for the radicalised agents
+        fig, ax = plt.subplots()
+
+        unpacked_rad_agt.append(deepcopy(analysis_statistics["rad_agts_statistics"][0][i]))
+
+        box_plot = ax.boxplot(
+            unpacked_rad_agt, notch=False, orientation="vertical", whis=1.5,
+        )
+        _ = plt.setp(box_plot["boxes"], color="black")
+        _ = plt.setp(box_plot["whiskers"], color="black")
+        _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+        ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+        _ = ax.set(
+            axisbelow=True,
+            title=f"Group NumIterations -- Radicalised Agent Statistics ({i + 1:03}ITERS)",
+            xlabel="Parameter",
+            ylabel="Value",
+        )
+
+        _ = ax.set_xticklabels(rad_agt_label, rotation=0, fontsize=8)
+
+        save_path = f"{base_path}/GRAS-{i + 1:03}ITERS.png"  # (Group Radical Agent Statistics)
+
+        plt.savefig(save_path, dpi=300.0)
+
+        # Reset for the radicalised groups
+        fig, ax = plt.subplots()
+
+        unpacked_rad_grp.append(deepcopy(analysis_statistics["rad_grps_statistics"][0][i]))
+
+        box_plot = ax.boxplot(
+            unpacked_rad_grp, notch=False, orientation="vertical", whis=1.5,
+        )
+        _ = plt.setp(box_plot["boxes"], color="black")
+        _ = plt.setp(box_plot["whiskers"], color="black")
+        _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+        ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+        _ = ax.set(
+            axisbelow=True,
+            title=f"Group NumIterations -- Radicalised Group Statistics ({i + 1:03}ITERS)",
+            xlabel="Parameter",
+            ylabel="Value",
+        )
+
+        _ = ax.set_xticklabels(rad_grp_label, rotation=0, fontsize=8)
+
+        save_path = f"{base_path}/GRGS-{i + 1:03}ITERS.png"  # (Group Radical Group Statistics)
+
+        plt.savefig(save_path, dpi=300.0)
+
+        # Just in case for possible memory leaks over loop iterations
+        plt.close()
+
+    return None
+
+
+def hierarchy_group_plots(analysis_results: AnalysisResults, analysis_statistics: OutputDict) -> None:
+    """
+    Create all relevant plots for the models when grouped by the number of iterations and then store them to the
+    experiment's save directory.
+
+    :param analysis_results: The result data from the experiment.
+    :type analysis_results: AnalysisResults
+    :param analysis_statistics: A dictionary containing per-iteration means and standard deviations for each parameter.
+    :type analysis_statistics: dict[str, Any]
+    """
+    # Ensure that the per-iteration-group subdirectory exists
+    plots_subdir: str = f"{ROOT_DIR}/subplots"
+    if not os.path.exists(plots_subdir):
+        os.mkdir(plots_subdir)
+    plot_var_over_models_grouped(analysis_results)
+    plot_model_runtimes_grouped(analysis_results, analysis_statistics)
+    plot_parameter_whiskers_grouped(analysis_statistics)
     return None
 
 
