@@ -204,6 +204,245 @@ class AnalysisResults:
                         self.polarisations[model_name].setdefault(hierarchy_name, []).append(float(value))
         return self
 
+    def calculate_opinion_statistics(self) -> tuple[list[float], list[float]]:
+        """
+        Calculates the basic statistics of the aggregate opinion across the models.
+
+        :return: The average and standard deviation of the aggregate opinions across the models.
+        :rtype: tuple[list[float], list[float]]
+        """
+        average_opinions: list[float] = []
+        opinions_sd: list[float] = []
+
+        for i in range(TEST_PARAMETERS["iterations"]):
+            iteration_values: list[float] = []
+
+            for model_values in self.aggregate_opinions.values():
+                iteration_values.append(model_values[i])
+
+            iteration_average: float = np.average(iteration_values)
+            iteration_sd: float = float(np.std(iteration_values))
+
+            average_opinions.append(iteration_average)
+            opinions_sd.append(iteration_sd)
+
+        return average_opinions, opinions_sd
+
+    def calculate_rad_agts_statistics(self) -> tuple[list[float], list[float]]:
+        """
+        Calculates the basic statistics of the total number of radicalised agents across the models.
+
+        :return: The average and standard deviation of the total number of radicalised agents across the models.
+        :rtype: tuple[list[float], list[float]]
+        """
+        average_rad_agts: list[float] = []
+        rad_agts_sd: list[float] = []
+
+        for i in range(TEST_PARAMETERS["iterations"]):
+            iteration_values: list[int] = []
+
+            for model_values in self.radicalised_agents.values():
+                iteration_values.append(model_values[i])
+
+            iteration_average: float = np.average(iteration_values)
+            iteration_sd: float = float(np.std(iteration_values))
+
+            average_rad_agts.append(iteration_average)
+            rad_agts_sd.append(iteration_sd)
+
+        return average_rad_agts, rad_agts_sd
+
+    def calculate_rad_grps_statistics(self) -> tuple[list[float], list[float]]:
+        """
+        Calculates the basic statistics of the total number of radicalised groups across the models.
+
+        :return: The average and standard deviation of the total number of radicalised groups across the models.
+        :rtype: tuple[list[float], list[float]]
+        """
+        average_rad_grps: list[float] = []
+        rad_grps_sd: list[float] = []
+
+        for i in range(TEST_PARAMETERS["iterations"]):
+            iteration_values: list[int] = []
+
+            for model_values in self.radicalised_groups.values():
+                iteration_values.append(model_values[i])
+
+            iteration_average: float = np.average(iteration_values)
+            iteration_sd: float = float(np.std(iteration_values))
+
+            average_rad_grps.append(iteration_average)
+            rad_grps_sd.append(iteration_sd)
+
+        return average_rad_grps, rad_grps_sd
+
+    def calculate_polarisation_statistics(self) -> tuple[dict[str, list[float]], dict[str, list[float]]]:
+        """
+        Calculates the basic statistics for the polarisation across the models for each hierarchy.
+
+        :return: Two <hierarchy : list> mappings containing the average and standard deviation of polarisation at each iteration per hierarchy.
+        :rtype: tuple[dict[str, list[float]], dict[str, list[float]]]
+        """
+        average_polarisation: dict[str, list[float]] = {}
+        polarisation_sd: dict[str, list[float]] = {}
+
+        for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+            average_polarisation[hierarchy] = []
+            polarisation_sd[hierarchy] = []
+
+        for i in range(TEST_PARAMETERS["iterations"]):
+            iteration_values: dict[str, list[float]] = {hierarchy: [] for hierarchy in TEST_PARAMETERS["hierarchy_names"]}
+
+            for hierarchy_dict in self.polarisations.values():
+                for hierarchy, hierarchy_values in hierarchy_dict.items():
+                    iteration_values[hierarchy].append(hierarchy_values[i])
+
+            for hierarchy, values_list in iteration_values.items():
+                hierarchy_average: float = np.average(values_list)
+                hierarchy_sd: float = float(np.std(values_list))
+
+                average_polarisation[hierarchy].append(hierarchy_average)
+                polarisation_sd[hierarchy].append(hierarchy_sd)
+
+        return average_polarisation, polarisation_sd
+
+
+class AgentsTester:
+    """
+    The main tester class which will handle the set up, iteration, and persistence of the different models
+    that are used in this experiment.
+
+    For this experiment, the models will not be identical; the purpose being to inspect the level of convergence
+    achieved by each model at varying numbers of agents included in each population.
+
+    This experiment specifically is an extension of the original NumAgents, using GATOH's Groups module and
+    clustered simulations rather than individual agents; done in order to ensure that the impact of agent
+    population size within the group simulations are similar to those seen with individual agents.
+
+    :param results_container: The container to which the tester's model results will be stored to.
+    :type results_container: AnalysisResults
+    :param existing: A flag indicating if the experiment has already been run and saved models are present to inspect.
+    :type existing: bool, optional
+    """
+
+    def __init__(self, results_container: AnalysisResults, existing: bool = False) -> None:
+        self.results: AnalysisResults = results_container
+        self.num_agents: list[int] = AGENT_PARAMETERS["n_agents"]
+
+        self.existing: bool = existing
+        self.model_saves: dict[str, str] = {}
+
+        # Dynamic model space
+        self.models: dict[str, md.ABModel] = {}
+
+        # Define the dicts that will contain the populations of Agents, Graphs, and Groups for each group
+        self.model_agents: dict[str, list[agt.Agent]] = {}
+        self.model_graphs: dict[str, list[gr.Graph]] = {}
+        self.model_groups: dict[str, list[grp.Group]] = {}
+        self.group_edges: dict[str, list[tuple[int, int]]] = {}
+
+        if not self.existing:
+            self.create_models()
+            self.create_agents()
+            self.create_graphs()
+            self.create_groups()
+        else:
+            self.model_saves = SAVEDIRS
+            # load_models is called from __main__ as any missing savefiles are checked for there
+            self.load_agents()
+            self.load_graphs()
+            self.load_groups()
+
+    def create_models(self) -> None:
+        """
+        Creates the empty model objects that will later be set up and run for the experiment.
+        """
+        for num_agents in self.num_agents:
+            for i in range(TEST_PARAMETERS["repetitions"]):
+                model_id: str = f"{TEST_PARAMETERS['model_id_base']}-{num_agents:03}AGTS-{i + 1:03}"
+
+                model_savedir: str = f"{SAVEDIR_ROOT}/{model_id}"
+                if not os.path.exists(model_savedir):
+                    os.mkdir(model_savedir)
+
+                model_datafile: str = f"{model_savedir}/{model_id}_variables.csv"
+
+                new_model: md.ABModel = md.ABModel(
+                    deepcopy(TEST_PARAMETERS["hierarchy_names"]),
+                    deepcopy(list(TEST_PARAMETERS["hierarchy_rw"].values())),
+                    save_dir=model_savedir,
+                    data_file=model_datafile,
+                    model_id=model_id,
+                    simulate_groups=True,
+                )
+                self.models[model_id] = deepcopy(new_model)
+
+                # Manual garbage collection
+                del new_model
+                _ = gc.collect()
+        return None
+
+    def create_agents(self) -> None:
+        """
+        Generates and sets the population of Agent objects for each group of models.
+        """
+        print("==== Starting Agent creation ====")
+        created_agents: list[agt.Agent] = []
+
+        benefit_flags: list[bool] = list(AGENT_PARAMETERS["personal_benefit"].keys())
+        benefit_p: list[float] = list(AGENT_PARAMETERS["personal_benefit"].values())
+
+        for i in range(self.num_agents[-1]):
+            agent_id: str = f"{AGENT_PARAMETERS['id_base']}{i + 1:04}"
+            agent_opinion: float = rd.uniform(
+                AGENT_PARAMETERS["opinions"][0],
+                AGENT_PARAMETERS["opinions"][1],
+            )
+            agent_personality: str = agt.draw_personality()
+            agent_susceptibility: float = rd.uniform(
+                AGENT_PARAMETERS["social_susceptibility"][0],
+                AGENT_PARAMETERS["social_susceptibility"][1],
+            )
+            agent_behaviour: tuple[str, float] = (agent_personality, agent_susceptibility)
+            agent_benefit: bool = bool(np.random.choice(benefit_flags, size=1, p=benefit_p)[0])
+
+            hierarchy_weightings: dict[str, float] = {}
+            for hierarchy_name in TEST_PARAMETERS["hierarchy_names"]:
+                generated_weighting: float = rd.uniform(
+                    AGENT_PARAMETERS["hierarchy_weighting"][0],
+                    AGENT_PARAMETERS["hierarchy_weighting"][1],
+                )
+                hierarchy_weightings[hierarchy_name] = generated_weighting
+
+            created_agent: agt.Agent = agt.Agent(
+                agent_id,
+                agent_opinion,
+                hierarchy_weightings,
+                agent_behaviour,
+                agent_benefit,
+            )
+
+            created_agents.append(deepcopy(created_agent))
+
+            # Manual garbage collection
+            del agent_id, agent_opinion, agent_personality, agent_susceptibility, agent_behaviour, agent_benefit
+            del hierarchy_weightings, created_agent
+            _ = gc.collect()
+
+        for num_agents in self.num_agents:
+            group_id: str = f"{TEST_PARAMETERS['model_id_base']}-{num_agents:03}AGTS"
+            self.model_agents[group_id] = deepcopy(created_agents[:num_agents])
+
+        # Manual garbage collection
+        del created_agents
+        _ = gc.collect()
+
+        # Serialise the created Agent objects so that they remain unchanged across future runs
+        self.pickle_agents()
+
+        print("==== Finished Agent creation ====")
+        return None
+
 
 if __name__ == "__main__":
     MULTIPROCESSING: bool = True
