@@ -634,6 +634,112 @@ class AgentsTester:
                 _ = gc.collect()
         return None
 
+    def create_groups(self) -> None:
+        """
+        Generates and sets the populations of Group objects that will be used across the instances.
+        """
+        print("==== Starting Group creation ====")
+        for model_group, graphs in self.model_graphs.items():
+            created_groups: list[grp.Group] = []
+            group_relationships: list[tuple[int, int]] = []
+
+            group_count: int = 0
+
+            for graph in graphs:
+                clustered_nodes: dict[gr.GraphNode, int] = graph.cluster_nodes(k=GROUP_PARAMETERS["n_groups"])
+
+                # Re-organise the nodes in clusters into clustered nodes
+                group_members: dict[int, list[agt.Agent]] = {}
+                for node, cluster in clustered_nodes.items():
+                    group_members.setdefault(cluster, []).append(node.agent)
+
+                graph_groups: list[grp.Group] = []
+
+                for cluster, members in group_members.items():
+                    new_group: grp.Group = grp.Group()
+                    _ = new_group.generate_group(
+                        f"{GROUP_PARAMETERS['id_base']}-{model_group.split('-')[-1]}-{group_count + 1:03}",
+                        cluster,
+                        graph.name,
+                        members,
+                    )
+                    new_group.set_index(group_count)
+                    group_count += 1
+                    graph_groups.append(new_group)
+
+                created_groups.extend(deepcopy(graph_groups))
+                group_relationships.extend(graph.generate_group_edges(graph_groups))
+
+                # Manual garbage collection
+                del clustered_nodes, group_members, graph_groups
+                _ = gc.collect()
+
+            self.group_edges[model_group] = deepcopy(group_relationships)
+            self.model_groups[model_group] = deepcopy(created_groups)
+
+            # manual garbage collection
+            del group_relationships, created_groups
+            _ = gc.collect()
+
+        # Serialise the created Group objects
+        self.pickle_groups()
+
+        print("==== Finished Group creation ====")
+        return None
+
+    def pickle_groups(self) -> None:
+        """
+        Serialises the tester's Group populations to subdirectories within the experiment directory.
+        """
+        groups_path: str = f"{ROOT_DIR}/groups"
+
+        if not os.path.exists(groups_path):
+            os.mkdir(groups_path)
+
+        for model_group, groups in self.model_groups.items():
+            group_path: str = f"{groups_path}/model_group"
+
+            if not os.path.exists(group_path):
+                os.mkdir(group_path)
+
+            for idx, group in enumerate(groups):
+                group_pickle_path: str = f"{group_path}/group_{idx}.pkl"
+                with open(group_pickle_path, "wb") as pickle_file:
+                    pickle.dump(group, pickle_file)
+
+            # Also pickle the group relationships
+            with open(f"{group_path}/group_edges.pkl", "wb") as pickle_file:
+                pickle.dump(self.group_edges[model_group], pickle_file)
+
+        return None
+
+    def load_groups(self) -> None:
+        """
+        Deserialises the tester's Group populations and loads them into memory.
+        """
+        groups_path: str = f"{ROOT_DIR}/groups"
+
+        for num_agents in self.num_agents:
+            group_path: str = f"{groups_path}/{TEST_PARAMETERS['model_id_base']}-{num_agents:03}AGTS"
+
+            for i in range(GROUP_PARAMETERS["n_groups"] * len(TEST_PARAMETERS["hierarchy_names"])):
+                group_pickle_path: str = f"{group_path}/group_{i}.pkl"
+                group_obj: grp.Group
+                with open(group_pickle_path, "rb") as pickle_file:
+                    group_obj = pickle.load(pickle_file)
+
+                self.model_groups.setdefault(f"{TEST_PARAMETERS['model_id_base']}-{num_agents:03}AGTS", []).append(deepcopy(group_obj))
+
+                # Manual garbage collection
+                del group_pickle_path, group_obj
+                _ = gc.collect()
+
+            # Also load the group relationships
+            with open(f"{group_path}/group_edges.pkl", "rb") as pickle_file:
+                self.group_edges[f"{TEST_PARAMETERS['model_id_base']}-{num_agents:03}AGTS"] = pickle.load(pickle_file)
+
+        return None
+
 
 if __name__ == "__main__":
     MULTIPROCESSING: bool = True
