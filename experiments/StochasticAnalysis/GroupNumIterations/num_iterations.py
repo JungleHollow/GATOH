@@ -6,7 +6,6 @@ import os
 import pickle
 import random as rd
 from copy import deepcopy
-from re import L
 from typing import Self, TypedDict
 
 from multiprocessing import Pool
