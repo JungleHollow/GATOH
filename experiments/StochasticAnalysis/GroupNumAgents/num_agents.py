@@ -740,6 +740,382 @@ class AgentsTester:
 
         return None
 
+    def load_models(self, existing_saves: list[str] | None = None) -> None:
+        """
+        Loads the model objects that have been previously saved in their respective subdirectories.
+
+        :param existing_saves: A potentially partial list of model names indicating models which can be loaded.
+        :type existing_saves: list[str], optional
+        """
+        new_model: md.ABModel
+
+        if existing_saves is not None:
+            for existing_save in existing_saves:
+                new_model = md.ABModel(
+                    TEST_PARAMETERS["hierarchy_names"],
+                    list(TEST_PARAMETERS["hierarchy_rw"].values()),
+                )
+                new_model.load_model(SAVEDIRS[existing_save])
+
+                self.models[existing_save] = deepcopy(new_model)
+
+                # Manual garbage collection
+                del new_model
+                _ = gc.collect()
+            return None
+
+        for model_name, model_savedir in SAVEDIRS.items():
+            new_model = md.ABModel(
+                TEST_PARAMETERS["hierarchy_names"],
+                list(TEST_PARAMETERS["hierarchy_rw"].values()),
+            )
+            new_model.load_model(model_savedir)
+
+            self.models[model_name] = deepcopy(new_model)
+
+            # Manual garbage collection
+            del new_model
+            _ = gc.collect()
+        return None
+
+    def create_savedir_validation(self) -> None:
+        """
+        Writes a csv file with columns ["model_name", "model_savedir"] containing the relevant information
+        for the models of all instances that have been initialised during model setup.
+
+        This is done in order to allow for checking of missing instance save directories if the tester is
+        being loaded from an existing run.
+        """
+        with open(LOGGED_SAVEDIRS, "w", newline="") as csv_file:
+            field_names: list[str] = ["model_name", "model_savedir"]
+
+            csv_writer: csv.DictWriter[str] = csv.DictWriter(
+                csv_file, fieldnames=field_names,
+            )
+            csv_writer.writeheader()
+
+            for model in self.models.values():
+                csv_row: dict[str, str] = {
+                    "model_name": model.model_id,
+                    "model_savedir": model.save_dir,
+                }
+                csv_writer.writerow(csv_row)
+
+        return None
+
+    def setup_models(self, missing_saves: list[str] | None = None) -> None:
+        """
+        Creates the model objects and adds the agent, graph, and group populations to them.
+
+        :param missing_saves: A potentially partial list of model names which must be setup.
+        :type missing_saves: list[str], optional
+        """
+        print("==== Setting up the model instances ====")
+        from_group: grp.Group
+        to_group: grp.Group
+
+        if missing_saves is not None:
+            for missing_save in missing_saves:
+                _ = self.models[missing_save].add_agents(self.model_agents[missing_save])
+                _ = self.models[missing_save].add_graphs(
+                    self.model_graphs[missing_save],
+                    TEST_PARAMETERS["hierarchy_names"],
+                    list(TEST_PARAMETERS["hierarchy_rw"].values()),
+                )
+                _ = self.models[missing_save].add_groups(self.model_groups[missing_save])
+
+                for edge in self.group_edges[missing_save]:
+                    from_group = self.model_groups[missing_save][edge[0]]
+                    to_group = self.model_groups[missing_save][edge[1]]
+                    self.models[missing_save].add_group_graph_edge(from_group, to_group)
+            print("==== Finished setting up model instances ====")
+            return None
+
+        for model_name, model in self.models.items():
+            _ = model.add_agents(self.model_agents[model_name])
+            _ = model.add_graphs(
+                self.model_graphs[model_name],
+                TEST_PARAMETERS["hierarchy_names"],
+                list(TEST_PARAMETERS["hierarchy_rw"].values()),
+            )
+            _ = model.add_groups(self.model_groups[model_name])
+
+            for edge in self.group_edges[model_name]:
+                from_group = self.model_groups[model_name][edge[0]]
+                to_group = self.model_groups[model_name][edge[1]]
+                model.add_group_graph_edge(from_group, to_group)
+
+        print("==== Finished setting up model instances ====")
+        return None
+
+    def store_model_results(self, model: md.ABModel) -> None:
+        """
+        A helper class that takes a model which has finished iterating and calls AnalysisResults.init_model
+        appropriately.
+
+        :param model: The model object that is being initialised in the analysis results.
+        :type model: :class:`~gatoh.model.ABModel`
+        """
+        self.results.init_model(
+            model.model_id,
+            model.logger.variables.aggregate_opinions,
+            model.logger.variables.radicalised_agents,
+            model.logger.variables.radicalised_groups,
+            model.logger.variables.layer_polarisations,
+        )
+        return None
+
+    def save_results(self) -> None:
+        """
+        Stores the parameters stored within the AnalysisResults into separate .csv files for each parameter.
+        """
+        self.create_savedir_validation()
+        self.results.save_results()
+        return None
+
+    def load_results(self) -> None:
+        """
+        Loads existing AnalysisResults from their corresponding .csv files.
+        """
+        self.results = self.results.load_results()
+        return None
+
+    def calculate_results_statistics(self) -> OutputDict:
+        """
+        Calculate and return all of the AnalysisResults statistics.
+
+        :return: A <parameter name : statistics> mapping containing the means and standard deviations for all parameters.
+        :rtype: dict[str, Any]
+        """
+        opinion_statistics: tuple[list[float], list[float]] = self.results.calculate_opinion_statistics()
+        radical_agt_statistics: tuple[list[float], list[float]] = self.results.calculate_rad_agts_statistics()
+        radical_grp_statistics: tuple[list[float], list[float]] = self.results.calculate_rad_grps_statistics()
+        polarisation_statistics: tuple[dict[str, list[float]], dict[str, list[float]]] = self.results.calculate_polarisation_statistics()
+
+        output_dict: OutputDict = {
+            "opinion_statistics": opinion_statistics,
+            "rad_agts_statistics": radical_agt_statistics,
+            "rad_grps_statistics": radical_grp_statistics,
+            "polarisation_statistics": polarisation_statistics,
+        }
+
+        return output_dict
+
+    def run_models(self, missing_saves: list[str] | None = None, worker_pool: WorkerPool | None = None) -> None:
+        """
+        Runs each model instance in the tester class.
+
+        :param missing_saves: A potentially partial list of model names which must be run.
+        :type missing_saves: list[str], optional
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
+        """
+        if missing_saves is not None:
+            for missing_save in missing_saves:
+                self.models[missing_save].iterate(worker_pool=worker_pool)
+                self.models[missing_save].save_model()
+                self.store_model_results(self.models[missing_save])
+            return None
+
+        for model in self.models.values():
+            model.iterate(worker_pool=worker_pool)
+            model.save_model()
+            self.store_model_results(model)
+
+        return None
+
+
+def plot_var_over_models(analysis_results: AnalysisResults) -> None:
+    """
+    Plots the variance of the opinions across the models.
+
+    :param analysis_results: The result data from the experiment.
+    :type analysis_results: AnalysisResults
+    """
+    current_opinion_values: list[float] = []
+
+    y_values: list[float] = []  # Variance of n models' values
+    x_values: list[int] = []  # Number of models
+
+    for idx, values in enumerate(analysis_results.aggregate_opinions.values()):
+        current_opinion_values += deepcopy(values)
+
+        current_vals_variance: float = float(np.var(current_opinion_values))
+
+        y_values.append(current_vals_variance)
+        x_values.append(idx + 1)
+
+    fig, ax = plt.subplots()
+
+    _ = ax.plot(x_values, y_values, "--k")
+    _ = ax.set_xlabel("Number of Models")
+    _ = ax.set_ylabel("Aggregate Opinion Variance")
+    _ = ax.set_title("Variance of Aggregate Opinions by Number of Models Used")
+
+    save_path: str = f"{ROOT_DIR}/GroupVarianceOverModels.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    return None
+
+
+def plot_model_runtimes(analysis_results: AnalysisResults, analysis_statistics: OutputDict) -> None:
+    """
+    Plot the runtime opinion values for all models in the experiment, along with an overall average trend.
+
+    :param analysis_results: The results data from the experiment.
+    :type analysis_results: AnalysisResults
+    :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations of the model parameters.
+    :type analysis_statistics: dict[str, Any]
+    """
+    iterations: list[int] = [i + 1 for i in range(TEST_PARAMETERS["iterations"])]
+    fix, ax = plt.subplots()
+
+    for values in analysis_results.aggregate_opinions.values():
+        _ = ax.plot(iterations, values, "-k", linewidth=0.7, alpha=0.25)
+
+    _ = ax.plot(
+        iterations,
+        analysis_statistics["opinion_statistics"][0],
+        "-r",
+        linewidth=0.8,
+        alpha=1.0,
+        label="Average",
+    )
+
+    _ = ax.legend()
+    _ = ax.set_xlabel("Iterations")
+    _ = ax.set_ylabel("Aggregate Opinion")
+    _ = ax.set_title("Model Aggregate Opinions over Iterations")
+
+    save_path: str = f"{ROOT_DIR}/GroupModelRuntimes.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    return None
+
+
+def plot_parameter_whhiskers(analysis_statistics: OutputDict) -> None:
+    """
+    Plot box and whiskers for each of the model parameters.
+
+    :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations for all parameters.
+    :type analysis_statistics: dict[str, Any]
+    """
+    unpacked_results: list[list[float | int]] = []
+    tick_labels: list[str] = []
+
+    for hierarchy, statistics in analysis_statistics["polarisation_statistics"][0].items():
+        unpacked_results.append(deepcopy(statistics))
+        tick_labels.append(f"Hierarchy Polarisation ({hierarchy})")
+
+    fig, ax = plt.subplots()
+
+    box_plot = ax.boxplot(
+        unpacked_results, notch=False, orientation="vertical", whis=1.5,
+    )
+    _ = plt.setp(box_plot["boxes"], color="black")
+    _ = plt.setp(box_plot["whiskers"], color="black")
+    _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+    ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+    _ = ax.set(
+        axisbelow=True,
+        title="Group NumAgents -- Polarisation Statistics",
+        xlabel="Parameter",
+        ylabel="Value",
+    )
+
+    _ = ax.set_xticklabels(tick_labels, rotation=0, fontsize=8)
+
+    save_path: str = f"{ROOT_DIR}/GroupPolarisationStatistics.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    unpacked_opinion: list[float] = deepcopy(analysis_statistics["opinion_statistics"][0])
+    opinion_label: list[str] = ["Aggregate Opinions"]
+
+    fig, ax = plt.subplots()
+
+    box_plot = ax.boxplot(
+        unpacked_opinion, notch=False, orientation="vertical", whis=1.5,
+    )
+    _ = plt.setp(box_plot["boxes"], color="black")
+    _ = plt.setp(box_plot["whiskers"], color="black")
+    _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+    ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+    _ = ax.set(
+        axisbelow=True,
+        title="Group NumAgents -- Aggregate Opinion Statistics",
+        xlabel="Parameter",
+        ylabel="Value",
+    )
+
+    _ = ax.set_xticklabels(opinion_label, rotation=0, fontsize=8)
+
+    save_path = f"{ROOT_DIR}/GroupOpinionStatistics.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    unpacked_rad_agt: list[float] = deepcopy(analysis_statistics["rad_agts_statistics"][0])
+    rad_agt_label: list[str] = ["Radicalised Agents"]
+
+    fig, ax = plt.subplots()
+
+    box_plot = ax.boxplot(
+        unpacked_rad_agt, notch=False, orientation="vertical", whis=1.5,
+    )
+    _ = plt.setp(box_plot["boxes"], color="black")
+    _ = plt.setp(box_plot["whiskers"], color="black")
+    _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+    ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+    _ = ax.set(
+        axisbelow=True,
+        title="Group NumAgents -- Radicalised Agent Statistics",
+        xlabel="Parameter",
+        ylabel="Value",
+    )
+
+    _ = ax.set_xticklabels(rad_agt_label, rotation=0, fontsize=8)
+
+    save_path = f"{ROOT_DIR}/GroupRadicalAgentStatistics.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    unpacked_rad_grp: list[float] = deepcopy(analysis_statistics["rad_grps_statistics"][0])
+    rad_grp_label: list[str] = ["Radicalised Groups"]
+
+    fig, ax = plt.subplots()
+
+    box_plot = ax.boxplot(
+        unpacked_rad_grp, notch=False, orientation="vertical", whis=1.5,
+    )
+    _ = plt.setp(box_plot["boxes"], color="black")
+    _ = plt.setp(box_plot["whiskers"], color="black")
+    _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+    ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+    _ = ax.set(
+        axisbelow=True,
+        title="Group NumAgents -- Radicalised Groups Statistics",
+        xlabel="Parameter",
+        ylabel="Value",
+    )
+
+    _ = ax.set_xticklabels(rad_grp_label, rotation=0, fontsize=8)
+
+    save_path = f"{ROOT_DIR}/GroupRadicalGroupStatistics.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    return None
+
 
 if __name__ == "__main__":
     MULTIPROCESSING: bool = True
