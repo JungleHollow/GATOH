@@ -165,7 +165,7 @@ class AnalysisResults:
                     if idx == 0:
                         model_name = value
                         self.aggregate_opinions[model_name] = []
-                    else:
+                    elif value != "":
                         self.aggregate_opinions[model_name].append(float(value))
 
         # Next load the radicalised agents
@@ -176,7 +176,7 @@ class AnalysisResults:
                     if idx == 0:
                         model_name = value
                         self.radicalised_agents[model_name] = []
-                    else:
+                    elif value != "":
                         self.radicalised_agents[model_name].append(int(value))
 
         # Next load the radicalised groups
@@ -187,7 +187,7 @@ class AnalysisResults:
                     if idx == 0:
                         model_name = value
                         self.radicalised_groups[model_name] = []
-                    else:
+                    elif value != "":
                         self.radicalised_groups[model_name].append(int(value))
 
         # Finally load the polarisations
@@ -199,7 +199,7 @@ class AnalysisResults:
                     if key == "model_id":
                         model_name = value
                         self.polarisations[model_name] = {}
-                    else:
+                    elif value != "":
                         hierarchy_name = key.split("_")[0]
                         self.polarisations[model_name].setdefault(hierarchy_name, []).append(float(value))
         return self
@@ -958,8 +958,10 @@ def plot_model_runtimes(analysis_results: AnalysisResults, analysis_statistics: 
     iterations: list[int] = [i + 1 for i in range(TEST_PARAMETERS["iterations"][-1])]
     fig, ax = plt.subplots()
 
-    for values in analysis_results.aggregate_opinions.values():
-        _ = ax.plot(iterations, values, "-k", linewidth=0.7, alpha=0.25)
+    for model_id, values in analysis_results.aggregate_opinions.items():
+        num_iters: int = int(model_id.split("-")[2][:3])  # Only take the nnn from nnnITERS
+        model_iterations: list[int] = [i + 1 for i in range(num_iters)]
+        _ = ax.plot(model_iterations, values, "-k", linewidth=0.7, alpha=0.25)
 
     _ = ax.plot(
         iterations,
@@ -1130,7 +1132,7 @@ def plot_var_over_models_grouped(analysis_results: AnalysisResults) -> None:
 
     for model_name, values in analysis_results.aggregate_opinions.items():
         # Check if this is a new group and reset accordingly
-        if model_name.split("-")[1] != current_iter_group:
+        if model_name.split("-")[2] != current_iter_group:
             # Plot the existing values first
             fig, ax = plt.subplots()
 
@@ -1147,7 +1149,7 @@ def plot_var_over_models_grouped(analysis_results: AnalysisResults) -> None:
             plt.close()
 
             # Then reset
-            current_iter_group = model_name.split("-")[1]
+            current_iter_group = model_name.split("-")[2]
             current_opinion_values = []
             y_values = []
 
@@ -1201,7 +1203,7 @@ def plot_model_runtimes_grouped(analysis_results: AnalysisResults, analysis_stat
 
     for model_name, values in analysis_results.aggregate_opinions.items():
         # Check if the group has changed, and reset accordingly
-        if model_name.split("-")[1] != current_iter_group:
+        if model_name.split("-")[2] != current_iter_group:
             # Plot the existing values
             _ = ax.plot(
                 iterations,
@@ -1226,7 +1228,7 @@ def plot_model_runtimes_grouped(analysis_results: AnalysisResults, analysis_stat
 
             # Then reset
             fig, ax = plt.subplots()
-            current_iter_group = model_name.split("-")[1]
+            current_iter_group = model_name.split("-")[2]
             iterations.append(iterations[-1] + 1)
 
         # Otherwise, plot the model's individual runtime
