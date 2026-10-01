@@ -31,6 +31,16 @@ class OutputDict(TypedDict):
     polarisation_statistics: tuple[dict[str, list[float]], dict[str, list[float]]]
 
 
+class GroupedOutputDict(TypedDict):
+    """
+    A helper class used for typechecking output_dict in AnalysisResults.calculate_grouped_results_statistics.
+    """
+    opinion_statistics: dict[str, tuple[list[float], list[float]]]
+    rad_agts_statistics: dict[str, tuple[list[float], list[float]]]
+    rad_grps_statistics: dict[str, tuple[list[float], list[float]]]
+    polarisation_statistics: dict[str, tuple[dict[str, list[float]], dict[str, list[float]]]]
+
+
 class AnalysisResults:
     """
     A container class whose main purpose is to collect the observed results from the different models
@@ -305,6 +315,140 @@ class AnalysisResults:
                 polarisation_sd[hierarchy].append(hierarchy_sd)
 
         return average_polarisation, polarisation_sd
+
+    def calculate_grouped_opinion_statistics(self) -> dict[str, tuple[list[float], list[float]]]:
+        """
+        Calculates the basic statistics of the aggregate opinion for each population size group.
+
+        :return: The average and standard deviation of the aggregate opinions across the groups.
+        :rtype: dict[str, tuple[list[float], list[float]]]
+        """
+        return_dict: dict[str, tuple[list[float], list[float]]] = {}
+
+        for i in AGENT_PARAMETERS["n_agents"]:
+            average_opinions: list[float] = []
+            opinions_sd: list[float] = []
+
+            current_agt_group: str = f"{i:03}AGTS"
+
+            for j in range(TEST_PARAMETERS["iterations"]):
+                iteration_values: list[float] = []
+
+                for model_name, model_values in self.aggregate_opinions.items():
+                    if model_name.split("-")[2] == current_agt_group:
+                        iteration_values.append(model_values[j])
+
+                iteration_average: float = np.average(iteration_values)
+                iteration_sd: float = float(np.std(iteration_values))
+
+                average_opinions.append(iteration_average)
+                opinions_sd.append(iteration_sd)
+
+            return_dict[current_agt_group] = (average_opinions, opinions_sd)
+
+        return return_dict
+
+    def calculate_grouped_rad_agts_statistics(self) -> dict[str, tuple[list[float], list[float]]]:
+        """
+        Calculates the basic statistics of the total number of radicalised agents for each population size group.
+
+        :return: The average and standard deviation of the total number of radicalised agents across the groups.
+        :rtype: dict[str, tuple[list[float], list[float]]]
+        """
+        return_dict: dict[str, tuple[list[float], list[float]]] = {}
+
+        for i in AGENT_PARAMETERS["n_agents"]:
+            average_rad_agts: list[float] = []
+            rad_agts_sd: list[float] = []
+
+            current_agt_group: str = f"{i:03}AGTS"
+
+            for j in range(TEST_PARAMETERS["iterations"]):
+                iteration_values: list[int] = []
+
+                for model_name, model_values in self.radicalised_agents.items():
+                    if model_name.split("-")[2] == current_agt_group:
+                        iteration_values.append(model_values[j])
+
+                    iteration_average: float = np.average(iteration_values)
+                    iteration_sd: float = float(np.std(iteration_values))
+
+                    average_rad_agts.append(iteration_average)
+                    rad_agts_sd.append(iteration_sd)
+
+            return_dict[current_agt_group] = (average_rad_agts, rad_agts_sd)
+
+        return return_dict
+
+    def calculate_grouped_rad_grps_statistics(self) -> dict[str, tuple[list[float], list[float]]]:
+        """
+        Calculates the basic statistics of the total number of radicalised groups for each population size group.
+
+        :return: The average and standard deviation of the total number of radicalised groups across the groups.
+        :rtype: dict[str, tuple[list[float], list[float]]]
+        """
+        return_dict: dict[str, tuple[list[float], list[float]]] = {}
+
+        for i in AGENT_PARAMETERS["n_agents"]:
+            average_rad_grps: list[float] = []
+            rad_grps_sd: list[float] = []
+
+            current_agt_group: str = f"{i:03}AGTS"
+
+            for j in range(TEST_PARAMETERS["iterations"]):
+                iteration_values: list[int] = []
+
+                for model_name, model_values in self.radicalised_groups.items():
+                    if model_name.split("-")[2] == current_agt_group:
+                        iteration_values.append(model_values[j])
+
+                    iteration_average: float = np.average(iteration_values)
+                    iteration_sd: float = float(np.std(iteration_values))
+
+                    average_rad_grps.append(iteration_average)
+                    rad_grps_sd.append(iteration_sd)
+
+            return_dict[current_agt_group] = (average_rad_grps, rad_grps_sd)
+
+        return return_dict
+
+    def calculate_grouped_polarisation_statistics(self) -> dict[str, tuple[dict[str, list[float]], dict[str, list[float]]]]:
+        """
+        Calculates the basic statistics for the polarisations across the groups for each hierarchy.
+
+        :return: A <model group : <hierarchy : list>> nested mapping containing the average and standard deviation of polarisation at each iteration per hierarchy per group.
+        :rtype: dict[str, tuple[dict[str, list[float]], dict[str, list[float]]]]
+        """
+        return_dict: dict[str, tuple[dict[str, list[float]], dict[str, list[float]]]] = {}
+
+        for i in AGENT_PARAMETERS["n_agents"]:
+            average_polarisation: dict[str, list[float]] = {}
+            polarisation_sd: dict[str, list[float]] = {}
+
+            for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
+                average_polarisation[hierarchy] = []
+                polarisation_sd[hierarchy] = []
+
+            current_agt_group: str = f"{i:03}AGTS"
+
+            for j in range(TEST_PARAMETERS["iterations"]):
+                iteration_values: dict[str, list[float]] = {hierarchy: [] for hierarchy in TEST_PARAMETERS["hierarchy_names"]}
+
+                for model_name, hierarchy_dict in self.polarisations.items():
+                    if model_name.split("-")[2] == current_agt_group:
+                        for hierarchy, hierarchy_values in hierarchy_dict.items():
+                            iteration_values[hierarchy].append(hierarchy_values[j])
+
+                for hierarchy, values_list in iteration_values.items():
+                    hierarchy_average: float = np.average(values_list)
+                    hierarchy_sd: float = float(np.std(values_list))
+
+                    average_polarisation[hierarchy].append(hierarchy_average)
+                    polarisation_sd[hierarchy].append(hierarchy_sd)
+
+            return_dict[current_agt_group] = (average_polarisation, polarisation_sd)
+
+        return return_dict
 
 
 class AgentsTester:
@@ -901,6 +1045,27 @@ class AgentsTester:
 
         return output_dict
 
+    def calculate_grouped_results_statistics(self) -> GroupedOutputDict:
+        """
+        Calculate and return all of the AnalysisResults statistics; grouped by agent population size.
+
+        :return A <parameter name : grouped statistics> mapping containing the grouped means and standard deviations for all parameters.
+        :rtype: dict[str, dict[str, Any]]
+        """
+        opinion_statistics: dict[str, tuple[list[float], list[float]]] = self.results.calculate_grouped_opinion_statistics()
+        radical_agt_statistics: dict[str, tuple[list[float], list[float]]] = self.results.calculate_grouped_rad_agts_statistics()
+        radical_grp_statistics: dict[str, tuple[list[float], list[float]]] = self.results.calculate_grouped_rad_grps_statistics()
+        polarisation_statistics: dict[str, tuple[dict[str, list[float]], dict[str, list[float]]]] = self.results.calculate_grouped_polarisation_statistics()
+
+        output_dict: GroupedOutputDict = {
+            "opinion_statistics": opinion_statistics,
+            "rad_agts_statistics": radical_agt_statistics,
+            "rad_grps_statistics": radical_grp_statistics,
+            "polarisation_statistics": polarisation_statistics,
+        }
+
+        return output_dict
+
     def run_models(self, missing_saves: list[str] | None = None, worker_pool: WorkerPool | None = None) -> None:
         """
         Runs each model instance in the tester class.
@@ -995,7 +1160,7 @@ def plot_model_runtimes(analysis_results: AnalysisResults, analysis_statistics: 
     return None
 
 
-def plot_parameter_whhiskers(analysis_statistics: OutputDict) -> None:
+def plot_parameter_whiskers(analysis_statistics: OutputDict) -> None:
     """
     Plot box and whiskers for each of the model parameters.
 
@@ -1117,6 +1282,356 @@ def plot_parameter_whhiskers(analysis_statistics: OutputDict) -> None:
     return None
 
 
+def plot_var_over_models_grouped(analysis_results: AnalysisResults) -> None:
+    """
+    Plots the variance of the opinions across the models; grouped by the number of agents in each instance's population.
+
+    :param analysis_results: The result data from the experiment.
+    :type analysis_results: AnalysisResults
+    """
+    current_opinion_values: list[float] = []
+
+    y_values: list[float] = []  # Variance of n model's values
+    x_values: list[int] = [i + 1 for i in range(TEST_PARAMETERS["repetitions"])]  # Number of models
+
+    # Initialise the current population size group from the start
+    current_agt_group: str = "010AGTS"
+
+    # A subdirectory to organise the many plots into
+    base_path: str = f"{ROOT_DIR}/subplots/ModelVariance"
+
+    if not os.path.exists(base_path):
+        os.mkdir(base_path)
+
+    # Declare the data type
+    save_path: str
+
+    for model_name, values in analysis_results.aggregate_opinions.items():
+        # Check if this is a new group and reset accordingly
+        if model_name.split("-")[2] != current_agt_group:
+            # Plot the existing values first
+            fig, ax = plt.subplots()
+
+            _ = ax.plot(x_values, y_values, "--k")
+            _ = ax.set_xlabel("Number of Models")
+            _ = ax.set_ylabel("Aggregate Opinion Variance")
+            _ = ax.set_title(f"Variance of Aggregate Opinions by Number of Models Used ({current_agt_group})")
+
+            save_path = f"{base_path}/GVOM-{current_agt_group}.png"  # (Group Variance Over Models)
+
+            plt.savefig(save_path, dpi=300.0)
+
+            # To prevent memory leaks during looping
+            plt.close()
+
+            # Then reset
+            current_agt_group = model_name.split("-")[2]
+            current_opinion_values = []
+            y_values = []
+
+        current_opinion_values += deepcopy(values)
+
+        current_vals_variance: float = float(np.var(current_opinion_values))
+
+        y_values.append(current_vals_variance)
+
+    # Generate the plot for the final group
+    fig, ax = plt.subplots()
+
+    _ = ax.plot(x_values, y_values, "--k")
+    _ = ax.set_xlabel("Number of Models")
+    _ = ax.set_ylabel("Aggregate Opinion Variance")
+    _ = ax.set_title(f"Variance of Aggregate Opinions by Number of Models Used ({current_agt_group})")
+
+    save_path = f"{base_path}/GVOM-{current_agt_group}.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    return None
+
+
+def plot_model_runtimes_grouped(analysis_results: AnalysisResults, analysis_statistics: OutputDict) -> None:
+    """
+    Plot the runtime opinion values for all models in each population size group in the experiment, along with
+    an overall average trend.
+
+    :param analysis_results: The results data from the experiment.
+    :type analysis_results: AnalysisResults
+    :param analysis_statistics: A dictionary containing the per-iteration means and standard deviations of the model parameters.
+    :type analysis_statistics: dict[str, Any]
+    """
+    iterations: list[int] = [i + 1 for i in range(TEST_PARAMETERS["iterations"])]
+
+    # A subdirectory to organise the many plots into
+    base_path: str = f"{ROOT_DIR}/subplots/ModelRuntimes"
+
+    if not os.path.exists(base_path):
+        os.mkdir(base_path)
+
+    # Initialise the current population size group at the first
+    current_agt_group: str = "010AGTS"
+
+    # Declare the data type
+    save_path: str
+
+    fig, ax = plt.subplots()
+
+    for model_name, values in analysis_results.aggregate_opinions.items():
+        # Check if the group has changed, and reset accordingly
+        if model_name.split("-")[2] != current_agt_group:
+            # Plot the existing values
+            _ = ax.plot(
+                iterations,
+                analysis_statistics["opinion_statistics"][0],
+                "-r",
+                linewidth=0.8,
+                alpha=1.0,
+                label="Average",
+            )
+
+            _ = ax.legend()
+            _ = ax.set_xlabel("Iterations")
+            _ = ax.set_ylabel("Aggregate Opinion")
+            _ = ax.set_title(f"Model Aggregate Opinions over Iterations ({current_agt_group})")
+
+            save_path = f"{base_path}/GMR-{current_agt_group}.png"  # (Group Model Runtimes)
+
+            plt.savefig(save_path, dpi=300.0)
+
+            # To prevent memory leaks during looping
+            plt.close()
+
+            # Then reset
+            fig, ax = plt.subplots()
+            current_agt_group = model_name.split("-")[2]
+
+        # Otherwise, plot the model's individual runtime
+        _ = ax.plot(iterations, values, "-k", linewidth=0.7, alpha=0.25)
+
+    # Generate the plot for the final group
+    _ = ax.plot(
+        iterations,
+        analysis_statistics["opinion_statistics"][0],
+        "-r",
+        linewidth=0.8,
+        alpha=1.0,
+        label="Average",
+    )
+
+    _ = ax.legend()
+    _ = ax.set_xlabel("Iterations")
+    _ = ax.set_ylabel("Aggregate Opinion")
+    _ = ax.set_title(f"Model Aggregate Opinions over Iteratioons ({current_agt_group})")
+
+    save_path = f"{base_path}/GMR-{current_agt_group}.png"
+
+    plt.savefig(save_path, dpi=300.0)
+
+    return None
+
+
+def plot_parameter_whiskers_grouped(grouped_statistics: GroupedOutputDict) -> None:
+    """
+    Plot the box and whiskers for all model parameters at each individual population size.
+
+    :param grouped_statistics: A dictionary containing the per-iteration means and standard deviations for all parameters; grouped by agent population size.
+    :type grouped_statistics: dict[str, dict[str, Any]]
+    """
+    # A subdirectory to organise the many plots into
+    base_path: str = f"{ROOT_DIR}/subplots/PramWhiskers"
+
+    if not os.path.exists(base_path):
+        os.mkdir(base_path)
+
+    # Declare the data type
+    save_path: str
+
+    for i in AGENT_PARAMETERS["n_agents"]:
+        current_agt_group: str = f"{i:03}AGTS"
+
+        unpacked_results: list[list[float | int]] = []
+        tick_labels: list[str] = []
+
+        unpacked_opinion: list[float] = []
+        opinion_label: list[str] = ["Aggregate Opinions"]
+
+        unpacked_rad_agt: list[float] = []
+        rad_agt_label: list[str] = ["Radicalised Agents"]
+
+        unpacked_rad_grp: list[float] = []
+        rad_grp_label: list[str] = ["Radicalised Groups"]
+
+        for group, hierarchies in grouped_statistics["polarisation_statistics"].items():
+            if group == current_agt_group:
+                for hierarchy, statistics in hierarchies[0].items():
+                    unpacked_results.append(statistics)
+                    tick_labels.append(f"Hierarchy Polarisations ({hierarchy})")
+
+                fig, ax = plt.subplots()
+
+                box_plot = ax.boxplot(
+                    unpacked_results, notch=False, orientation="vertical", whis=1.5,
+                )
+                _ = plt.setp(box_plot["boxes"], color="black")
+                _ = plt.setp(box_plot["whiskers"], color="black")
+                _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+                ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+                _ = ax.set(
+                    axisbelow=True,
+                    title=f"Group NumAgents -- Polarisation Statistics ({group})",
+                    xlabel="Parameter",
+                    ylabel="Value",
+                )
+
+                _ = ax.set_xticklabels(tick_labels, rotation=0, fontsize=8)
+
+                save_path = f"{base_path}/GPS-{group}.png"  # (Group Polarisation Statistics)
+
+                plt.savefig(save_path, dpi=300.0)
+
+                # Just in case for possible memory leaks over the loop iterations
+                plt.close()
+                # Very minor optimisation of loop runtime...
+                break
+
+        for group, opinions in grouped_statistics["opinion_statistics"].items():
+            if group == current_agt_group:
+                # Reset for the aggregate opinions
+                fig, ax = plt.subplots()
+
+                unpacked_opinion = deepcopy(opinions[0])
+
+                box_plot = ax.boxplot(
+                    unpacked_opinion, notch=False, orientation="vertical", whis=1.5,
+                )
+                _ = plt.setp(box_plot["boxes"], color="black")
+                _ = plt.setp(box_plot["whiskers"], color="black")
+                _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+                ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+                _ = ax.set(
+                    axisbelow=True,
+                    title=f"Group NumAgents -- Aggregate Opinion Statistics ({group})",
+                    xlabel="Parameter",
+                    ylabel="Value",
+                )
+
+                _ = ax.set_xticklabels(opinion_label, rotation=0, fontsize=8)
+
+                save_path = f"{base_path}/GOS-{group}.png"  # (Group Opinion Statistics)
+
+                plt.savefig(save_path, dpi=300.0)
+
+                plt.close()
+                break
+
+        for group, rad_agts in grouped_statistics["rad_agts_statistics"].items():
+            if group == current_agt_group:
+                # Reset for the radicalised agents
+                fig, ax = plt.subplots()
+
+                unpacked_rad_agt = deepcopy(rad_agts[0])
+
+                box_plot = ax.boxplot(
+                    unpacked_rad_agt, notch=False, orientation="vertical", whis=1.5,
+                )
+                _ = plt.setp(box_plot["boxes"], color="black")
+                _ = plt.setp(box_plot["whiskers"], color="black")
+                _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+                ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+                _ = ax.set(
+                    axisbelow=True,
+                    title=f"Group NumAgents -- Radicalised Agent Statistics ({group})",
+                    xlabel="Parameter",
+                    ylabel="Value",
+                )
+
+                _ = ax.set_xticklabels(rad_agt_label, rotation=0, fontsize=8)
+
+                save_path = f"{base_path}/GRAS-{group}.png"  # (Group Radicalised Agent Statistics)
+
+                plt.savefig(save_path, dpi=300.0)
+
+                plt.close()
+                break
+
+        for group, rad_grps in grouped_statistics["rad_grps_statistics"].items():
+            if group == current_agt_group:
+                # Reset for the radicalised groups
+                fig, ax = plt.subplots()
+
+                unpacked_rad_grp = deepcopy(rad_grps[0])
+
+                box_plot = ax.boxplot(
+                    unpacked_rad_grp, notch=False, orientation="vertical", whis=1.5,
+                )
+                _ = plt.setp(box_plot["boxes"], color="black")
+                _ = plt.setp(box_plot["whiskers"], color="black")
+                _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+                ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+                _ = ax.set(
+                    axisbelow=True,
+                    title=f"Group NumAgents -- Radicalised Group Statistics ({group})",
+                    xlabel="Parameter",
+                    ylabel="Value",
+                )
+
+                _ = ax.set_xticklabels(rad_grp_label, rotation=0, fontsize=8)
+
+                save_path = f"{base_path}/GRGS-{group}.png"  # (Group Radicalised Group Statistics)
+
+                plt.savefig(save_path, dpi=300.0)
+
+                plt.close()
+                break
+
+    return None
+
+
+def create_group_analysis_plots(analysis_results: AnalysisResults, analysis_statistics: OutputDict, grouped_statistics: GroupedOutputDict) -> None:
+    """
+    Create all relevant plots for the models when grouped by the agent population size and then store them to the
+    experiment's save directory.
+
+    :param analysis_results: The result data from the experiment.
+    :type analysis_results: AnalysisResults
+    :param analysis_statistics: A dictionary containing per-iteration means and standard deviations for each parameter (not grouped).
+    :type analysis_statistics: dict[str, Any]
+    :param grouped_statistics: A nested dictionary containing per-iteration means and standard deviations for each parameter, for each population size group.
+    :type grouped_statistics: dict[str, dict[str, Any]]
+    """
+    # Ensure that the subplots subdirectory exists
+    plots_subdir: str = f"{ROOT_DIR}/subplots"
+    if not os.path.exists(plots_subdir):
+        os.mkdir(plots_subdir)
+    plot_var_over_models_grouped(analysis_results)
+    plot_model_runtimes_grouped(analysis_results, analysis_statistics)
+    plot_parameter_whiskers_grouped(grouped_statistics)
+    return None
+
+
+def create_analysis_plots(analysis_results: AnalysisResults, analysis_statistics: OutputDict) -> None:
+    """
+    Create all relevant analysis plots and then store them to the experiment's save directory.
+
+    :param analysis_results: The result data from the experiment.
+    :type analysis_results: AnalysisResults
+    :param analysis_statistics: A dictionary containing per-iteration means and standard deviations for each parameter.
+    :type analysis_statistics: dict[str. Any]
+    """
+    plot_var_over_models(analysis_results)
+    plot_model_runtimes(analysis_results, analysis_statistics)
+    plot_parameter_whiskers(analysis_statistics)
+    return None
+
+
 if __name__ == "__main__":
     MULTIPROCESSING: bool = True
     WORKER_POOL: WorkerPool | None = Pool() if MULTIPROCESSING else None
@@ -1162,7 +1677,7 @@ if __name__ == "__main__":
 
     # The parameters that will be used to create the Agent population that is shared across models
     AGENT_PARAMETERS: AgentParameters = {
-        "n_agents": [i + 1 for i in range(100)],
+        "n_agents": [i + 1 for i in range(10, 100)],  # Starting from 10 as lower population sizes are not expected to be informative enough
         "opinions": (-1.0, 0.2),
         "relationships": (-1.0, 1.0),
         "hierarchy_weighting": (-1.0, 1.0),
@@ -1254,9 +1769,12 @@ if __name__ == "__main__":
         # Calculate the means and standard deviations for all relevant model parameters
         analysis_statistics: OutputDict = tester.calculate_results_statistics()
 
+        # Also calculate the means and standard deviations grouped by agent population size
+        grouped_statistics: GroupedOutputDict = tester.calculate_grouped_results_statistics()
+
         # Create all relevant output plots for the experiment
         create_analysis_plots(tester.results, analysis_statistics)
-        create_group_analysis_plots(tester.results, analysis_statistics)
+        create_group_analysis_plots(tester.results, analysis_statistics, grouped_statistics)
 
     # Ensure the worker pool is terminated if it exists once all processing is finished
     if WORKER_POOL is not None:
