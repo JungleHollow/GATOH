@@ -467,13 +467,16 @@ class AgentsTester:
     :type results_container: AnalysisResults
     :param existing: A flag indicating if the experiment has already been run and saved models are present to inspect.
     :type existing: bool, optional
+    :param results_only: A flag indicating if only the experiment results will be loaded.
+    :type results_only: bool, optional
     """
 
-    def __init__(self, results_container: AnalysisResults, existing: bool = False) -> None:
+    def __init__(self, results_container: AnalysisResults, existing: bool = False, results_only: bool = False) -> None:
         self.results: AnalysisResults = results_container
         self.num_agents: list[int] = AGENT_PARAMETERS["n_agents"]
 
         self.existing: bool = existing
+        self.results_only: bool = results_only
         self.model_saves: dict[str, str] = {}
 
         # Dynamic model space
@@ -490,6 +493,8 @@ class AgentsTester:
             self.create_agents()
             self.create_graphs()
             self.create_groups()
+        elif self.existing and self.results_only:
+            self.model_saves = SAVEDIRS
         else:
             self.model_saves = SAVEDIRS
             # load_models is called from __main__ as any missing savefiles are checked for there
@@ -643,7 +648,7 @@ class AgentsTester:
         agent_indices: list[int]
 
         for num_agents in self.num_agents:
-            agent_indices = [i + 1 for i in range(num_agents)]
+            agent_indices = [i for i in range(num_agents)]
 
             for hierarchy in TEST_PARAMETERS["hierarchy_names"]:
                 graph: gr.Graph = gr.Graph(
@@ -757,9 +762,10 @@ class AgentsTester:
                     node_index: int = int(
                         (os.path.basename(node_path).split("_")[-1]).split(".")[0]
                     )
-                    with open(f"{nodes_dir}/{node_path}", "rb") as pickle_file:
-                        node_object: gr.GraphNode = pickle.load(pickle_file)
-                        new_graph.graph[node_index] = node_object
+                    if node_index < len(new_graph.graph.nodes()):
+                        with open(f"{nodes_dir}/{node_path}", "rb") as pickle_file:
+                            node_object: gr.GraphNode = pickle.load(pickle_file)
+                            new_graph.graph[node_index] = node_object
 
                 edges_dir: str = f"{hierarchy_dir}/edges"
                 edge_paths: list[str] = list(os.walk(edges_dir))[0][2]
@@ -767,9 +773,10 @@ class AgentsTester:
                     edge_index: int = int(
                         (os.path.basename(edge_path).split("_")[-1]).split(".")[0]
                     )
-                    with open(f"{edges_dir}/{edge_path}", "rb") as pickle_file:
-                        edge_object: gr.GraphEdge = pickle.load(pickle_file)
-                        new_graph.graph.update_edge_by_index(edge_index, edge_object)
+                    if edge_index < len(new_graph.graph.edges()):
+                        with open(f"{edges_dir}/{edge_path}", "rb") as pickle_file:
+                            edge_object: gr.GraphEdge = pickle.load(pickle_file)
+                            new_graph.graph.update_edge_by_index(edge_index, edge_object)
 
                 self.model_graphs.setdefault(f"{TEST_PARAMETERS['model_id_base']}-{num_agents:03}AGTS", []).append(deepcopy(new_graph))
 
@@ -841,7 +848,7 @@ class AgentsTester:
             os.mkdir(groups_path)
 
         for model_group, groups in self.model_groups.items():
-            group_path: str = f"{groups_path}/model_group"
+            group_path: str = f"{groups_path}/{model_group}"
 
             if not os.path.exists(group_path):
                 os.mkdir(group_path)
@@ -960,33 +967,33 @@ class AgentsTester:
 
         if missing_saves is not None:
             for missing_save in missing_saves:
-                _ = self.models[missing_save].add_agents(self.model_agents[missing_save])
+                _ = self.models[missing_save].add_agents(self.model_agents[missing_save[:-4]])
                 _ = self.models[missing_save].add_graphs(
-                    self.model_graphs[missing_save],
+                    self.model_graphs[missing_save[:-4]],
                     TEST_PARAMETERS["hierarchy_names"],
                     list(TEST_PARAMETERS["hierarchy_rw"].values()),
                 )
-                _ = self.models[missing_save].add_groups(self.model_groups[missing_save])
+                _ = self.models[missing_save].add_groups(self.model_groups[missing_save[:-4]])
 
-                for edge in self.group_edges[missing_save]:
-                    from_group = self.model_groups[missing_save][edge[0]]
-                    to_group = self.model_groups[missing_save][edge[1]]
+                for edge in self.group_edges[missing_save[:-4]]:
+                    from_group = self.model_groups[missing_save[:-4]][edge[0]]
+                    to_group = self.model_groups[missing_save[:-4]][edge[1]]
                     self.models[missing_save].add_group_graph_edge(from_group, to_group)
             print("==== Finished setting up model instances ====")
             return None
 
         for model_name, model in self.models.items():
-            _ = model.add_agents(self.model_agents[model_name])
+            _ = model.add_agents(self.model_agents[model_name[:-4]])
             _ = model.add_graphs(
-                self.model_graphs[model_name],
+                self.model_graphs[model_name[:-4]],
                 TEST_PARAMETERS["hierarchy_names"],
                 list(TEST_PARAMETERS["hierarchy_rw"].values()),
             )
-            _ = model.add_groups(self.model_groups[model_name])
+            _ = model.add_groups(self.model_groups[model_name[:-4]])
 
-            for edge in self.group_edges[model_name]:
-                from_group = self.model_groups[model_name][edge[0]]
-                to_group = self.model_groups[model_name][edge[1]]
+            for edge in self.group_edges[model_name[:-4]]:
+                from_group = self.model_groups[model_name[:-4]][edge[0]]
+                to_group = self.model_groups[model_name[:-4]][edge[1]]
                 model.add_group_graph_edge(from_group, to_group)
 
         print("==== Finished setting up model instances ====")
@@ -1295,7 +1302,7 @@ def plot_var_over_models_grouped(analysis_results: AnalysisResults) -> None:
     x_values: list[int] = [i + 1 for i in range(TEST_PARAMETERS["repetitions"])]  # Number of models
 
     # Initialise the current population size group from the start
-    current_agt_group: str = "010AGTS"
+    current_agt_group: str = "011AGTS"
 
     # A subdirectory to organise the many plots into
     base_path: str = f"{ROOT_DIR}/subplots/ModelVariance"
@@ -1369,7 +1376,7 @@ def plot_model_runtimes_grouped(analysis_results: AnalysisResults, analysis_stat
         os.mkdir(base_path)
 
     # Initialise the current population size group at the first
-    current_agt_group: str = "010AGTS"
+    current_agt_group: str = "011AGTS"
 
     # Declare the data type
     save_path: str
@@ -1762,8 +1769,9 @@ if __name__ == "__main__":
     else:
         print("Loading a saved, previously run instance of the Group NumAgents experiment...")
         results = AnalysisResults()
-        tester = AgentsTester(results, existing=True)
-        tester.load_models()
+        # tester = AgentsTester(results, existing=True)
+        tester = AgentsTester(results, existing=True, results_only=True)
+        # tester.load_models()
         tester.load_results()
 
         # Calculate the means and standard deviations for all relevant model parameters
