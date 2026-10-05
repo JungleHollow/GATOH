@@ -370,11 +370,11 @@ class AnalysisResults:
                     if model_name.split("-")[2] == current_agt_group:
                         iteration_values.append(model_values[j])
 
-                    iteration_average: float = np.average(iteration_values)
-                    iteration_sd: float = float(np.std(iteration_values))
+                iteration_average: float = np.average(iteration_values)
+                iteration_sd: float = float(np.std(iteration_values))
 
-                    average_rad_agts.append(iteration_average)
-                    rad_agts_sd.append(iteration_sd)
+                average_rad_agts.append(iteration_average)
+                rad_agts_sd.append(iteration_sd)
 
             return_dict[current_agt_group] = (average_rad_agts, rad_agts_sd)
 
@@ -402,11 +402,11 @@ class AnalysisResults:
                     if model_name.split("-")[2] == current_agt_group:
                         iteration_values.append(model_values[j])
 
-                    iteration_average: float = np.average(iteration_values)
-                    iteration_sd: float = float(np.std(iteration_values))
+                iteration_average: float = np.average(iteration_values)
+                iteration_sd: float = float(np.std(iteration_values))
 
-                    average_rad_grps.append(iteration_average)
-                    rad_grps_sd.append(iteration_sd)
+                average_rad_grps.append(iteration_average)
+                rad_grps_sd.append(iteration_sd)
 
             return_dict[current_agt_group] = (average_rad_grps, rad_grps_sd)
 
@@ -1428,7 +1428,7 @@ def plot_model_runtimes_grouped(analysis_results: AnalysisResults, analysis_stat
     _ = ax.legend()
     _ = ax.set_xlabel("Iterations")
     _ = ax.set_ylabel("Aggregate Opinion")
-    _ = ax.set_title(f"Model Aggregate Opinions over Iteratioons ({current_agt_group})")
+    _ = ax.set_title(f"Model Aggregate Opinions over Iterations ({current_agt_group})")
 
     save_path = f"{base_path}/GMR-{current_agt_group}.png"
 
@@ -1445,7 +1445,7 @@ def plot_parameter_whiskers_grouped(grouped_statistics: GroupedOutputDict) -> No
     :type grouped_statistics: dict[str, dict[str, Any]]
     """
     # A subdirectory to organise the many plots into
-    base_path: str = f"{ROOT_DIR}/subplots/PramWhiskers"
+    base_path: str = f"{ROOT_DIR}/subplots/ParamWhiskers"
 
     if not os.path.exists(base_path):
         os.mkdir(base_path)
