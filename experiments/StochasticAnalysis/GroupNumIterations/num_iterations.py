@@ -1290,7 +1290,7 @@ def plot_parameter_whiskers_grouped(analysis_statistics: OutputDict) -> None:
 
         for hierarchy, statistics in analysis_statistics["polarisation_statistics"][0].items():
             unpacked_results.append(deepcopy(statistics[:i + 1]))
-            tick_labels.append(f"Hierarchy Polarisations ({hierarchy} - {i + 1:03}ITERS)")
+            tick_labels.append(f"Hierarchy Polarisations ({hierarchy})")
 
         fig, ax = plt.subplots()
 
