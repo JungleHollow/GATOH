@@ -60,9 +60,8 @@ class DataSynthesiser:
         self.output_dataframe: pl.DataFrame
         self.output_dict: dict[str, Any] = {"AgentId": []}
 
-        self.output_relationships: dict[str, Any] = {
-            hierarchy: [] for hierarchy in self.social_graphs
-        }  # Will be lists of (start_node, end_node, weight) triples
+        # Will be lists of (start_node, end_node, weight) triples
+        self.output_relationships: dict[str, Any] = {hierarchy: [] for hierarchy in self.social_graphs}
 
         for question in self.response_distribution:
             self.output_dict[question] = []
@@ -124,8 +123,10 @@ class DataSynthesiser:
                         )[0]
 
                 self.output_dict[question].append(generated_response)
+
         self.create_dataframe()
         self.generate_relationships()
+
         return None
 
     def generate_relationships(self) -> None:
@@ -138,24 +139,25 @@ class DataSynthesiser:
                 match hierarchy:
                     case "Age":
                         for j in self.output_dataframe.iter_rows(named=True):
-                            if (
-                                j["AgentId"] == i["AgentId"]
-                            ):  # Cannot have relationships start and end at the same node...
+                            if j["AgentId"] == i["AgentId"]:
+                                # Cannot have relationships start and end at the same node...
                                 continue
                             else:
                                 self.gen_age_relation(i, j)
                     case "Family":
-                        continue  # Handled externally
+                        # Handled externally
+                        continue
                     case "Friends":
-                        continue  # Handled externally
+                        # Handled externally
+                        continue
                     case "Religion":
-                        if i["Q11"] == "No":  # The start_node agent is not religious
+                        if i["Q11"] == "No":
+                            # The start_node agent is not religious
                             continue
                         else:
                             for j in self.output_dataframe.iter_rows(named=True):
-                                if (
-                                    j["Q11"] == "No"
-                                ):  # The end_node agent is not religious
+                                if j["Q11"] == "No":
+                                    # The end_node agent is not religious
                                     continue
                                 elif i["AgentId"] == j["AgentId"]:
                                     continue
@@ -175,6 +177,7 @@ class DataSynthesiser:
 
         self.gen_family_relationships()
         self.gen_friend_relationships()
+
         return None
 
     def gen_age_relation(self, start_row: dict[str, Any], end_row: dict[str, Any]) -> None:
@@ -187,11 +190,9 @@ class DataSynthesiser:
         :param end_row: The dataframe row of the end_node agent for which the relationship is being generated.
         :type end_row: dict[str, Any]
         """
-        weight: float = 1.0 - (
-            0.25
-            * abs(
-                self.survey_values["Q1"][start_row["Q1"]]
-                - self.survey_values["Q1"][end_row["Q1"]]
+        weight: float = 1.0 - (0.25 * abs(
+            self.survey_values["Q01"][start_row["Q01"]]
+            - self.survey_values["Q01"][end_row["Q01"]]
             )
         )
 
@@ -232,13 +233,14 @@ class DataSynthesiser:
         :param end_row: The dataframe row of the end_node agent for which the relationship is being generated.
         :type end_row: dict[str, Any]
         """
+        # 11.0 is the maximum possible score for these questions
         weight: float = (
             self.survey_values["Q12"][start_row["Q12"]]
             + self.survey_values["Q13"][start_row["Q13"]]
             + self.survey_values["Q14"][start_row["Q14"]]
             + self.survey_values["Q15"][start_row["Q15"]]
             + self.survey_values["Q16"][start_row["Q16"]]
-        ) / 11.0  # 11.0 is the maximum possible score for these questions
+        ) / 11.0
 
         # Add some stochastic noise to the generated weight
         weight = np.random.normal(weight, 0.1 * weight)
@@ -271,6 +273,7 @@ class DataSynthesiser:
         :param end_row: The dataframe row of the end_node agent for which the relationship is being generated.
         :type end_row: dict[str, Any]
         """
+        # 16.0 is the maximum possible score for these questions
         weight: float = (
             self.survey_values["Q20"][start_row["Q20"]]
             + self.survey_values["Q30"][start_row["Q30"]]
@@ -278,7 +281,7 @@ class DataSynthesiser:
             + self.survey_values["Q24"][start_row["Q24"]]
             + self.survey_values["Q25"][start_row["Q25"]]
             + self.survey_values["Q26"][start_row["Q26"]]
-        ) / 16.0  # 16.0 is the maximum possible score for these questions
+        ) / 16.0
 
         # Add some stochastic noise to the generated weight
         weight = np.random.normal(weight, 0.1 * weight)
@@ -316,26 +319,34 @@ class DataSynthesiser:
         a marriage joining these families) are not accounted for.
         """
         agent_df: pl.DataFrame = copy.deepcopy(self.output_dataframe.select("AgentId"))
+
+        # Leave 10% of the total pop as having no family
         no_family: list[Any] = list(
             agent_df.sample(fraction=0.1, with_replacement=False)["AgentId"]
-        )  # Leave 10% of the total pop as having no family
+        )
+
         agent_df = agent_df.filter(~pl.col("AgentId").is_in(no_family))
 
-        current_sample: list[Any]  # Define but don't initialise the variable yet
+        # Define but don't initialise the variable yet
+        current_sample: list[Any]
 
-        while (
-            len(agent_df["AgentId"]) >= 3
-        ):  # Any remainders will also be treated as having no family
-            family_size: int = random.randint(
-                3, 12
-            )  # Families can range from 3 to 12 people
+        # Any remainders will also be treated as having no family
+        while len(agent_df["AgentId"]) >= 3:
+            # Families can range from 3 to 12 people
+            family_size: int = random.randint(3, 12)
+
+            # Account for cases where the drawn family size is larger than the remaining group
+            family_size = min(family_size, len(agent_df["AgentId"]))
+
             current_sample = list(
                 agent_df.sample(n=family_size, with_replacement=False)["AgentId"]
             )
+
             for i in current_sample:
                 for j in current_sample:
                     if i == j:
                         continue
+
                     # Should create a random weight in [0, 1], with mean 0.5
                     weight: float = random.random()
 
@@ -359,14 +370,19 @@ class DataSynthesiser:
         This means that unidirectional and unbalanced friendships can exist between the agents in the graph.
         """
         agent_df: pl.DataFrame = copy.deepcopy(self.output_dataframe.select("AgentId"))
+
         agent_list: list[Any] = list(agent_df["AgentId"])
+
         for i in agent_list:
             random_sample: list[Any] = list(
                 agent_df.sample(fraction=0.1, with_replacement=False)["AgentId"]
             )
+
             for j in random_sample:
-                if i == j:  # Case where 'i' was included in the random sample
+                if i == j:
+                    # Case where 'i' was included in the random sample
                     continue
+
                 weight: float = random.random()
 
                 # Check if the weight goes negative (implying a dislike)
@@ -421,12 +437,15 @@ class SynthesiserArgParser:
         data_synthesiser: DataSynthesiser = DataSynthesiser(
             args.response_file,
             args.output_path,
-            args.community_code,
-            args.social_graphs,
+            SURVEY_VALUES,
+            community_code=args.community_code,
+            social_graphs=args.social_graphs,
         )
         data_synthesiser.generate_n_entries(args.num_entries)
         data_synthesiser.write_csv()
 
 
 if __name__ == "__main__":
+    SURVEY_VALUES: str = "./data/SurveyValues.json"
+
     parser: SynthesiserArgParser = SynthesiserArgParser()
