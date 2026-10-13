@@ -15,6 +15,7 @@ from multiprocessing.pool import Pool as WorkerPool
 from typing import TypedDict, NotRequired
 
 import polars as pl
+from rustworkx import NodeIndices
 import numpy as np
 
 from gatoh.agents import Agent
@@ -443,3 +444,577 @@ class CaseStudyRunner:
             # Store the model object
             self.models[model_name] = new_model
         return None
+
+    def save_models(self, missing_saves: list[str] | None = None) -> None:
+        """
+        Saves the model objects to allow for future loading.
+
+        :param missing_saves: The model names of the models that were just newly run and should be saved.
+        :type missing_saves: list[str], optional
+        """
+        if missing_saves is None:
+            for model in self.models.values():
+                # Save the model to a newly created savedir
+                model.save_model()
+
+                # Call the logger's save_data function which handles data persistence appropriately after the model is saved
+                data_saved = model.logger.save_data(model.data_file)
+
+                if data_saved:
+                    print(f"\n\nGATOH logger data was successfully written to the file at path: {model.data_file}\n\n")
+        else:
+            for missing_save in missing_saves:
+                model_to_save: ABModel = self.models[missing_save]
+
+                model_to_save.save_model()
+
+                data_saved = model_to_save.logger.save_data(model_to_save.data_file)
+
+                if data_saved:
+                    print(f"\n\nGATOH logger data was successfully written to the file at path: {model_to_save.data_file}\n\n")
+        return None
+
+    def custom_group_iterate(self, model_to_iterate: ABModel, worker_pool: WorkerPool | None = None) -> ABModel:
+        """
+        Custom iteration loop used for this experiment -- operates on the group objects in the models.
+
+        :param model_to_iterate: The model that is being run.
+        :type model_to_iterate: ABModel
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
+        :return: The model that has been run.
+        :rtype: ABModel
+        """
+        while model_to_iterate.current_iteration < model_to_iterate.max_iterations:
+            # Initialise the logger state for the current iteration
+            if model_to_iterate.current_iteration == 0:
+                model_to_iterate.logger.new_iteration(init=True)
+            else:
+                model_to_iterate.logger.new_iteration()
+
+            for group in model_to_iterate.groups:
+                # Always store the groups' previous opinions at the start of an iteration no matter what
+                group.store_previous_opinion()
+
+            # Track the group opinion changes separately to prevent recursive updates
+            new_group_opinions: dict[str, tuple[float, list[bool]]] = {}
+
+            # First, calculate the opinion changes and store them
+            if worker_pool is not None:
+                opinion_results = worker_pool.imap(
+                    model_to_iterate.group_iteration_opinion_calculation,
+                    model_to_iterate.groups,
+                    chunksize=10,
+                )
+
+                for opinion_result in opinion_results:
+                    new_group_opinions[opinion_result[0]] = opinion_result[1]
+
+                # Manual garbage collection
+                del opinion_results
+                _ = gc.collect()
+            else:
+                for group in model_to_iterate.groups:
+                    opinion_result = model_to_iterate.group_iteration_opinion_calculation(group)
+                    new_group_opinions[opinion_result[0]] = opinion_result[1]
+
+                    # Manual garbage collection
+                    del opinion_result
+                    _ = gc.collect()
+
+            model_to_iterate.group_iteration_opinion_changes(new_group_opinions)
+            model_to_iterate.step()
+            model_to_iterate.update(worker_pool=worker_pool)
+            model_to_iterate.logger_iteration(worker_pool=worker_pool)
+
+            # Get this iteration's print string (will be formatted appropriately based on the print interval)
+            iteration_print_string: str = model_to_iterate.logger.iteration_print()
+            print(iteration_print_string)
+
+            if model_to_iterate.visualise:
+                model_to_iterate.visualiser.visualiser_iteration(
+                    model_to_iterate.base_graph,
+                    model_to_iterate.current_iteration,
+                    model_name=model_to_iterate.model_id,
+                )
+
+            if model_to_iterate.checkpointing:
+                model_to_iterate.save_model()
+
+            model_to_iterate.current_iteration += 1
+
+        # Call the logger's save data function which handles persistence appropriately
+        data_saved: bool = model_to_iterate.logger.save_data(model_to_iterate.data_file)
+        if data_saved:
+            print(f"\n\nGATOH logger data was successfully written to the file at path: {model_to_iterate.data_file}\n\n")
+
+        return model_to_iterate
+
+    def custom_iterate(self, model_to_iterate: ABModel, worker_pool: WorkerPool | None = None) -> ABModel:
+        """
+        Custom iteration loop used for this experiment -- accounts for "Age" and "Gender" as Agent attributes.
+
+        :param model_to_iterate: The model that is being run.
+        :type model_to_iterate: ABModel
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
+        :return: The model that has been run.
+        :rtype: ABModel
+        """
+        while model_to_iterate.current_iteration < model_to_iterate.max_iterations:
+            # Initialise the logger state for the current iteration
+            if model_to_iterate.current_iteration == 0:
+                model_to_iterate.logger.new_iteration(init=True)
+            else:
+                model_to_iterate.logger.new_iteration()
+
+            # Initialise a dictionary to keep track of agent opinion changes
+            # (this is done to prevent recursive updating of opinions during the evolution of opinions)
+            new_agent_opinions: dict[str, tuple[float, list[float], list[bool]]] = {}
+
+            # First each agent looks at its neighbours to see how their opinion will evolve this iteration
+            if worker_pool is not None:
+                opinion_results = worker_pool.starmap(
+                    self.custom_iter_opinion_calc,
+                    zip(model_to_iterate.agents, repeat(model_to_iterate.model_id)),
+                )
+                for opinion_result in opinion_results:
+                    new_agent_opinions[opinion_result[0]] = opinion_result[1]
+
+                # Manual garbage collection
+                del opinion_results
+                _ = gc.collect()
+            else:
+                for agent in model_to_iterate.agents:
+                    opinion_result = self.custom_iter_opinion_calc(agent, model_to_iterate.model_id)
+                    new_agent_opinions[opinion_result[0]] = opinion_result[1]
+
+                    # Manual garbage collection
+                    del opinion_result
+                    _ = gc.collect()
+
+            model_to_iterate.iteration_opinion_changes(new_agent_opinions)
+            model_to_iterate.step()
+            model_to_iterate.update(worker_pool=worker_pool)
+            model_to_iterate.logger_iteration(worker_pool=worker_pool)
+
+            # Get this iteration's print string (will be formatted appropriately based on the print interval)
+            iteration_print_string: str = model_to_iterate.logger.iteration_print()
+            print(iteration_print_string)
+
+            if model_to_iterate.visualise:
+                model_to_iterate.visualiser.visualiser_iteration(
+                    model_to_iterate.base_graph,
+                    model_to_iterate.current_iteration,
+                    model_name=model_to_iterate.model_id,
+                )
+
+            if model_to_iterate.checkpointing:
+                model_to_iterate.save_model()
+
+            model_to_iterate.current_iteration += 1
+
+        # Call the logger's save_data function which handles data persistence appropriately
+        data_saved: bool = model_to_iterate.logger.save_data(model_to_iterate.data_file)
+        if data_saved:
+            print(f"\n\nGATOH logger data was successfully written to the file at path: {model_to_iterate.data_file}\n\n")
+
+        return model_to_iterate
+
+    def custom_iter_opinion_calc(self, agent: Agent, model_name: str) -> tuple[str, tuple[float, list[float], list[bool]]]:
+        """
+        A helper function that calculates the per-agent, per-hierarchy changes to opinions for the iteration,
+        returning all necessary information for :meth:`~gatoh.model.ABModel.iteration_opinion_changes`.
+
+        This funciton was primarily created to allow for multiprocessing in the main :meth:`~CaseStudyRunner.custom_iterate`
+        function.
+
+        :param agent: The agent for which the opinion changes are being calculated.
+        :type agent: Agent
+        :param model_name: The name of the model which is iterating.
+        :type model_name: str
+        :return: An <Agent ID : Changes info> mapping that provides all necessary information to apply the opinion changes for a specific agent.
+        :rtype: tuple[str, tuple[float, list[float], list[bool]]]
+        """
+        model_to_iterate: ABModel = self.models[model_name]
+
+        agent.previous_opinion = agent.opinion
+        for hierarchy in model_to_iterate.graphs:
+            if not hierarchy.agent_in_graph(agent):
+                continue
+            # Update the previous opinion across all hierarchies
+            hierarchy.agent_previous_opinion(agent)
+
+        collective_changes: list[float] = []
+        for hierarchy in model_to_iterate.graphs:
+            # Custom neighbour_influences that accounts for "Age" and "Gender" attributes when determining influences
+            neighbour_influences: float | None = self.custom_neighbour_influences(agent, hierarchy)
+
+            if neighbour_influences is not None:
+                collective_changes.append(neighbour_influences)
+        total_change: float = sum(collective_changes)
+
+        # Check for the existence of personal benefit across all of the agent's neighbours
+        all_neighbour_indices: list[int] = list(model_to_iterate.base_graph.graph.neighbors(agent.index))
+        all_neighbour_benefits: list[bool] = []
+        for neighbour_index in all_neighbour_indices:
+            neighbour_object: GraphNode = model_to_iterate.base_graph.graph[neighbour_index]
+            all_neighbour_benefits.append(neighbour_object.agent.personal_benefit)
+
+        # Define the return type
+        opinion_result: tuple[str, tuple[float, list[float], list[bool]]]
+
+        # Constrain to [-1, 1]
+        # 100.0, and -100.0 are used as key delta values indicating that the opinion needs to be constrained
+        if agent.opinion + total_change < -1.0:
+            opinion_result = (
+                agent.id,
+                (
+                    -100.0,
+                    collective_changes,
+                    all_neighbour_benefits,
+                ),
+            )
+        elif agent.opinion + total_change > 1.0:
+            opinion_result = (
+                agent.id,
+                (
+                    100.0,
+                    collective_changes,
+                    all_neighbour_benefits,
+                ),
+            )
+        else:
+            opinion_result = (
+                agent.id,
+                (
+                    total_change,
+                    collective_changes,
+                    all_neighbour_benefits
+                ),
+            )
+        return opinion_result
+
+    def custom_neighbour_influences(self, agent: Agent, hierarchy_graph: Graph) -> float | None:
+        """
+        A custom version of :meth:`~gatoh.model.ABModel.neighbour_influences` that also accounts for "Age" and "Gender"
+        as universally modifying attributes that affect neighbour influences across all hierarchies.
+
+        :param agent: The agent for which the neighbour influences are being determined.
+        :type agent: Agent
+        :param hierarchy_graph: The hierarchy in which the neighbour influences are being determined.
+        :type hierarchy_graph: Graph
+        :return: The total value of the neighbour influences on the agent in this specific hierarchy, or None if the agent has no neighbours.
+        :rtype: float | None
+        """
+        agent_hierarchy_weighting: float = agent.social_weightings[hierarchy_graph.name]
+        agent_index: int | None = hierarchy_graph.get_agent_index(agent)
+        if agent_index is None:
+            if not hierarchy_graph.suppress_warnings:
+                warnings.warn(
+                    f"Input Agent {agent.id} does not exist in this hierarchy ({hierarchy_graph.name})",
+                    category=UserWarning,
+                )
+            return None
+        neighbour_indices: NodeIndices = hierarchy_graph.graph.neighbors(agent_index)
+
+        weighted_deltas: list[float] = []
+        delta_weightings: list[float] = []
+        for neighbour_index in neighbour_indices:
+            neighbour_node: GraphNode | None = hierarchy_graph.get_node(neighbour_index)
+            if neighbour_node is None:
+                # This should never be reached and is only included for type checking purposes
+                continue
+
+            relationship_strength: float = hierarchy_graph.get_relationship(agent, neighbour_node.agent)
+
+            # Simple average of own and neighbour opinions
+            average_opinion: float = (agent.opinion + neighbour_node.agent.opinion) / 2.0
+            # The delta that must be applied to own opinion to reach the average
+            distance_from_avg: float = average_opinion - agent.opinion
+            # The final opinion change
+            weighted_delta: float = distance_from_avg * agent_hierarchy_weighting * relationship_strength
+
+            # Account for neighbour radicalisation
+            relative_weighting: float = 1.0
+            if neighbour_node.agent.radicalised and agent.personality != "neutral" and not agent.radicalised:
+                # "neutral" personality means that the existence or lack of neighbour radicalisation will have no effect
+                if agent.personality in ["rational", "social"]:
+                    # "rational" or "social" agents that are not radicalised will have a generally lesser view of extreme opinions
+                    relative_weighting = 0.5
+                elif agent.personality == "impulsive":
+                    # "impulsive" agents will always view radicalised opinions more favourably
+                    relative_weighting = 2.0
+                else:
+                    # "erratic" agents act randomly
+                    erratic_coinflip: bool = random_coinflip("bool")
+                    if erratic_coinflip:
+                        relative_weighting = 2.0
+                    else:
+                        relative_weighting = 0.5
+            elif neighbour_node.agent.radicalised and agent.radicalised:
+                if distance_from_avg <= 0.25:
+                    # Both agents are radicalised towards the same opinion
+                    relative_weighting = 4.0
+                else:
+                    # Both agents are radicalised in opposing opinions
+                    relative_weighting = 0.25
+
+            # Account for "Age" and "Gender" as further modifiers to the relative weighting
+            if neighbour_node.agent.get_attribute("age") == agent.get_attribute("age"):
+                relative_weighting += self.agent_parameters["age_weighting"]
+            else:
+                relative_weighting *= (1.0 / self.agent_parameters["age_weighting"])
+
+            if neighbour_node.agent.get_attribute("gender") == agent.get_attribute("gender"):
+                relative_weighting *= self.agent_parameters["gender_weighting"]
+            else:
+                relative_weighting *= (1.0 / self.agent_parameters["gender_weighting"])
+
+            weighted_deltas.append(weighted_delta)
+            delta_weightings.append(relative_weighting)
+
+        # Calculate the final change
+        final_change: float = 0.0
+        total_weightings: float = sum(delta_weightings)
+        for idx, weighted_delta in enumerate(weighted_deltas):
+            if total_weightings == 0.0:
+                final_change += 0.0
+            else:
+                final_change += weighted_delta * delta_weightings[idx] / total_weightings
+
+        return final_change
+
+    def run_models(self, missing_saves: list[str] | None = None, worker_pool: WorkerPool | None = None) -> None:
+        """
+        Runs each model instance in the experiment.
+
+        :param missing_saves: The model names of non-existing models that should be run.
+        :type missing_saves: list[str], optional
+        :param worker_pool: A pool of workers that can distribute the iteration processing amongst themselves.
+        :type worker_pool: :class:`~multiprocessing.pool.Pool`, optional
+        """
+        print("==== Beginning model iterations ====\n\n")
+        if missing_saves is not None:
+            for missing_save in missing_saves:
+                model_to_run: ABModel = self.models[missing_save]
+                if SIMULATE_GROUPS:
+                    _ = self.custom_group_iterate(model_to_run, worker_pool=worker_pool)
+                else:
+                    _ = self.custom_iterate(model_to_run, worker_pool=worker_pool)
+
+            # Only save the models which were missing
+            self.save_models(missing_saves=missing_saves)
+            return None
+
+        for model in self.models.values():
+            if SIMULATE_GROUPS:
+                _ = self.custom_group_iterate(model, worker_pool=worker_pool)
+            else:
+                _ = self.custom_iterate(model, worker_pool=worker_pool)
+
+        self.save_models()
+        return None
+
+
+if __name__ == "__main__":
+    # Declare all relevant global variables here
+    MULTIPROCESSING: bool = True
+
+    # Whether to simulate groups of agents or not (rather than the individual agents)
+    SIMULATE_GROUPS: bool = True
+
+    SAVEDIR_ROOT: str = "./experiments/SyntheticCaseStudy/Results"
+
+    VISUALISATION_ROOT: str = f"{SAVEDIR_ROOT}/Visualisations"
+
+    SAVEDIRS: dict[str, str] = {
+        "NONMN": f"{SAVEDIR_ROOT}/NONMN",
+        "MINNG": f"{SAVEDIR_ROOT}/MINNG",
+    }
+
+    SAVEFILES: dict[str, str] = {
+        "NONMN": f"{SAVEDIRS['NONMN']}/NONMN_model_variables.csv",
+        "MINNG": f"{SAVEDIRS['MINNG']}/MINNG_model_variables.csv",
+    }
+
+    VISDIRS: dict[str, str] = {
+        "NONMN": f"{VISUALISATION_ROOT}/NONMN",
+        "MINNG": f"{VISUALISATION_ROOT}/MINNG",
+    }
+
+    AGENT_PATHS: dict[str, str] = {
+        "NONMN": "./experiments/SyntheticCaseStudy/Agents/NONMN_Agents",
+        "MINNG": "./experiments/SyntheticCaseStudy/Agents/MINNG_Agents",
+    }
+
+    GRAPH_PATHS: dict[str, str] = {
+        "NONMN": "./experiments/SyntheticCaseStudy/Graphs/NONMN_Graphs",
+        "MINNG": "./experiments/SyntheticCaseStudy/Graphs/MINNG_Graphs",
+    }
+
+    GROUP_PATHS: dict[str, str] = {
+        "NONMN": "./experiments/SyntheticCaseStudy/Groups/NONMN_Groups",
+        "MINNG": "./experiments/SyntheticCaseStudy/Groups/MINNG_Groups",
+    }
+
+    BASE_HIERARCHIES: list[str] = [
+        # Removing Age and Gender as full graphs for now, as these are much too densely connected for reasonable runtimes
+        # "Age",
+        # "Gender",
+        "Friends",
+        "Family",
+        "Cultural",
+        "Religious",
+        "Geographical",
+        "Social",
+    ]
+
+    HIERARCHY_RW: dict[str, tuple[float, float]] = {
+        # "Age": (0.0, 0.04),
+        # "Gender": (0.0, 0.02),
+        "Friends": (0.0, 0.05),
+        "Family": (0.0, 0.01),
+        "Cultural": (0.0, 0.15),
+        "Religious": (0.0, 0.1),
+        "Geographical": (0.0, 0.0),
+        "Social": (0.0, 0.1),
+    }
+
+    class ModelTestParameters(TypedDict):
+        """
+        A helper class for typechecking the model-specific TEST_PARAMETERS.
+        """
+        model_id: str
+        iterations: int
+        hierarchies: list[str]
+        hierarchy_rw: dict[str, tuple[float, float]]
+
+    class DefaultTestParameters(TypedDict):
+        """
+        A helper class for typechecking the default (shared) values in TEST_PARAMETERS.
+        """
+        iterations: int
+        hierarchies: list[str]
+        hierarchy_rw: dict[str, tuple[float, float]]
+        agent_opinion_rw: tuple[float, float]
+        silencing_threshold: float
+        negation_threshold: float
+        radicalisation_threshold: float
+        suppress_warnings: bool
+
+    class TestParameters(TypedDict):
+        """
+        A helper class for typechecking the TEST_PARAMETERS container.
+        """
+        NONMN: ModelTestParameters
+        MINNG: ModelTestParameters
+        DEFAULT: DefaultTestParameters
+
+    # The relevant parameters that are defined for the model instances
+    TEST_PARAMETERS: TestParameters = {
+        "NONMN": {
+            "model_id": "NONMN",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "MINNG": {
+            "model_id": "MINNG",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "DEFAULT": {
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+            "agent_opinion_rw": (0.0, 0.05),
+            "silencing_threshold": 0.95,
+            "negation_threshold": 0.999,
+            "radicalisation_threshold": 0.99,
+            "suppress_warnings": True,
+        },
+    }
+
+    # Used to assign changeable weightings to different agent attributes throughout the models
+    AGENT_PARAMETERS: dict[str, float] = {
+        "age_weighting": 1.1,
+        "gender_weighting": 1.25,
+    }
+
+    # Used to change the number of groups that each hierarchy is clustered into (possibly extended on in the future)
+    GROUP_PARARAMETERS: dict[str, int] = {
+        "n_groups": 10,
+    }
+
+    # Specify the dependant variable CSV paths here
+    OPINION_PATHS: dict[str, str] = {}
+
+    # Use "spawn" as the default to optimise memory usage and cross-platform compatibility
+    set_start_method("spawn", force=True)
+    WORKER_POOL: WorkerPool | None = Pool() if MULTIPROCESSING else None
+
+    if not os.path.exists(SAVEDIR_ROOT):
+        os.mkdir(SAVEDIR_ROOT)
+
+    if not os.path.exists(VISUALISATION_ROOT):
+        os.mkdir(VISUALISATION_ROOT)
+
+    # Check for existing saved models and store the relevant information
+    save_dirs: list[str] = list(os.walk(SAVEDIR_ROOT))[0][1]
+
+    directory_missing: bool = False
+    existing_savedirs: list[str] = []
+    missing_savedirs: list[str] = []
+
+    for model_name, save_dir in SAVEDIRS.items():
+        dir_name: str = os.path.basename(save_dir)
+        if dir_name in save_dirs:
+            existing_savedirs.append(model_name)
+        else:
+            directory_missing = True
+            missing_savedirs.append(model_name)
+
+    runner: CaseStudyRunner
+    if directory_missing:
+        # Create the tester normally, setup the models, and begin iterations
+        runner = CaseStudyRunner(
+            AGENT_PATHS,
+            GRAPH_PATHS,
+            GROUP_PATHS,
+            BASE_HIERARCHIES,
+            AGENT_PARAMETERS,
+            GROUP_PARARAMETERS,
+            TEST_PARAMETERS,
+            opinion_paths=None,
+            worker_pool=WORKER_POOL,
+        )
+
+        if len(existing_savedirs) > 0:
+            # At least one model exists
+            runner.load_models(existing_saves=existing_savedirs)
+            runner.create_models(missing_saves=missing_savedirs)
+            runner.run_models(missing_saves=missing_savedirs, worker_pool=WORKER_POOL)
+        else:
+            runner.create_models()
+            runner.run_models(worker_pool=WORKER_POOL)
+    else:
+        # Create the ruunner in "existing" mode, and examine the results
+        runner = CaseStudyRunner(
+            AGENT_PATHS,
+            GRAPH_PATHS,
+            GROUP_PATHS,
+            BASE_HIERARCHIES,
+            AGENT_PARAMETERS,
+            GROUP_PARARAMETERS,
+            TEST_PARAMETERS,
+            opinion_paths=OPINION_PATHS,
+            worker_pool=WORKER_POOL,
+            existing=True,
+        )
+        runner.load_models()
+
+    # Ensure that the multiprocessing pool is closed after all processing has finished
+    if WORKER_POOL is not None:
+        WORKER_POOL.terminate()

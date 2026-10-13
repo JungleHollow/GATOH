@@ -739,7 +739,7 @@ class DataReader:
     ) -> tuple[str, tuple[float, list[float], list[bool]]]:
         """
         A helper function that calculates the per-agent, per-hierarchy changes to opinions for the iteration,
-        returning all necessary information for :meth:`~gatoh.model.model.ABModel.iteration_opinion_changes`
+        returning all necessary information for :meth:`~gatoh.model.ABModel.iteration_opinion_changes`
         to apply the opinion changes.
 
         This function was primarily created to allow for multiprocessing in the main :meth:`~self.custom_iterate`
