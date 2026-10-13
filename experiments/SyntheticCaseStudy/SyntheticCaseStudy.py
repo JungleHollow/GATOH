@@ -122,7 +122,7 @@ class ModelParameters:
         if data_file is not None:
             self.data_file = data_file
         else:
-            self.data_file = DATAFILES[self.model_id]
+            self.data_file = SAVEFILES[self.model_id]
         del data_file
 
         return None
