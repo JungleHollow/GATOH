@@ -105,7 +105,7 @@ class ResponseParser:
                     # Favourite sports
                     "Football": [],
                     "Basketball": [],
-                    "Volleyball": [],
+                    "Voleyball": [],
                     "Athletics": [],
                     "Other": [],
                 },
@@ -338,7 +338,7 @@ class ResponseParser:
 
                     age_difference: int = abs(
                         self.survey_values["Q01"][agent_i.age]
-                        - self.survey_values["Q02"][agent_j.age]
+                        - self.survey_values["Q01"][agent_j.age]
                     )
                     # 1.0 at no difference, and -0.25 at maximum difference
                     age_weighting: float = 1.0 - age_difference * 0.25
@@ -428,18 +428,34 @@ class ResponseParser:
         Creates the remaining hierarchy graphs using the available information and the input adjacency matrices.
         """
         for community, adj_matrix_paths in ADJ_MATRIX_PATHS.items():
-            for hierarchy, adj_matrix_path in adj_matrix_paths.items():
-                adj_matrix = pl.read_csv(adj_matrix_path)
+            for hierarchy in adj_matrix_paths:
+                adj_matrix: np.ndarray
+                match hierarchy:
+                    case "Friends":
+                        # Values of 0 to 4
+                        adj_matrix = self.generate_matrix(4, len(self.agents[community]))
+                    case "Family":
+                        # Values of 0 to 4
+                        adj_matrix = self.generate_matrix(4, len(self.agents[community]))
+                    case "Cultural":
+                        # Values of 0 to 2
+                        adj_matrix = self.generate_matrix(2, len(self.agents[community]))
+                    case "Religious":
+                        # Values of 0 to 2
+                        adj_matrix = self.generate_matrix(2, len(self.agents[community]))
+                    case "Geographical":
+                        # Values of 0 to 3
+                        adj_matrix = self.generate_matrix(3, len(self.agents[community]))
+                    case "Social":
+                        # Values of 0 to 2
+                        adj_matrix = self.generate_matrix(2, len(self.agents[community]))
+                    case _:
+                        adj_matrix = np.zeros((len(self.agents[community]), len(self.agents[community])))
 
-                # Remove the ID column, leaving only the codified adjacency matrix
-                adj_matrix = adj_matrix.drop("Persona")
-                adj_matrix = adj_matrix.to_numpy(writable=True).astype(np.float32)
+                adj_matrix = self.generate_relationship_strengths(
+                    adj_matrix, hierarchy=hierarchy, community=community,
+                )
 
-                # Convert the adjacency matrix from coded values to float strengths
-                adj_matrix = self.generate_relationship_strengths(adj_matrix, hierarchy=hierarchy, community=community)
-
-                # In this case study, some matrices are sparse, but it is rare for any individual to not have
-                # at least one relationship in a hierarchy
                 agent_ids: list[str] = []
                 for agent in self.agents[community]:
                     agent_ids.append(agent.id)
@@ -449,6 +465,26 @@ class ResponseParser:
                 self.graphs[community]["rw_params"].append(HIERARCHY_RW[hierarchy])
                 self.graphs[community]["agents"].append(deepcopy(agent_ids))
         return None
+
+    def generate_matrix(self, max_value: int, matrix_size: int) -> np.ndarray:
+        """
+        A helper function that generates random NxN matrices with zeros along the diagonal, and values
+        [0, max_value] everywhere else.
+
+        :param max_value: The maximum value that non-diagonals can take (inclusive).
+        :type max_value: int
+        :param matrix_size: The size of the square matrix to be generated.
+        :type matrix_size: int
+        :return: The generated matrix
+        :rtype: ndarray
+        """
+        new_matrix: np.ndarray = np.zeros((matrix_size, matrix_size), dtype=np.float32)
+        for i in range(matrix_size):
+            for j in range(matrix_size):
+                if i == j:
+                    continue
+                new_matrix[i, j] = round(rd.uniform(0, max_value))
+        return new_matrix
 
     def generate_groups(self) -> None:
         """
