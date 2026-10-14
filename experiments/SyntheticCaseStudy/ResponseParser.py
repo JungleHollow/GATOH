@@ -7,7 +7,6 @@ import pickle
 import random as rd
 from copy import deepcopy
 from dataclasses import dataclass
-from re import L
 from typing import Any, TypedDict
 
 import numpy as np
@@ -402,7 +401,7 @@ class ResponseParser:
                         inclusion_threshold: float = rd.random()
                         # Somewhat restrict the relationship density to maintain reasonable model runtimes
                         # (No need to account for different community sizes as the synthetic data are the same size)
-                        if inclusion_threshold <= 0.05:
+                        if inclusion_threshold <= 0.04:
                             new_value = rd.uniform(matrix_value[0], matrix_value[1])
                             new_adj_matrix[i, j] = new_value
                         else:

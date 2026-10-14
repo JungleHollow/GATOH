@@ -4,7 +4,6 @@ import concurrent.futures
 import gc
 import os
 import pickle
-from re import L
 import warnings
 from copy import deepcopy
 from dataclasses import dataclass
@@ -16,10 +15,9 @@ from typing import TypedDict, NotRequired
 
 import polars as pl
 from rustworkx import NodeIndices
-import numpy as np
 
 from gatoh.agents import Agent
-from gatoh.graphs import Graph, GraphEdge, GraphNode, GroupGraph, GroupEdge, GroupNode
+from gatoh.graphs import Graph, GraphEdge, GraphNode
 from gatoh.groups import Group
 from gatoh.model import ABModel
 from gatoh.utils import random_coinflip
