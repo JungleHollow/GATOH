@@ -24,9 +24,9 @@ from gatoh.groups import Group
 from gatoh.model import ABModel
 from gatoh.utils import random_coinflip
 
-from .SyntheticCaseStudy import ModelParamsInput, ModelParameters, TestParameters
+from SyntheticCaseStudy import ModelParamsInput, ModelParameters
 # For class inheritance
-from .SyntheticCaseStudy import CaseStudyRunner
+from SyntheticCaseStudy import CaseStudyRunner
 
 
 class OngoingNegativeParameters(TypedDict):
@@ -78,6 +78,9 @@ class OngoingNegativeRunner(CaseStudyRunner):
         group_parameters: dict[str, int],
         test_parameters: TestParameters,
         experiment_parameters: OngoingNegativeParameters,
+        visdirs: dict[str, str],
+        savedirs: dict[str, str],
+        savefiles: dict[str, str],
         opinion_paths: dict[str, str] | None = None,
         worker_pool: WorkerPool | None = None,
         existing: bool = False,
@@ -90,6 +93,9 @@ class OngoingNegativeRunner(CaseStudyRunner):
             agent_parameters,
             group_parameters,
             test_parameters,
+            visdirs,
+            savedirs,
+            savefiles,
             opinion_paths,
             worker_pool,
             existing,
@@ -389,6 +395,9 @@ if __name__ == "__main__":
             GROUP_PARAMETERS,
             TEST_PARAMETERS,
             EXPERIMENT_PARAMETERS,
+            VISDIRS,
+            SAVEDIRS,
+            SAVEFILES,
             opinion_paths=None,
             worker_pool=WORKER_POOL,
         )
@@ -412,6 +421,9 @@ if __name__ == "__main__":
             GROUP_PARAMETERS,
             TEST_PARAMETERS,
             EXPERIMENT_PARAMETERS,
+            VISDIRS,
+            SAVEDIRS,
+            SAVEFILES,
             opinion_paths=OPINION_PATHS,
             worker_pool=WORKER_POOL,
             existing=True,

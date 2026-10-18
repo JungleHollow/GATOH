@@ -23,6 +23,141 @@ from gatoh.model import ABModel
 from gatoh.utils import random_coinflip
 
 
+# Declare all relevant global variables here
+MULTIPROCESSING: bool = True
+
+# Whether to simulate groups of agents or not (rather than the individual agents)
+SIMULATE_GROUPS: bool = True
+
+SAVEDIR_ROOT: str = "./experiments/SyntheticCaseStudy/Neutral/Results"
+
+VISUALISATION_ROOT: str = f"{SAVEDIR_ROOT}/Visualisations"
+
+SAVEDIRS: dict[str, str] = {
+    "NONMN": f"{SAVEDIR_ROOT}/NONMN",
+    "MINNG": f"{SAVEDIR_ROOT}/MINNG",
+}
+
+SAVEFILES: dict[str, str] = {
+    "NONMN": f"{SAVEDIRS['NONMN']}/NONMN_model_variables.csv",
+    "MINNG": f"{SAVEDIRS['MINNG']}/MINNG_model_variables.csv",
+}
+
+VISDIRS: dict[str, str] = {
+    "NONMN": f"{VISUALISATION_ROOT}/NONMN",
+    "MINNG": f"{VISUALISATION_ROOT}/MINNG",
+}
+
+AGENT_PATHS: dict[str, str] = {
+    "NONMN": "./experiments/SyntheticCaseStudy/Neutral/Agents/NONMN_Agents",
+    "MINNG": "./experiments/SyntheticCaseStudy/Neutral/Agents/MINNG_Agents",
+}
+
+GRAPH_PATHS: dict[str, str] = {
+    "NONMN": "./experiments/SyntheticCaseStudy/Neutral/Graphs/NONMN_Graphs",
+    "MINNG": "./experiments/SyntheticCaseStudy/Neutral/Graphs/MINNG_Graphs",
+}
+
+GROUP_PATHS: dict[str, str] = {
+    "NONMN": "./experiments/SyntheticCaseStudy/Neutral/Groups/NONMN_Groups",
+    "MINNG": "./experiments/SyntheticCaseStudy/Neutral/Groups/MINNG_Groups",
+}
+
+BASE_HIERARCHIES: list[str] = [
+    # Removing Age and Gender as full graphs for now, as these are much too densely connected for reasonable runtimes
+    # "Age",
+    # "Gender",
+    "Friends",
+    "Family",
+    "Cultural",
+    "Religious",
+    "Geographical",
+    "Social",
+]
+
+HIERARCHY_RW: dict[str, tuple[float, float]] = {
+    # "Age": (0.0, 0.04),
+    # "Gender": (0.0, 0.02),
+    "Friends": (0.0, 0.05),
+    "Family": (0.0, 0.01),
+    "Cultural": (0.0, 0.15),
+    "Religious": (0.0, 0.1),
+    "Geographical": (0.0, 0.0),
+    "Social": (0.0, 0.1),
+}
+
+# The relevant parameters that are defined for the model instances
+TEST_PARAMETERS: TestParameters = {
+    "NONMN": {
+        "model_id": "NONMN",
+        "iterations": 100,
+        "hierarchies": BASE_HIERARCHIES,
+        "hierarchy_rw": HIERARCHY_RW,
+    },
+    "MINNG": {
+        "model_id": "MINNG",
+        "iterations": 100,
+        "hierarchies": BASE_HIERARCHIES,
+        "hierarchy_rw": HIERARCHY_RW,
+    },
+    "DEFAULT": {
+        "iterations": 100,
+        "hierarchies": BASE_HIERARCHIES,
+        "hierarchy_rw": HIERARCHY_RW,
+        "agent_opinion_rw": (0.0, 0.05),
+        "silencing_threshold": 0.95,
+        "negation_threshold": 0.999,
+        "radicalisation_threshold": 0.99,
+        "suppress_warnings": True,
+    },
+}
+
+# Used to assign changeable weightings to different agent attributes throughout the models
+AGENT_PARAMETERS: dict[str, float] = {
+    "age_weighting": 1.1,
+    "gender_weighting": 1.25,
+}
+
+# Used to change the number of groups that each hierarchy is clustered into (possibly extended on in the future)
+GROUP_PARAMETERS: dict[str, int] = {
+    "n_groups": 10,
+}
+
+# Specify the dependant variable CSV paths here
+OPINION_PATHS: dict[str, str] = {}
+
+
+class ModelTestParameters(TypedDict):
+    """
+    A helper class for typechecking the model-specific TEST_PARAMETERS.
+    """
+    model_id: str
+    iterations: int
+    hierarchies: list[str]
+    hierarchy_rw: dict[str, tuple[float, float]]
+
+class DefaultTestParameters(TypedDict):
+    """
+    A helper class for typechecking the default (shared) values in TEST_PARAMETERS.
+    """
+    iterations: int
+    hierarchies: list[str]
+    hierarchy_rw: dict[str, tuple[float, float]]
+    agent_opinion_rw: tuple[float, float]
+    silencing_threshold: float
+    negation_threshold: float
+    radicalisation_threshold: float
+    suppress_warnings: bool
+
+class TestParameters(TypedDict):
+    """
+    A helper class for typechecking the TEST_PARAMETERS container.
+    """
+    NONMN: ModelTestParameters
+    MINNG: ModelTestParameters
+    DEFAULT: DefaultTestParameters
+
+
 class ModelParamsInput(TypedDict):
     """
     A helper class that is used to type check the input dictionary for ModelParameters.
@@ -61,7 +196,14 @@ class ModelParameters:
     save_dir: str
     data_file: str
 
-    def __init__(self, parameters_dict: ModelParamsInput) -> None:
+    def __init__(
+        self,
+        parameters_dict: ModelParamsInput,
+        test_parameters: TestParameters,
+        visdirs: dict[str, str],
+        savedirs: dict[str, str],
+        savefiles: dict[str, str],
+    ) -> None:
         self.model_id = parameters_dict["model_id"]
         self.hierarchy_names = parameters_dict["hierarchies"]
         self.hierarchy_rw_distributions = parameters_dict["hierarchy_rw"]
@@ -71,56 +213,56 @@ class ModelParameters:
         if agent_opinion_rw is not None:
             self.agent_opinion_rw = agent_opinion_rw
         else:
-            self.agent_opinion_rw = TEST_PARAMETERS["DEFAULT"]["agent_opinion_rw"]
+            self.agent_opinion_rw = test_parameters["DEFAULT"]["agent_opinion_rw"]
         del agent_opinion_rw
 
         silencing_threshold: float | None = parameters_dict.get("silencing_threshold")
         if silencing_threshold is not None:
             self.silencing_threshold = silencing_threshold
         else:
-            self.silencing_threshold = TEST_PARAMETERS["DEFAULT"]["silencing_threshold"]
+            self.silencing_threshold = test_parameters["DEFAULT"]["silencing_threshold"]
         del silencing_threshold
 
         negation_threshold: float | None = parameters_dict.get("negation_threshold")
         if negation_threshold is not None:
             self.negation_threshold = negation_threshold
         else:
-            self.negation_threshold = TEST_PARAMETERS["DEFAULT"]["negation_threshold"]
+            self.negation_threshold = test_parameters["DEFAULT"]["negation_threshold"]
         del negation_threshold
 
         radicalisation_threshold: float | None = parameters_dict.get("radicalisation_threshold")
         if radicalisation_threshold is not None:
             self.radicalisation_threshold = radicalisation_threshold
         else:
-            self.radicalisation_threshold = TEST_PARAMETERS["DEFAULT"]["radicalisation_threshold"]
+            self.radicalisation_threshold = test_parameters["DEFAULT"]["radicalisation_threshold"]
         del radicalisation_threshold
 
         visualisation_dir: str | None = parameters_dict.get("visualisation_dir")
         if visualisation_dir is not None:
             self.visualisation_dir = visualisation_dir
         else:
-            self.visualisation_dir = VISDIRS[self.model_id]
+            self.visualisation_dir = visdirs[self.model_id]
         del visualisation_dir
 
         suppress_warnings: bool | None = parameters_dict.get("suppress_warnings")
         if suppress_warnings is not None:
             self.suppress_warnings = suppress_warnings
         else:
-            self.suppress_warnings = TEST_PARAMETERS["DEFAULT"]["suppress_warnings"]
+            self.suppress_warnings = test_parameters["DEFAULT"]["suppress_warnings"]
         del suppress_warnings
 
         save_dir: str | None = parameters_dict.get("save_dir")
         if save_dir is not None:
             self.save_dir = save_dir
         else:
-            self.save_dir = SAVEDIRS[self.model_id]
+            self.save_dir = savedirs[self.model_id]
         del save_dir
 
         data_file: str | None = parameters_dict.get("data_file")
         if data_file is not None:
             self.data_file = data_file
         else:
-            self.data_file = SAVEFILES[self.model_id]
+            self.data_file = savefiles[self.model_id]
         del data_file
 
         return None
@@ -165,11 +307,19 @@ class CaseStudyRunner:
         agent_parameters: dict[str, float],
         group_parameters: dict[str, int],
         test_parameters: TestParameters,
+        visdirs: dict[str, str],
+        savedirs: dict[str, str],
+        savefiles: dict[str, str],
         opinion_paths: dict[str, str] | None = None,
         worker_pool: WorkerPool | None = None,
         existing: bool = False,
     ) -> None:
         self.existing: bool = existing
+
+        self.test_parameters: TestParameters = test_parameters
+        self.visdirs: dict[str, str] = visdirs
+        self.savedirs: dict[str, str] = savedirs
+        self.savefiles: dict[str, str] = savefiles
 
         self.agent_paths: dict[str, str] = agent_paths
         self.graph_paths: dict[str, str] = graph_paths
@@ -201,7 +351,13 @@ class CaseStudyRunner:
                 if key == "DEFAULT":
                     continue
                 else:
-                    param_struct: ModelParameters = ModelParameters(value)
+                    param_struct: ModelParameters = ModelParameters(
+                        value,
+                        self.test_parameters,
+                        self.visdirs,
+                        self.savedirs,
+                        self.savefiles,
+                    )
                     self.model_params[key] = param_struct
 
                     # Also initialise the appropriate object lists
@@ -227,7 +383,7 @@ class CaseStudyRunner:
             agent_pickle_paths: list[str] = list(os.walk(agent_path))[0][2]
             for pickle_path in agent_pickle_paths:
                 agent_obj: Agent
-                with open(f"{AGENT_PATHS[model_name]}/{pickle_path}", "rb") as pickle_file:
+                with open(f"{self.agent_paths[model_name]}/{pickle_path}", "rb") as pickle_file:
                     agent_obj = pickle.load(pickle_file)
 
                 self.agent_objects.setdefault(model_name, []).append(agent_obj)
@@ -376,18 +532,18 @@ class CaseStudyRunner:
             for existing_save in existing_saves:
                 # Create an empty dummy model
                 new_model = ABModel(
-                    TEST_PARAMETERS["DEFAULT"]["hierarchies"],
-                    list(TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"].values()),
+                    self.test_parameters["DEFAULT"]["hierarchies"],
+                    list(self.test_parameters["DEFAULT"]["hierarchy_rw"].values()),
                 )
-                new_model.load_model(SAVEDIRS[existing_save])
+                new_model.load_model(self.savedirs[existing_save])
 
                 self.models[existing_save] = new_model
             return None
 
-        for model_name, model_savedir in SAVEDIRS.items():
+        for model_name, model_savedir in self.savedirs.items():
             new_model = ABModel(
-                TEST_PARAMETERS["DEFAULT"]["hierarchies"],
-                list(TEST_PARAMETERS["DEFAULT"]["hierarchy_rw"].values()),
+                self.test_parameters["DEFAULT"]["hierarchies"],
+                list(self.test_parameters["DEFAULT"]["hierarchy_rw"].values()),
             )
             new_model.load_model(model_savedir)
 
@@ -816,139 +972,6 @@ class CaseStudyRunner:
 
 
 if __name__ == "__main__":
-    # Declare all relevant global variables here
-    MULTIPROCESSING: bool = True
-
-    # Whether to simulate groups of agents or not (rather than the individual agents)
-    SIMULATE_GROUPS: bool = True
-
-    SAVEDIR_ROOT: str = "./experiments/SyntheticCaseStudy/Neutral/Results"
-
-    VISUALISATION_ROOT: str = f"{SAVEDIR_ROOT}/Visualisations"
-
-    SAVEDIRS: dict[str, str] = {
-        "NONMN": f"{SAVEDIR_ROOT}/NONMN",
-        "MINNG": f"{SAVEDIR_ROOT}/MINNG",
-    }
-
-    SAVEFILES: dict[str, str] = {
-        "NONMN": f"{SAVEDIRS['NONMN']}/NONMN_model_variables.csv",
-        "MINNG": f"{SAVEDIRS['MINNG']}/MINNG_model_variables.csv",
-    }
-
-    VISDIRS: dict[str, str] = {
-        "NONMN": f"{VISUALISATION_ROOT}/NONMN",
-        "MINNG": f"{VISUALISATION_ROOT}/MINNG",
-    }
-
-    AGENT_PATHS: dict[str, str] = {
-        "NONMN": "./experiments/SyntheticCaseStudy/Neutral/Agents/NONMN_Agents",
-        "MINNG": "./experiments/SyntheticCaseStudy/Neutral/Agents/MINNG_Agents",
-    }
-
-    GRAPH_PATHS: dict[str, str] = {
-        "NONMN": "./experiments/SyntheticCaseStudy/Neutral/Graphs/NONMN_Graphs",
-        "MINNG": "./experiments/SyntheticCaseStudy/Neutral/Graphs/MINNG_Graphs",
-    }
-
-    GROUP_PATHS: dict[str, str] = {
-        "NONMN": "./experiments/SyntheticCaseStudy/Neutral/Groups/NONMN_Groups",
-        "MINNG": "./experiments/SyntheticCaseStudy/Neutral/Groups/MINNG_Groups",
-    }
-
-    BASE_HIERARCHIES: list[str] = [
-        # Removing Age and Gender as full graphs for now, as these are much too densely connected for reasonable runtimes
-        # "Age",
-        # "Gender",
-        "Friends",
-        "Family",
-        "Cultural",
-        "Religious",
-        "Geographical",
-        "Social",
-    ]
-
-    HIERARCHY_RW: dict[str, tuple[float, float]] = {
-        # "Age": (0.0, 0.04),
-        # "Gender": (0.0, 0.02),
-        "Friends": (0.0, 0.05),
-        "Family": (0.0, 0.01),
-        "Cultural": (0.0, 0.15),
-        "Religious": (0.0, 0.1),
-        "Geographical": (0.0, 0.0),
-        "Social": (0.0, 0.1),
-    }
-
-    class ModelTestParameters(TypedDict):
-        """
-        A helper class for typechecking the model-specific TEST_PARAMETERS.
-        """
-        model_id: str
-        iterations: int
-        hierarchies: list[str]
-        hierarchy_rw: dict[str, tuple[float, float]]
-
-    class DefaultTestParameters(TypedDict):
-        """
-        A helper class for typechecking the default (shared) values in TEST_PARAMETERS.
-        """
-        iterations: int
-        hierarchies: list[str]
-        hierarchy_rw: dict[str, tuple[float, float]]
-        agent_opinion_rw: tuple[float, float]
-        silencing_threshold: float
-        negation_threshold: float
-        radicalisation_threshold: float
-        suppress_warnings: bool
-
-    class TestParameters(TypedDict):
-        """
-        A helper class for typechecking the TEST_PARAMETERS container.
-        """
-        NONMN: ModelTestParameters
-        MINNG: ModelTestParameters
-        DEFAULT: DefaultTestParameters
-
-    # The relevant parameters that are defined for the model instances
-    TEST_PARAMETERS: TestParameters = {
-        "NONMN": {
-            "model_id": "NONMN",
-            "iterations": 100,
-            "hierarchies": BASE_HIERARCHIES,
-            "hierarchy_rw": HIERARCHY_RW,
-        },
-        "MINNG": {
-            "model_id": "MINNG",
-            "iterations": 100,
-            "hierarchies": BASE_HIERARCHIES,
-            "hierarchy_rw": HIERARCHY_RW,
-        },
-        "DEFAULT": {
-            "iterations": 100,
-            "hierarchies": BASE_HIERARCHIES,
-            "hierarchy_rw": HIERARCHY_RW,
-            "agent_opinion_rw": (0.0, 0.05),
-            "silencing_threshold": 0.95,
-            "negation_threshold": 0.999,
-            "radicalisation_threshold": 0.99,
-            "suppress_warnings": True,
-        },
-    }
-
-    # Used to assign changeable weightings to different agent attributes throughout the models
-    AGENT_PARAMETERS: dict[str, float] = {
-        "age_weighting": 1.1,
-        "gender_weighting": 1.25,
-    }
-
-    # Used to change the number of groups that each hierarchy is clustered into (possibly extended on in the future)
-    GROUP_PARAMETERS: dict[str, int] = {
-        "n_groups": 10,
-    }
-
-    # Specify the dependant variable CSV paths here
-    OPINION_PATHS: dict[str, str] = {}
-
     # Use "spawn" as the default to optimise memory usage and cross-platform compatibility
     set_start_method("spawn", force=True)
     WORKER_POOL: WorkerPool | None = Pool() if MULTIPROCESSING else None
@@ -985,6 +1008,9 @@ if __name__ == "__main__":
             AGENT_PARAMETERS,
             GROUP_PARAMETERS,
             TEST_PARAMETERS,
+            VISDIRS,
+            SAVEDIRS,
+            SAVEFILES,
             opinion_paths=None,
             worker_pool=WORKER_POOL,
         )
@@ -1007,6 +1033,9 @@ if __name__ == "__main__":
             AGENT_PARAMETERS,
             GROUP_PARAMETERS,
             TEST_PARAMETERS,
+            VISDIRS,
+            SAVEDIRS,
+            SAVEFILES,
             opinion_paths=OPINION_PATHS,
             worker_pool=WORKER_POOL,
             existing=True,
