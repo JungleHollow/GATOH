@@ -221,7 +221,11 @@ experiments/StochasticAnalysis/GroupNumAgents/GroupPolarisationStatistics.png
 experiments/StochasticAnalysis/GroupNumAgents/GroupRadicalAgentStatistics.png
 experiments/StochasticAnalysis/GroupNumAgents/GroupRadicalGroupStatistics.png
 experiments/StochasticAnalysis/GroupNumAgents/GroupVarianceOverModels.png
-experiments/SyntheticCaseStudy/Graphs/
-experiments/SyntheticCaseStudy/Agents/
-experiments/SyntheticCaseStudy/Groups/
-experiments/SyntheticCaseStudy/Results/
+experiments/SyntheticCaseStudy/Neutral/Graphs/
+experiments/SyntheticCaseStudy/Neutral/Agents/
+experiments/SyntheticCaseStudy/Neutral/Groups/
+experiments/SyntheticCaseStudy/Neutral/Results/
+experiments/SyntheticCaseStudy/OngoingNegative/Graphs/
+experiments/SyntheticCaseStudy/OngoingNegative/Agents/
+experiments/SyntheticCaseStudy/OngoingNegative/Groups/
+experiments/SyntheticCaseStudy/OngoingNegative/Results/
