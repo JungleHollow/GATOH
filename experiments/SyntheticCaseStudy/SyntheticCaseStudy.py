@@ -822,7 +822,7 @@ if __name__ == "__main__":
     # Whether to simulate groups of agents or not (rather than the individual agents)
     SIMULATE_GROUPS: bool = True
 
-    SAVEDIR_ROOT: str = "./experiments/SyntheticCaseStudy/Results"
+    SAVEDIR_ROOT: str = "./experiments/SyntheticCaseStudy/Neutral/Results"
 
     VISUALISATION_ROOT: str = f"{SAVEDIR_ROOT}/Visualisations"
 
@@ -842,18 +842,18 @@ if __name__ == "__main__":
     }
 
     AGENT_PATHS: dict[str, str] = {
-        "NONMN": "./experiments/SyntheticCaseStudy/Agents/NONMN_Agents",
-        "MINNG": "./experiments/SyntheticCaseStudy/Agents/MINNG_Agents",
+        "NONMN": "./experiments/SyntheticCaseStudy/Neutral/Agents/NONMN_Agents",
+        "MINNG": "./experiments/SyntheticCaseStudy/Neutral/Agents/MINNG_Agents",
     }
 
     GRAPH_PATHS: dict[str, str] = {
-        "NONMN": "./experiments/SyntheticCaseStudy/Graphs/NONMN_Graphs",
-        "MINNG": "./experiments/SyntheticCaseStudy/Graphs/MINNG_Graphs",
+        "NONMN": "./experiments/SyntheticCaseStudy/Neutral/Graphs/NONMN_Graphs",
+        "MINNG": "./experiments/SyntheticCaseStudy/Neutral/Graphs/MINNG_Graphs",
     }
 
     GROUP_PATHS: dict[str, str] = {
-        "NONMN": "./experiments/SyntheticCaseStudy/Groups/NONMN_Groups",
-        "MINNG": "./experiments/SyntheticCaseStudy/Groups/MINNG_Groups",
+        "NONMN": "./experiments/SyntheticCaseStudy/Neutral/Groups/NONMN_Groups",
+        "MINNG": "./experiments/SyntheticCaseStudy/Neutral/Groups/MINNG_Groups",
     }
 
     BASE_HIERARCHIES: list[str] = [
@@ -942,7 +942,7 @@ if __name__ == "__main__":
     }
 
     # Used to change the number of groups that each hierarchy is clustered into (possibly extended on in the future)
-    GROUP_PARARAMETERS: dict[str, int] = {
+    GROUP_PARAMETERS: dict[str, int] = {
         "n_groups": 10,
     }
 
@@ -983,7 +983,7 @@ if __name__ == "__main__":
             GROUP_PATHS,
             BASE_HIERARCHIES,
             AGENT_PARAMETERS,
-            GROUP_PARARAMETERS,
+            GROUP_PARAMETERS,
             TEST_PARAMETERS,
             opinion_paths=None,
             worker_pool=WORKER_POOL,
@@ -1005,7 +1005,7 @@ if __name__ == "__main__":
             GROUP_PATHS,
             BASE_HIERARCHIES,
             AGENT_PARAMETERS,
-            GROUP_PARARAMETERS,
+            GROUP_PARAMETERS,
             TEST_PARAMETERS,
             opinion_paths=OPINION_PATHS,
             worker_pool=WORKER_POOL,
