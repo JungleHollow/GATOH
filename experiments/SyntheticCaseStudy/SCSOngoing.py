@@ -121,7 +121,7 @@ class OngoingNegativeRunner(CaseStudyRunner):
             return model_to_alter
 
         # If deltas are being applied, determine to how many groups
-        affected_groups: int = np.floor(len(model_to_alter.groups) * self.experiment_parameters["delta_application_rate"])
+        affected_groups: int = int(np.floor(len(model_to_alter.groups) * self.experiment_parameters["delta_application_rate"]))
 
         # Randomly select the indices of the groups to be impacted
         group_indices: list[int] = list(range(len(model_to_alter.groups)))
