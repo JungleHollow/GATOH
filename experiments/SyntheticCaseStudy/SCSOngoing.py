@@ -350,8 +350,8 @@ if __name__ == "__main__":
 
     # Used to change the experiment-specific parameters for this ongoing negative effects experiment
     EXPERIMENT_PARAMETERS: OngoingNegativeParameters = {
-        "negative_delta": (-0.1, 0.02),
-        "delta_application_rate": 0.6,
+        "negative_delta": (-0.1, 0.04),
+        "delta_application_rate": 0.75,
         "delta_chance": 0.2,
     }
 
