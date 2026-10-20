@@ -1815,6 +1815,8 @@ class ABModel:
         """
         for agent, changes in agent_changes.items():
             agent_obj: Agent = self.agents.get_agent_by_id(agent)
+            if self.debug:
+                self.logger.log_function_call("AgentSet.get_agent_by_id")
 
             # Calculate the aggregate effects
             total_opinion_change: float = sum(changes["opinion_changes"]) / len(changes["opinion_changes"])
@@ -1826,6 +1828,8 @@ class ABModel:
 
             # Apply the total opinion change
             agent_obj.change_opinion(total_opinion_change)
+            if self.debug:
+                self.logger.log_function_call("Agent.change_opinion")
 
             # Note the existing radicalisation_status
             previous_radicalisation: bool = agent_obj.radicalised
@@ -1835,25 +1839,36 @@ class ABModel:
                 agent_obj.change_radicalisation(True)
             else:
                 agent_obj.change_radicalisation(False)
+            if self.debug:
+                self.logger.log_function_call("Agent.change_radicalisation")
 
             # Log for (de)radicalisation by comparing the previous status to the new one
             if previous_radicalisation and not agent_obj.radicalised:
                 self.logger.variables.increment_deradicalised(True)
+                if self.debug:
+                    self.logger.log_function_call("LoggerVariables.increment_deradicalised")
             elif not previous_radicalisation and agent_obj.radicalised:
                 self.logger.variables.increment_radicalised(True)
+                if self.debug:
+                    self.logger.log_function_call("LoggerVariables.increment_radicalised")
 
             # Also update the values in each agent graph (to allow for the calculated metrics to be produced)
             for graph in self.graphs:
-                graph_agent_obj: GraphNode | None = graph.node_from_agent(agent_obj)
-                if graph_agent_obj is not None:
-                    graph_agent_obj.agent.opinion = agent_obj.opinion
-                    graph_agent_obj.agent.change_radicalisation(agent_obj.radicalised)
+                graph.agent_opinion_change(agent_obj, total_opinion_change, deradicalisation=(previous_radicalisation and not agent_obj.radicalised))
+                graph.agent_radicalisation_change(agent_obj, agent_obj.radicalised)
+                if self.debug:
+                    self.logger.log_function_call("Graph.agent_opinion_change")
+                    self.logger.log_function_call("Graph.agent_radicalisation_change")
 
             # Remember to update the base graph
-            base_graph_agent: GraphNode | None = self.base_graph.node_from_agent(agent_obj)
-            if base_graph_agent is not None:
-                base_graph_agent.agent.opinion = agent_obj.opinion
-                base_graph_agent.agent.change_radicalisation(agent_obj.radicalised)
+            self.base_graph.agent_opinion_change(agent_obj, total_opinion_change, deradicalisation=(previous_radicalisation and not agent_obj.radicalised))
+            self.base_graph.agent_radicalisation_change(agent_obj, agent_obj.radicalised)
+            if self.debug:
+                self.logger.log_function_call("Graph.agent_opinion_change")
+                self.logger.log_function_call("Graph.agent_radicalisation_change")
+
+        if self.debug:
+            self.logger.log_function_call("ABModel.group_members_opinion_changes")
         return None
 
     def apply_link_functions(self) -> None:
