@@ -383,8 +383,12 @@ class CaseStudyRunner:
             agent_pickle_paths: list[str] = list(os.walk(agent_path))[0][2]
             for pickle_path in agent_pickle_paths:
                 agent_obj: Agent
-                with open(f"{self.agent_paths[model_name]}/{pickle_path}", "rb") as pickle_file:
-                    agent_obj = pickle.load(pickle_file)
+                if model_name != "NONMN" and model_name != "MINNG":
+                    with open(f"{self.agent_paths[model_name[:-1]]}/{pickle_path}", "rb") as pickle_file:
+                        agent_obj = pickle.load(pickle_file)
+                else:
+                    with open(f"{self.agent_paths[model_name]}/{pickle_path}", "rb") as pickle_file:
+                        agent_obj = pickle.load(pickle_file)
 
                 self.agent_objects.setdefault(model_name, []).append(agent_obj)
 
@@ -423,7 +427,10 @@ class CaseStudyRunner:
             group_num: int = len(list(os.walk(group_path))[0][2]) - 1
 
             for i in range(group_num):
-                group_pickle_path: str = f"{group_path}/group_G{model_name}{i + 1:03}.pkl"
+                if model_name != "NONMN" and model_name != "MINNG":
+                    group_pickle_path: str = f"{group_path}/group_G{model_name[:-1]}{i + 1:03}.pkl"
+                else:
+                    group_pickle_path = f"{group_path}/group_G{model_name}{i + 1:03}.pkl"
                 group_obj: Group
                 with open(group_pickle_path, "rb") as pickle_file:
                     group_obj = pickle.load(pickle_file)
