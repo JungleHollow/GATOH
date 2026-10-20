@@ -230,3 +230,6 @@ experiments/SyntheticCaseStudy/OngoingNegative/Agents/
 experiments/SyntheticCaseStudy/OngoingNegative/Groups/
 experiments/SyntheticCaseStudy/OngoingNegative/Results/
 experiments/SyntheticCaseStudy/__pycache__/
+experiments/SyntheticCaseStudy/InitialNegative/Agents/
+experiments/SyntheticCaseStudy/InitialNegative/Graphs/
+experiments/SyntheticCaseStudy/InitialNegative/Groups/
