@@ -348,7 +348,15 @@ if __name__ == "__main__":
         A helper class for typechecking the TEST_PARAMETERS container.
         """
         NONMN: ModelTestParameters
+        NONMN2: ModelTestParameters
+        NONMN3: ModelTestParameters
+        NONMN4: ModelTestParameters
+        NONMN5: ModelTestParameters
         MINNG: ModelTestParameters
+        MINNG2: ModelTestParameters
+        MINNG3: ModelTestParameters
+        MINNG4: ModelTestParameters
+        MINNG5: ModelTestParameters
         DEFAULT: DefaultTestParameters
 
     # The relevant parameters that are defined for the model instances
@@ -359,8 +367,56 @@ if __name__ == "__main__":
             "hierarchies": BASE_HIERARCHIES,
             "hierarchy_rw": HIERARCHY_RW,
         },
+        "NONMN2": {
+            "model_id": "NONMN2",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "NONMN3": {
+            "model_id": "NONMN3",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "NONMN4": {
+            "model_id": "NONMN4",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "NONMN5": {
+            "model_id": "NONMN5",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
         "MINNG": {
             "model_id": "MINNG",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "MINNG2": {
+            "model_id": "MINNG2",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "MINNG3": {
+            "model_id": "MINNG3",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "MINNG4": {
+            "model_id": "MINNG4",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "MINNG5": {
+            "model_id": "MINNG5",
             "iterations": 100,
             "hierarchies": BASE_HIERARCHIES,
             "hierarchy_rw": HIERARCHY_RW,
