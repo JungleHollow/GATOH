@@ -429,25 +429,36 @@ class ResponseParser:
         for community, adj_matrix_paths in ADJ_MATRIX_PATHS.items():
             for hierarchy in adj_matrix_paths:
                 adj_matrix: np.ndarray
+                agent_ids: list[str] = []
+
                 match hierarchy:
                     case "Friends":
                         # Values of 0 to 4
                         adj_matrix = self.generate_matrix(4, len(self.agents[community]))
+                        agent_ids = self.select_agents(community, 0.75)
                     case "Family":
                         # Values of 0 to 4
                         adj_matrix = self.generate_matrix(4, len(self.agents[community]))
+                        agent_ids = self.select_agents(community, 0.8)
                     case "Cultural":
                         # Values of 0 to 2
                         adj_matrix = self.generate_matrix(2, len(self.agents[community]))
+                        agent_ids = self.select_agents(community, 0.5)
                     case "Religious":
                         # Values of 0 to 2
                         adj_matrix = self.generate_matrix(2, len(self.agents[community]))
+                        agent_ids = self.select_agents(community, 0.6)
                     case "Geographical":
                         # Values of 0 to 3
                         adj_matrix = self.generate_matrix(3, len(self.agents[community]))
+
+                        # All agents live in the community...
+                        agent_ids = [attributes.id for attributes in self.agents[community]]
                     case "Social":
                         # Values of 0 to 2
                         adj_matrix = self.generate_matrix(2, len(self.agents[community]))
+
+                        agent_ids = self.select_agents(community, 0.5)
                     case _:
                         adj_matrix = np.zeros((len(self.agents[community]), len(self.agents[community])))
 
@@ -455,15 +466,31 @@ class ResponseParser:
                     adj_matrix, hierarchy=hierarchy, community=community,
                 )
 
-                agent_ids: list[str] = []
-                for agent in self.agents[community]:
-                    agent_ids.append(agent.id)
-
                 self.graphs[community]["hierarchies"].append(hierarchy)
                 self.graphs[community]["adj_matrices"].append(deepcopy(adj_matrix))
                 self.graphs[community]["rw_params"].append(HIERARCHY_RW[hierarchy])
                 self.graphs[community]["agents"].append(deepcopy(agent_ids))
         return None
+
+    def select_agents(self, community: str, proportion: float) -> list[str]:
+        """
+        A helper function that randomly selects a certain proportion of agents from a community
+        and returns their IDs.
+
+        :param community: The ID of the community that is being sampled.
+        :type community: str
+        :param proportion: The proportion of agents in the community to take.
+        :type proportion: float
+        :return: The IDs of all the agents in the randomly sampled proportion.
+        :rtype: list[str]
+        """
+        nearest_whole: int = int(np.floor(proportion * len(self.agents[community])))
+        agent_indices: list[int] = list(range(len(self.agents[community])))
+        selected_indices: list[int] = list(np.random.choice(agent_indices, size=nearest_whole))
+        agent_ids: list[str] = []
+        for selected_index in selected_indices:
+            agent_ids.append(self.agents[community][selected_index].id)
+        return agent_ids
 
     def generate_matrix(self, max_value: int, matrix_size: int) -> np.ndarray:
         """
@@ -608,29 +635,48 @@ class ResponseParser:
                     if agent_id in self.graphs[community]["agents"][idx]:
                         included_agents.append(deepcopy(agent_obj))
 
-                # Add the relevant Agent objects as GraphNodes
-                new_graph.add_nodes(included_agents)
-
-                edges_dict: dict[str, list[int | float]] = {
-                    "from_node": [],
-                    "to_node": [],
-                    "weighting": [],
-                }
-
-                for i in range(len(included_agents)):
-                    for j in range(len(included_agents)):
-                        adj_matrix_value: float = float(self.graphs[community]["adj_matrices"][idx][i, j])
-
-                        if adj_matrix_value == 0.0:
-                            # No valid relationship exists from i to j
-                            continue
-                        else:
-                            edges_dict["from_node"].append(i)
-                            edges_dict["to_node"].append(j)
-                            edges_dict["weighting"].append(adj_matrix_value)
-
-                # Create the GraphEdge relationships using the information from the adjacency matrix
-                new_graph.add_edges(edges_dict)
+                # Generate the graph according to the hierarchy
+                match hierarchy:
+                    case "Friends":
+                        # Friend groups of size 8 (only considering close friends, not every possible acquaintance)
+                        new_graph.change_generation_params(sbm_sizes=8)
+                        new_graph = new_graph.generate_graph(
+                            included_agents,
+                            method="blockmodel",
+                        )
+                    case "Family":
+                        # Families of size 6
+                        new_graph.change_generation_params(sbm_sizes=6)
+                        new_graph = new_graph.generate_graph(
+                            included_agents,
+                            method="blockmodel",
+                        )
+                    case "Cultural":
+                        # Cultural characteristics are more stochastic in nature, so "random" generation applies best here
+                        new_graph = new_graph.generate_graph(
+                            included_agents,
+                            method="random",
+                        )
+                    case "Religious":
+                        # "Small-world" reflects the clustered and tight-knit charactersitics of small community churches best
+                        new_graph = new_graph.generate_graph(
+                            included_agents,
+                            method="small-world",
+                        )
+                    case "Geographical":
+                        # "Scale-free" reflects the physical characteristics of a small town best
+                        new_graph = new_graph.generate_graph(
+                            included_agents,
+                            method="scale-free",
+                        )
+                    case "Social":
+                        # Similar reasoning as for the religious hierarchy
+                        new_graph = new_graph.generate_graph(
+                            included_agents,
+                            method="small-world",
+                        )
+                    case _:
+                        pass
 
                 # Serialise and save the graph object
                 self.save_graph(new_graph, hierarchy_subdir)
