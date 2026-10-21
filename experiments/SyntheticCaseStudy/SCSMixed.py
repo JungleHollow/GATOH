@@ -115,6 +115,42 @@ class MixedEventsRunner(CaseStudyRunner):
         :return: The model which had the stochastic event applied appropriately.
         :rtype: ABModel
         """
+        model_id: str
+        if model_to_alter.model_id != "MINNG" and model_to_alter.model_id != "NONMN":
+            model_id = model_to_alter.model_id[:-1]
+        else:
+            model_id = model_to_alter.model_id
+
+        drawn_event: str = np.random.choice(self.probability_tables[model_id], size=1)[0]
+        print(f"MODEL {model_to_alter.model_id} ITERATION {model_to_alter.current_iteration} -- drawn event: {drawn_event}")
+        event_effect: tuple[float, float] = self.event_effects[drawn_event]
+
+        # Determine the number of affected groups in the community
+        affected_groups: int = int(np.ceil(len(model_to_alter.groups) * event_effect[1]))
+
+        # Randomly select the indices of the groups to be affected
+        group_indices: list[int] = list(range(len(model_to_alter.groups)))
+        selected_indices: list[int] = list(np.random.choice(group_indices, size=affected_groups, replace=False))
+
+        # Apply the changes
+        for index in selected_indices:
+            # Apply the event delta to the group
+            per_agent_delta: float = model_to_alter.groups.groups[index].change_aggregate_opinion(event_effect[0])
+
+            group_members: list[str] = model_to_alter.groups.groups[index].members
+
+            # Apply the per_agent_delta to all group members
+            for group_member in group_members:
+                agent_obj: Agent = model_to_alter.agents.get_agent_by_id(group_member)
+
+                agent_obj.change_opinion(per_agent_delta)
+
+                # Remember to apply the changes in each hierarchy and the base graph
+                for hierarchy in model_to_alter.graphs:
+                    hierarchy.agent_opinion_change(agent_obj, per_agent_delta)
+
+                model_to_alter.base_graph.agent_opinion_change(agent_obj, per_agent_delta)
+
         return model_to_alter
 
     @override
