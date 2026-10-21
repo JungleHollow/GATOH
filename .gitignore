@@ -234,3 +234,6 @@ experiments/SyntheticCaseStudy/InitialNegative/Agents/
 experiments/SyntheticCaseStudy/InitialNegative/Graphs/
 experiments/SyntheticCaseStudy/InitialNegative/Groups/
 experiments/SyntheticCaseStudy/InitialNegative/Results/
+experiments/SyntheticCaseStudy/MixedEvents/Agents/
+experiments/SyntheticCaseStudy/MixedEvents/Graphs/
+experiments/SyntheticCaseStudy/MixedEvents/Groups/
