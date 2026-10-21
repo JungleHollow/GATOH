@@ -139,7 +139,15 @@ class OngoingNegativeRunner(CaseStudyRunner):
 
             # Apply the per_agent_delta to all group members
             for group_member in group_members:
-                model_to_alter.agents.get_agent_by_id(group_member).change_opinion(per_agent_delta)
+                agent_obj: Agent = model_to_alter.agents.get_agent_by_id(group_member)
+
+                agent_obj.change_opinion(per_agent_delta)
+
+                # Remember to apply the changes in each hierarchy and the base graph
+                for hierarchy in model_to_alter.graphs:
+                    hierarchy.agent_opinion_change(agent_obj, per_agent_delta)
+
+                model_to_alter.base_graph.agent_opinion_change(agent_obj, per_agent_delta)
 
         return model_to_alter
 
