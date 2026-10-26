@@ -218,6 +218,37 @@ class AnalysisResults:
                         self.polarisations[model_name].setdefault(hierarchy_name, []).append(float(value))
         return self
 
+    def import_model_parameters(self, model_name: str, results_path: str) -> None:
+        """
+        Imports existing model results from a .csv file that has been saved using the GATOH logger
+        writing format.
+        """
+        aggregate_opinions: list[float] = []
+        radicalised_agents: list[int] = []
+        radicalised_groups: list[int] = []
+        polarisations: dict[str, list[float]] = {}
+
+        # First, read the csv file and load all results into memory
+        with open(results_path, "r", newline="") as csv_file:
+            csv_reader: csv.DictReader[str] = csv.DictReader(csv_file)
+            for row in csv_reader:
+                aggregate_opinions.append(float(row["aggregate_opinions"]))
+                radicalised_agents.append(int(row["radicalised_agents"]))
+                radicalised_groups.append(int(row["radicalised_group"]))
+                for hierarchy in self.hierarchies:
+                    polarisations.setdefault(hierarchy, []).append(float(row[f"layer_polarisations_{hierarchy}"]))
+
+        # Then, initialise the model within the class
+        self.init_model(
+            model_name,
+            aggregate_opinions,
+            radicalised_agents,
+            radicalised_groups,
+            polarisations,
+        )
+
+        return None
+
     def calculate_opinion_statistics(self) -> tuple[list[float], list[float]]:
         """
         Calculates the basic statistics of the aggregate opinion across the models.
@@ -835,7 +866,60 @@ class AnalysisResults:
 
             plt.savefig(save_path, dpi=300.0)
 
-            # TODO: Rad Agts and Rad Grps
+            unpacked_rad_agts: list[float] = deepcopy(self.grouped_analysis_statistics[community]["rad_agts_statistics"][0])
+            rad_agt_label: list[str] = ["Radicalised Agents"]
+
+            fig, ax = plt.subplots()
+
+            box_plot = ax.boxplot(
+                unpacked_rad_agts, notch=False, orientation="vertical", whis=1.5,
+            )
+            _ = plt.setp(box_plot["boxes"], color="black")
+            _ = plt.setp(box_plot["whiskers"], color="black")
+            _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+            ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+            _ = ax.set(
+                axisbelow=True,
+                title=f"Synthetic Case Study -- {community} Radical Agents Statistics",
+                xlabel="Parameter",
+                ylabel="Value",
+            )
+
+            _ = ax.set_xticklabels(rad_agt_label, rotation=0, fontsize=8)
+
+            save_path = f"{base_path}/GRAS-{community}.png"
+
+            plt.savefig(save_path, dpi=300.0)
+
+            unpacked_rad_grps: list[float] = deepcopy(self.grouped_analysis_statistics[community]["rad_grps_statistics"][0])
+            rad_grp_label: list[str] = ["Radicalised Groups"]
+
+            fig, ax = plt.subplots()
+
+            box_plot = ax.boxplot(
+                unpacked_rad_grps, notch=False, orientation="vertical", whis=1.5,
+            )
+            _ = plt.setp(box_plot["boxes"], color="black")
+            _ = plt.setp(box_plot["whiskers"], color="black")
+            _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+            ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+            _ = ax.set(
+                axisbelow=True,
+                title=f"Synthetic Case Study -- {community} Radical Groups Statistics",
+                xlabel="Parameter",
+                ylabel="Value",
+            )
+
+            _ = ax.set_xticklabels(rad_grp_label, rotation=0, fontsize=8)
+
+            save_path = f"{base_path}/GRGS-{community}.png"
+
+            plt.savefig(save_path, dpi=300.0)
+
         return None
 
     def create_analysis_plots(self) -> None:
@@ -851,6 +935,10 @@ class AnalysisResults:
         """
         A wrapper that simply ensures all grouped plots are created.
         """
+        # Ensure that the subplots subdir exists
+        plots_subdir: str = f"{self.root_dir}/subplots"
+        if not os.path.exists(plots_subdir):
+            os.mkdir(plots_subdir)
         self.plot_var_over_models_grouped()
         self.plot_model_runtimes_grouped()
         self.plot_parameter_whiskers_grouped()
@@ -863,3 +951,39 @@ class AnalysisResults:
         self.create_analysis_plots()
         self.create_grouped_analysis_plots()
         return None
+
+
+if __name__ == "__main__":
+    ROOT_DIR: str = "./experiments/SyntheticCaseStudy/Neutral"
+
+    HIERARCHIES: list[str] = [
+        # "Age",
+        # "Gender",
+        "Friends",
+        "Family",
+        "Cultural",
+        "Religious",
+        "Geographical",
+        "Social",
+    ]
+
+    COMMUNITIES: list[str] = ["MINNG", "NONMN"]
+
+    PARAMETER_DIRS: dict[str, str] = {
+        "MINNG": f"{ROOT_DIR}/Results/MINNG/MINNG_model_variables.csv",
+        "NONMN": f"{ROOT_DIR}/Results/NONMN/NONMN_model_variables.csv",
+    }
+
+    results: AnalysisResults = AnalysisResults(
+        ROOT_DIR,
+        100,
+        HIERARCHIES,
+        1,
+        COMMUNITIES,
+    )
+
+    results.import_model_parameters("MINNG", PARAMETER_DIRS["MINNG"])
+    results.import_model_parameters("NONMN", PARAMETER_DIRS["NONMN"])
+
+    results.calculate_all_stats()
+    results.create_all_plots()
