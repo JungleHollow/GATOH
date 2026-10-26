@@ -234,7 +234,7 @@ class AnalysisResults:
             for row in csv_reader:
                 aggregate_opinions.append(float(row["aggregate_opinions"]))
                 radicalised_agents.append(int(row["radicalised_agents"]))
-                radicalised_groups.append(int(row["radicalised_group"]))
+                radicalised_groups.append(int(row["radicalised_groups"]))
                 for hierarchy in self.hierarchies:
                     polarisations.setdefault(hierarchy, []).append(float(row[f"layer_polarisations_{hierarchy}"]))
 
@@ -780,7 +780,7 @@ class AnalysisResults:
 
             _ = ax.plot(
                 iterations,
-                self.grouped_analysis_statistics[community]["opinion_statistics"][0],
+                self.grouped_analysis_statistics["opinion_statistics"][community][0],
                 "-r",
                 linewidth=0.8,
                 alpha=1.0,
@@ -811,7 +811,7 @@ class AnalysisResults:
             unpacked_results: list[list[float | int]] = []
             tick_labels: list[str] = []
 
-            for hierarchy, statistics in self.grouped_analysis_statistics[community]["polarisation_statistics"][0].items():
+            for hierarchy, statistics in self.grouped_analysis_statistics["polarisation_statistics"][community][0].items():
                 unpacked_results.append(deepcopy(statistics))
                 tick_labels.append(f"Hierarchy Polarisation ({hierarchy})")
 
@@ -839,7 +839,7 @@ class AnalysisResults:
 
             plt.savefig(save_path, dpi=300.0)
 
-            unpacked_opinions: list[float] = deepcopy(self.grouped_analysis_statistics[community]["opinion_statistics"][0])
+            unpacked_opinions: list[float] = deepcopy(self.grouped_analysis_statistics["opinion_statistics"][community][0])
             opinion_label: list[str] = ["Aggregate Opinions"]
 
             fig, ax = plt.subplots()
@@ -866,7 +866,7 @@ class AnalysisResults:
 
             plt.savefig(save_path, dpi=300.0)
 
-            unpacked_rad_agts: list[float] = deepcopy(self.grouped_analysis_statistics[community]["rad_agts_statistics"][0])
+            unpacked_rad_agts: list[float] = deepcopy(self.grouped_analysis_statistics["rad_agts_statistics"][community][0])
             rad_agt_label: list[str] = ["Radicalised Agents"]
 
             fig, ax = plt.subplots()
@@ -893,7 +893,7 @@ class AnalysisResults:
 
             plt.savefig(save_path, dpi=300.0)
 
-            unpacked_rad_grps: list[float] = deepcopy(self.grouped_analysis_statistics[community]["rad_grps_statistics"][0])
+            unpacked_rad_grps: list[float] = deepcopy(self.grouped_analysis_statistics["rad_grps_statistics"][community][0])
             rad_grp_label: list[str] = ["Radicalised Groups"]
 
             fig, ax = plt.subplots()
