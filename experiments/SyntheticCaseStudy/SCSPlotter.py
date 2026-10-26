@@ -678,7 +678,45 @@ class AnalysisResults:
         """
         Plots the variance of the opinions across the models; grouped by the number of agents in each instance's population.
         """
-        # TODO: Implement this
+        for community in self.communities:
+            current_opinion_values: list[float] = []
+
+            y_values: list[float] = []  # Variance of n models' values
+            x_values: list[int] = []  # Number of models
+
+            # A subdirectory to organise the community plots into
+            base_path: str = f"{self.root_dir}/subplots/{community}"
+
+            if not os.path.exists(base_path):
+                os.mkdir(base_path)
+
+            for i in range(self.repetitions):
+                model_name: str
+                if i == 0:
+                    model_name = community
+                else:
+                    model_name = f"{community}{i + 1}"
+
+                model_values: list[float] = self.aggregate_opinions[model_name]
+
+                current_opinion_values += deepcopy(model_values)
+
+                current_vals_variance: float = float(np.var(current_opinion_values))
+
+                x_values.append(i + 1)
+                y_values.append(current_vals_variance)
+
+            fig, ax = plt.subplots()
+
+            _ = ax.plot(x_values, y_values, "--k")
+            _ = ax.set_xlabel("Number of Models")
+            _ = ax.set_ylabel("Aggregate Opinion Variance")
+            _ = ax.set_title(f"Variance of Aggregate Opinions by Number of Models Used ({community})")
+
+            save_path: str = f"{base_path}/GVOM-{community}.png"
+
+            plt.savefig(save_path, dpi=300.0)
+
         return None
 
 
@@ -687,7 +725,45 @@ class AnalysisResults:
         Plot the runtime opinion values for all models in each population size group in the experiment, along with
         an overall average trend.
         """
-        # TODO: Implement this
+        for community in self.communities:
+            iterations: list[int] = [i + 1 for i in range(self.max_iterations)]
+
+            # A subdirectory to organise the community plots into
+            base_path: str = f"{self.root_dir}/subplots/{community}"
+
+            if not os.path.exists(base_path):
+                os.mkdir(base_path)
+
+            fig, ax = plt.subplots()
+
+            for i in range(self.repetitions):
+                model_name: str
+                if i == 0:
+                    model_name = community
+                else:
+                    model_name = f"{community}{i + 1}"
+
+                model_values: list[float] = self.aggregate_opinions[model_name]
+
+                _ = ax.plot(iterations, model_values, "-k", linewidth=0.7, alpha=0.25)
+
+            _ = ax.plot(
+                iterations,
+                self.grouped_analysis_statistics[community]["opinion_statistics"][0],
+                "-r",
+                linewidth=0.8,
+                alpha=1.0,
+                label="Average",
+            )
+
+            _ = ax.legend()
+            _ = ax.set_xlabel("Iterations")
+            _ = ax.set_ylabel("Aggregate Opinions")
+            _ = ax.set_title(f"Model Aggregate Opinions over Iterations ({community})")
+
+            save_path: str = f"{base_path}/GMR-{community}.png"
+
+            plt.savefig(save_path, dpi=300.0)
         return None
 
 
@@ -695,7 +771,71 @@ class AnalysisResults:
         """
         Plot the box and whiskers for all model parameters at each individual population size.
         """
-        # TODO: Implement this
+        for community in self.communities:
+            base_path: str = f"{self.root_dir}/subplots/{community}"
+
+            if not os.path.exists(base_path):
+                os.mkdir(base_path)
+
+            unpacked_results: list[list[float | int]] = []
+            tick_labels: list[str] = []
+
+            for hierarchy, statistics in self.grouped_analysis_statistics[community]["polarisation_statistics"][0].items():
+                unpacked_results.append(deepcopy(statistics))
+                tick_labels.append(f"Hierarchy Polarisation ({hierarchy})")
+
+            fig, ax = plt.subplots()
+
+            box_plot = ax.boxplot(
+                unpacked_results, notch=False, orientation="vertical", whis=1.5,
+            )
+            _ = plt.setp(box_plot["boxes"], color="black")
+            _ = plt.setp(box_plot["whiskers"], color="black")
+            _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+            ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+            _ = ax.set(
+                axisbelow=True,
+                title=f"Synthetic Case Study -- {community} Polarisation Statistics",
+                xlabel="Parameter",
+                ylabel="Value",
+            )
+
+            _ = ax.set_xticklabels(tick_labels, rotation=0, fontsize=8)
+
+            save_path: str = f"{base_path}/GPS-{community}.png"
+
+            plt.savefig(save_path, dpi=300.0)
+
+            unpacked_opinions: list[float] = deepcopy(self.grouped_analysis_statistics[community]["opinion_statistics"][0])
+            opinion_label: list[str] = ["Aggregate Opinions"]
+
+            fig, ax = plt.subplots()
+
+            box_plot = ax.boxplot(
+                unpacked_opinions, notch=False, orientation="vertical", whis=1.5,
+            )
+            _ = plt.setp(box_plot["boxes"], color="black")
+            _ = plt.setp(box_plot["whiskers"], color="black")
+            _ = plt.setp(box_plot["fliers"], color="red", marker="+")
+
+            ax.yaxis.grid(True, linestyle="-", which="major", color="lightgrey", alpha=0.5)
+
+            _ = ax.set(
+                axisbelow=True,
+                title=f"Synthetic Case Study -- {community} Aggregate Opinion Statistics",
+                xlabel="Parameter",
+                ylabel="Value",
+            )
+
+            _ = ax.set_xticklabels(opinion_label, rotation=0, fontsize=8)
+
+            save_path = f"{base_path}/GOS-{community}.png"
+
+            plt.savefig(save_path, dpi=300.0)
+
+            # TODO: Rad Agts and Rad Grps
         return None
 
     def create_analysis_plots(self) -> None:
