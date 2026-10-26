@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .SCSPlotter import AnalysisResults
+from SCSPlotter import AnalysisResults
 
 
 if __name__ == "__main__":
