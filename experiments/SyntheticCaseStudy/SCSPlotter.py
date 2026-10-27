@@ -813,7 +813,7 @@ class AnalysisResults:
 
             for hierarchy, statistics in self.grouped_analysis_statistics["polarisation_statistics"][community][0].items():
                 unpacked_results.append(deepcopy(statistics))
-                tick_labels.append(f"Hierarchy Polarisation ({hierarchy})")
+                tick_labels.append(f"{hierarchy}")
 
             fig, ax = plt.subplots()
 
@@ -829,7 +829,7 @@ class AnalysisResults:
             _ = ax.set(
                 axisbelow=True,
                 title=f"Synthetic Case Study -- {community} Polarisation Statistics",
-                xlabel="Parameter",
+                xlabel="Hierarchy",
                 ylabel="Value",
             )
 
