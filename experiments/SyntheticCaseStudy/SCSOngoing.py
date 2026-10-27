@@ -243,27 +243,75 @@ if __name__ == "__main__":
 
     SAVEDIRS: dict[str, str] = {
         "NONMN": f"{SAVEDIR_ROOT}/NONMN",
+        "NONMN2": f"{SAVEDIR_ROOT}/NONMN2",
+        "NONMN3": f"{SAVEDIR_ROOT}/NONMN3",
+        "NONMN4": f"{SAVEDIR_ROOT}/NONMN4",
+        "NONMN5": f"{SAVEDIR_ROOT}/NONMN5",
         "MINNG": f"{SAVEDIR_ROOT}/MINNG",
+        "MINNG2": f"{SAVEDIR_ROOT}/MINNG2",
+        "MINNG3": f"{SAVEDIR_ROOT}/MINNG3",
+        "MINNG4": f"{SAVEDIR_ROOT}/MINNG4",
+        "MINNG5": f"{SAVEDIR_ROOT}/MINNG5",
     }
     SAVEFILES: dict[str, str] = {
         "NONMN": f"{SAVEDIRS['NONMN']}/NONMN_model_variables.csv",
+        "NONMN2": f"{SAVEDIRS['NONMN2']}/NONMN2_model_variables.csv",
+        "NONMN3": f"{SAVEDIRS['NONMN3']}/NONMN3_model_variables.csv",
+        "NONMN4": f"{SAVEDIRS['NONMN4']}/NONMN4_model_variables.csv",
+        "NONMN5": f"{SAVEDIRS['NONMN5']}/NONMN5_model_variables.csv",
         "MINNG": f"{SAVEDIRS['MINNG']}/MINNG_model_variables.csv",
+        "MINNG2": f"{SAVEDIRS['MINNG2']}/MINNG2_model_variables.csv",
+        "MINNG3": f"{SAVEDIRS['MINNG3']}/MINNG3_model_variables.csv",
+        "MINNG4": f"{SAVEDIRS['MINNG4']}/MINNG4_model_variables.csv",
+        "MINNG5": f"{SAVEDIRS['MINNG5']}/MINNG5_model_variables.csv",
     }
     VISDIRS: dict[str, str] = {
         "NONMN": f"{VISUALISATION_ROOT}/NONMN",
+        "NONMN2": f"{VISUALISATION_ROOT}/NONMN2",
+        "NONMN3": f"{VISUALISATION_ROOT}/NONMN3",
+        "NONMN4": f"{VISUALISATION_ROOT}/NONMN4",
+        "NONMN5": f"{VISUALISATION_ROOT}/NONMN5",
         "MINNG": f"{VISUALISATION_ROOT}/MINNG",
+        "MINNG2": f"{VISUALISATION_ROOT}/MINNG2",
+        "MINNG3": f"{VISUALISATION_ROOT}/MINNG3",
+        "MINNG4": f"{VISUALISATION_ROOT}/MINNG4",
+        "MINNG5": f"{VISUALISATION_ROOT}/MINNG5",
     }
     AGENT_PATHS: dict[str, str] = {
         "NONMN": "./experiments/SyntheticCaseStudy/OngoingNegative/Agents/NONMN_Agents",
+        "NONMN2": "./experiments/SyntheticCaseStudy/OngoingNegative/Agents/NONMN_Agents",
+        "NONMN3": "./experiments/SyntheticCaseStudy/OngoingNegative/Agents/NONMN_Agents",
+        "NONMN4": "./experiments/SyntheticCaseStudy/OngoingNegative/Agents/NONMN_Agents",
+        "NONMN5": "./experiments/SyntheticCaseStudy/OngoingNegative/Agents/NONMN_Agents",
         "MINNG": "./experiments/SyntheticCaseStudy/OngoingNegative/Agents/MINNG_Agents",
+        "MINNG2": "./experiments/SyntheticCaseStudy/OngoingNegative/Agents/MINNG_Agents",
+        "MINNG3": "./experiments/SyntheticCaseStudy/OngoingNegative/Agents/MINNG_Agents",
+        "MINNG4": "./experiments/SyntheticCaseStudy/OngoingNegative/Agents/MINNG_Agents",
+        "MINNG5": "./experiments/SyntheticCaseStudy/OngoingNegative/Agents/MINNG_Agents",
     }
     GRAPH_PATHS: dict[str, str] = {
         "NONMN": "./experiments/SyntheticCaseStudy/OngoingNegative/Graphs/NONMN_Graphs",
+        "NONMN2": "./experiments/SyntheticCaseStudy/OngoingNegative/Graphs/NONMN_Graphs",
+        "NONMN3": "./experiments/SyntheticCaseStudy/OngoingNegative/Graphs/NONMN_Graphs",
+        "NONMN4": "./experiments/SyntheticCaseStudy/OngoingNegative/Graphs/NONMN_Graphs",
+        "NONMN5": "./experiments/SyntheticCaseStudy/OngoingNegative/Graphs/NONMN_Graphs",
         "MINNG": "./experiments/SyntheticCaseStudy/OngoingNegative/Graphs/MINNG_Graphs",
+        "MINNG2": "./experiments/SyntheticCaseStudy/OngoingNegative/Graphs/MINNG_Graphs",
+        "MINNG3": "./experiments/SyntheticCaseStudy/OngoingNegative/Graphs/MINNG_Graphs",
+        "MINNG4": "./experiments/SyntheticCaseStudy/OngoingNegative/Graphs/MINNG_Graphs",
+        "MINNG5": "./experiments/SyntheticCaseStudy/OngoingNegative/Graphs/MINNG_Graphs",
     }
     GROUP_PATHS: dict[str, str] = {
         "NONMN": "./experiments/SyntheticCaseStudy/OngoingNegative/Groups/NONMN_Groups",
+        "NONMN2": "./experiments/SyntheticCaseStudy/OngoingNegative/Groups/NONMN_Groups",
+        "NONMN3": "./experiments/SyntheticCaseStudy/OngoingNegative/Groups/NONMN_Groups",
+        "NONMN4": "./experiments/SyntheticCaseStudy/OngoingNegative/Groups/NONMN_Groups",
+        "NONMN5": "./experiments/SyntheticCaseStudy/OngoingNegative/Groups/NONMN_Groups",
         "MINNG": "./experiments/SyntheticCaseStudy/OngoingNegative/Groups/MINNG_Groups",
+        "MINNG2": "./experiments/SyntheticCaseStudy/OngoingNegative/Groups/MINNG_Groups",
+        "MINNG3": "./experiments/SyntheticCaseStudy/OngoingNegative/Groups/MINNG_Groups",
+        "MINNG4": "./experiments/SyntheticCaseStudy/OngoingNegative/Groups/MINNG_Groups",
+        "MINNG5": "./experiments/SyntheticCaseStudy/OngoingNegative/Groups/MINNG_Groups",
     }
 
     BASE_HIERARCHIES: list[str] = [
@@ -316,7 +364,15 @@ if __name__ == "__main__":
         A helper class for typechecking the TEST_PARAMETERS container.
         """
         NONMN: ModelTestParameters
+        NONMN2: ModelTestParameters
+        NONMN3: ModelTestParameters
+        NONMN4: ModelTestParameters
+        NONMN5: ModelTestParameters
         MINNG: ModelTestParameters
+        MINNG2: ModelTestParameters
+        MINNG3: ModelTestParameters
+        MINNG4: ModelTestParameters
+        MINNG5: ModelTestParameters
         DEFAULT: DefaultTestParameters
 
     # The relevant parameters that are defined for the model instances
@@ -327,8 +383,56 @@ if __name__ == "__main__":
             "hierarchies": BASE_HIERARCHIES,
             "hierarchy_rw": HIERARCHY_RW,
         },
+        "NONMN2": {
+            "model_id": "NONMN2",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "NONMN3": {
+            "model_id": "NONMN3",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "NONMN4": {
+            "model_id": "NONMN4",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "NONMN5": {
+            "model_id": "NONMN5",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
         "MINNG": {
             "model_id": "MINNG",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "MINNG2": {
+            "model_id": "MINNG2",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "MINNG3": {
+            "model_id": "MINNG3",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "MINNG4": {
+            "model_id": "MINNG4",
+            "iterations": 100,
+            "hierarchies": BASE_HIERARCHIES,
+            "hierarchy_rw": HIERARCHY_RW,
+        },
+        "MINNG5": {
+            "model_id": "MINNG5",
             "iterations": 100,
             "hierarchies": BASE_HIERARCHIES,
             "hierarchy_rw": HIERARCHY_RW,
