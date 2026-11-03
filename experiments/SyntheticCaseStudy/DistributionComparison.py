@@ -133,7 +133,7 @@ class DistributionComparator:
 
         return None
 
-    def perform_ttest(self, base_experiment: str | None = None) -> None:
+    def perform_ttest(self, base_experiment: str | None = None, compare_collections: bool = False) -> None:
         """
         Perform a pair-wise Welch's t-test across all experiments in a collection of results.
 
@@ -142,6 +142,8 @@ class DistributionComparator:
 
         :param base_experiment: The name of the baseline experiment against which all other experiments are being compared.
         :type base_experiment: str, optional
+        :param compare_collections: A flag indicating if there should be direct between-collection comparisons as well.
+        :type compare_collections: bool, optional
         """
         for collection, experiments in self.opinions_data.items():
             self.ttest_results.setdefault(collection, {})
@@ -149,7 +151,7 @@ class DistributionComparator:
 
             if base_experiment is None:
                 for i in range(len(experiments)):
-                    for j in range(i, len(experiments)):
+                    for j in range(i + 1, len(experiments)):
                         self.ttest_results[collection]["opinions"][f"{list(experiments.keys())[i]}-{list(experiments.keys())[j]}"] = ttest_ind(
                             list(experiments.values())[i],
                             list(experiments.values())[j],
@@ -171,7 +173,7 @@ class DistributionComparator:
 
             if base_experiment is None:
                 for i in range(len(experiments)):
-                    for j in range(i, len(experiments)):
+                    for j in range(i + 1, len(experiments)):
                         for hierarchy in self.hierarchies:
                             self.ttest_results[collection]["polarisations"][f"{list(experiments.keys())[i]}-{list(experiments.keys())[j]}-{hierarchy}"] = ttest_ind(
                                 list(experiments.values())[i][hierarchy],
@@ -189,11 +191,42 @@ class DistributionComparator:
                             values[hierarchy],
                             equal_var=False,
                         )
+
+        if compare_collections:
+            for collection_i, experiments_i in self.opinions_data.items():
+                for collection_j, experiments_j in self.opinions_data.items():
+                    if collection_i == collection_j:
+                        continue
+
+                    self.ttest_results.setdefault(f"{collection_i}-{collection_j}", {})
+                    self.ttest_results[f"{collection_i}-{collection_j}"].setdefault("opinions", {})
+
+                    for experiment in experiments_i:
+                        self.ttest_results[f"{collection_i}-{collection_j}"]["opinions"][f"{collection_i}-{collection_j}-{experiment}"] = ttest_ind(
+                            experiments_i[experiment],
+                            experiments_j[experiment],
+                            equal_var=False,
+                        )
+
+            for collection_i, experiments_i in self.polarisations_data.items():
+                for collection_j, experiments_j in self.polarisations_data.items():
+                    if collection_i == collection_j:
+                        continue
+
+                    self.ttest_results[f"{collection_i}-{collection_j}"].setdefault("polarisations", {})
+
+                    for experiment in experiments_i:
+                        for hierarchy in self.hierarchies:
+                            self.ttest_results[f"{collection_i}-{collection_j}"]["polarisations"][f"{collection_i}-{collection_j}-{experiment}-{hierarchy}"] = ttest_ind(
+                                experiments_i[experiment][hierarchy],
+                                experiments_j[experiment][hierarchy],
+                                equal_var=False,
+                            )
         return None
 
 
 if __name__ == "__main__":
     comparator: DistributionComparator = DistributionComparator(HIERARCHIES, NONMN=NONMN_SAVEFILES, MINNG=MINNG_SAVEFILES)
     comparator.load_data()
-    comparator.perform_ttest(base_experiment="Neutral")
+    comparator.perform_ttest(compare_collections=True)
     comparator.save_results("./experiments/SyntheticCaseStudy/scenario_distributions_comparison.csv")
