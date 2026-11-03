@@ -463,9 +463,21 @@ if __name__ == "__main__":
     # Used to define the relative probability of events for each community type
     PROBABILITY_TABLE: dict[str, list[str]] = {
         "NONMN": [
+            # Nothing : 71                  - 88.75%
+            # New project -- negative : 1   - 1.25%
+            # New project -- positive : 1   - 1.25%
+            # Neighbour suffering : 6       - 7.5%
+            # Neighbour profitting : 1      - 1.25%
+            # ----------------------------------------
+            # Total : 80                    - 100%
             "New project announced - negative",
             "Nearby community suffering from mining",
             "Nearby community suffering from mining",
+            "Nearby community suffering from mining",
+            "Nearby community suffering from mining",
+            "Nearby community suffering from mining",
+            "Nearby community suffering from mining",
+            "Nothing",
             "Nothing",
             "Nothing",
             "Nothing",
@@ -540,6 +552,23 @@ if __name__ == "__main__":
             "New project announced - positive",
         ],
         "MINNG": [
+            # Nothing : 111                             - 69.375%
+            # Mine collapse : 2                         - 1.25%
+            # Indigenous eviction : 4                   - 2.5%
+            # Forest clearing : 4                       - 2.5%
+            # Broken promises : 8                       - 5%
+            # Layoffs : 8                               - 5%
+            # Protest repression : 8                    - 5%
+            # Pollution : 8                             - 5%
+            # Outreach program : 1                      - 0.625%
+            # Minor donation : 1                        - 0.625%
+            # Promises being met : 1                    - 0.625%
+            # Moderate donation : 1                     - 0.625%
+            # New jobs : 1                              - 0.625%
+            # Large donation : 1                        - 0.625%
+            # Extensive infrastructure investment : 1   - 0.625%
+            # ----------------------------------------------------
+            # Total : 160                               - 100%
             "Mine collapse",
             "Eviction of indigenous group",
             "Clearing of forested areas",
