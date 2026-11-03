@@ -5,6 +5,7 @@ import os
 from copy import deepcopy
 
 from scipy.stats import ttest_ind
+from scipy.stats._result_classes import TtestResult
 
 
 # Declare all relevant global variables here
@@ -40,12 +41,12 @@ MINNG_SAVEFILES: dict[str, list[str]] = {
 }
 # Then loop to add all repetitions
 for i in range(1, REPETITIONS):
-    NONMN_SAVEFILES["OngoingNegative"].append(f"{SAVEDIR_ROOT}/OngoingNegative/Results/NONMN{i}/NONMN{i}_model_variables.csv")
-    NONMN_SAVEFILES["InitialNegative"].append(f"{SAVEDIR_ROOT}/InitialNegative/Results/NONMN{i}/NONMN{i}_model_variables.csv")
-    NONMN_SAVEFILES["MixedEvents"].append(f"{SAVEDIR_ROOT}/MixedEvents/Results/NONMN{i}/NONMN{i}_model_variables.csv")
-    MINNG_SAVEFILES["OngoingNegative"].append(f"{SAVEDIR_ROOT}/OngoingNegative/Results/MINNG{i}/MINNG{i}_model_variables.csv")
-    MINNG_SAVEFILES["InitialNegative"].append(f"{SAVEDIR_ROOT}/InitialNegative/Results/MINNG{i}/MINNG{i}_model_variables.csv")
-    MINNG_SAVEFILES["MixedEvents"].append(f"{SAVEDIR_ROOT}/MixedEvents/Results/MINNG{i}/MINNG{i}_model_variables.csv")
+    NONMN_SAVEFILES["OngoingNegative"].append(f"{SAVEDIR_ROOT}/OngoingNegative/Results/NONMN{i + 1}/NONMN{i + 1}_model_variables.csv")
+    NONMN_SAVEFILES["InitialNegative"].append(f"{SAVEDIR_ROOT}/InitialNegative/Results/NONMN{i + 1}/NONMN{i + 1}_model_variables.csv")
+    NONMN_SAVEFILES["MixedEvents"].append(f"{SAVEDIR_ROOT}/MixedEvents/Results/NONMN{i + 1}/NONMN{i + 1}_model_variables.csv")
+    MINNG_SAVEFILES["OngoingNegative"].append(f"{SAVEDIR_ROOT}/OngoingNegative/Results/MINNG{i + 1}/MINNG{i + 1}_model_variables.csv")
+    MINNG_SAVEFILES["InitialNegative"].append(f"{SAVEDIR_ROOT}/InitialNegative/Results/MINNG{i + 1}/MINNG{i + 1}_model_variables.csv")
+    MINNG_SAVEFILES["MixedEvents"].append(f"{SAVEDIR_ROOT}/MixedEvents/Results/MINNG{i + 1}/MINNG{i + 1}_model_variables.csv")
 
 
 class DistributionComparator:
@@ -66,13 +67,14 @@ class DistributionComparator:
         self.saves: dict[str, dict[str, list[str]]] = saves
         self.opinions_data: dict[str, dict[str, list[float]]] = {}
         self.polarisations_data: dict[str, dict[str, dict[str, list[float]]]] = {}
-        self.ttest_results: dict[str, dict[str, dict[str, tuple[float, float]]]] = {}
+        self.ttest_results: dict[str, dict[str, dict[str, TtestResult]]] = {}
         # The names of all columns which will be written to the output .csv file
         self.fieldnames: list[str] = [
             "Collection",  # The collection of save files that the recorded row originates from
             "Type",  # The type of statistic/test that is being recorded in this row
             "ID",  # Some type of identifier outlining the involved distribution(s), and hierarchies where relevant
-            "Result",  # The actual calculated statistic or result of the test
+            "Statistic",  # The actual calculated statistic or result of the test
+            "P-Value",  # The p-value associated with the test (where applicable)
         ]
 
     def load_data(self) -> None:
@@ -111,7 +113,7 @@ class DistributionComparator:
             csv_writer: csv.DictWriter[str] = csv.DictWriter(csv_file, fieldnames=self.fieldnames)
             csv_writer.writeheader()
 
-            row_dict: dict[str, str | int | float | tuple[float, float]]
+            row_dict: dict[str, str | int | float | TtestResult]
 
             # First, write the ttest results
             for collection, ttests in self.ttest_results.items():
@@ -122,7 +124,8 @@ class DistributionComparator:
                             "Collection": collection,
                             "Type": test_type,
                             "ID": pairing,
-                            "Result": result,
+                            "Statistic": float(result[0]),
+                            "P-Value": float(result[1]),
                         }
                         csv_writer.writerow(row_dict)
 
