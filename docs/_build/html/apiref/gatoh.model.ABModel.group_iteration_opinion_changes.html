@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.model.ABModel.group_iteration_opinion_changes &mdash; gatoh 2026.08.0</title>
+  <title>gatoh.model.ABModel.group_iteration_opinion_changes &mdash; gatoh 2026.09.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../_static/documentation_options.js?v=9aec01f2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/thebelab-helper.js"></script>
@@ -29,7 +29,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="gatoh.model.ABModel.init_base_graph" href="gatoh.model.ABModel.init_base_graph.html" />
+    <link rel="next" title="gatoh.model.ABModel.group_members_opinion_changes" href="gatoh.model.ABModel.group_members_opinion_changes.html" />
     <link rel="prev" title="gatoh.model.ABModel.group_iteration_opinion_calculation" href="gatoh.model.ABModel.group_iteration_opinion_calculation.html" /> 
 </head>
 
@@ -79,6 +79,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_graph.html">gatoh.model.ABModel.add_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_graphs.html">gatoh.model.ABModel.add_graphs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_group.html">gatoh.model.ABModel.add_group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_group_graph_edge.html">gatoh.model.ABModel.add_group_graph_edge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_groups.html">gatoh.model.ABModel.add_groups</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.add_relationships_to_hierarchy.html">gatoh.model.ABModel.add_relationships_to_hierarchy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.apply_link_functions.html">gatoh.model.ABModel.apply_link_functions</a></li>
@@ -95,6 +96,15 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.generate_groups.html">gatoh.model.ABModel.generate_groups</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_agent_ids.html">gatoh.model.ABModel.get_agent_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_base_indices_from_edge.html">gatoh.model.ABModel.get_base_indices_from_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_benefited_count.html">gatoh.model.ABModel.get_benefited_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_group_benefited_count.html">gatoh.model.ABModel.get_group_benefited_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_group_personality_count.html">gatoh.model.ABModel.get_group_personality_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_group_personality_counts.html">gatoh.model.ABModel.get_group_personality_counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_group_radical_count.html">gatoh.model.ABModel.get_group_radical_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_groupgraph_indices_from_endpoints.html">gatoh.model.ABModel.get_groupgraph_indices_from_endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_personality_count.html">gatoh.model.ABModel.get_personality_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_personality_counts.html">gatoh.model.ABModel.get_personality_counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_radical_count.html">gatoh.model.ABModel.get_radical_count</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_tracked_agent_attributes.html">gatoh.model.ABModel.get_tracked_agent_attributes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.get_tracked_parameters.html">gatoh.model.ABModel.get_tracked_parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.group_iteration_opinion_calculation.html">gatoh.model.ABModel.group_iteration_opinion_calculation</a></li>
@@ -102,6 +112,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.model.ABModel.group_iteration_opinion_changes"><code class="docutils literal notranslate"><span class="pre">ABModel.group_iteration_opinion_changes()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.group_members_opinion_changes.html">gatoh.model.ABModel.group_members_opinion_changes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.init_base_graph.html">gatoh.model.ABModel.init_base_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.iterate.html">gatoh.model.ABModel.iterate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.iteration_opinion_calculation.html">gatoh.model.ABModel.iteration_opinion_calculation</a></li>
@@ -137,6 +148,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.track_model_parameters.html">gatoh.model.ABModel.track_model_parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.update.html">gatoh.model.ABModel.update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.update_base_graph.html">gatoh.model.ABModel.update_base_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.update_group_multi.html">gatoh.model.ABModel.update_group_multi</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.model.ABModel.update_multi.html">gatoh.model.ABModel.update_multi</a></li>
 </ul>
 </li>
@@ -195,12 +207,18 @@
 <h1>gatoh.model.ABModel.group_iteration_opinion_changes<a class="headerlink" href="#gatoh-model-abmodel-group-iteration-opinion-changes" title="Link to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="gatoh.model.ABModel.group_iteration_opinion_changes">
-<span class="sig-prename descclassname"><span class="pre">ABModel.</span></span><span class="sig-name descname"><span class="pre">group_iteration_opinion_changes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">changes_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/gatoh/model.html#ABModel.group_iteration_opinion_changes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.model.ABModel.group_iteration_opinion_changes" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">ABModel.</span></span><span class="sig-name descname"><span class="pre">group_iteration_opinion_changes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">changes_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radicalisation_thresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/gatoh/model.html#ABModel.group_iteration_opinion_changes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.model.ABModel.group_iteration_opinion_changes" title="Link to this definition"></a></dt>
 <dd><p>A helper function for group_iterate that simply applies all group opinion changes and then
 performs the appropriate checks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>changes_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – A &lt;group ID : opinion change information&gt; mapping of the opinion values to apply.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>changes_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>list</em><em>[</em><em>bool</em><em>]</em><em>]</em><em>]</em>) – A &lt;group ID : opinion change information&gt; mapping of the opinion values to apply.</p></li>
+<li><p><strong>radicalisation_thresh</strong> (<em>float</em><em>, </em><em>optional</em>) – An explicit threshold that should be used when determining (de)radicalisation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If the explicit radicalisation_thresh is invalid.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -212,7 +230,7 @@ performs the appropriate checks.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="gatoh.model.ABModel.group_iteration_opinion_calculation.html" class="btn btn-neutral float-left" title="gatoh.model.ABModel.group_iteration_opinion_calculation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="gatoh.model.ABModel.init_base_graph.html" class="btn btn-neutral float-right" title="gatoh.model.ABModel.init_base_graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="gatoh.model.ABModel.group_members_opinion_changes.html" class="btn btn-neutral float-right" title="gatoh.model.ABModel.group_members_opinion_changes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

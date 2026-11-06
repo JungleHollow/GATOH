@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AgentSet &mdash; gatoh 2026.08.0</title>
+  <title>AgentSet &mdash; gatoh 2026.09.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../_static/documentation_options.js?v=9aec01f2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/thebelab-helper.js"></script>
@@ -62,6 +62,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.add.html">gatoh.agents.AgentSet.add</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.agent_at_index.html">gatoh.agents.AgentSet.agent_at_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.agents_at_indices.html">gatoh.agents.AgentSet.agents_at_indices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.benefit_count.html">gatoh.agents.AgentSet.benefit_count</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.discard.html">gatoh.agents.AgentSet.discard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.discard_index.html">gatoh.agents.AgentSet.discard_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.extract_agent_pickle.html">gatoh.agents.AgentSet.extract_agent_pickle</a></li>
@@ -72,6 +73,9 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.get_indices.html">gatoh.agents.AgentSet.get_indices</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.id_in_agentset.html">gatoh.agents.AgentSet.id_in_agentset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.load_agentset.html">gatoh.agents.AgentSet.load_agentset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.personality_count.html">gatoh.agents.AgentSet.personality_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.personality_counts.html">gatoh.agents.AgentSet.personality_counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.radicalised_count.html">gatoh.agents.AgentSet.radicalised_count</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.remove.html">gatoh.agents.AgentSet.remove</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.remove_index.html">gatoh.agents.AgentSet.remove_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.agents.AgentSet.sample.html">gatoh.agents.AgentSet.sample</a></li>
@@ -162,35 +166,47 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.agents_at_indices.html#gatoh.agents.AgentSet.agents_at_indices" title="gatoh.agents.AgentSet.agents_at_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">agents_at_indices</span></code></a></p></td>
 <td><p>Returns a list of all the agent objects at the specified indices.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.discard.html#gatoh.agents.AgentSet.discard" title="gatoh.agents.AgentSet.discard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">discard</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.benefit_count.html#gatoh.agents.AgentSet.benefit_count" title="gatoh.agents.AgentSet.benefit_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">benefit_count</span></code></a></p></td>
+<td><p>A getter function that returns the number of agents which experience personal benefit from social contagion in the agent set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.discard.html#gatoh.agents.AgentSet.discard" title="gatoh.agents.AgentSet.discard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">discard</span></code></a></p></td>
 <td><p>Removes an Agent from the AgentSet which matches the input Agent; does not return an error if the Agent does not exist.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.discard_index.html#gatoh.agents.AgentSet.discard_index" title="gatoh.agents.AgentSet.discard_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">discard_index</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.discard_index.html#gatoh.agents.AgentSet.discard_index" title="gatoh.agents.AgentSet.discard_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">discard_index</span></code></a></p></td>
 <td><p>Removes the Agent at the specified index in the AgentSet; does not return an error if the index is out of bounds.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.extract_agent_pickle.html#gatoh.agents.AgentSet.extract_agent_pickle" title="gatoh.agents.AgentSet.extract_agent_pickle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_agent_pickle</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.extract_agent_pickle.html#gatoh.agents.AgentSet.extract_agent_pickle" title="gatoh.agents.AgentSet.extract_agent_pickle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_agent_pickle</span></code></a></p></td>
 <td><p>A helper function that allows for multithreading of <a class="reference internal" href="gatoh.agents.AgentSet.load_agentset.html#gatoh.agents.AgentSet.load_agentset" title="gatoh.agents.AgentSet.load_agentset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_agentset()</span></code></a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.get_agent_by_id.html#gatoh.agents.AgentSet.get_agent_by_id" title="gatoh.agents.AgentSet.get_agent_by_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_agent_by_id</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.get_agent_by_id.html#gatoh.agents.AgentSet.get_agent_by_id" title="gatoh.agents.AgentSet.get_agent_by_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_agent_by_id</span></code></a></p></td>
 <td><p>Searches the AgentSet for an Agent with the given id and returns its object if it exists.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.get_agent_ids.html#gatoh.agents.AgentSet.get_agent_ids" title="gatoh.agents.AgentSet.get_agent_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_agent_ids</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.get_agent_ids.html#gatoh.agents.AgentSet.get_agent_ids" title="gatoh.agents.AgentSet.get_agent_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_agent_ids</span></code></a></p></td>
 <td><p>A getter function that returns the IDs of all agents contained within the agent set.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.get_agents_by_ids.html#gatoh.agents.AgentSet.get_agents_by_ids" title="gatoh.agents.AgentSet.get_agents_by_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_agents_by_ids</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.get_agents_by_ids.html#gatoh.agents.AgentSet.get_agents_by_ids" title="gatoh.agents.AgentSet.get_agents_by_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_agents_by_ids</span></code></a></p></td>
 <td><p>Searches the AgentSet for Agents with the given ids and returns their objects if they all exist.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.get_index.html#gatoh.agents.AgentSet.get_index" title="gatoh.agents.AgentSet.get_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_index</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.get_index.html#gatoh.agents.AgentSet.get_index" title="gatoh.agents.AgentSet.get_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_index</span></code></a></p></td>
 <td><p>Returns the index within the AgentSet of the input Agent object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.get_indices.html#gatoh.agents.AgentSet.get_indices" title="gatoh.agents.AgentSet.get_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_indices</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.get_indices.html#gatoh.agents.AgentSet.get_indices" title="gatoh.agents.AgentSet.get_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_indices</span></code></a></p></td>
 <td><p>Returns the indices within the AgentSet of the input Agent objects.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.id_in_agentset.html#gatoh.agents.AgentSet.id_in_agentset" title="gatoh.agents.AgentSet.id_in_agentset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id_in_agentset</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.id_in_agentset.html#gatoh.agents.AgentSet.id_in_agentset" title="gatoh.agents.AgentSet.id_in_agentset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id_in_agentset</span></code></a></p></td>
 <td><p>Report if an agent with the given unique ID exists in the agentset.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.load_agentset.html#gatoh.agents.AgentSet.load_agentset" title="gatoh.agents.AgentSet.load_agentset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_agentset</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.load_agentset.html#gatoh.agents.AgentSet.load_agentset" title="gatoh.agents.AgentSet.load_agentset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_agentset</span></code></a></p></td>
 <td><p>Loads an AgentSet that has been saved following the same process as in the <a class="reference internal" href="gatoh.agents.AgentSet.save_agentset.html#gatoh.agents.AgentSet.save_agentset" title="gatoh.agents.AgentSet.save_agentset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_agentset()</span></code></a> function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.personality_count.html#gatoh.agents.AgentSet.personality_count" title="gatoh.agents.AgentSet.personality_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">personality_count</span></code></a></p></td>
+<td><p>A getter function that returns the count of agents which hold a specific personality type in the agent set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.personality_counts.html#gatoh.agents.AgentSet.personality_counts" title="gatoh.agents.AgentSet.personality_counts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">personality_counts</span></code></a></p></td>
+<td><p>A getter function that returns the counts of all personality types among agents in the agent set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.radicalised_count.html#gatoh.agents.AgentSet.radicalised_count" title="gatoh.agents.AgentSet.radicalised_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">radicalised_count</span></code></a></p></td>
+<td><p>A getter function that returns the number of radicalised agents that are present in the agent set.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.agents.AgentSet.remove.html#gatoh.agents.AgentSet.remove" title="gatoh.agents.AgentSet.remove"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove</span></code></a></p></td>
 <td><p>Removes an agent from the AgentSet which matches the input agent; returning an error if such an Agent does not exist.</p></td>

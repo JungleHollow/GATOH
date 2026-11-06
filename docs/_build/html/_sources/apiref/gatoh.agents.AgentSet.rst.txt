@@ -17,6 +17,7 @@
       ~AgentSet.add
       ~AgentSet.agent_at_index
       ~AgentSet.agents_at_indices
+      ~AgentSet.benefit_count
       ~AgentSet.discard
       ~AgentSet.discard_index
       ~AgentSet.extract_agent_pickle
@@ -27,6 +28,9 @@
       ~AgentSet.get_indices
       ~AgentSet.id_in_agentset
       ~AgentSet.load_agentset
+      ~AgentSet.personality_count
+      ~AgentSet.personality_counts
+      ~AgentSet.radicalised_count
       ~AgentSet.remove
       ~AgentSet.remove_index
       ~AgentSet.sample

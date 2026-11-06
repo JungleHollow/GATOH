@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.model &mdash; gatoh 2026.08.0</title>
+  <title>gatoh.model &mdash; gatoh 2026.09.0</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../../_static/documentation_options.js?v=9aec01f2"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/thebelab-helper.js"></script>
@@ -91,7 +91,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing.pool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="kn">import</span> <span class="n">choices</span><span class="p">,</span> <span class="n">randint</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="kn">import</span> <span class="n">choices</span><span class="p">,</span> <span class="n">randint</span><span class="p">,</span> <span class="n">uniform</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shutil</span><span class="w"> </span><span class="kn">import</span> <span class="n">rmtree</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">TypedDict</span>
 
@@ -105,7 +105,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rustworkx</span><span class="w"> </span><span class="kn">import</span> <span class="n">all_shortest_paths</span> <span class="k">as</span> <span class="n">rx_shortest_paths</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">AgentSet</span><span class="p">,</span> <span class="n">OPINION_MAX</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.graphs</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">GraphNode</span><span class="p">,</span> <span class="n">GraphEdge</span><span class="p">,</span> <span class="n">GraphSet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.graphs</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">GraphNode</span><span class="p">,</span> <span class="n">GraphEdge</span><span class="p">,</span> <span class="n">GraphSet</span><span class="p">,</span> <span class="n">MAX_RELATIONSHIP</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.graphs</span><span class="w"> </span><span class="kn">import</span> <span class="n">GroupGraph</span><span class="p">,</span> <span class="n">GroupNode</span><span class="p">,</span> <span class="n">GroupEdge</span><span class="p">,</span> <span class="n">GroupGraphSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.groups</span><span class="w"> </span><span class="kn">import</span> <span class="n">Group</span><span class="p">,</span> <span class="n">GroupSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gatoh.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">GATOHLogger</span>
@@ -164,6 +164,26 @@
     <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span>
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">AgentChanges</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A helper class used to type check the agent changes dictionary for group iterations in :class:`~gatoh.model.ABModel`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">opinion_changes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">radicalisation_changes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">GroupUpdateDict</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A helper class used to type check the group updates dictionary for group updates at the end of iterations in :class:`~gatoh.model.ABModel`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">aggregate_opinion</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">member_benefit_rate</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">aggregate_susceptibility</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">radicalisation_rate</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">aggregate_hierarchy_weighting</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">silencing_rate</span><span class="p">:</span> <span class="nb">float</span>
+
+
 <div class="viewcode-block" id="ABModel">
 <a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.html#gatoh.model.ABModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ABModel</span><span class="p">:</span>
@@ -176,6 +196,10 @@
 <span class="sd">    :type hierarchy_rw_distributions: list[tuple[float, float]]</span>
 <span class="sd">    :param agent_opinion_rw: Shared (mean, variance) parameters used for stochastic opinion changes across all agents at each timestep.</span>
 <span class="sd">    :type agent_opinion_rw: tuple[float, float], optional</span>
+<span class="sd">    :param group_opinion_rw: Shared (mean, variance) parameters used for stochastic opinion changes across all groups at each timestep.</span>
+<span class="sd">    :type group_opinion_rw: tuple[float, float], optional</span>
+<span class="sd">    :param group_rw_distribution: (mean, variance) parameters used for random walk effects within the group graph.</span>
+<span class="sd">    :type group_rw_distribution: tuple[float, float], optional</span>
 <span class="sd">    :param iterations: The number of iterations that the model will run for.</span>
 <span class="sd">    :type iterations: int, optional</span>
 <span class="sd">    :param silencing_threshold: A threshold that, when surpassed by agents, will cause them to cease expressing their opinions in a given hierarchy.</span>
@@ -225,6 +249,8 @@
         <span class="n">hierarchy_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">hierarchy_rw_distributions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
         <span class="n">agent_opinion_rw</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+        <span class="n">group_opinion_rw</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+        <span class="n">group_rw_distribution</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
         <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
         <span class="n">silencing_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
         <span class="n">silencing_link</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
@@ -252,11 +278,17 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">=</span> <span class="n">hierarchy_rw_distributions</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">agent_opinion_rw</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_opinion_rw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_opinion_rw</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_opinion_rw</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span> <span class="n">AgentSet</span> <span class="o">=</span> <span class="n">AgentSet</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span> <span class="n">GraphSet</span> <span class="o">=</span> <span class="n">GraphSet</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span> <span class="n">GroupSet</span> <span class="o">=</span> <span class="n">GroupSet</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="p">:</span> <span class="n">GroupGraphSet</span> <span class="o">=</span> <span class="n">GroupGraphSet</span><span class="p">()</span>
+
+        <span class="c1"># Initialise and add the group graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">add_graph</span><span class="p">(</span>
+            <span class="n">GroupGraph</span><span class="p">(</span><span class="n">group_rw_distribution</span><span class="p">,</span> <span class="n">suppress_warnings</span><span class="o">=</span><span class="n">suppress_warnings</span><span class="p">)</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">init_graphs</span><span class="p">:</span>
             <span class="c1"># Ensure that the input hierarchy information always produce at least empty graphs in the graphset</span>
@@ -802,6 +834,108 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+<div class="viewcode-block" id="ABModel.get_radical_count">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.get_radical_count.html#gatoh.model.ABModel.get_radical_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_radical_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A wrapper for :meth:`~gatoh.agents.AgentSet.radicalised_count`.</span>
+
+<span class="sd">        :return: The number of radicalised agents in the model&#39;s agent set.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">radicalised_count</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ABModel.get_benefited_count">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.get_benefited_count.html#gatoh.model.ABModel.get_benefited_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_benefited_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A wrapper for :meth:`~gatoh.agents.AgentSet.benefit_count`.</span>
+
+<span class="sd">        :return: The number of benefited agents in the model&#39;s agent set.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">benefit_count</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ABModel.get_personality_counts">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.get_personality_counts.html#gatoh.model.ABModel.get_personality_counts">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_personality_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A wrapper for :meth:`~gatoh.agents.AgentSet.personality_counts`.</span>
+
+<span class="sd">        :return: The count of each supported personality type among agents in the agent set.</span>
+<span class="sd">        :rtype: dict[str, int]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">personality_counts</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ABModel.get_personality_count">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.get_personality_count.html#gatoh.model.ABModel.get_personality_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_personality_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">personality</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A wrapper for :meth:`~gatoh.agents.AgentSet.personality_count`.</span>
+
+<span class="sd">        :param personality: The personality type that is being counted.</span>
+<span class="sd">        :type personality: str</span>
+<span class="sd">        :raises ValueError: If the wrapped function receives an invalid personality type.</span>
+<span class="sd">        :return: The count of agents which hold the specified personality type.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">personality_count</span><span class="p">(</span><span class="n">personality</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ABModel.get_group_radical_count">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.get_group_radical_count.html#gatoh.model.ABModel.get_group_radical_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_group_radical_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A wrapper for :meth:`~gatoh.groups.GroupSet.radicalised_count`.</span>
+
+<span class="sd">        :return: The number of radicalised groups in the model&#39;s group set.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">radicalised_count</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ABModel.get_group_benefited_count">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.get_group_benefited_count.html#gatoh.model.ABModel.get_group_benefited_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_group_benefited_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A wrapper for :meth:`~gatoh.groups.GroupSet.benefit_count`.</span>
+
+<span class="sd">        :return: The number of benefited groups in the model&#39;s group set.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">benefit_count</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ABModel.get_group_personality_counts">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.get_group_personality_counts.html#gatoh.model.ABModel.get_group_personality_counts">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_group_personality_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A wrapper for :meth:`~gatoh.groups.GroupSet.personality_counts`.</span>
+
+<span class="sd">        :return: The count of each supported personality type among groups in the group set.</span>
+<span class="sd">        :rtype: dict[str, int]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">personality_counts</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ABModel.get_group_personality_count">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.get_group_personality_count.html#gatoh.model.ABModel.get_group_personality_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_group_personality_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">personality</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A wrapper for :meth:`~gatoh.groups.GroupSet.personality_count`.</span>
+
+<span class="sd">        :param personality: The personality type that is being counted.</span>
+<span class="sd">        :type personality: str</span>
+<span class="sd">        :raises ValueError: If the wrapped function receives an invalid personality type.</span>
+<span class="sd">        :return: The count of groups which hold the specified predominant personality type.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">personality_count</span><span class="p">(</span><span class="n">personality</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="ABModel.add_graph">
 <a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.add_graph.html#gatoh.model.ABModel.add_graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GraphSet</span><span class="p">:</span>
@@ -903,7 +1037,7 @@
 
         <span class="c1"># Done this way to prevent memory leaks from initiating the empty dict in the function parameters</span>
         <span class="k">if</span> <span class="n">ensure_connected</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">ensure_connected</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">ensure_connected</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">hierarchies</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">agent_subsetting</span><span class="p">:</span>
@@ -1125,7 +1259,9 @@
 <span class="sd">        :return: The index of the newly added Group in the GroupSet.</span>
 <span class="sd">        :rtype: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">([</span><span class="n">group</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GroupGraph.add_nodes&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.add_group&quot;</span><span class="p">)</span>
             <span class="c1"># Preemptively logging the groupset add</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GroupSet.add&quot;</span><span class="p">)</span>
@@ -1148,8 +1284,11 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GroupSet.add&quot;</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.add_groups&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GroupGraph.add_nodes&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span></div>
 
@@ -1377,7 +1516,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Initialise a dictionary to keep track of group opinion changes</span>
         <span class="c1"># (this is done to prevent recursive updating of opinions during the evolution of opinions)</span>
-        <span class="n">new_group_opinions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">new_group_opinions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1"># Type declarations</span>
         <span class="n">partial_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1694,7 +1833,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">group_iteration_opinion_calculation</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">group</span><span class="p">:</span> <span class="n">Group</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A helper function that calculates the per-group changes to opinions for the iteration,</span>
 <span class="sd">        returning all necessary information for :meth:`~self.group_iteration_opinion_changes`</span>
@@ -1706,7 +1845,7 @@
 <span class="sd">        :param group: The group for which the opinion changes are being calculated.</span>
 <span class="sd">        :type group: Group</span>
 <span class="sd">        :return: A &lt;Group ID : Changes info&gt; mapping that provides all necessary information to apply the opinion changes for a specific group.</span>
-<span class="sd">        :rtype: tuple[str, float]</span>
+<span class="sd">        :rtype: tuple[str, tuple[float, list[bool]]]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">group</span><span class="o">.</span><span class="n">previous_opinion</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">aggregate_opinion</span>
 
@@ -1724,22 +1863,233 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">total_change</span> <span class="o">=</span> <span class="n">neighbour_influences</span>
 
-        <span class="c1"># TODO: Finish this function...</span>
+        <span class="c1"># Check for the existence of personal benefit across all of the group&#39;s neighbours</span>
+        <span class="n">all_neighbour_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+        <span class="n">all_neighbour_benefits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">neighbour_index</span> <span class="ow">in</span> <span class="n">all_neighbour_indices</span><span class="p">:</span>
+            <span class="n">neighbour_object</span><span class="p">:</span> <span class="n">Group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">neighbour_index</span><span class="p">]</span><span class="o">.</span><span class="n">group</span>
+            <span class="n">all_neighbour_benefits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neighbour_object</span><span class="o">.</span><span class="n">is_benefited</span><span class="p">())</span>
 
-        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span></div>
+        <span class="c1"># Define the return type</span>
+        <span class="n">opinion_result</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]</span>
+
+        <span class="c1"># Constrain to [-1, 1]</span>
+        <span class="c1"># 100.0 and -100.0 are used as key delta values indicating that the opinion needs to be constrained</span>
+        <span class="k">if</span> <span class="n">group</span><span class="o">.</span><span class="n">aggregate_opinion</span> <span class="o">+</span> <span class="n">total_change</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">OPINION_MAX</span><span class="p">:</span>
+            <span class="n">opinion_result</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">group</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="p">(</span>
+                    <span class="o">-</span><span class="mf">100.0</span><span class="p">,</span>
+                    <span class="n">all_neighbour_benefits</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">group</span><span class="o">.</span><span class="n">aggregate_opinion</span> <span class="o">+</span> <span class="n">total_change</span> <span class="o">&gt;</span> <span class="n">OPINION_MAX</span><span class="p">:</span>
+            <span class="n">opinion_result</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">group</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="p">(</span>
+                    <span class="mf">100.0</span><span class="p">,</span>
+                    <span class="n">all_neighbour_benefits</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">opinion_result</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">group</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="p">(</span>
+                    <span class="n">total_change</span><span class="p">,</span>
+                    <span class="n">all_neighbour_benefits</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">opinion_result</span></div>
 
 
 <div class="viewcode-block" id="ABModel.group_iteration_opinion_changes">
 <a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.group_iteration_opinion_changes.html#gatoh.model.ABModel.group_iteration_opinion_changes">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">group_iteration_opinion_changes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">changes_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">group_iteration_opinion_changes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">changes_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]],</span> <span class="n">radicalisation_thresh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A helper function for group_iterate that simply applies all group opinion changes and then</span>
 <span class="sd">        performs the appropriate checks.</span>
 
 <span class="sd">        :param changes_dict: A &lt;group ID : opinion change information&gt; mapping of the opinion values to apply.</span>
-<span class="sd">        :type changes_dict: dict[str, float]</span>
+<span class="sd">        :type changes_dict: dict[str, tuple[float, list[bool]]]</span>
+<span class="sd">        :param radicalisation_thresh: An explicit threshold that should be used when determining (de)radicalisation.</span>
+<span class="sd">        :type radicalisation_thresh: float, optional</span>
+<span class="sd">        :raises TypeError: If the explicit radicalisation_thresh is invalid.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># TODO: Implement this function</span>
+        <span class="c1"># Type check for the radicalisation threshold</span>
+        <span class="k">if</span> <span class="n">radicalisation_thresh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">radicalisation_thresh</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">radicalisation_thresh</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">radicalisation_thresh</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;radicalisation_thresh must be a float value in the range [0.0, 1.0]&quot;</span><span class="p">)</span>
+
+        <span class="c1"># A dictionary that tracks the total group influences on each individual agent (for an aggregate application of changes later)</span>
+        <span class="n">agent_changes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentChanges</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">group_id</span><span class="p">,</span> <span class="n">opinion_change_info</span> <span class="ow">in</span> <span class="n">changes_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">group_object</span><span class="p">:</span> <span class="n">Group</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">get_group_by_id</span><span class="p">(</span><span class="n">group_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GroupSet.get_group_by_id&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">group_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Flag if the group was already radicalised</span>
+                <span class="n">existing_radicalisation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">group_object</span><span class="o">.</span><span class="n">is_radicalised</span><span class="p">()</span>
+
+                <span class="n">agent_opinion_delta</span><span class="p">:</span> <span class="nb">float</span>
+                <span class="n">agent_radicalisations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span>
+                <span class="n">group_opinion_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c1"># After the opinion change, determine if the agent has become radicalised or deradicalised</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">existing_radicalisation</span><span class="p">:</span>
+                    <span class="n">radicalisation_info</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_object</span><span class="o">.</span><span class="n">radicalisation</span><span class="p">(</span>
+                        <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="n">threshold</span><span class="o">=</span><span class="n">radicalisation_thresh</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Group.radicalisation&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Update the node in the group graph</span>
+                    <span class="n">agent_opinion_delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_opinion_change</span><span class="p">(</span><span class="n">group_object</span><span class="p">,</span> <span class="n">group_opinion_delta</span><span class="p">)</span>
+                    <span class="n">agent_radicalisations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_radicalisation_change</span><span class="p">(</span><span class="n">group_object</span><span class="p">,</span> <span class="n">radicalisation_info</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+                    <span class="c1"># Store each agent&#39;s results for this group</span>
+                    <span class="k">for</span> <span class="n">agent</span><span class="p">,</span> <span class="n">radicalisation_status</span> <span class="ow">in</span> <span class="n">agent_radicalisations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="c1"># First set the opinion change</span>
+                        <span class="n">agent_changes</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+                            <span class="n">agent</span><span class="p">,</span>
+                            <span class="p">{</span>
+                                <span class="s2">&quot;opinion_changes&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                                <span class="s2">&quot;radicalisation_changes&quot;</span><span class="p">:</span> <span class="p">[]</span>
+                            <span class="p">},</span>
+                        <span class="p">)[</span><span class="s2">&quot;opinion_changes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent_opinion_delta</span><span class="p">)</span>
+
+                        <span class="c1"># Next, set the radicalisation change (the inner dict and lists will always be initialised by this point)</span>
+                        <span class="n">agent_changes</span><span class="p">[</span><span class="n">agent</span><span class="p">][</span><span class="s2">&quot;radicalisation_changes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">radicalisation_status</span><span class="p">)</span>
+
+                    <span class="c1"># Update the radicalisation count in the logger as needed</span>
+                    <span class="c1"># (radicalisation_info[0] will always be False if the group was already radicalised)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_radicalised_group</span><span class="p">(</span><span class="n">radicalisation_info</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.group_members_opinion_changes&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GroupGraph.group_opinion_change&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GroupGraph.group_radicalisation_change&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.increment_radicalised_group&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">deradicalisation_info</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_object</span><span class="o">.</span><span class="n">deradicalisation</span><span class="p">(</span>
+                        <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="n">opinion_change_info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="n">threshold</span><span class="o">=</span><span class="n">radicalisation_thresh</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Group.deradicalisation&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Update the node in the group graph</span>
+                    <span class="n">agent_opinion_delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_opinion_change</span><span class="p">(</span>
+                        <span class="n">group_object</span><span class="p">,</span> <span class="n">group_opinion_delta</span><span class="p">,</span> <span class="n">deradicalisation</span><span class="o">=</span><span class="n">deradicalisation_info</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="p">)</span>
+                    <span class="n">agent_radicalisations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_radicalisation_change</span><span class="p">(</span>
+                        <span class="n">group_object</span><span class="p">,</span> <span class="n">deradicalisation_info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Store each agent&#39;s results for this group</span>
+                    <span class="k">for</span> <span class="n">agent</span><span class="p">,</span> <span class="n">radicalisation_status</span> <span class="ow">in</span> <span class="n">agent_radicalisations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="c1"># First set the opinion change</span>
+                        <span class="n">agent_changes</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+                            <span class="n">agent</span><span class="p">,</span>
+                            <span class="p">{</span>
+                                <span class="s2">&quot;opinion_changes&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                                <span class="s2">&quot;radicalisation_changes&quot;</span><span class="p">:</span> <span class="p">[]</span>
+                            <span class="p">},</span>
+                        <span class="p">)[</span><span class="s2">&quot;opinion_changes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent_opinion_delta</span><span class="p">)</span>
+
+                        <span class="c1"># Next set the radicalisation change (the inner dict and lists will always be initialised at this point)</span>
+                        <span class="n">agent_changes</span><span class="p">[</span><span class="n">agent</span><span class="p">][</span><span class="s2">&quot;radicalisation_changes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">radicalisation_status</span><span class="p">)</span>
+
+                    <span class="c1"># Update the deradicalisation count in the logger as needed</span>
+                    <span class="c1"># (deradicalisation_info[0] will always be False if the group was not already radicalised)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_deradicalised_group</span><span class="p">(</span><span class="n">deradicalisation_info</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.group_members_opinion_changes&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GroupGraph.group_opinion_change&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GroupGraph.group_radicalisation_change&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.increment_deradicalised_group&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Finally, apply all agent changes at the aggregate level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_members_opinion_changes</span><span class="p">(</span><span class="n">agent_changes</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.group_iteration_opinion_changes&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="ABModel.group_members_opinion_changes">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.group_members_opinion_changes.html#gatoh.model.ABModel.group_members_opinion_changes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">group_members_opinion_changes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_changes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentChanges</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that applies the group&#39;s aggregate opinion changes to the individual Agents which make it up.</span>
+
+<span class="sd">        :param opinion_delta: The calculated per-agent opinion delta that must be applied.</span>
+<span class="sd">        :type opinion_delta: float</span>
+<span class="sd">        :param radicalisations: The new radicalisation statuses that have been determined for each member.</span>
+<span class="sd">        :type radicalisations: dict[str, bool]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">agent</span><span class="p">,</span> <span class="n">changes</span> <span class="ow">in</span> <span class="n">agent_changes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">agent_obj</span><span class="p">:</span> <span class="n">Agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">get_agent_by_id</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;AgentSet.get_agent_by_id&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Calculate the aggregate effects</span>
+            <span class="n">total_opinion_change</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">changes</span><span class="p">[</span><span class="s2">&quot;opinion_changes&quot;</span><span class="p">])</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">changes</span><span class="p">[</span><span class="s2">&quot;opinion_changes&quot;</span><span class="p">])</span>
+            <span class="n">total_radicalisation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">radicalisation_change</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">[</span><span class="s2">&quot;radicalisation_changes&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">radicalisation_change</span><span class="p">:</span>
+                    <span class="n">total_radicalisation</span> <span class="o">+=</span> <span class="mf">1.0</span>
+            <span class="n">total_radicalisation</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">changes</span><span class="p">[</span><span class="s2">&quot;radicalisation_changes&quot;</span><span class="p">])</span>
+
+            <span class="c1"># Apply the total opinion change</span>
+            <span class="n">agent_obj</span><span class="o">.</span><span class="n">change_opinion</span><span class="p">(</span><span class="n">total_opinion_change</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Agent.change_opinion&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Note the existing radicalisation_status</span>
+            <span class="n">previous_radicalisation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">agent_obj</span><span class="o">.</span><span class="n">radicalised</span>
+
+            <span class="c1"># Update the radicalisation status based on the presence of any radicalisation in parent groups</span>
+            <span class="k">if</span> <span class="n">total_radicalisation</span> <span class="o">&gt;=</span> <span class="mf">0.33</span><span class="p">:</span>
+                <span class="n">agent_obj</span><span class="o">.</span><span class="n">change_radicalisation</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">agent_obj</span><span class="o">.</span><span class="n">change_radicalisation</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Agent.change_radicalisation&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Log for (de)radicalisation by comparing the previous status to the new one</span>
+            <span class="k">if</span> <span class="n">previous_radicalisation</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">agent_obj</span><span class="o">.</span><span class="n">radicalised</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_deradicalised</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.increment_deradicalised&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">previous_radicalisation</span> <span class="ow">and</span> <span class="n">agent_obj</span><span class="o">.</span><span class="n">radicalised</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_radicalised</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.increment_radicalised&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Also update the values in each agent graph (to allow for the calculated metrics to be produced)</span>
+            <span class="k">for</span> <span class="n">graph</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">agent_opinion_change</span><span class="p">(</span><span class="n">agent_obj</span><span class="p">,</span> <span class="n">total_opinion_change</span><span class="p">,</span> <span class="n">deradicalisation</span><span class="o">=</span><span class="p">(</span><span class="n">previous_radicalisation</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">agent_obj</span><span class="o">.</span><span class="n">radicalised</span><span class="p">))</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">agent_radicalisation_change</span><span class="p">(</span><span class="n">agent_obj</span><span class="p">,</span> <span class="n">agent_obj</span><span class="o">.</span><span class="n">radicalised</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_opinion_change&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_radicalisation_change&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Remember to update the base graph</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">agent_opinion_change</span><span class="p">(</span><span class="n">agent_obj</span><span class="p">,</span> <span class="n">total_opinion_change</span><span class="p">,</span> <span class="n">deradicalisation</span><span class="o">=</span><span class="p">(</span><span class="n">previous_radicalisation</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">agent_obj</span><span class="o">.</span><span class="n">radicalised</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="o">.</span><span class="n">agent_radicalisation_change</span><span class="p">(</span><span class="n">agent_obj</span><span class="p">,</span> <span class="n">agent_obj</span><span class="o">.</span><span class="n">radicalised</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_opinion_change&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.agent_radicalisation_change&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.group_members_opinion_changes&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -1778,6 +2128,13 @@
             <span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Agent.step&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+            <span class="n">group</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_information</span><span class="p">[</span><span class="n">group</span><span class="o">.</span><span class="n">hierarchy</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">group_opinion_rw</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Group.step&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.step&quot;</span><span class="p">)</span>
@@ -1810,6 +2167,12 @@
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_silenced</span><span class="p">(</span><span class="n">agent_update</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_negated</span><span class="p">(</span><span class="n">agent_update</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+            <span class="c1"># Update the group objects to account for multi-group agent membership effects</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_groups</span><span class="p">:</span>
+                <span class="n">group_updates</span> <span class="o">=</span> <span class="n">worker_pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">update_group_multi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">group_update</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">group_updates</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">apply_update</span><span class="p">(</span><span class="n">group_update</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">partial_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
@@ -1820,6 +2183,13 @@
                     <span class="c1"># Update the logger variables as needed</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_silenced</span><span class="p">(</span><span class="n">agent_update</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_negated</span><span class="p">(</span><span class="n">agent_update</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_groups</span><span class="p">:</span>
+                    <span class="c1"># Recalculate all relevant aggregate attributes to account for multi-group agent membership effects</span>
+                    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+                        <span class="n">group_update</span><span class="p">:</span> <span class="n">GroupUpdateDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_group_multi</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+
+                        <span class="n">group</span><span class="o">.</span><span class="n">apply_update</span><span class="p">(</span><span class="n">group_update</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">partial_agents</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">agent_at_index</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">partial_indices</span><span class="p">]</span>
                 <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">partial_agents</span><span class="p">:</span>
@@ -1831,6 +2201,12 @@
 
                         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_silenced</span><span class="p">(</span><span class="n">agent_update</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">increment_negated</span><span class="p">(</span><span class="n">agent_update</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_groups</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+                        <span class="n">group_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_group_multi</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+
+                        <span class="n">group</span><span class="o">.</span><span class="n">apply_update</span><span class="p">(</span><span class="n">group_update</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)):</span>
@@ -1878,6 +2254,22 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">silenced</span><span class="p">,</span> <span class="n">was_silenced</span><span class="p">,</span> <span class="n">negation</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="ABModel.update_group_multi">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.update_group_multi.html#gatoh.model.ABModel.update_group_multi">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_group_multi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GroupUpdateDict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function that allows for multiprocessing of the :meth:`~gatoh.model.ABModel.update` function when simulating groups.</span>
+
+<span class="sd">        :param group: The group being updated.</span>
+<span class="sd">        :type group: Group</span>
+<span class="sd">        :return: All recalculated group aggregate attributes (reflecting the changes that members may have experienced from their other groups).</span>
+<span class="sd">        :rtype: dict[str, Any]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">group_members</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="o">.</span><span class="n">get_agents_by_ids</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">members</span><span class="p">)</span>
+        <span class="n">recalculated_attributes</span><span class="p">:</span> <span class="n">GroupUpdateDict</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">group_members</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">recalculated_attributes</span></div>
+
+
 <div class="viewcode-block" id="ABModel.logger_debug_iteration">
 <a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.logger_debug_iteration.html#gatoh.model.ABModel.logger_debug_iteration">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">logger_debug_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1906,6 +2298,10 @@
 <span class="sd">        :type worker_pool: :class:`~multiprocessing.pool.Pool`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">aggregate_opinion</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_aggregate_opinion</span><span class="p">()</span>
+
+        <span class="n">radicalised_agents</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_radical_count</span><span class="p">()</span>
+        <span class="n">radicalised_groups</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_group_radical_count</span><span class="p">()</span>
+
         <span class="n">radicalisation_logodds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_radicalisation_logodds</span><span class="p">()</span>
 
         <span class="n">layer_interdependences</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1920,6 +2316,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">iteration</span><span class="p">(</span>
             <span class="n">aggregate_opinion</span><span class="p">,</span>
+            <span class="n">radicalised_agents</span><span class="p">,</span>
+            <span class="n">radicalised_groups</span><span class="p">,</span>
             <span class="n">radicalisation_logodds</span><span class="p">,</span>
             <span class="n">layer_interdependences</span><span class="p">,</span>
             <span class="n">layers_polarisation</span><span class="p">,</span>
@@ -2391,6 +2789,34 @@
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This line should not have been reached...&quot;</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="ABModel.get_groupgraph_indices_from_endpoints">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.get_groupgraph_indices_from_endpoints.html#gatoh.model.ABModel.get_groupgraph_indices_from_endpoints">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_groupgraph_indices_from_endpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_group</span><span class="p">:</span> <span class="n">Group</span><span class="p">,</span> <span class="n">to_group</span><span class="p">:</span> <span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function for the groupset that takes in two Group objects and retrieves their node indices</span>
+<span class="sd">        within the model&#39;s groupgraph.</span>
+
+<span class="sd">        :param from_group: The group that the edge starts from.</span>
+<span class="sd">        :type from_group: Group</span>
+<span class="sd">        :param to_group: The group that the edge points to.</span>
+<span class="sd">        :type to_group: Group</span>
+<span class="sd">        :return: The index in the groupgraph of the parent and child nodes involved in the edge&#39;s relationship.</span>
+<span class="sd">        :rtype: tuple[int, int]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">from_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">get_group_index</span><span class="p">(</span><span class="n">from_group</span><span class="p">)</span>
+        <span class="n">to_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">get_group_index</span><span class="p">(</span><span class="n">to_group</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GroupGraph.get_group_index&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;GroupGraph.get_group_index&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">from_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">to_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">from_index</span><span class="p">,</span> <span class="n">to_index</span>
+
+        <span class="c1"># Including here for return checking</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This line should not have been reached...&quot;</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="ABModel.add_base_graph_edges">
 <a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.add_base_graph_edges.html#gatoh.model.ABModel.add_base_graph_edges">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_base_graph_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -2433,6 +2859,45 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;Graph.add_edges&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;ABModel.add_base_graph_edges&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="ABModel.add_group_graph_edge">
+<a class="viewcode-back" href="../../apiref/gatoh.model.ABModel.add_group_graph_edge.html#gatoh.model.ABModel.add_group_graph_edge">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_group_graph_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_group</span><span class="p">:</span> <span class="n">Group</span><span class="p">,</span> <span class="n">to_group</span><span class="p">:</span> <span class="n">Group</span><span class="p">,</span> <span class="n">weighting</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rw_params</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A function that takes two groups and adds a relationship between them in the model&#39;s groupgraph.</span>
+
+<span class="sd">        :param from_group: The node representing the parent node of the relationship.</span>
+<span class="sd">        :type from_group: Group</span>
+<span class="sd">        :param to_group: The node representing the child node of the relationship.</span>
+<span class="sd">        :type to_group: Group</span>
+<span class="sd">        :param weighting: The weighting that should be assigned to the relationship.</span>
+<span class="sd">        :type weighting: float, optional</span>
+<span class="sd">        :param rw_params: The relationship-specific random-walk parameters that should be assigned.</span>
+<span class="sd">        :type rw_params: tuple[float, float], optional</span>
+<span class="sd">        :raises ValueError: If either of the groups do not exist in the groupgraph as nodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_in_graph</span><span class="p">(</span><span class="n">from_group</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_in_graph</span><span class="p">(</span><span class="n">to_group</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One or both of the input Groups do not exist as GroupNodes in the model&#39;s GroupGraph -- cannot create an edge&quot;</span><span class="p">)</span>
+
+        <span class="n">node_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_groupgraph_indices_from_endpoints</span><span class="p">(</span><span class="n">from_group</span><span class="p">,</span> <span class="n">to_group</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">weighting</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">weighting</span> <span class="o">=</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">MAX_RELATIONSHIP</span><span class="p">,</span> <span class="n">MAX_RELATIONSHIP</span><span class="p">)</span>
+
+        <span class="n">edge_to_add</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">from_group</span><span class="o">.</span><span class="n">hierarchy</span><span class="p">],</span>
+            <span class="s2">&quot;from_node&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">node_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+            <span class="s2">&quot;to_node&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">node_indices</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+            <span class="s2">&quot;weighting&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">weighting</span><span class="p">],</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">rw_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">edge_to_add</span><span class="p">[</span><span class="s2">&quot;rw_param&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">rw_params</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">group_graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">edge_to_add</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">None</span></div>
 

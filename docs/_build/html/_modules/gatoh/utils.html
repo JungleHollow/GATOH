@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.utils &mdash; gatoh 2026.08.0</title>
+  <title>gatoh.utils &mdash; gatoh 2026.09.0</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../../_static/documentation_options.js?v=9aec01f2"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/thebelab-helper.js"></script>
@@ -461,6 +461,8 @@
 
 
 
+<div class="viewcode-block" id="linear_link">
+<a class="viewcode-back" href="../../apiref/gatoh.utils.linear_link.html#gatoh.utils.linear_link">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">linear_link</span><span class="p">(</span><span class="n">input_param</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">link_val</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">minimum</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">maximum</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function that performs constant linear scaling on an input parameter.</span>
@@ -482,9 +484,12 @@
         <span class="k">return</span> <span class="n">minimum</span>
     <span class="k">elif</span> <span class="n">input_param</span> <span class="o">+</span> <span class="n">link_val</span> <span class="o">&gt;</span> <span class="n">maximum</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">maximum</span>
-    <span class="k">return</span> <span class="n">input_param</span> <span class="o">+</span> <span class="n">link_val</span>
+    <span class="k">return</span> <span class="n">input_param</span> <span class="o">+</span> <span class="n">link_val</span></div>
 
 
+
+<div class="viewcode-block" id="multiplicative_link">
+<a class="viewcode-back" href="../../apiref/gatoh.utils.multiplicative_link.html#gatoh.utils.multiplicative_link">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">multiplicative_link</span><span class="p">(</span><span class="n">input_param</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">link_val</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">minimum</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">maximum</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function that performs a multiplicative scaling on an input parameter.</span>
@@ -506,7 +511,8 @@
         <span class="k">return</span> <span class="n">minimum</span>
     <span class="k">elif</span> <span class="n">input_param</span> <span class="o">*</span> <span class="n">link_val</span> <span class="o">&gt;</span> <span class="n">maximum</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">maximum</span>
-    <span class="k">return</span> <span class="n">input_param</span> <span class="o">*</span> <span class="n">link_val</span>
+    <span class="k">return</span> <span class="n">input_param</span> <span class="o">*</span> <span class="n">link_val</span></div>
+
 
 
 <span class="c1"># ========== Random Generation Utils ==========</span>
@@ -788,6 +794,8 @@
 <span class="c1"># ========== Python Utils ==========</span>
 
 
+<div class="viewcode-block" id="get_keys_by_value">
+<a class="viewcode-back" href="../../apiref/gatoh.utils.get_keys_by_value.html#gatoh.utils.get_keys_by_value">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_keys_by_value</span><span class="p">(</span><span class="n">input_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">K</span><span class="p">,</span> <span class="n">V</span><span class="p">],</span> <span class="n">value_to_find</span><span class="p">:</span> <span class="n">V</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">K</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A utility function that returns all keys in a dictionary which have the specified</span>
@@ -804,7 +812,71 @@
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">input_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="n">value_to_find</span><span class="p">:</span>
             <span class="n">keys_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">keys_list</span>
+    <span class="k">return</span> <span class="n">keys_list</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_list_with_mode</span><span class="p">(</span><span class="n">possible_values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">K</span><span class="p">],</span> <span class="n">mode_value</span><span class="p">:</span> <span class="n">K</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">K</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A utility function that takes a list of possible values, and the value which should be the most frequent (mode),</span>
+<span class="sd">    and then returns a list of a specified length where this is true.</span>
+
+<span class="sd">    This function has been defined as it is not as simple as just saying that a proportion &gt;= than a threshold of values</span>
+<span class="sd">    should be the specified type.</span>
+
+<span class="sd">    In cases where the list is relatively small and the possible values are comparatively large, it is possible through</span>
+<span class="sd">    pure chance that even if the minimum threshold of [1 + ceil(1/len(possible_values * n)] is reached; if all other values</span>
+<span class="sd">    in the list happen to be the same drawn value, this will be the actual mode of the list...</span>
+
+<span class="sd">    :param possible_values: A list of all possible values that any one entry in the list may take.</span>
+<span class="sd">    :type possible_values: list[Any]</span>
+<span class="sd">    :param mode_value: The specific value that should be the mode of the generated list.</span>
+<span class="sd">    :type mode_value: Any</span>
+<span class="sd">    :param n: The length of the list that should be generated.</span>
+<span class="sd">    :type n: int, optional</span>
+<span class="sd">    :raises TypeError: If the mode_value is of a different data type than the possible values.</span>
+<span class="sd">    :raises ValueError: If the mode_value is not present in the list of possible values.</span>
+<span class="sd">    :return: A generated list of arbitrary length in which the specified value is the most frequently appearing.</span>
+<span class="sd">    :rtype: list[Any]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Data integrity checks</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mode_value</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">possible_values</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The input mode_value is not the same data type as those in the list of possible values&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mode_value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">possible_values</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The input mode_value does not exist in the list of possible values&quot;</span><span class="p">)</span>
+
+    <span class="n">value_counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">K</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">value</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">possible_values</span><span class="p">}</span>
+    <span class="n">output_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">K</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># First populate the list to n</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">drawn_value</span><span class="p">:</span> <span class="n">K</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">possible_values</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">drawn_value</span><span class="p">)</span>
+        <span class="n">value_counts</span><span class="p">[</span><span class="n">drawn_value</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># As long as the specified mode_value is not the list&#39;s mode, continue randomly changing values in the list</span>
+    <span class="c1"># (not the most efficient way, but this also helps to produce more &quot;interesting&quot; output lists)</span>
+    <span class="k">while</span> <span class="nb">max</span><span class="p">(</span><span class="n">value_counts</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">value_counts</span><span class="p">[</span><span class="n">x</span><span class="p">])</span> <span class="o">!=</span> <span class="n">mode_value</span><span class="p">:</span>
+        <span class="n">drawn_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">output_list</span><span class="p">[</span><span class="n">drawn_index</span><span class="p">]</span> <span class="o">==</span> <span class="n">mode_value</span><span class="p">:</span>
+            <span class="c1"># Do not change an entry that is already of the desired mode value</span>
+            <span class="k">continue</span>
+
+        <span class="n">old_value</span><span class="p">:</span> <span class="n">K</span> <span class="o">=</span> <span class="n">output_list</span><span class="p">[</span><span class="n">drawn_index</span><span class="p">]</span>
+        <span class="n">new_value</span><span class="p">:</span> <span class="n">K</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">possible_values</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">old_value</span> <span class="o">==</span> <span class="n">new_value</span><span class="p">:</span>
+            <span class="c1"># No change has happened</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Change the value, and update the value counts</span>
+        <span class="n">output_list</span><span class="p">[</span><span class="n">drawn_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_value</span>
+        <span class="n">value_counts</span><span class="p">[</span><span class="n">old_value</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">value_counts</span><span class="p">[</span><span class="n">new_value</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Finally, return the output_list</span>
+    <span class="k">return</span> <span class="n">output_list</span>
 </pre></div>
 
            </div>

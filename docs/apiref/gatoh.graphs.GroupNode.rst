@@ -14,6 +14,8 @@
       :nosignatures:
       :toctree: ../apiref/
 
+      ~GroupNode.get_hierarchy
+      ~GroupNode.get_num_members
       ~GroupNode.set_index
 
 

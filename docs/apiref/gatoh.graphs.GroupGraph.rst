@@ -29,20 +29,24 @@
       ~GroupGraph.get_dijkstra_all_pairs
       ~GroupGraph.get_edge
       ~GroupGraph.get_edge_changes
+      ~GroupGraph.get_edges
       ~GroupGraph.get_group_hierarchy
       ~GroupGraph.get_group_index
       ~GroupGraph.get_groups_in_hierarchy
       ~GroupGraph.get_neighbours
       ~GroupGraph.get_node
+      ~GroupGraph.get_nodes
       ~GroupGraph.get_relationship
       ~GroupGraph.get_relationships
       ~GroupGraph.group_in_graph
       ~GroupGraph.group_opinion_change
       ~GroupGraph.group_previous_opinion
+      ~GroupGraph.group_radicalisation_change
       ~GroupGraph.hierarchy_exists
       ~GroupGraph.load_graph
       ~GroupGraph.neighbour_influences
       ~GroupGraph.node_from_group
+      ~GroupGraph.node_from_group_id
       ~GroupGraph.node_relationships_count
       ~GroupGraph.register_edge_change
       ~GroupGraph.relationship_exists

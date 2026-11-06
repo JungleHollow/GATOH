@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.agents &mdash; gatoh 2026.08.0</title>
+  <title>gatoh.agents &mdash; gatoh 2026.09.0</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../../_static/documentation_options.js?v=9aec01f2"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/thebelab-helper.js"></script>
@@ -611,7 +611,7 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The agent for which an update is being attempted has not yet been initialised&quot;</span><span class="p">)</span>
 
         <span class="c1"># Type checking</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">opinion_silenced</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">negation_ocurred</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">opinion_silenced</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;opinion_silenced must be a &lt;string : boolean&gt; dictionary -- the input is of an incorrect data type&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">negation_ocurred</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;negation_ocurred must be a boolean -- the input value is not of the correct data type&quot;</span><span class="p">)</span>
@@ -663,10 +663,11 @@
             <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="mf">0.0</span>
 
         <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span>
-        <span class="k">if</span> <span class="n">silencing_threshold</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">silencing_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">threshold</span> <span class="o">=</span> <span class="n">silencing_threshold</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span>
+            <span class="c1"># &quot;inverse&quot; of social susceptibility as a higher susceptibility will mean that a lower threshold will exist</span>
+            <span class="n">threshold</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span>
 
         <span class="n">absolute_difference</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
 
@@ -726,15 +727,15 @@
         <span class="c1"># Multiplication by (susceptibility * hierarchy weighting) will always decrease negation strength, whilst division will always increase it</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">personality</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;neutral&quot;</span><span class="p">,</span> <span class="s2">&quot;rational&quot;</span><span class="p">]:</span>
             <span class="c1"># Cases where opinion negation is less likely to occur</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">negation_strength</span> <span class="o">*=</span> <span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span>
+                    <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span>
                 <span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">personality</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;erratic&quot;</span><span class="p">,</span> <span class="s2">&quot;impulsive&quot;</span><span class="p">,</span> <span class="s2">&quot;social&quot;</span><span class="p">]:</span>
             <span class="c1"># Cases where opinion negation is more likely to occur</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">negation_strength</span> <span class="o">/=</span> <span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span>
+                    <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span><span class="p">[</span><span class="n">hierarchy</span><span class="p">]</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">negation_strength</span> <span class="o">&gt;</span> <span class="n">threshold</span></div>
@@ -809,7 +810,7 @@
             <span class="k">case</span> <span class="s2">&quot;rational&quot;</span><span class="p">:</span>
                 <span class="c1"># This will likely mean that the agent is more disposed towards considering tangible benefits and their own</span>
                 <span class="c1"># opinions when determining deradicalisation, rather than external influences</span>
-                <span class="k">if</span> <span class="n">absolute_opinion</span> <span class="o">&lt;=</span> <span class="n">threshold</span> <span class="ow">and</span> <span class="n">aggregate_benefit</span> <span class="o">&lt;=</span> <span class="n">DERAD_AGG_BEN_THRESH</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">absolute_opinion</span> <span class="o">&lt;=</span> <span class="n">threshold</span> <span class="ow">and</span> <span class="n">aggregate_benefit</span> <span class="o">&gt;=</span> <span class="n">DERAD_AGG_BEN_THRESH</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">False</span>
                     <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
                 <span class="k">elif</span> <span class="n">absolute_opinion</span> <span class="o">&lt;=</span> <span class="n">threshold</span> <span class="ow">and</span> <span class="n">aggregate_benefit</span> <span class="o">&gt;=</span> <span class="n">DERAD_AGG_BEN_THRESH</span><span class="p">:</span>
@@ -842,7 +843,7 @@
                     <span class="c1"># Flag whether the change is moving in the same direction as the agent&#39;s original opinion</span>
                     <span class="n">change_direction</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="p">(</span><span class="n">change</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">opinion</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">change</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">opinion</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
 
-                    <span class="k">if</span> <span class="n">absolute_change</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">change_direction</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">absolute_change</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">change_direction</span><span class="p">:</span>
                         <span class="c1"># A strong opinion change which disagreed with the agent&#39;s opinion was caused by some hierarchy</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">False</span>
                         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
@@ -855,7 +856,7 @@
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">change_directions</span> <span class="o">-=</span> <span class="mf">1.0</span>
                 <span class="c1"># If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)</span>
-                <span class="k">if</span> <span class="n">absolute_changes</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">hierarchy_changes</span><span class="p">)</span> <span class="o">*</span> <span class="n">DERAD_SOCIAL_THRESH_MOD</span> <span class="ow">and</span> <span class="n">change_directions</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">absolute_changes</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">hierarchy_changes</span><span class="p">)</span> <span class="o">*</span> <span class="n">DERAD_SOCIAL_THRESH_MOD</span> <span class="ow">and</span> <span class="n">change_directions</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">False</span>
                     <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
             <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
@@ -968,7 +969,7 @@
                     <span class="c1"># Flag whether the change is moving in the same direction as the agent&#39;s original opinion</span>
                     <span class="n">change_direction</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="p">(</span><span class="n">change</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">opinion</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">change</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">opinion</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
 
-                    <span class="k">if</span> <span class="n">absolute_change</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="ow">and</span> <span class="n">change_direction</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">absolute_change</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span><span class="p">)</span> <span class="ow">and</span> <span class="n">change_direction</span><span class="p">:</span>
                         <span class="c1"># A strong opinion change which agreed with the agent&#39;s opinion was caused by some hierarchy</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
@@ -981,7 +982,7 @@
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">change_directions</span> <span class="o">-=</span> <span class="mf">1.0</span>
                 <span class="c1"># If no changes were strong enough individually, check for the aggregate (with a relatively lower threshold)</span>
-                <span class="k">if</span> <span class="n">absolute_changes</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">hierarchy_changes</span><span class="p">)</span> <span class="o">*</span> <span class="n">RAD_SOCIAL_THRESH_MOD</span> <span class="ow">and</span> <span class="n">change_directions</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">absolute_changes</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">social_susceptibility</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">hierarchy_changes</span><span class="p">)</span> <span class="o">*</span> <span class="n">RAD_SOCIAL_THRESH_MOD</span> <span class="ow">and</span> <span class="n">change_directions</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span> <span class="o">=</span> <span class="kc">True</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised</span>
             <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
@@ -1009,10 +1010,10 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;rw_distributions must be a dictionary&quot;</span><span class="p">)</span>
 
         <span class="c1"># Data type checks for the values in rw_distributions</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">rw_distributions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">rw_distributions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;One or more items in rw_distributions is of an invalid data type -- all must be tuples&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">float</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;One or more tuples in rw_distributions contain invalid data types -- all must be tuples with two float items&quot;</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">rw_distributions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -1102,6 +1103,8 @@
 
 <span class="sd">        :param personality_probs: Specific per-personality type probabilities to be used for drawing the new agent personality.</span>
 <span class="sd">        :type personality_probs: dict[str, float]</span>
+<span class="sd">        :raises TypeError: If a non-float probability is supplied.</span>
+<span class="sd">        :raises KeyError: If an unsupported personality type is passed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">personality_probs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">personality</span> <span class="o">=</span> <span class="n">draw_personality</span><span class="p">()</span>
@@ -1780,6 +1783,78 @@
         <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
             <span class="n">agent_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">agent_ids</span></div>
+
+
+<div class="viewcode-block" id="AgentSet.radicalised_count">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.radicalised_count.html#gatoh.agents.AgentSet.radicalised_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">radicalised_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A getter function that returns the number of radicalised agents that are present in the</span>
+<span class="sd">        agent set.</span>
+
+<span class="sd">        :return: The number of radicalised agents in the agent set.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">radical_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">radicalised</span><span class="p">:</span>
+                <span class="n">radical_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">radical_count</span></div>
+
+
+<div class="viewcode-block" id="AgentSet.benefit_count">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.benefit_count.html#gatoh.agents.AgentSet.benefit_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">benefit_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A getter function that returns the number of agents which experience personal benefit</span>
+<span class="sd">        from social contagion in the agent set.</span>
+
+<span class="sd">        :return: The number of benefited agents in the agent set.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">benefit_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">personal_benefit</span><span class="p">:</span>
+                <span class="n">benefit_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">benefit_count</span></div>
+
+
+<div class="viewcode-block" id="AgentSet.personality_counts">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.personality_counts.html#gatoh.agents.AgentSet.personality_counts">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">personality_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A getter function that returns the counts of all personality types among agents in</span>
+<span class="sd">        the agent set.</span>
+
+<span class="sd">        :return: The count of each supported personality type among agents in the agent set.</span>
+<span class="sd">        :rtype: dict[str, int]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">personality_counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">personality</span> <span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">personality</span> <span class="ow">in</span> <span class="n">PERSONALITIES</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+            <span class="n">personality_counts</span><span class="p">[</span><span class="n">agent</span><span class="o">.</span><span class="n">personality</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">personality_counts</span></div>
+
+
+<div class="viewcode-block" id="AgentSet.personality_count">
+<a class="viewcode-back" href="../../apiref/gatoh.agents.AgentSet.personality_count.html#gatoh.agents.AgentSet.personality_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">personality_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">personality</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A getter function that returns the count of agents which hold a specific personality</span>
+<span class="sd">        type in the agent set.</span>
+
+<span class="sd">        :param personality: The personality type that is being counted.</span>
+<span class="sd">        :type personality: str</span>
+<span class="sd">        :raises ValueError: If the personality type input is unsupported.</span>
+<span class="sd">        :return: The count of agents which hold the specified personality type.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">personality</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">PERSONALITIES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The input personality is not one of the supported types&quot;</span><span class="p">)</span>
+        <span class="n">personality_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">personality</span> <span class="o">==</span> <span class="n">personality</span><span class="p">:</span>
+                <span class="n">personality_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">personality_count</span></div>
 
 
     <span class="nd">@override</span>

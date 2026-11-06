@@ -29,18 +29,22 @@
       ~Graph.estimate_neighbour_opinions
       ~Graph.estimate_opinion_climate
       ~Graph.generate_graph
+      ~Graph.generate_group_edges
       ~Graph.get_agent_index
       ~Graph.get_betweenness_centrality
       ~Graph.get_dijkstra_all_pairs
       ~Graph.get_edge
       ~Graph.get_edge_changes
+      ~Graph.get_edges
       ~Graph.get_neighbours
       ~Graph.get_node
+      ~Graph.get_nodes
       ~Graph.get_relationship
       ~Graph.get_relationships
       ~Graph.load_graph
       ~Graph.neighbour_influences
       ~Graph.node_from_agent
+      ~Graph.node_from_agent_id
       ~Graph.node_relationships_count
       ~Graph.register_edge_change
       ~Graph.relationship_exists

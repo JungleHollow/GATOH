@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GroupGraph &mdash; gatoh 2026.08.0</title>
+  <title>GroupGraph &mdash; gatoh 2026.09.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../_static/documentation_options.js?v=9aec01f2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/thebelab-helper.js"></script>
@@ -79,20 +79,24 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_dijkstra_all_pairs.html">gatoh.graphs.GroupGraph.get_dijkstra_all_pairs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_edge.html">gatoh.graphs.GroupGraph.get_edge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_edge_changes.html">gatoh.graphs.GroupGraph.get_edge_changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_edges.html">gatoh.graphs.GroupGraph.get_edges</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_group_hierarchy.html">gatoh.graphs.GroupGraph.get_group_hierarchy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_group_index.html">gatoh.graphs.GroupGraph.get_group_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_groups_in_hierarchy.html">gatoh.graphs.GroupGraph.get_groups_in_hierarchy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_neighbours.html">gatoh.graphs.GroupGraph.get_neighbours</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_node.html">gatoh.graphs.GroupGraph.get_node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_nodes.html">gatoh.graphs.GroupGraph.get_nodes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_relationship.html">gatoh.graphs.GroupGraph.get_relationship</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.get_relationships.html">gatoh.graphs.GroupGraph.get_relationships</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.group_in_graph.html">gatoh.graphs.GroupGraph.group_in_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.group_opinion_change.html">gatoh.graphs.GroupGraph.group_opinion_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.group_previous_opinion.html">gatoh.graphs.GroupGraph.group_previous_opinion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.group_radicalisation_change.html">gatoh.graphs.GroupGraph.group_radicalisation_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.hierarchy_exists.html">gatoh.graphs.GroupGraph.hierarchy_exists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.load_graph.html">gatoh.graphs.GroupGraph.load_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.neighbour_influences.html">gatoh.graphs.GroupGraph.neighbour_influences</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.node_from_group.html">gatoh.graphs.GroupGraph.node_from_group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.node_from_group_id.html">gatoh.graphs.GroupGraph.node_from_group_id</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.node_relationships_count.html">gatoh.graphs.GroupGraph.node_relationships_count</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.register_edge_change.html">gatoh.graphs.GroupGraph.register_edge_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.graphs.GroupGraph.relationship_exists.html">gatoh.graphs.GroupGraph.relationship_exists</a></li>
@@ -232,20 +236,26 @@ operations on Groups are representative of aggregate operations on multiple Agen
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_edge_changes.html#gatoh.graphs.GroupGraph.get_edge_changes" title="gatoh.graphs.GroupGraph.get_edge_changes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_edge_changes</span></code></a></p></td>
 <td><p>A getter function that returns the current register of pending edge changes for this graph, and then resets the attribute to an empty entry.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_group_hierarchy.html#gatoh.graphs.GroupGraph.get_group_hierarchy" title="gatoh.graphs.GroupGraph.get_group_hierarchy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_group_hierarchy</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_edges.html#gatoh.graphs.GroupGraph.get_edges" title="gatoh.graphs.GroupGraph.get_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_edges</span></code></a></p></td>
+<td><p>A getter function to access multiple GroupEdge objects at once.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_group_hierarchy.html#gatoh.graphs.GroupGraph.get_group_hierarchy" title="gatoh.graphs.GroupGraph.get_group_hierarchy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_group_hierarchy</span></code></a></p></td>
 <td><p>A getter function that reports what specific hierarchy a Group in the group graph belongs to.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_group_index.html#gatoh.graphs.GroupGraph.get_group_index" title="gatoh.graphs.GroupGraph.get_group_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_group_index</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_group_index.html#gatoh.graphs.GroupGraph.get_group_index" title="gatoh.graphs.GroupGraph.get_group_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_group_index</span></code></a></p></td>
 <td><p>Searches for the node index in the GroupGraph which corresponds to the input Group object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_groups_in_hierarchy.html#gatoh.graphs.GroupGraph.get_groups_in_hierarchy" title="gatoh.graphs.GroupGraph.get_groups_in_hierarchy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_groups_in_hierarchy</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_groups_in_hierarchy.html#gatoh.graphs.GroupGraph.get_groups_in_hierarchy" title="gatoh.graphs.GroupGraph.get_groups_in_hierarchy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_groups_in_hierarchy</span></code></a></p></td>
 <td><p>A getter function that returns all graph nodes with groups that belong to the specified hierarchy.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_neighbours.html#gatoh.graphs.GroupGraph.get_neighbours" title="gatoh.graphs.GroupGraph.get_neighbours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_neighbours</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_neighbours.html#gatoh.graphs.GroupGraph.get_neighbours" title="gatoh.graphs.GroupGraph.get_neighbours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_neighbours</span></code></a></p></td>
 <td><p>Finds all the nodes in the graph with direct relationships to the specified Group.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_node.html#gatoh.graphs.GroupGraph.get_node" title="gatoh.graphs.GroupGraph.get_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_node</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_node.html#gatoh.graphs.GroupGraph.get_node" title="gatoh.graphs.GroupGraph.get_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_node</span></code></a></p></td>
 <td><p>A getter function to access GroupNode objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_nodes.html#gatoh.graphs.GroupGraph.get_nodes" title="gatoh.graphs.GroupGraph.get_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_nodes</span></code></a></p></td>
+<td><p>A getter function to access multiple GroupNode objects at once.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.get_relationship.html#gatoh.graphs.GroupGraph.get_relationship" title="gatoh.graphs.GroupGraph.get_relationship"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_relationship</span></code></a></p></td>
 <td><p>Return a directed relationship from one node to another.</p></td>
@@ -262,17 +272,23 @@ operations on Groups are representative of aggregate operations on multiple Agen
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.group_previous_opinion.html#gatoh.graphs.GroupGraph.group_previous_opinion" title="gatoh.graphs.GroupGraph.group_previous_opinion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">group_previous_opinion</span></code></a></p></td>
 <td><p>Set the specified Group's previous opinion to be equal to the current opinion (before the current opinion changes in the current iteration).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.hierarchy_exists.html#gatoh.graphs.GroupGraph.hierarchy_exists" title="gatoh.graphs.GroupGraph.hierarchy_exists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hierarchy_exists</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.group_radicalisation_change.html#gatoh.graphs.GroupGraph.group_radicalisation_change" title="gatoh.graphs.GroupGraph.group_radicalisation_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">group_radicalisation_change</span></code></a></p></td>
+<td><p>Change the specified Group's radicalisation rate by the given delta.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.hierarchy_exists.html#gatoh.graphs.GroupGraph.hierarchy_exists" title="gatoh.graphs.GroupGraph.hierarchy_exists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hierarchy_exists</span></code></a></p></td>
 <td><p>A simple function that checks if at least one group in the graph belongs to the specified hierarchy.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.load_graph.html#gatoh.graphs.GroupGraph.load_graph" title="gatoh.graphs.GroupGraph.load_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_graph</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.load_graph.html#gatoh.graphs.GroupGraph.load_graph" title="gatoh.graphs.GroupGraph.load_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_graph</span></code></a></p></td>
 <td><p>Loads a GroupGraph object stored in the GraphML format from the given path.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.neighbour_influences.html#gatoh.graphs.GroupGraph.neighbour_influences" title="gatoh.graphs.GroupGraph.neighbour_influences"><code class="xref py py-obj docutils literal notranslate"><span class="pre">neighbour_influences</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.neighbour_influences.html#gatoh.graphs.GroupGraph.neighbour_influences" title="gatoh.graphs.GroupGraph.neighbour_influences"><code class="xref py py-obj docutils literal notranslate"><span class="pre">neighbour_influences</span></code></a></p></td>
 <td><p>Looks at all the neighbours for a Group and uses the neighbours' own opinions plus the weight of the relationships between Groups to return a final value by which the given Group's opinion value will increment or decrement.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.node_from_group.html#gatoh.graphs.GroupGraph.node_from_group" title="gatoh.graphs.GroupGraph.node_from_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">node_from_group</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.node_from_group.html#gatoh.graphs.GroupGraph.node_from_group" title="gatoh.graphs.GroupGraph.node_from_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">node_from_group</span></code></a></p></td>
 <td><p>Returns the GroupNode object corresponding to the given Group object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.node_from_group_id.html#gatoh.graphs.GroupGraph.node_from_group_id" title="gatoh.graphs.GroupGraph.node_from_group_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">node_from_group_id</span></code></a></p></td>
+<td><p>Returns the GroupNode object corresponding to the Group object with the given ID.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.graphs.GroupGraph.node_relationships_count.html#gatoh.graphs.GroupGraph.node_relationships_count" title="gatoh.graphs.GroupGraph.node_relationships_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">node_relationships_count</span></code></a></p></td>
 <td><p>Report the number of ingoing and outgoing relationships that a specific node is involved in.</p></td>

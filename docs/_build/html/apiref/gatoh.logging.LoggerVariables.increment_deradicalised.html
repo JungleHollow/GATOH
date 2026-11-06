@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.logging.LoggerVariables.increment_deradicalised &mdash; gatoh 2026.08.0</title>
+  <title>gatoh.logging.LoggerVariables.increment_deradicalised &mdash; gatoh 2026.09.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../_static/documentation_options.js?v=9aec01f2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/thebelab-helper.js"></script>
@@ -29,7 +29,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="gatoh.logging.LoggerVariables.increment_negated" href="gatoh.logging.LoggerVariables.increment_negated.html" />
+    <link rel="next" title="gatoh.logging.LoggerVariables.increment_deradicalised_group" href="gatoh.logging.LoggerVariables.increment_deradicalised_group.html" />
     <link rel="prev" title="gatoh.logging.LoggerVariables.get_fieldnames" href="gatoh.logging.LoggerVariables.get_fieldnames.html" /> 
 </head>
 
@@ -79,14 +79,20 @@
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.increment_deradicalised"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.increment_deradicalised()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_deradicalised_group.html">gatoh.logging.LoggerVariables.increment_deradicalised_group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_negated.html">gatoh.logging.LoggerVariables.increment_negated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_negated_group.html">gatoh.logging.LoggerVariables.increment_negated_group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_radicalised.html">gatoh.logging.LoggerVariables.increment_radicalised</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_radicalised_group.html">gatoh.logging.LoggerVariables.increment_radicalised_group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_silenced.html">gatoh.logging.LoggerVariables.increment_silenced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_silenced_group.html">gatoh.logging.LoggerVariables.increment_silenced_group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.new_iteration.html">gatoh.logging.LoggerVariables.new_iteration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_aggregate_opinion.html">gatoh.logging.LoggerVariables.store_aggregate_opinion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_group_radicalisation.html">gatoh.logging.LoggerVariables.store_group_radicalisation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_interdependences.html">gatoh.logging.LoggerVariables.store_layer_interdependences</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_polarisations.html">gatoh.logging.LoggerVariables.store_layer_polarisations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_model_parameters.html">gatoh.logging.LoggerVariables.store_model_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_radicalisation.html">gatoh.logging.LoggerVariables.store_radicalisation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_radicalisation_logodds.html">gatoh.logging.LoggerVariables.store_radicalisation_logodds</a></li>
 </ul>
 </li>
@@ -147,7 +153,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.increment_deradicalised">
 <span class="sig-prename descclassname"><span class="pre">LoggerVariables.</span></span><span class="sig-name descname"><span class="pre">increment_deradicalised</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/gatoh/logging.html#LoggerVariables.increment_deradicalised"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gatoh.logging.LoggerVariables.increment_deradicalised" title="Link to this definition"></a></dt>
-<dd><p>A simple setter function that checks the input flag and updates the deradicalisation count accordingly.</p>
+<dd><p>A simple setter function that checks the input flag and updates the deradicalisation event count accordingly.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>flag</strong> (<em>bool</em>) – A flag indicating if deradicalisation occurred.</p>
@@ -162,7 +168,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="gatoh.logging.LoggerVariables.get_fieldnames.html" class="btn btn-neutral float-left" title="gatoh.logging.LoggerVariables.get_fieldnames" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="gatoh.logging.LoggerVariables.increment_negated.html" class="btn btn-neutral float-right" title="gatoh.logging.LoggerVariables.increment_negated" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="gatoh.logging.LoggerVariables.increment_deradicalised_group.html" class="btn btn-neutral float-right" title="gatoh.logging.LoggerVariables.increment_deradicalised_group" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

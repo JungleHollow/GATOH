@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.groups.GroupSet.group_at_index &mdash; gatoh 2026.08.0</title>
+  <title>gatoh.groups.GroupSet.group_at_index &mdash; gatoh 2026.09.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../_static/documentation_options.js?v=9aec01f2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/thebelab-helper.js"></script>
@@ -30,7 +30,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="gatoh.groups.GroupSet.groups_at_indices" href="gatoh.groups.GroupSet.groups_at_indices.html" />
-    <link rel="prev" title="gatoh.groups.GroupSet.get_num_members" href="gatoh.groups.GroupSet.get_num_members.html" /> 
+    <link rel="prev" title="gatoh.groups.GroupSet.get_total_members" href="gatoh.groups.GroupSet.get_total_members.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -70,6 +70,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="gatoh.groups.GroupSet.html">GroupSet</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.html#gatoh.groups.GroupSet"><code class="docutils literal notranslate"><span class="pre">GroupSet</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.add.html">gatoh.groups.GroupSet.add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.benefit_count.html">gatoh.groups.GroupSet.benefit_count</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.discard.html">gatoh.groups.GroupSet.discard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.discard_index.html">gatoh.groups.GroupSet.discard_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.extract_group_pickle.html">gatoh.groups.GroupSet.extract_group_pickle</a></li>
@@ -78,7 +79,9 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_groups_by_ids.html">gatoh.groups.GroupSet.get_groups_by_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_index.html">gatoh.groups.GroupSet.get_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_indices.html">gatoh.groups.GroupSet.get_indices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_member_ids.html">gatoh.groups.GroupSet.get_member_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_num_members.html">gatoh.groups.GroupSet.get_num_members</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_total_members.html">gatoh.groups.GroupSet.get_total_members</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">gatoh.groups.GroupSet.group_at_index</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.groups.GroupSet.group_at_index"><code class="docutils literal notranslate"><span class="pre">GroupSet.group_at_index()</span></code></a></li>
 </ul>
@@ -86,6 +89,9 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.groups_at_indices.html">gatoh.groups.GroupSet.groups_at_indices</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.id_in_groupset.html">gatoh.groups.GroupSet.id_in_groupset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.load_groupset.html">gatoh.groups.GroupSet.load_groupset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.personality_count.html">gatoh.groups.GroupSet.personality_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.personality_counts.html">gatoh.groups.GroupSet.personality_counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.radicalised_count.html">gatoh.groups.GroupSet.radicalised_count</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.remove.html">gatoh.groups.GroupSet.remove</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.remove_index.html">gatoh.groups.GroupSet.remove_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.sample.html">gatoh.groups.GroupSet.sample</a></li>
@@ -176,7 +182,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="gatoh.groups.GroupSet.get_num_members.html" class="btn btn-neutral float-left" title="gatoh.groups.GroupSet.get_num_members" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gatoh.groups.GroupSet.get_total_members.html" class="btn btn-neutral float-left" title="gatoh.groups.GroupSet.get_total_members" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="gatoh.groups.GroupSet.groups_at_indices.html" class="btn btn-neutral float-right" title="gatoh.groups.GroupSet.groups_at_indices" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

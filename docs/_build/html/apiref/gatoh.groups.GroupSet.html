@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GroupSet &mdash; gatoh 2026.08.0</title>
+  <title>GroupSet &mdash; gatoh 2026.09.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../_static/documentation_options.js?v=9aec01f2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/thebelab-helper.js"></script>
@@ -70,6 +70,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">GroupSet</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#gatoh.groups.GroupSet"><code class="docutils literal notranslate"><span class="pre">GroupSet</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.add.html">gatoh.groups.GroupSet.add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.benefit_count.html">gatoh.groups.GroupSet.benefit_count</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.discard.html">gatoh.groups.GroupSet.discard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.discard_index.html">gatoh.groups.GroupSet.discard_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.extract_group_pickle.html">gatoh.groups.GroupSet.extract_group_pickle</a></li>
@@ -78,11 +79,16 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_groups_by_ids.html">gatoh.groups.GroupSet.get_groups_by_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_index.html">gatoh.groups.GroupSet.get_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_indices.html">gatoh.groups.GroupSet.get_indices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_member_ids.html">gatoh.groups.GroupSet.get_member_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_num_members.html">gatoh.groups.GroupSet.get_num_members</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.get_total_members.html">gatoh.groups.GroupSet.get_total_members</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.group_at_index.html">gatoh.groups.GroupSet.group_at_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.groups_at_indices.html">gatoh.groups.GroupSet.groups_at_indices</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.id_in_groupset.html">gatoh.groups.GroupSet.id_in_groupset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.load_groupset.html">gatoh.groups.GroupSet.load_groupset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.personality_count.html">gatoh.groups.GroupSet.personality_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.personality_counts.html">gatoh.groups.GroupSet.personality_counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.radicalised_count.html">gatoh.groups.GroupSet.radicalised_count</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.remove.html">gatoh.groups.GroupSet.remove</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.remove_index.html">gatoh.groups.GroupSet.remove_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.groups.GroupSet.sample.html">gatoh.groups.GroupSet.sample</a></li>
@@ -157,44 +163,62 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.add.html#gatoh.groups.GroupSet.add" title="gatoh.groups.GroupSet.add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code></a></p></td>
 <td><p>Adds a Group to the GroupSet.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.discard.html#gatoh.groups.GroupSet.discard" title="gatoh.groups.GroupSet.discard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">discard</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.benefit_count.html#gatoh.groups.GroupSet.benefit_count" title="gatoh.groups.GroupSet.benefit_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">benefit_count</span></code></a></p></td>
+<td><p>A getter function that returns the number of groups which experience aggregate personal benefit from social contagion in the group set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.discard.html#gatoh.groups.GroupSet.discard" title="gatoh.groups.GroupSet.discard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">discard</span></code></a></p></td>
 <td><p>Removes a Group from the GroupSet which matches the input Group; does not return an error if the Group does not exist.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.discard_index.html#gatoh.groups.GroupSet.discard_index" title="gatoh.groups.GroupSet.discard_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">discard_index</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.discard_index.html#gatoh.groups.GroupSet.discard_index" title="gatoh.groups.GroupSet.discard_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">discard_index</span></code></a></p></td>
 <td><p>Removes the Group at the specified index in the GroupSet; does not raise an error if the index is out of bounds.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.extract_group_pickle.html#gatoh.groups.GroupSet.extract_group_pickle" title="gatoh.groups.GroupSet.extract_group_pickle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_group_pickle</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.extract_group_pickle.html#gatoh.groups.GroupSet.extract_group_pickle" title="gatoh.groups.GroupSet.extract_group_pickle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_group_pickle</span></code></a></p></td>
 <td><p>A helper function that allows for multithreading of <a class="reference internal" href="gatoh.groups.GroupSet.load_groupset.html#gatoh.groups.GroupSet.load_groupset" title="gatoh.groups.GroupSet.load_groupset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_groupset()</span></code></a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_group_by_id.html#gatoh.groups.GroupSet.get_group_by_id" title="gatoh.groups.GroupSet.get_group_by_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_group_by_id</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_group_by_id.html#gatoh.groups.GroupSet.get_group_by_id" title="gatoh.groups.GroupSet.get_group_by_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_group_by_id</span></code></a></p></td>
 <td><p>Searches the GroupSet for a Group with the given id and returns its object if it exists.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_group_ids.html#gatoh.groups.GroupSet.get_group_ids" title="gatoh.groups.GroupSet.get_group_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_group_ids</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_group_ids.html#gatoh.groups.GroupSet.get_group_ids" title="gatoh.groups.GroupSet.get_group_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_group_ids</span></code></a></p></td>
 <td><p>A getter function that returns the IDs of all groups contained within the group set.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_groups_by_ids.html#gatoh.groups.GroupSet.get_groups_by_ids" title="gatoh.groups.GroupSet.get_groups_by_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_groups_by_ids</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_groups_by_ids.html#gatoh.groups.GroupSet.get_groups_by_ids" title="gatoh.groups.GroupSet.get_groups_by_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_groups_by_ids</span></code></a></p></td>
 <td><p>Searches the GroupSet for Groups with the given ids and returns their objects if they all exist.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_index.html#gatoh.groups.GroupSet.get_index" title="gatoh.groups.GroupSet.get_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_index</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_index.html#gatoh.groups.GroupSet.get_index" title="gatoh.groups.GroupSet.get_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_index</span></code></a></p></td>
 <td><p>Returns the index within the GroupSet of the input Group object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_indices.html#gatoh.groups.GroupSet.get_indices" title="gatoh.groups.GroupSet.get_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_indices</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_indices.html#gatoh.groups.GroupSet.get_indices" title="gatoh.groups.GroupSet.get_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_indices</span></code></a></p></td>
 <td><p>Returns the indices within the GroupSet of the input Group objects.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_member_ids.html#gatoh.groups.GroupSet.get_member_ids" title="gatoh.groups.GroupSet.get_member_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_member_ids</span></code></a></p></td>
+<td><p>A getter function that returns the unique IDs of all members contained within the group set.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_num_members.html#gatoh.groups.GroupSet.get_num_members" title="gatoh.groups.GroupSet.get_num_members"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_num_members</span></code></a></p></td>
 <td><p>A wrapper that used the group's getter function to report the number of members of that group.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.group_at_index.html#gatoh.groups.GroupSet.group_at_index" title="gatoh.groups.GroupSet.group_at_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">group_at_index</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.get_total_members.html#gatoh.groups.GroupSet.get_total_members" title="gatoh.groups.GroupSet.get_total_members"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_total_members</span></code></a></p></td>
+<td><p>A getter function that iterates across all groups in the groupset and adds their member counts to report the total number of members that exist in the groupset.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.group_at_index.html#gatoh.groups.GroupSet.group_at_index" title="gatoh.groups.GroupSet.group_at_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">group_at_index</span></code></a></p></td>
 <td><p>Returns the Groups object at the given index in the GroupSet.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.groups_at_indices.html#gatoh.groups.GroupSet.groups_at_indices" title="gatoh.groups.GroupSet.groups_at_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups_at_indices</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.groups_at_indices.html#gatoh.groups.GroupSet.groups_at_indices" title="gatoh.groups.GroupSet.groups_at_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups_at_indices</span></code></a></p></td>
 <td><p>Returns a list of all the group objects at the specified indices.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.id_in_groupset.html#gatoh.groups.GroupSet.id_in_groupset" title="gatoh.groups.GroupSet.id_in_groupset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id_in_groupset</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.id_in_groupset.html#gatoh.groups.GroupSet.id_in_groupset" title="gatoh.groups.GroupSet.id_in_groupset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id_in_groupset</span></code></a></p></td>
 <td><p>Report if a group with the given unique ID exists in the groupset.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.load_groupset.html#gatoh.groups.GroupSet.load_groupset" title="gatoh.groups.GroupSet.load_groupset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_groupset</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.load_groupset.html#gatoh.groups.GroupSet.load_groupset" title="gatoh.groups.GroupSet.load_groupset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_groupset</span></code></a></p></td>
 <td><p>Loads a GroupSet that has been saved following the same process as in the <a class="reference internal" href="gatoh.groups.GroupSet.save_groupset.html#gatoh.groups.GroupSet.save_groupset" title="gatoh.groups.GroupSet.save_groupset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_groupset()</span></code></a> function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.personality_count.html#gatoh.groups.GroupSet.personality_count" title="gatoh.groups.GroupSet.personality_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">personality_count</span></code></a></p></td>
+<td><p>A getter function that returns the count of groups which hold a specific personality type as it predominant one in the group set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.personality_counts.html#gatoh.groups.GroupSet.personality_counts" title="gatoh.groups.GroupSet.personality_counts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">personality_counts</span></code></a></p></td>
+<td><p>A getter function that returns the counts of all predomninant personality types among groups in the group set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.radicalised_count.html#gatoh.groups.GroupSet.radicalised_count" title="gatoh.groups.GroupSet.radicalised_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">radicalised_count</span></code></a></p></td>
+<td><p>A getter function that returns the number of radicalised groups that are present in the group set.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.groups.GroupSet.remove.html#gatoh.groups.GroupSet.remove" title="gatoh.groups.GroupSet.remove"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove</span></code></a></p></td>
 <td><p>Removes a group from the GroupSet which matches the input group; returning an error if such a Group does not exist.</p></td>

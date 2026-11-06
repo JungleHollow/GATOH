@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gatoh.logging &mdash; gatoh 2026.08.0</title>
+  <title>gatoh.logging &mdash; gatoh 2026.09.0</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../../_static/documentation_options.js?v=9aec01f2"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/thebelab-helper.js"></script>
@@ -295,12 +295,24 @@
     <span class="n">aggregate_opinions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># The number of radicalised agents that exist in the model at each timestep</span>
     <span class="n">radicalised_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="c1"># The number of deradicalisation events that occur at each timestep</span>
+    <span class="c1"># The cumulative number of agent radicalisation events that occur</span>
+    <span class="n">radicalisation_events</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The number of radicalised groups that exist in the model at each timestep</span>
+    <span class="n">radicalised_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The cumulative number of group radicalisation events that occur</span>
+    <span class="n">group_radicalisation_events</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The cumulative number of deradicalisation events that occur</span>
     <span class="n">deradicalised_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The cumulative number of group deradicalisation events that occur</span>
+    <span class="n">deradicalised_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># The total count of opinion silencing effects that have ocurred in the simulation over time</span>
     <span class="n">silenced_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The total count of group silencing events that have occurred in the simulation over time</span>
+    <span class="n">silenced_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># The total count of opinion negation effects that have ocurred in the simulation over time</span>
     <span class="n">negated_agents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># The total count of group negation events that have occurred in the simulation over time</span>
+    <span class="n">negated_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># The calculated layer interdependence of each hierarchy at each timestep</span>
     <span class="n">layer_interdependences</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
     <span class="c1"># The calculated layer polarisation of each hierarchy at each timestep</span>
@@ -321,9 +333,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinions</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_events</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_groups</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_radicalisation_events</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_groups</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">silenced_groups</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">negated_groups</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_logodds</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -342,27 +360,54 @@
 <a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_radicalised.html#gatoh.logging.LoggerVariables.increment_radicalised">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">increment_radicalised</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A simple setter function that checks the input flag and updates the radicalisation count accordingly.</span>
+<span class="sd">        A simple setter function that checks the input flag and updates the radicalisation event count accordingly.</span>
 
 <span class="sd">        :param flag: A flag indicating if radicalisation ocurred.</span>
 <span class="sd">        :type flag: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_events</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.increment_radicalised_group">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_radicalised_group.html#gatoh.logging.LoggerVariables.increment_radicalised_group">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_radicalised_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A simple setter function that checks the input flag and updates the group radicalisation event count accordingly.</span>
+
+<span class="sd">        :param flag: A flag indicating if radicalisation ocurred.</span>
+<span class="sd">        :type flag: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group_radicalisation_events</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span></div>
 
 
 <div class="viewcode-block" id="LoggerVariables.increment_deradicalised">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_deradicalised.html#gatoh.logging.LoggerVariables.increment_deradicalised">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">increment_deradicalised</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A simple setter function that checks the input flag and updates the deradicalisation count accordingly.</span>
+<span class="sd">        A simple setter function that checks the input flag and updates the deradicalisation event count accordingly.</span>
 
 <span class="sd">        :param flag: A flag indicating if deradicalisation occurred.</span>
 <span class="sd">        :type flag: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.increment_deradicalised_group">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_deradicalised_group.html#gatoh.logging.LoggerVariables.increment_deradicalised_group">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_deradicalised_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A simple setter function that checks the input flag and updates the group deradicalisation event count accordingly.</span>
+
+<span class="sd">        :param flag: A flag indicating if deradicalisation ocurred.</span>
+<span class="sd">        :type flag: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_groups</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -380,6 +425,20 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+<div class="viewcode-block" id="LoggerVariables.increment_silenced_group">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_silenced_group.html#gatoh.logging.LoggerVariables.increment_silenced_group">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_silenced_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A simple setter function that checks the input flag and updates the group silencing events count accordingly.</span>
+
+<span class="sd">        :param flag: A flag indicating if opinion silencing ocurred.</span>
+<span class="sd">        :type flag: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">silenced_groups</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
 <div class="viewcode-block" id="LoggerVariables.increment_negated">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_negated.html#gatoh.logging.LoggerVariables.increment_negated">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">increment_negated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -391,6 +450,20 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.increment_negated_group">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.increment_negated_group.html#gatoh.logging.LoggerVariables.increment_negated_group">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_negated_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A simple setter function that checks the input flag and updates the group negation events count accordingly.</span>
+
+<span class="sd">        :param flag: A flag indicating if opinion negation ocurred.</span>
+<span class="sd">        :type flag: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">negated_groups</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -417,6 +490,32 @@
 <span class="sd">        :type r_logodds: float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_logodds</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">r_logodds</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.store_radicalisation">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.store_radicalisation.html#gatoh.logging.LoggerVariables.store_radicalisation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">store_radicalisation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radical_n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that simplifies the storing of the model&#39;s radicalised agents count at each iteration.</span>
+
+<span class="sd">        :param radical_n: The number of radicalised agents to store for the current iteration.</span>
+<span class="sd">        :type radical_n: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">radical_n</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="LoggerVariables.store_group_radicalisation">
+<a class="viewcode-back" href="../../apiref/gatoh.logging.LoggerVariables.store_group_radicalisation.html#gatoh.logging.LoggerVariables.store_group_radicalisation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">store_group_radicalisation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radical_n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A setter function that simplifies the storing of the model&#39;s radicalised groups count at each iteration.</span>
+
+<span class="sd">        :param radical_n: The number of radicalised groups to store for the current iteration.</span>
+<span class="sd">        :type radical_n: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_groups</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">radical_n</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -487,11 +586,15 @@
         <span class="n">t_last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">-</span> <span class="mi">2</span>
         <span class="c1"># -1 and -2 indexes due to indexing logic for lists...</span>
 
-        <span class="c1"># Only these 3 variables must be carried over, all others are calculated at the end of the timestep independently</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
+        <span class="c1"># Only these 8 variables must be carried over, all others are calculated at the end of the timestep independently</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_events</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_events</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_radicalisation_events</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_radicalisation_events</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_agents</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_agents</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_groups</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_groups</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">silenced_groups</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">silenced_groups</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">negated_groups</span><span class="p">[</span><span class="n">t_now</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">negated_groups</span><span class="p">[</span><span class="n">t_last</span><span class="p">]</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -548,11 +651,17 @@
         <span class="n">formatted_string</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\n\n</span><span class="s2">==== GATOH model variables at iteration </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2">====</span>
 <span class="s2">                </span><span class="se">\n\n</span><span class="s2">Aggregate community opinion: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">aggregate_opinions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
-<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of radicalisation events in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of radicalised agents in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of radicalisation events in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_events</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of radicalised groups in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalised_groups</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of group radicalisation events in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">group_radicalisation_events</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
 <span class="s2">                </span><span class="se">\n</span><span class="s2">Number of deradicalisation events in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of group deradicalisation events in the community: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">deradicalised_groups</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
 <span class="s2">                </span><span class="se">\n</span><span class="s2">Log odds of radicalisation ocurring: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">radicalisation_logodds</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
 <span class="s2">                </span><span class="se">\n</span><span class="s2">Number of opinion silencing events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of group silencing events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">silenced_groups</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
 <span class="s2">                </span><span class="se">\n</span><span class="s2">Number of opinion negation events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                </span><span class="se">\n</span><span class="s2">Number of group negation events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">negated_groups</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span>
 <span class="s2">                </span><span class="se">\n\n</span><span class="s2">**** Layer statistics ****</span><span class="se">\n\n</span><span class="s2">&quot;&quot;&quot;</span>
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_layers_repr</span><span class="p">()</span>
         <span class="p">)</span>
@@ -575,9 +684,15 @@
             <span class="s2">&quot;iterations&quot;</span><span class="p">,</span>
             <span class="s2">&quot;aggregate_opinions&quot;</span><span class="p">,</span>
             <span class="s2">&quot;radicalised_agents&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;radicalisation_events&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;radicalised_groups&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;group_radicalisation_events&quot;</span><span class="p">,</span>
             <span class="s2">&quot;deradicalised_agents&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deradicalised_groups&quot;</span><span class="p">,</span>
             <span class="s2">&quot;silenced_agents&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;silenced_groups&quot;</span><span class="p">,</span>
             <span class="s2">&quot;negated_agents&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;negated_groups&quot;</span><span class="p">,</span>
             <span class="s2">&quot;radicalisation_logodds&quot;</span><span class="p">,</span>
         <span class="p">]</span>
 
@@ -812,6 +927,49 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="kc">None</span>
 
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LoggedGroups</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dataclass that provides the framework used to track specific attributes of certain groups throughout model runtime.</span>
+
+<span class="sd">    :param max_iterations: The maximum number of iterations that the model will run its simulation for.</span>
+<span class="sd">    :type max_iterations: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># The maximum iterations that the simulation will run for</span>
+    <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="c1"># The current iteration that the simulation is at</span>
+    <span class="n">current_iteration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># The dictionary that will be used to store group aggregate opinions</span>
+    <span class="n">opinions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The dictionary that will be used to store group previous opinions</span>
+    <span class="n">previous_opinions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The dictionary that will be used to store group radicalisation rates</span>
+    <span class="n">radicalisations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The dictionary that will be used to store group aggregate social weightings</span>
+    <span class="n">social_weightings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The dictionary that will be used to store group silencing rates</span>
+    <span class="n">silencings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># The dictionary that will be used to store any custom attributes</span>
+    <span class="n">custom_attributes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stores the number of max iterations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span> <span class="o">=</span> <span class="n">max_iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opinions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_opinions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radicalisations</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">social_weightings</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">silencings</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># TODO: Continue implementing the LoggedGroups class...</span>
+
+
 <div class="viewcode-block" id="GATOHLogger">
 <a class="viewcode-back" href="../../apiref/gatoh.logging.GATOHLogger.html#gatoh.logging.GATOHLogger">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GATOHLogger</span><span class="p">:</span>
@@ -909,6 +1067,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">iteration</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">aggregate_opinion</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">radicalised_agents</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">radicalised_groups</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">radicalisation_logodds</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">layer_interdependences</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
         <span class="n">layer_polarisations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
@@ -920,6 +1080,10 @@
 
 <span class="sd">        :param aggregate_opinion: The aggregate network opinion that has been observed in the model at the end of this iteration.</span>
 <span class="sd">        :type aggregate_opinion: float</span>
+<span class="sd">        :param radicalised_agents: The number of radicalised agents in the model at the end of this iteration.</span>
+<span class="sd">        :type radicalised_agents: int</span>
+<span class="sd">        :param radicalised_groups: The number of radicalised groups in the model at the end of this iteration.</span>
+<span class="sd">        :type radicalised_groups: int</span>
 <span class="sd">        :param radicalisation_logodds: The log odds of an agent being radicalised in the model at the end of this iteration.</span>
 <span class="sd">        :type radicalisation_logodds: float</span>
 <span class="sd">        :param layer_interdependences: A &lt;hierarchy : value&gt; mapping containing the calculated layer interdependency for each hierarchy in the model at the end of this iteration.</span>
@@ -932,6 +1096,8 @@
 <span class="sd">        :type model_parameters: dict[str, Any], optional</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_aggregate_opinion</span><span class="p">(</span><span class="n">aggregate_opinion</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_radicalisation</span><span class="p">(</span><span class="n">radicalised_agents</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_group_radicalisation</span><span class="p">(</span><span class="n">radicalised_groups</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_radicalisation_logodds</span><span class="p">(</span><span class="n">radicalisation_logodds</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_interdependences</span><span class="p">(</span><span class="n">layer_interdependences</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">store_layer_polarisations</span><span class="p">(</span><span class="n">layer_polarisations</span><span class="p">)</span>
@@ -941,6 +1107,8 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_aggregate_opinion&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_radicalisation&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_group_radicalisation&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_radicalisation_logodds&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_layer_interdependences&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log_function_call</span><span class="p">(</span><span class="s2">&quot;LoggerVariables.store_layer_polarisations&quot;</span><span class="p">)</span>
@@ -1044,9 +1212,15 @@
                     <span class="s2">&quot;iterations&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;aggregate_opinions&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">aggregate_opinions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;radicalised_agents&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">radicalised_agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;radicalisation_events&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">radicalisation_events</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;radicalised_groups&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">radicalised_groups</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;group_radicalisation_events&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">group_radicalisation_events</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;deradicalised_agents&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">deradicalised_agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;deradicalised_groups&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">deradicalised_groups</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;silenced_agents&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">silenced_agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;silenced_groups&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">silenced_groups</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;negated_agents&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">negated_agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;negated_groups&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">negated_groups</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;radicalisation_logodds&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">radicalisation_logodds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="p">}</span>
 

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LoggerVariables &mdash; gatoh 2026.08.0</title>
+  <title>LoggerVariables &mdash; gatoh 2026.09.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css?v=572af1d6" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=eb394bab"></script>
+      <script src="../_static/documentation_options.js?v=9aec01f2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/thebelab-helper.js"></script>
@@ -75,9 +75,15 @@
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.max_iterations"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.max_iterations</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.aggregate_opinions"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.aggregate_opinions</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.radicalised_agents"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.radicalised_agents</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.radicalisation_events"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.radicalisation_events</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.radicalised_groups"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.radicalised_groups</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.group_radicalisation_events"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.group_radicalisation_events</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.deradicalised_agents"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.deradicalised_agents</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.deradicalised_groups"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.deradicalised_groups</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.silenced_agents"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.silenced_agents</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.silenced_groups"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.silenced_groups</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.negated_agents"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.negated_agents</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.negated_groups"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.negated_groups</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.layer_interdependences"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.layer_interdependences</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.layer_polarisations"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.layer_polarisations</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gatoh.logging.LoggerVariables.radicalisation_logodds"><code class="docutils literal notranslate"><span class="pre">LoggerVariables.radicalisation_logodds</span></code></a></li>
@@ -89,14 +95,20 @@
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.current_model_params_repr.html">gatoh.logging.LoggerVariables.current_model_params_repr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.get_fieldnames.html">gatoh.logging.LoggerVariables.get_fieldnames</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_deradicalised.html">gatoh.logging.LoggerVariables.increment_deradicalised</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_deradicalised_group.html">gatoh.logging.LoggerVariables.increment_deradicalised_group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_negated.html">gatoh.logging.LoggerVariables.increment_negated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_negated_group.html">gatoh.logging.LoggerVariables.increment_negated_group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_radicalised.html">gatoh.logging.LoggerVariables.increment_radicalised</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_radicalised_group.html">gatoh.logging.LoggerVariables.increment_radicalised_group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_silenced.html">gatoh.logging.LoggerVariables.increment_silenced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_silenced_group.html">gatoh.logging.LoggerVariables.increment_silenced_group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.new_iteration.html">gatoh.logging.LoggerVariables.new_iteration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_aggregate_opinion.html">gatoh.logging.LoggerVariables.store_aggregate_opinion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_group_radicalisation.html">gatoh.logging.LoggerVariables.store_group_radicalisation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_interdependences.html">gatoh.logging.LoggerVariables.store_layer_interdependences</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_polarisations.html">gatoh.logging.LoggerVariables.store_layer_polarisations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_model_parameters.html">gatoh.logging.LoggerVariables.store_model_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_radicalisation.html">gatoh.logging.LoggerVariables.store_radicalisation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gatoh.logging.LoggerVariables.store_radicalisation_logodds.html">gatoh.logging.LoggerVariables.store_radicalisation_logodds</a></li>
 </ul>
 </li>
@@ -184,16 +196,28 @@ and sizes to match the number of iterations.</p>
 <td><p>A helper function that provides a place to collect and return all of the dataclass' attribute names for use as CSV column names.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_deradicalised.html#gatoh.logging.LoggerVariables.increment_deradicalised" title="gatoh.logging.LoggerVariables.increment_deradicalised"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_deradicalised</span></code></a></p></td>
-<td><p>A simple setter function that checks the input flag and updates the deradicalisation count accordingly.</p></td>
+<td><p>A simple setter function that checks the input flag and updates the deradicalisation event count accordingly.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_negated.html#gatoh.logging.LoggerVariables.increment_negated" title="gatoh.logging.LoggerVariables.increment_negated"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_negated</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_deradicalised_group.html#gatoh.logging.LoggerVariables.increment_deradicalised_group" title="gatoh.logging.LoggerVariables.increment_deradicalised_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_deradicalised_group</span></code></a></p></td>
+<td><p>A simple setter function that checks the input flag and updates the group deradicalisation event count accordingly.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_negated.html#gatoh.logging.LoggerVariables.increment_negated" title="gatoh.logging.LoggerVariables.increment_negated"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_negated</span></code></a></p></td>
 <td><p>A simple setter function that checks the input flag and updates the opinion negation events count accordingly.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_radicalised.html#gatoh.logging.LoggerVariables.increment_radicalised" title="gatoh.logging.LoggerVariables.increment_radicalised"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_radicalised</span></code></a></p></td>
-<td><p>A simple setter function that checks the input flag and updates the radicalisation count accordingly.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_negated_group.html#gatoh.logging.LoggerVariables.increment_negated_group" title="gatoh.logging.LoggerVariables.increment_negated_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_negated_group</span></code></a></p></td>
+<td><p>A simple setter function that checks the input flag and updates the group negation events count accordingly.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_silenced.html#gatoh.logging.LoggerVariables.increment_silenced" title="gatoh.logging.LoggerVariables.increment_silenced"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_silenced</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_radicalised.html#gatoh.logging.LoggerVariables.increment_radicalised" title="gatoh.logging.LoggerVariables.increment_radicalised"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_radicalised</span></code></a></p></td>
+<td><p>A simple setter function that checks the input flag and updates the radicalisation event count accordingly.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_radicalised_group.html#gatoh.logging.LoggerVariables.increment_radicalised_group" title="gatoh.logging.LoggerVariables.increment_radicalised_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_radicalised_group</span></code></a></p></td>
+<td><p>A simple setter function that checks the input flag and updates the group radicalisation event count accordingly.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_silenced.html#gatoh.logging.LoggerVariables.increment_silenced" title="gatoh.logging.LoggerVariables.increment_silenced"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_silenced</span></code></a></p></td>
 <td><p>A simple setter function that checks the input flag and updates the opinion silencing events count accordingly.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.increment_silenced_group.html#gatoh.logging.LoggerVariables.increment_silenced_group" title="gatoh.logging.LoggerVariables.increment_silenced_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">increment_silenced_group</span></code></a></p></td>
+<td><p>A simple setter function that checks the input flag and updates the group silencing events count accordingly.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.new_iteration.html#gatoh.logging.LoggerVariables.new_iteration" title="gatoh.logging.LoggerVariables.new_iteration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_iteration</span></code></a></p></td>
 <td><p>Increment the current_iteration counter and then copy all the values from the previous iteration to their respective list indexes for the new iteration.</p></td>
@@ -201,14 +225,20 @@ and sizes to match the number of iterations.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_aggregate_opinion.html#gatoh.logging.LoggerVariables.store_aggregate_opinion" title="gatoh.logging.LoggerVariables.store_aggregate_opinion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_aggregate_opinion</span></code></a></p></td>
 <td><p>A setter function that simplifies the storing of aggregate opinion values at each iteration.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_interdependences.html#gatoh.logging.LoggerVariables.store_layer_interdependences" title="gatoh.logging.LoggerVariables.store_layer_interdependences"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_layer_interdependences</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_group_radicalisation.html#gatoh.logging.LoggerVariables.store_group_radicalisation" title="gatoh.logging.LoggerVariables.store_group_radicalisation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_group_radicalisation</span></code></a></p></td>
+<td><p>A setter function that simplifies the storing of the model's radicalised groups count at each iteration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_interdependences.html#gatoh.logging.LoggerVariables.store_layer_interdependences" title="gatoh.logging.LoggerVariables.store_layer_interdependences"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_layer_interdependences</span></code></a></p></td>
 <td><p>A setter function that simplifies the storing of the model's layer interdependences at each iteration.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_polarisations.html#gatoh.logging.LoggerVariables.store_layer_polarisations" title="gatoh.logging.LoggerVariables.store_layer_polarisations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_layer_polarisations</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_layer_polarisations.html#gatoh.logging.LoggerVariables.store_layer_polarisations" title="gatoh.logging.LoggerVariables.store_layer_polarisations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_layer_polarisations</span></code></a></p></td>
 <td><p>A setter function that simplifies the storing of the model's layer polarisations at each iteration.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_model_parameters.html#gatoh.logging.LoggerVariables.store_model_parameters" title="gatoh.logging.LoggerVariables.store_model_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_model_parameters</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_model_parameters.html#gatoh.logging.LoggerVariables.store_model_parameters" title="gatoh.logging.LoggerVariables.store_model_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_model_parameters</span></code></a></p></td>
 <td><p>A setter function that simplifies the storing of the model's tracked parameters at each iteration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_radicalisation.html#gatoh.logging.LoggerVariables.store_radicalisation" title="gatoh.logging.LoggerVariables.store_radicalisation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_radicalisation</span></code></a></p></td>
+<td><p>A setter function that simplifies the storing of the model's radicalised agents count at each iteration.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="gatoh.logging.LoggerVariables.store_radicalisation_logodds.html#gatoh.logging.LoggerVariables.store_radicalisation_logodds" title="gatoh.logging.LoggerVariables.store_radicalisation_logodds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_radicalisation_logodds</span></code></a></p></td>
 <td><p>A setter function that simplifies the storing of the model's radicalisation log odds at each iteration.</p></td>
@@ -237,8 +267,28 @@ and sizes to match the number of iterations.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.radicalisation_events">
+<span class="sig-name descname"><span class="pre">radicalisation_events</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.radicalisation_events" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.radicalised_groups">
+<span class="sig-name descname"><span class="pre">radicalised_groups</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.radicalised_groups" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.group_radicalisation_events">
+<span class="sig-name descname"><span class="pre">group_radicalisation_events</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.group_radicalisation_events" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.deradicalised_agents">
 <span class="sig-name descname"><span class="pre">deradicalised_agents</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.deradicalised_agents" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.deradicalised_groups">
+<span class="sig-name descname"><span class="pre">deradicalised_groups</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.deradicalised_groups" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -247,8 +297,18 @@ and sizes to match the number of iterations.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.silenced_groups">
+<span class="sig-name descname"><span class="pre">silenced_groups</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.silenced_groups" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.negated_agents">
 <span class="sig-name descname"><span class="pre">negated_agents</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.negated_agents" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gatoh.logging.LoggerVariables.negated_groups">
+<span class="sig-name descname"><span class="pre">negated_groups</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#gatoh.logging.LoggerVariables.negated_groups" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

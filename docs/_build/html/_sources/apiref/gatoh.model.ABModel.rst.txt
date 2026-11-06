@@ -21,6 +21,7 @@
       ~ABModel.add_graph
       ~ABModel.add_graphs
       ~ABModel.add_group
+      ~ABModel.add_group_graph_edge
       ~ABModel.add_groups
       ~ABModel.add_relationships_to_hierarchy
       ~ABModel.apply_link_functions
@@ -37,10 +38,20 @@
       ~ABModel.generate_groups
       ~ABModel.get_agent_ids
       ~ABModel.get_base_indices_from_edge
+      ~ABModel.get_benefited_count
+      ~ABModel.get_group_benefited_count
+      ~ABModel.get_group_personality_count
+      ~ABModel.get_group_personality_counts
+      ~ABModel.get_group_radical_count
+      ~ABModel.get_groupgraph_indices_from_endpoints
+      ~ABModel.get_personality_count
+      ~ABModel.get_personality_counts
+      ~ABModel.get_radical_count
       ~ABModel.get_tracked_agent_attributes
       ~ABModel.get_tracked_parameters
       ~ABModel.group_iteration_opinion_calculation
       ~ABModel.group_iteration_opinion_changes
+      ~ABModel.group_members_opinion_changes
       ~ABModel.init_base_graph
       ~ABModel.iterate
       ~ABModel.iteration_opinion_calculation
@@ -76,6 +87,7 @@
       ~ABModel.track_model_parameters
       ~ABModel.update
       ~ABModel.update_base_graph
+      ~ABModel.update_group_multi
       ~ABModel.update_multi
 
 
