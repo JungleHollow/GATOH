@@ -954,40 +954,49 @@ if __name__ == "__main__":
     # Whether to simulate groups of agents or not (rather than the individual agents)
     SIMULATE_GROUPS: bool = True
 
+    # The save directory to which all experiment results will be written
     SAVEDIR_ROOT: str = "./experiments/CaseStudy/Results"
 
+    # The subdirectory where all experiment visualisations will be written
     VISUALISATION_ROOT: str = f"{SAVEDIR_ROOT}/Visualisations"
 
+    # The community save subdirectories
     SAVEDIRS: dict[str, str] = {
         "NONMN": f"{SAVEDIR_ROOT}/NONMN",
         "MINNG": f"{SAVEDIR_ROOT}/MINNG",
     }
 
+    # The paths to where the loggers will write the model output variables
     SAVEFILES: dict[str, str] = {
         "NONMN": f"{SAVEDIRS['NONMN']}/NONMN_model_variables.csv",
         "MINNG": f"{SAVEDIRS['MINNG']}/MINNG_model_variables.csv",
     }
 
+    # The community visualisation subdirectories
     VISDIRS: dict[str, str] = {
         "NONMN": f"{VISUALISATION_ROOT}/NONMN",
         "MINNG": f"{VISUALISATION_ROOT}/MINNG",
     }
 
+    # Directories in which each community's agents are stored
     AGENT_PATHS: dict[str, str] = {
         "NONMN": "./experiments/CaseStudy/Agents/NONMN_Agents",
         "MINNG": "./experiments/CaseStudy/Agents/MINNG_Agents",
     }
 
+    # Directories in which each community's graphs are stored
     GRAPH_PATHS: dict[str, str] = {
         "NONMN": "./experiments/CaseStudy/Graphs/NONMN_Graphs",
         "MINNG": "./experiments/CaseStudy/Graphs/MINNG_Graphs",
     }
 
+    # Directories in which each community's groups are stored
     GROUP_PATHS: dict[str, str] = {
         "NONMN": "./experiments/CaseStudy/Groups/NONMN_Groups",
         "MINNG": "./experiments/CaseStudy/Groups/MINNG_Groups",
     }
 
+    # The hierarchies that are being simulated in the models
     BASE_HIERARCHIES: list[str] = [
         # Removing Age and Gender as graphs for now, as these are much too densely connected for reasonable runtimes
         # "Age",
@@ -1000,6 +1009,7 @@ if __name__ == "__main__":
         "Social",
     ]
 
+    # The (mean, variance) normal distribution parameters used for relationship random-walk effects per hierarchy
     HIERARCHY_RW: dict[str, tuple[float, float]] = {
         # "Age": (0.0, 0.04),
         # "Gender": (0.0, 0.02),
@@ -1011,6 +1021,7 @@ if __name__ == "__main__":
         "Social": (0.0, 0.1),
     }
 
+    # ==== Typechecking dictionaries ====
     class ModelTestParameters(TypedDict):
         """
         A helper class for type checking the NONMNG and MINNG TEST_PARAMETERS subdictionary.
@@ -1040,17 +1051,18 @@ if __name__ == "__main__":
         NONMN: ModelTestParameters
         MINNG: ModelTestParameters
         DEFAULT: DefaultTestParameters
+    # ==== End of typechecking dictionaries ====
 
     # The relevant parameters that are defined for the model instances
     TEST_PARAMETERS: TestParameters = {
         "NONMN": {
-            "model_id": "NONMN",
+            "model_id": "NONMN",  # NON MiNing community
             "iterations": 100,
             "hierarchies": BASE_HIERARCHIES,
             "hierarchy_rw": HIERARCHY_RW,
         },
         "MINNG": {
-            "model_id": "MINNG",
+            "model_id": "MINNG",  # MINiNG community
             "iterations": 100,
             "hierarchies": BASE_HIERARCHIES,
             "hierarchy_rw": HIERARCHY_RW,
@@ -1059,27 +1071,37 @@ if __name__ == "__main__":
             "iterations": 100,
             "hierarchies": BASE_HIERARCHIES,
             "hierarchy_rw": HIERARCHY_RW,
-            "agent_opinion_rw": (0.0, 0.05),
-            "silencing_threshold": 0.95,
-            "negation_threshold": 0.999,
-            "radicalisation_threshold": 0.99,
-            "suppress_warnings": True,
+            # Above parameters are redefined in DEFAULT to ensure that they are always available just in case
+            "agent_opinion_rw": (0.0, 0.05),   # The (mean, variance) normal distribution parameters used for adding stochastic noise to agent opinions each iteration
+            "silencing_threshold": 0.95,  # The relative threshold that must be surpassed before an agent is considered silenced in a hierarchy
+            "negation_threshold": 0.999,  # The relative threshold that must be surpassed before an agent completely reverses their current opinion (positive -> negative and vice versa)
+            "radicalisation_threshold": 0.99,  # The relative threshold that must be surpassed for an agent to (de)radicalise when checks are made each iteration
+            "suppress_warnings": True,  # Prevent printing non-critical warning messages
         },
     }
 
     # Used to assign changeable weightings to different agent attributes throughout the models
+    # (These are relevant during (de)radicalisation, where agents will assign additional modifiers and penalties to neighbours' importances depending on age and gender similarity)
     AGENT_PARAMETERS: dict[str, float] = {
         "age_weighting": 1.1,
         "gender_weighting": 1.25,
     }
 
     # Used to change the number of groups that each hierarchy is clustered into (possibly extended on in the future)
+    #
+    # This is the maximum number of groups; a default group size of 10 agents is used regardless of the number of groups
+    # I.e. if a population is of size 100, a maximum of n groups of 100/n agents will be present in any hierarchy
     GROUP_PARAMETERS: dict[str, int] = {
         "n_groups": 5,
     }
 
     # Specify the dependant variable CSV paths here:
+    #
+    # NOTE: This is not used at the moment, but could allow for model validation by simulating past conditions and then checking against a present set of dependant variables
     OPINION_PATHS: dict[str, str] = {}
+
+    # ============================================================================================================================================================================
+    # Anything below this line should not have to ever be changed at this point unless you know what you are doing
 
     # Use "spawn" as the default to optimise memory usage and cross-platform compatibility
     set_start_method("spawn", force=True)
@@ -1147,5 +1169,3 @@ if __name__ == "__main__":
     # Ensure that the Pool is closed after all processing has finished
     if WORKER_POOL is not None:
         WORKER_POOL.terminate()
-
-    # TODO: Add the graph visualisation functions here once those features are implemented...
