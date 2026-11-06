@@ -2458,7 +2458,7 @@ class GroupGraph:
         :type edge_indices: list[int]
         :raises RuntimeWarning: If any of the edge indices are out of bounds.
         :return: A list containing all valid graph edges that were found.
-        :rtype list[GroupEdge]
+        :rtype: list[GroupEdge]
         """
         out_edges: list[GroupEdge] = []
         for index in edge_indices:

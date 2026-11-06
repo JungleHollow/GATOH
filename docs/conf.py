@@ -42,6 +42,7 @@ extensions = [
     "sphinxcontrib.bibtex",
     "sphinx_tabs.tabs",
     "sphinxcontrib.images",
+    "rst2pdf.pdfbuilder",
 ]
 
 bibtex_bibfiles = [
@@ -162,3 +163,28 @@ def avoid_duplicate_in_dispatch(app, obj, bound_method):
 def setup(app):
     # app.connect("config-inited", _get_versions)
     app.connect("autodoc-before-process-signature", avoid_duplicate_in_dispatch)
+
+
+# -- Options for PDF output -----------------------------------------------
+
+# latexpdf
+
+latex_documents = [("index", "GATOH_Docs.tex", "GATOH Documentation", "Manuel Munizaga", "manual", False)]
+
+# rst2pdf
+
+pdf_documents = [('index', 'GATOHDocs.tex', 'GATOH Docs', 'Manuel Munizaga'),]
+
+pdf_stylesheets = ["sphinx", "a4"]
+
+pdf_style_path = [".", "_styles"]
+
+pdf_toc_depth = 9999
+
+pdf_use_numbered_links = False
+
+pdf_fit_background_mode = "scale"
+
+pdf_repeat_table_rows = True
+
+pdf_smartquotes = 0

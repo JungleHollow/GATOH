@@ -1021,7 +1021,7 @@ if __name__ == "__main__":
         "Social": (0.0, 0.1),
     }
 
-    # ==== Typechecking dictionaries ====
+    # ================ Typechecking dictionaries ================
     class ModelTestParameters(TypedDict):
         """
         A helper class for type checking the NONMNG and MINNG TEST_PARAMETERS subdictionary.
@@ -1051,7 +1051,7 @@ if __name__ == "__main__":
         NONMN: ModelTestParameters
         MINNG: ModelTestParameters
         DEFAULT: DefaultTestParameters
-    # ==== End of typechecking dictionaries ====
+    # ================ End of typechecking dictionaries ================
 
     # The relevant parameters that are defined for the model instances
     TEST_PARAMETERS: TestParameters = {
